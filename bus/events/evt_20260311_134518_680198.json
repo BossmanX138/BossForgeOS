@@ -1,0 +1,11 @@
+{
+  "type": "event",
+  "source": "runeforge",
+  "event": "command:list_os_actions",
+  "level": "info",
+  "data": {
+    "ok": false,
+    "message": "unknown command: list_os_actions"
+  },
+  "timestamp": "2026-03-11T17:45:18.680181+00:00"
+}

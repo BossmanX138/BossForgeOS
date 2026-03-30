@@ -1,0 +1,16 @@
+{
+  "id": "runeforge",
+  "name": "Runeforge, Hammer-Mind of the Forge",
+  "version": "1.0.0",
+  "description": "Model/runtime infrastructure steward for BossForge workloads.",
+  "llm_router": {
+    "enabled": true,
+    "provider": "openai_compatible",
+    "url": "http://127.0.0.1:8011/v1/chat/completions",
+    "model": "runeforge_Core-7b",
+    "api_key_env": "",
+    "timeout_seconds": 8,
+    "temperature": 0.0,
+    "max_tokens": 350
+  }
+}

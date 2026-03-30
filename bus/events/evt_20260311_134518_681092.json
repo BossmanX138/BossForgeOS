@@ -1,0 +1,11 @@
+{
+  "type": "event",
+  "source": "runeforge",
+  "event": "command:run_os_observation",
+  "level": "info",
+  "data": {
+    "ok": false,
+    "message": "unknown command: run_os_observation"
+  },
+  "timestamp": "2026-03-11T17:45:18.681079+00:00"
+}

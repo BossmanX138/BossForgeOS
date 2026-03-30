@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "default": "deny",
+  "allow": {
+    "archivist": [
+      "scan_workspace"
+    ],
+    "codemage": [
+      "scan_workspace"
+    ],
+    "model_gateway": [
+      "scan_workspace"
+    ],
+    "security_sentinel": [
+      "*"
+    ]
+  }
+}

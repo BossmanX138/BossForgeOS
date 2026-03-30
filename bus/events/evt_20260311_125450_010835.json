@@ -1,0 +1,11 @@
+{
+  "type": "event",
+  "source": "hearth_tender",
+  "event": "disk_warning",
+  "level": "warning",
+  "data": {
+    "percent": 83.8,
+    "threshold": 80.0
+  },
+  "timestamp": "2026-03-11T16:54:50.010823+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "runeforge",
+  "command": "list_os_actions",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-11T17:45:12.529172+00:00"
+}

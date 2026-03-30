@@ -1,0 +1,13 @@
+{
+  "type": "event",
+  "source": "test_sentinel",
+  "event": "command:status_ping",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "status": "alive",
+    "last_metrics_at": "",
+    "test_debt_hits": 0
+  },
+  "timestamp": "2026-03-19T22:40:14.583936+00:00"
+}

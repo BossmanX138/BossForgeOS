@@ -1,0 +1,65 @@
+{
+  "name": "bosscrafts-control-hall",
+  "displayName": "BossCrafts Control Hall",
+  "description": "BossCrafts VS Code integration for Rune Bus command and event workflows.",
+  "version": "0.0.1",
+  "publisher": "bosscrafts",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bosscrafts.status",
+        "title": "BossCrafts: Show Status"
+      },
+      {
+        "command": "bosscrafts.sendSelectionToCodeMage",
+        "title": "BossCrafts: Send Selection To CodeMage"
+      },
+      {
+        "command": "bosscrafts.openControlHall",
+        "title": "BossCrafts: Open Control Hall"
+      },
+      {
+        "command": "bosscrafts.refreshPanel",
+        "title": "BossCrafts: Refresh Sidebar Panel"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bosscraftsSidebar",
+          "title": "BossCrafts",
+          "icon": "media/bosscrafts.svg"
+        }
+      ]
+    },
+    "views": {
+      "bosscraftsSidebar": [
+        {
+          "id": "bosscrafts.controlPanel",
+          "name": "Control Panel",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "bosscrafts.refreshPanel",
+          "when": "view == bosscrafts.controlPanel",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "lint": "echo no-lint",
+    "package": "echo package-step-pending"
+  }
+}

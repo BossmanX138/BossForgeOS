@@ -1,0 +1,6 @@
+{
+  "id": "test_sentinel",
+  "name": "Test Sentinel",
+  "version": "1.0.0",
+  "description": "Tracks test debt and test metrics for BossForge projects."
+}

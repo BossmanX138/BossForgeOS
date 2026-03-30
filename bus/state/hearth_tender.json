@@ -1,0 +1,81 @@
+{
+  "service": "hearth_tender",
+  "pid": 2016,
+  "disk": {
+    "root": "C:\\",
+    "total_gb": 446.5,
+    "used_gb": 389.6,
+    "free_gb": 56.9,
+    "percent": 87.3
+  },
+  "docker": null,
+  "wsl_vhd": null,
+  "system": {
+    "cpu_percent": 0.0,
+    "memory": {
+      "total_gb": 15.92,
+      "used_gb": 14.78,
+      "available_gb": 1.14,
+      "percent": 92.9
+    },
+    "swap": {
+      "total_gb": 26.68,
+      "used_gb": 4.4,
+      "percent": 16.5
+    }
+  },
+  "gpu_vram": {
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce GTX 1060 6GB",
+        "total_gb": 6.0,
+        "used_gb": 1.83,
+        "free_gb": 4.05,
+        "percent": 30.6,
+        "utilization_percent": 1.0
+      }
+    ]
+  },
+  "agent_load": {
+    "tracked_processes": [
+      {
+        "agent": "hearth_tender",
+        "pid": 24032,
+        "status": "missing"
+      },
+      {
+        "agent": "archivist",
+        "pid": 2016,
+        "name": "python.exe",
+        "cpu_percent": 0.0,
+        "rss_mb": 44.9,
+        "status": "running"
+      },
+      {
+        "agent": "model_gateway",
+        "pid": 2016,
+        "name": "python.exe",
+        "cpu_percent": 0.0,
+        "rss_mb": 45.2,
+        "status": "running"
+      },
+      {
+        "agent": "security_sentinel",
+        "pid": 2016,
+        "name": "python.exe",
+        "cpu_percent": 0.0,
+        "rss_mb": 45.2,
+        "status": "running"
+      }
+    ],
+    "totals": {
+      "cpu_percent": 0.0,
+      "rss_gb": 0.132
+    }
+  },
+  "warnings": [
+    "disk high: 87.3% used",
+    "ram critical: 92.9% used"
+  ],
+  "timestamp": "2026-03-11T17:48:30.580068+00:00"
+}

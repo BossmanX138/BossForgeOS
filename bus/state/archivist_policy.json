@@ -1,0 +1,55 @@
+{
+  "todo_scan_suffixes": [
+    ".json",
+    ".md",
+    ".ps1",
+    ".py",
+    ".txt",
+    ".yaml",
+    ".yml"
+  ],
+  "todo_ignore_dir_names": [
+    ".git",
+    ".models",
+    ".runtime",
+    ".venv",
+    ".venv-vllm",
+    ".venv-xtts",
+    "__pycache__",
+    "archives",
+    "build",
+    "bus",
+    "dist",
+    "node_modules",
+    "releases"
+  ],
+  "todo_ignore_file_names": [
+    "archivistreadme.md",
+    "changelog.md",
+    "daily_ledger.md",
+    "decisions.md",
+    "delegation_notes.md",
+    "todos.md"
+  ],
+  "readme_ignore_dir_names": [
+    ".git",
+    ".models",
+    ".runtime",
+    ".venv",
+    ".venv-vllm",
+    ".venv-xtts",
+    "__pycache__",
+    "archives",
+    "build",
+    "bus",
+    "dist",
+    "node_modules",
+    "releases",
+    "site-packages"
+  ],
+  "todo_patterns": [
+    "TODO",
+    "FIXME",
+    "TBD"
+  ]
+}

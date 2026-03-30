@@ -1,0 +1,10 @@
+{
+  "type": "event",
+  "source": "archivist",
+  "event": "awaiting_seal",
+  "level": "info",
+  "data": {
+    "message": "Documentation updated. Ask user before commit/push."
+  },
+  "timestamp": "2026-03-19T22:08:06.371498+00:00"
+}

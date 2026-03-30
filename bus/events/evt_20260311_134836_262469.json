@@ -1,0 +1,22 @@
+{
+  "type": "event",
+  "source": "runeforge",
+  "event": "command:run_os_observation",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "observation": {
+      "system_info": "OS: Windows 10 (10.0.19045)\nCPU: Intel64 Family 6 Model 62 Stepping 4, GenuineIntel\nRAM: 16302 MB\nDisk: 1862 GB total",
+      "uia_tree": {
+        "error": "Traceback (most recent call last):\n  File \"D:\\Bosscrafts\\BossForgeOS\\Runeforge OS Edition\\ui_tree_extractor.py\", line 62, in <module>\n    main()\n    ~~~~^^\n  File \"D:\\Bosscrafts\\BossForgeOS\\Runeforge OS Edition\\ui_tree_extractor.py\", line 58, in main\n    tree = get_ui_tree()\n  File \"D:\\Bosscrafts\\BossForgeOS\\Runeforge OS Edition\\ui_tree_extractor.py\", line 44, in get_ui_tree\n    'rect': list(window.BoundingRectangle),\n            ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'Rect' object is not iterable"
+      },
+      "screenshot_path": "D:\\Bosscrafts\\BossForgeOS\\Runeforge OS Edition\\captures\\screenshot_20260311_134835.png",
+      "ocr_text": "[OCR error: tesseract is not installed or it's not in your PATH. See README file for more information.]"
+    },
+    "command_processor": {
+      "returncode": 0,
+      "stderr": ""
+    }
+  },
+  "timestamp": "2026-03-11T17:48:36.262447+00:00"
+}

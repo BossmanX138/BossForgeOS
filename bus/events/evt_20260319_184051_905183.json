@@ -1,0 +1,74 @@
+{
+  "type": "event",
+  "source": "test_sentinel",
+  "event": "command:collect_test_metrics",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "timestamp": "2026-03-19T22:40:51.905143+00:00",
+    "test_debt": {
+      "ok": true,
+      "tests_root": "D:\\Bosscrafts\\BossForgeOS\\tests",
+      "files_scanned": 9,
+      "test_debt_hits": 6,
+      "items": [
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_archivist_agent.py",
+          "line": 73,
+          "text": "self.assertTrue((project / \"docs\" / \"todos.md\").exists())",
+          "severity": "medium"
+        },
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_archivist_agent.py",
+          "line": 119,
+          "text": "(project / \"notes.txt\").write_text(\"todo\\n\", encoding=\"utf-8\")",
+          "severity": "medium"
+        },
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_archivist_agent.py",
+          "line": 178,
+          "text": "if args == [\"add\", \"README.md\", \"docs/CHANGELOG.md\", \"docs/archivistREADME.md\", \"docs/daily_ledger.md\", \"docs/delegation_notes.md\", \"docs/decisions.md\", \"docs/todos.md\"]:",
+          "severity": "medium"
+        },
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_codemage_agent.py",
+          "line": 31,
+          "text": "\"args\": {\"language\": \"python\", \"content\": \"print('x')\\n# TODO: improve\"},",
+          "severity": "medium"
+        },
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_codemage_agent.py",
+          "line": 50,
+          "text": "\"# Ritual Plan\\n\\n1. Do this\\n2. Do that\\n\\nTODO: fill missing step\\nMUST keep tests passing\\n\",",
+          "severity": "medium"
+        },
+        {
+          "file": "D:\\Bosscrafts\\BossForgeOS\\tests\\test_codemage_agent.py",
+          "line": 62,
+          "text": "self.assertGreaterEqual(len(read.get(\"todo_or_open\", [])), 1)",
+          "severity": "medium"
+        }
+      ]
+    },
+    "test_suite": {
+      "ok": true,
+      "command": [
+        "D:\\Bosscrafts\\BossForgeOS\\.venv\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_*.py"
+      ],
+      "returncode": 0,
+      "tests_ran": 38,
+      "passed": true,
+      "failed": false,
+      "stdout": "",
+      "stderr": "......................................\n----------------------------------------------------------------------\nRan 38 tests in 2.644s\n\nOK"
+    }
+  },
+  "timestamp": "2026-03-19T22:40:51.905171+00:00"
+}

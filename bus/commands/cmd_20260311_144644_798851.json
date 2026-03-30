@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "custom_agent",
+  "command": "status_ping",
+  "args": {},
+  "issued_by": "voice",
+  "timestamp": "2026-03-11T18:46:44.798829+00:00"
+}

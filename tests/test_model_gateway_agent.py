@@ -1,0 +1,218 @@
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+from core.model_gateway_agent import ModelGatewayAgent
+
+
+class ModelGatewayAgentTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._old_root = os.environ.get("BOSSFORGE_ROOT")
+        self.tmp = tempfile.TemporaryDirectory()
+        os.environ["BOSSFORGE_ROOT"] = self.tmp.name
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+        if self._old_root is None:
+            os.environ.pop("BOSSFORGE_ROOT", None)
+        else:
+            os.environ["BOSSFORGE_ROOT"] = self._old_root
+
+    def test_default_endpoints_written(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        self.assertIn("ollama", agent.endpoints)
+        self.assertTrue(agent.config_path.exists())
+
+    def test_list_endpoints_command_emits_event(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.handle_command({"target": "model_gateway", "command": "list_endpoints", "args": {}})
+
+        events = agent.bus.read_latest_events(limit=1)
+        self.assertEqual(events[0]["source"], "model_gateway")
+        self.assertEqual(events[0]["event"], "command:list_endpoints")
+        self.assertTrue(events[0]["data"]["ok"])
+
+    def test_refactor_routes_to_invoke(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(agent, "_invoke_endpoint", return_value={"ok": True, "text": "refactored"}) as mocked:
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "refactor_code",
+                    "args": {
+                        "endpoint": "ollama",
+                        "language": "python",
+                        "instructions": "make it cleaner",
+                        "code": "print('x')",
+                    },
+                }
+            )
+
+            self.assertTrue(mocked.called)
+            kwargs = mocked.call_args.args
+            self.assertEqual(kwargs[0], "ollama")
+            self.assertIn("make it cleaner", kwargs[1])
+
+    def test_serve_and_stop_server_commands(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        with patch("core.model_gateway_agent.subprocess.Popen") as popen:
+            proc = popen.return_value
+            proc.pid = 4321
+            proc.poll.return_value = None
+
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "serve_model",
+                    "args": {"server": "vllm", "model": "Qwen2", "host": "127.0.0.1", "port": 8000},
+                }
+            )
+
+            self.assertIn("vllm", agent.servers)
+
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "stop_model_server",
+                    "args": {"server": "vllm"},
+                }
+            )
+
+            self.assertTrue(proc.terminate.called)
+
+    def test_stop_all_servers(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        proc = Mock()
+        proc.pid = 77
+        proc.poll.return_value = None
+        proc.wait.return_value = None
+        agent.servers["ollama"] = proc
+
+        result = agent._stop_all_servers()
+        self.assertTrue(result["ok"])
+        self.assertTrue(proc.terminate.called)
+
+    def test_create_and_run_model_agent_profile(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        create = agent._create_agent_profile(
+            name="refactorer",
+            endpoint="ollama",
+            system_prompt="You refactor code.",
+            temperature=0.1,
+            max_tokens=800,
+        )
+        self.assertTrue(create["ok"])
+        self.assertIn("refactorer", agent.agent_profiles)
+        self.assertTrue((agent.bus.state / "model_agent_refactorer.json").exists())
+
+        with patch.object(agent, "_invoke_endpoint", return_value={"ok": True, "text": "done"}) as mocked:
+            run = agent._run_agent_profile(name="refactorer", task="Refactor this function")
+            self.assertTrue(run["ok"])
+            self.assertEqual(run["agent"], "refactorer")
+            self.assertTrue(mocked.called)
+            self.assertTrue((agent.bus.state / "model_agent_refactorer.json").exists())
+
+    def test_handle_command_create_delete_agent(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        agent.handle_command(
+            {
+                "target": "model_gateway",
+                "command": "create_agent",
+                "args": {"name": "planner", "endpoint": "ollama", "system": "Plan things."},
+            }
+        )
+        self.assertIn("planner", agent.agent_profiles)
+
+        agent.handle_command(
+            {
+                "target": "model_gateway",
+                "command": "delete_agent",
+                "args": {"name": "planner"},
+            }
+        )
+        self.assertNotIn("planner", agent.agent_profiles)
+
+    def test_mcp_server_registry_roundtrip(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.set_mcp_server(
+            name="filesystem",
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-filesystem", "."],
+            env={"LOG_LEVEL": "info"},
+        )
+        self.assertTrue(created["ok"])
+        self.assertIn("filesystem", agent.mcp_servers)
+
+        removed = agent.remove_mcp_server("filesystem")
+        self.assertTrue(removed["ok"])
+        self.assertNotIn("filesystem", agent.mcp_servers)
+
+    def test_create_agent_with_tools(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.set_mcp_server(name="filesystem", command="fs-mcp")
+
+        created = agent.create_agent_profile(
+            name="toolsmith",
+            endpoint="ollama",
+            system_prompt="Use tools when needed.",
+            temperature=0.2,
+            max_tokens=900,
+            tools=["filesystem"],
+        )
+        self.assertTrue(created["ok"])
+        self.assertEqual(agent.agent_profiles["toolsmith"]["tools"], ["filesystem"])
+
+    def test_export_import_json_config(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.set_mcp_server(name="filesystem", command="fs-mcp")
+        agent.create_agent_profile(
+            name="planner",
+            endpoint="ollama",
+            system_prompt="Plan tasks.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=["filesystem"],
+        )
+
+        export_path = Path(self.tmp.name) / "model_config.json"
+        exported = agent.export_config(str(export_path))
+        self.assertTrue(exported["ok"])
+        self.assertTrue(export_path.exists())
+
+        imported_agent = ModelGatewayAgent(interval_seconds=1)
+        imported = imported_agent.import_config(str(export_path), merge=False)
+        self.assertTrue(imported["ok"])
+        self.assertIn("planner", imported_agent.agent_profiles)
+        self.assertIn("filesystem", imported_agent.mcp_servers)
+
+    def test_export_import_yaml_config(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.create_agent_profile(
+            name="scribe",
+            endpoint="ollama",
+            system_prompt="Write docs.",
+            temperature=0.1,
+            max_tokens=700,
+            tools=[],
+        )
+
+        export_path = Path(self.tmp.name) / "model_config.yaml"
+        exported = agent.export_config(str(export_path), format_hint="yaml")
+        self.assertTrue(exported["ok"])
+        self.assertTrue(export_path.exists())
+
+        imported_agent = ModelGatewayAgent(interval_seconds=1)
+        imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
+        self.assertTrue(imported["ok"])
+        self.assertIn("scribe", imported_agent.agent_profiles)
+
+
+if __name__ == "__main__":
+    unittest.main()

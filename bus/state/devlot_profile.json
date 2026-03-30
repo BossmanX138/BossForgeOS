@@ -1,0 +1,6 @@
+{
+  "id": "devlot",
+  "name": "Devlot, Machine-Smith of the Forge",
+  "version": "1.0.0",
+  "description": "Environment steward and execution utility agent for BossForge tasks."
+}

@@ -1,0 +1,10 @@
+{
+  "type": "command",
+  "target": "archivist",
+  "command": "summarize_events",
+  "args": {
+    "limit": 200
+  },
+  "issued_by": "cli",
+  "timestamp": "2026-03-19T13:59:14.722518+00:00"
+}

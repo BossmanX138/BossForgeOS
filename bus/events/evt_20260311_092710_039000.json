@@ -1,0 +1,14 @@
+{
+  "type": "event",
+  "source": "speaker",
+  "event": "tts_generated",
+  "level": "info",
+  "data": {
+    "source_event": "evt_20260311_091955_697814.json",
+    "source_agent": "codemage",
+    "text": "CodeMage status: alive",
+    "ok": true,
+    "output": "voices/codemage/out/codemage_20260311_092541_352979.wav"
+  },
+  "timestamp": "2026-03-11T13:27:10.038979+00:00"
+}

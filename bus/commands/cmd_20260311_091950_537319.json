@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "codemage",
+  "command": "status_ping",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-11T13:19:50.537291+00:00"
+}

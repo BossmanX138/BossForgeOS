@@ -1,0 +1,36 @@
+{
+  "type": "event",
+  "source": "runeforge",
+  "event": "command:list_os_actions",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "supported_action_types": [
+      "open_app",
+      "close_app",
+      "open_file",
+      "list_directory",
+      "open_url",
+      "delete_file",
+      "move_file",
+      "copy_file",
+      "set_volume",
+      "registry_edit",
+      "shutdown",
+      "restart",
+      "logoff"
+    ],
+    "high_risk_action_types": [
+      "delete_file",
+      "move_file",
+      "copy_file",
+      "set_volume",
+      "registry_edit",
+      "shutdown",
+      "restart",
+      "logoff"
+    ],
+    "schema_version": "1.0.0"
+  },
+  "timestamp": "2026-03-11T17:45:17.257882+00:00"
+}

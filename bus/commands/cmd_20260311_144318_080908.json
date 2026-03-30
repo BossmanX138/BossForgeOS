@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "codemage",
+  "command": "status_ping",
+  "args": {},
+  "issued_by": "voice",
+  "timestamp": "2026-03-11T18:43:18.080877+00:00"
+}

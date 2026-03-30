@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "archivist",
+  "command": "snapshot_state",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-19T13:58:38.648105+00:00"
+}

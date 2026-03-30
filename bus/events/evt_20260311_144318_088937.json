@@ -1,0 +1,11 @@
+{
+  "type": "event",
+  "source": "codemage",
+  "event": "voice_ping",
+  "level": "info",
+  "data": {
+    "message": "Codemage awakened by voice command.",
+    "via": "runeforge_voice_router"
+  },
+  "timestamp": "2026-03-11T18:43:18.088921+00:00"
+}

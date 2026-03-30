@@ -1,0 +1,12 @@
+{
+  "type": "event",
+  "source": "runeforge",
+  "event": "command:status_ping",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "status": "alive",
+    "queued_tasks": 0
+  },
+  "timestamp": "2026-03-11T17:45:08.254699+00:00"
+}

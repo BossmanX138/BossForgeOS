@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "aliases": {
+    "archivist": [
+      "archivist"
+    ],
+    "codemage": [
+      "codemage"
+    ],
+    "devlot": [
+      "devlot"
+    ],
+    "model_gateway": [
+      "model gateway",
+      "model_gateway"
+    ],
+    "runeforge": [
+      "runeforge"
+    ],
+    "security_sentinel": [
+      "security sentinel",
+      "security_sentinel"
+    ],
+    "custom_agent": [
+      "emberforge"
+    ]
+  }
+}

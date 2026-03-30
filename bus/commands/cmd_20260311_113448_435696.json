@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "runeforge",
+  "command": "status_ping",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-11T15:34:48.435675+00:00"
+}

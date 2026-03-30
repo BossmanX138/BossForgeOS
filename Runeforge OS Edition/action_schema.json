@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "supported_action_types": [
+    "grant_permission",
+    "revoke_permission",
+    "list_permissions",
+    "lock_file",
+    "unlock_file",
+    "list_file_locks",
+    "open_app",
+    "close_app",
+    "open_file",
+    "list_directory",
+    "open_url",
+    "unblock_file",
+    "delete_file",
+    "move_file",
+    "copy_file",
+    "set_volume",
+    "registry_edit",
+    "shutdown",
+    "restart",
+    "logoff"
+  ],
+  "high_risk_action_types": [
+    "grant_permission",
+    "revoke_permission",
+    "lock_file",
+    "unlock_file",
+    "unblock_file",
+    "delete_file",
+    "move_file",
+    "copy_file",
+    "set_volume",
+    "registry_edit",
+    "shutdown",
+    "restart",
+    "logoff"
+  ],
+  "examples": [
+    {
+      "action_type": "lock_file",
+      "params": {
+        "path": "C:/AgentSandbox/Downloads/tool.zip",
+        "reason": "protect before review"
+      }
+    },
+    {
+      "action_type": "unlock_file",
+      "params": {
+        "path": "C:/AgentSandbox/Downloads/tool.zip"
+      }
+    },
+    {
+      "action_type": "grant_permission",
+      "params": {
+        "action_type": "unblock_file",
+        "target_path": "C:/AgentSandbox/Downloads/",
+        "duration_seconds": 1800,
+        "max_uses": 5
+      }
+    },
+    {
+      "action_type": "unblock_file",
+      "params": {
+        "path": "C:/AgentSandbox/Downloads/tool.zip"
+      }
+    },
+    {
+      "action_type": "open_app",
+      "params": {
+        "path": "notepad.exe"
+      }
+    },
+    {
+      "action_type": "open_url",
+      "params": {
+        "url": "https://example.com"
+      }
+    },
+    {
+      "action_type": "list_directory",
+      "params": {
+        "path": "C:/AgentSandbox"
+      }
+    }
+  ]
+}

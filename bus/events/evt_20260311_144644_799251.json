@@ -1,0 +1,11 @@
+{
+  "type": "event",
+  "source": "custom_agent",
+  "event": "voice_ping",
+  "level": "info",
+  "data": {
+    "message": "Custom Agent awakened by voice command.",
+    "via": "runeforge_voice_router"
+  },
+  "timestamp": "2026-03-11T18:46:44.799242+00:00"
+}

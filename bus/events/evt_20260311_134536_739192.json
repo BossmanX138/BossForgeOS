@@ -1,0 +1,19 @@
+{
+  "type": "event",
+  "source": "codemage",
+  "event": "command:status_ping",
+  "level": "info",
+  "data": {
+    "ok": true,
+    "status": "alive",
+    "queued_work_packets": 0,
+    "state": "Idle",
+    "last_transition": "",
+    "model_backend": {
+      "provider": "openai_compatible",
+      "url": "http://127.0.0.1:8000/v1/chat/completions",
+      "model": "Qwen/Qwen2.5-7B-Instruct"
+    }
+  },
+  "timestamp": "2026-03-11T17:45:36.739181+00:00"
+}

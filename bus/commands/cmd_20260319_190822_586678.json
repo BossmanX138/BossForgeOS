@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "test_sentinel",
+  "command": "collect_test_metrics",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-19T23:08:22.586654+00:00"
+}

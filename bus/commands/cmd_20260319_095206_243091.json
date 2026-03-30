@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "target": "archivist",
+  "command": "archive_logs",
+  "args": {},
+  "issued_by": "cli",
+  "timestamp": "2026-03-19T13:52:06.243068+00:00"
+}

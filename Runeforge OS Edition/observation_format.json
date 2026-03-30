@@ -1,0 +1,18 @@
+{
+  "windows": [
+    {
+      "title": "Untitled - Notepad",
+      "process": "notepad.exe",
+      "focused": true,
+      "controls": [
+        {"type": "Edit", "id": "edit_1", "text": "", "rect": [10, 10, 400, 300]}
+      ]
+    }
+  ],
+  "screenshot_path": "screen_001.png",
+  "system_info": {
+    "os": "Windows 10",
+    "cpu": "Intel(R) Core(TM) i7",
+    "ram_mb": 16384
+  }
+}
