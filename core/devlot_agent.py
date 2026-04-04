@@ -8,6 +8,9 @@ from typing import Any
 
 from core.rune_bus import RuneBus, resolve_root_from_env
 
+# HuggingFaceConnector import
+from core.huggingface_connector import HuggingFaceConnector
+
 
 DEVLOT_PROFILE: dict[str, Any] = {
     "id": "devlot",
@@ -27,6 +30,15 @@ class DevlotAgent:
         self.work_packets: list[dict[str, Any]] = []
         self._ensure_profile()
         self._load_tasks()
+
+        # HuggingFaceConnector instance (token from env)
+        try:
+            self.hf = HuggingFaceConnector()
+        except Exception as ex:
+            self.hf = None
+            self.bus.emit_event(
+                "devlot", "huggingface_connector_init_failed", {"ok": False, "error": str(ex)}
+            )
 
     def _ensure_profile(self) -> None:
         if self.profile_path.exists():
@@ -93,7 +105,35 @@ class DevlotAgent:
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
 
-        if command == "status_ping":
+
+        # === Hugging Face Connector Commands ===
+        if command == "hf_search_models":
+            if not self.hf:
+                result = {"ok": False, "error": "HuggingFaceConnector not initialized"}
+            else:
+                query = args.get("query", "")
+                limit = int(args.get("limit", 10))
+                result = self.hf.search_models(query, limit)
+            self.bus.emit_event("devlot", "hf_search_models", result)
+        elif command == "hf_list_models":
+            if not self.hf:
+                result = {"ok": False, "error": "HuggingFaceConnector not initialized"}
+            else:
+                author = args.get("author", None)
+                limit = int(args.get("limit", 10))
+                result = self.hf.list_models(author, limit)
+            self.bus.emit_event("devlot", "hf_list_models", result)
+        elif command == "hf_download_model":
+            if not self.hf:
+                result = {"ok": False, "error": "HuggingFaceConnector not initialized"}
+            else:
+                repo_id = args.get("repo_id", "")
+                filename = args.get("filename", "")
+                dest_path = args.get("dest_path", "")
+                result = self.hf.download_model(repo_id, filename, dest_path)
+            self.bus.emit_event("devlot", "hf_download_model", result)
+        # === End Hugging Face Connector Commands ===
+        elif command == "status_ping":
             result = {"ok": True, "status": "alive", "queued_work_packets": len(self.work_packets)}
         elif command == "work_packet":
             result = self.add_work_packet(args)

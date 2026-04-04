@@ -259,6 +259,39 @@ class BossCraftsSidebarProvider {
         vscode.window.showInformationMessage(`BossCrafts command queued: ${path.basename(file)}`);
         this.view.webview.postMessage({ type: 'notice', level: 'info', text: `Queued: ${path.basename(file)}` });
         this.postData();
+        return;
+      }
+
+      if (type === 'event_response') {
+        // Ritual: respond to an event from the event stream
+        const eventIdx = Number(message.eventIdx);
+        const response = String(message.response || '').trim();
+        // Get the event from the current event list
+        const events = readRecentEvents(40);
+        const event = events[eventIdx];
+        if (!event) {
+          this.view.webview.postMessage({ type: 'event_response_status', eventIdx, statusText: 'Event not found.' });
+          return;
+        }
+        // For demonstration, treat response as a command to the event's source or target
+        let target = event.target || event.source || 'archivist';
+        let command = response;
+        let args = {};
+        // Optionally, parse response as JSON for command/args
+        if (response.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(response);
+            if (parsed.command) {
+              command = parsed.command;
+              args = parsed.args || {};
+            }
+          } catch {}
+        }
+        const file = writeCommand(target, command, args, 'vscode_extension_event_response');
+        this.view.webview.postMessage({ type: 'event_response_status', eventIdx, statusText: `Queued: ${path.basename(file)}` });
+        vscode.window.showInformationMessage(`BossCrafts event response queued: ${path.basename(file)}`);
+        this.postData();
+        return;
       }
     });
 
@@ -332,6 +365,7 @@ class BossCraftsSidebarProvider {
     const initialBusRoot = resolveBusRoot();
     const initialUpdated = new Date().toISOString();
 
+    // Helper to safely encode HTML
     const encode = (value) => JSON.stringify(value, null, 2)
       .replaceAll('&', '&amp;')
       .replaceAll('<', '&lt;')
@@ -381,13 +415,40 @@ class BossCraftsSidebarProvider {
       letter-spacing: 0.06em;
       opacity: 0.85;
     }
-    pre {
-      margin: 0;
-      font-size: 11px;
+    .event-list {
       max-height: 180px;
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
+      overflow-y: auto;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .event-item {
+      border-bottom: 1px solid var(--vscode-editorWidget-border, #3f3f3f);
+      padding: 6px 0;
+    }
+    .event-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .event-summary {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .event-details {
+      font-size: 11px;
+      margin-top: 4px;
+      display: none;
+    }
+    .event-item.expanded .event-details {
+      display: block;
+    }
+    .event-respond {
+      margin-top: 6px;
+      display: flex;
+      gap: 4px;
     }
     .muted {
       opacity: 0.7;
@@ -461,8 +522,8 @@ class BossCraftsSidebarProvider {
   </div>
 
   <div class="panel">
-    <div class="title">Recent Events</div>
-    <pre id="events">${encode(initialEvents)}</pre>
+    <div class="title">Event Stream</div>
+    <ul id="event_list" class="event-list"></ul>
   </div>
 
   <div class="panel">
@@ -490,8 +551,62 @@ class BossCraftsSidebarProvider {
     function setOnlineOnlyPreference(value) {
       try {
         localStorage.setItem(onlineOnlyKey, value ? '1' : '0');
-      } catch {
+      } catch {}
+    }
+
+    function renderEventList(events) {
+      const root = document.getElementById('event_list');
+      root.innerHTML = '';
+      if (!Array.isArray(events) || !events.length) {
+        root.innerHTML = '<li class="muted">No recent events.</li>';
+        return;
       }
+      events.forEach((evt, idx) => {
+        const li = document.createElement('li');
+        li.className = 'event-item';
+        li.innerHTML = `
+          <div class="event-header">
+            <span class="event-summary">${evt.event || evt.type || 'event'}</span>
+            <span class="muted">${evt.timestamp ? evt.timestamp.slice(0, 19).replace('T', ' ') : ''}</span>
+            <button class="expand-btn" data-idx="${idx}">Details</button>
+          </div>
+          <div class="event-details">
+            <pre>${encode(evt)}</pre>
+            <div class="event-respond">
+              <input type="text" class="response-input" placeholder="Ritual command or response..." />
+              <button class="respond-btn" data-idx="${idx}">Respond</button>
+            </div>
+            <div class="response-status muted"></div>
+          </div>
+        `;
+        root.appendChild(li);
+      });
+
+      // Expand/collapse logic
+      root.querySelectorAll('.expand-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = btn.getAttribute('data-idx');
+          const item = root.children[idx];
+          item.classList.toggle('expanded');
+        });
+      });
+
+      // Respond logic
+      root.querySelectorAll('.respond-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const idx = btn.getAttribute('data-idx');
+          const item = root.children[idx];
+          const input = item.querySelector('.response-input');
+          const status = item.querySelector('.response-status');
+          const value = input.value.trim();
+          if (!value) {
+            status.textContent = 'Enter a response.';
+            return;
+          }
+          status.textContent = 'Sending...';
+          vscode.postMessage({ type: 'event_response', eventIdx: idx, response: value });
+        });
+      });
     }
 
     function render(payload) {
@@ -501,7 +616,7 @@ class BossCraftsSidebarProvider {
       const delegation = payload && Array.isArray(payload.delegationStatus) ? payload.delegationStatus : [];
       const vscodeCtx = payload && payload.vscodeContext ? payload.vscodeContext : {};
       document.getElementById('seal').textContent = JSON.stringify(seal, null, 2);
-      document.getElementById('events').textContent = JSON.stringify(events, null, 2);
+      renderEventList(events);
       document.getElementById('delegation').textContent = JSON.stringify(delegation, null, 2);
       document.getElementById('vscode_ctx').textContent = JSON.stringify(vscodeCtx, null, 2);
       document.getElementById('meta').textContent = 'Bus: ' + (payload.busRoot || 'unknown') + ' | Updated: ' + (payload.updatedAt || '');
@@ -550,6 +665,14 @@ class BossCraftsSidebarProvider {
         const root = document.getElementById('notice');
         if (root) {
           root.textContent = msg.text || '';
+        }
+      } else if (msg.type === 'event_response_status') {
+        // Show response status for the event
+        const { eventIdx, statusText } = msg;
+        const root = document.getElementById('event_list');
+        if (root && root.children[eventIdx]) {
+          const status = root.children[eventIdx].querySelector('.response-status');
+          if (status) status.textContent = statusText;
         }
       }
     });

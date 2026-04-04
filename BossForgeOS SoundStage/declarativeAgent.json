@@ -1,0 +1,39 @@
+{
+  "name": "BossForgeOS SoundStage Agent",
+  "description": "Monitor and control the deterministic sound engine for BossForgeOS SoundStage.",
+  "instructions": "You are an expert assistant for managing and monitoring the SoundStage deterministic sound engine. Use the provided tools to play sounds, set sound mappings, monitor program events, and retrieve logs or status.",
+  "capabilities": [
+    "Monitor program open/close events",
+    "Play sounds",
+    "Set sound mappings",
+    "Retrieve logs and status"
+  ],
+  "conversation_starters": [
+    "Show me recent program events in SoundStage.",
+    "Play the ‘alert’ sound at 50% volume.",
+    "Map Notepad to the ‘typewriter’ sound.",
+    "Get the current sound mappings and status.",
+    "Show me the latest SoundStage logs."
+  ],
+  "tools": [
+    { "name": "monitorProgramEvents" },
+    { "name": "playSound" },
+    { "name": "setSoundMapping" },
+    { "name": "getLogs" },
+    { "name": "getStatus" }
+  ],
+  "response_semantics": {
+    "monitorProgramEvents": {
+      "data_path": "$.events",
+      "template_selector": "eventLog"
+    },
+    "getLogs": {
+      "data_path": "$.logs",
+      "template_selector": "logList"
+    },
+    "getStatus": {
+      "data_path": "$.",
+      "template_selector": "statusCard"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Voice Profile Contract",
+  "description": "Schema for BossForgeOS voice-layer profile onboarding and validation.",
+  "type": "object",
+  "required": [
+    "agent",
+    "engine",
+    "xtts_env_python",
+    "xtts_model_dir",
+    "xtts_config",
+    "reference_wav",
+    "language",
+    "sample_output"
+  ],
+  "properties": {
+    "agent": { "type": "string", "description": "Agent name (e.g., codemage, runeforge)" },
+    "engine": { "type": "string", "description": "Voice synthesis engine (e.g., xtts_v2)" },
+    "xtts_env_python": { "type": "string", "description": "Path to Python executable for XTTS" },
+    "xtts_model_dir": { "type": "string", "description": "Path to XTTS model directory" },
+    "xtts_config": { "type": "string", "description": "Path to XTTS config file" },
+    "reference_wav": { "type": "string", "description": "Path to reference WAV file for voice cloning" },
+    "language": { "type": "string", "description": "Language code (e.g., en)" },
+    "playback_rate": { "type": "number", "description": "Playback rate multiplier (optional)" },
+    "auto_play": { "type": "boolean", "description": "Auto-play output (optional)" },
+    "sample_output": { "type": "string", "description": "Path to sample output WAV file" }
+  },
+  "additionalProperties": false
+}

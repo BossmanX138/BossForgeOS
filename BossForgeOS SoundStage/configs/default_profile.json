@@ -1,0 +1,16 @@
+{
+  "profile": "BossForge Arena",
+  "eq": {
+    "bands_db": [2.0, 1.5, 1.0, 0.5, 0.0, -0.5, -1.0, 0.5, 1.0, 1.5]
+  },
+  "upmix": {
+    "mode": "stereo_to_7_2",
+    "dialog_center_weight": 0.8,
+    "lfe_weight": 0.35
+  },
+  "output_device": "dev_speakers_room_a",
+  "safety": {
+    "auto_backup_system_sounds": true,
+    "allow_rollback": true
+  }
+}

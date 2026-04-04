@@ -4,7 +4,9 @@
   "xtts_env_python": ".venv-xtts\\Scripts\\python.exe",
   "xtts_model_dir": ".models\\coqui--XTTS-v2",
   "xtts_config": ".models\\coqui--XTTS-v2\\config.json",
-  "reference_wav": "voices\\runeforge\\reference.wav",
+  "reference_wav": "voices\\runeforge\\reference_runeforgevoicesample_clean.wav",
   "language": "en",
-  "sample_output": "voices\\runeforge\\runeforge_clone_test.wav"
+  "playback_rate": 1.06,
+  "auto_play": true,
+  "sample_output": "voices\\runeforge\\out\\rf_sample_A.wav"
 }

@@ -6,7 +6,6 @@ BossForgeOS is a local command-and-control layer for orchestrating agents throug
 
 - [Implemented v1 Foundation](#implemented-v1-foundation)
 - [Project Layout](#project-layout)
-- [Quick Start](#quick-start)
 - [Unified Launcher](#unified-launcher)
 - [Global bforge CLI](#global-bforge-cli)
 - [Test Sentinel Agent](#test-sentinel-agent)
@@ -32,17 +31,16 @@ BossForgeOS is a local command-and-control layer for orchestrating agents throug
 - Control Hall dashboard and API using Flask.
 - OS snapshot module for disk, Docker, and WSL VHD checks.
 - Integrated Archivist agent service for log archiving, event summaries, and state snapshots.
-- Integrated Model Gateway service to bridge local LLM runtimes (Ollama, vLLM, LM Studio) through the Rune Bus.
 
 ## Project Layout
 
-- `core/`: bus, daemon, CLI.
+
+- `core/`: bus, daemon, CLI, connectors (GitHub, Hugging Face).
 - `modules/`: system modules and snapshots.
 - `ui/`: Control Hall server.
 - `docs/`: architecture and runbook.
 - `tests/`: unit tests.
-
-## Quick Start
+- `voices/`: canonical voice-layer profile schema and agent profiles.
 
 1. Install dependencies.
    - `pip install -r requirements.txt`

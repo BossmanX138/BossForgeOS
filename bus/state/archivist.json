@@ -1,8 +1,8 @@
 {
   "service": "archivist",
-  "pid": 2016,
+  "pid": 28444,
   "status": "idle",
   "daily_run_time": "00:45",
   "last_daily_run": null,
-  "timestamp": "2026-03-11T17:48:45.369278+00:00"
+  "timestamp": "2026-03-20T17:39:42.604520+00:00"
 }

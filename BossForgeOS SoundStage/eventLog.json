@@ -1,0 +1,38 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Program Events",
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "Table",
+      "columns": [
+        { "width": 1 },
+        { "width": 1 },
+        { "width": 2 }
+      ],
+      "rows": [
+        {
+          "cells": [
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "Program" }] },
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "Event" }] },
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "Timestamp" }] }
+          ]
+        },
+        {
+          "$data": "${$root}",
+          "cells": [
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "${program}" }] },
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "${event}" }] },
+            { "type": "TableCell", "items": [{ "type": "TextBlock", "text": "${timestamp}" }] }
+          ]
+        }
+      ]
+    }
+  ]
+}

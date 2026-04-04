@@ -8,6 +8,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+try:
+    import winsound
+except Exception:  # pragma: no cover - winsound only exists on Windows
+    winsound = None
+
 from core.rune_bus import RuneBus, resolve_root_from_env
 
 
@@ -26,6 +31,23 @@ class SpeakerDaemon:
         # Start from "now" so the daemon speaks only fresh events.
         self.seen_events: set[str] = {p.name for p in self.bus.events.glob("*.json")}
 
+    def _play_output(self, output_rel: str) -> dict[str, Any]:
+        if not output_rel:
+            return {"played": False, "play_message": "no output file provided"}
+
+        output_abs = (self.root / output_rel).resolve()
+        if not output_abs.exists():
+            return {"played": False, "play_message": f"output missing: {output_abs}"}
+
+        if os.name != "nt" or winsound is None:
+            return {"played": False, "play_message": "audio playback currently supports Windows only"}
+
+        try:
+            winsound.PlaySound(str(output_abs), winsound.SND_FILENAME | winsound.SND_ASYNC)
+            return {"played": True, "play_message": "audio playback started"}
+        except Exception as ex:
+            return {"played": False, "play_message": str(ex)}
+
     def _poll_events(self) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
         for path in sorted(self.bus.events.glob("*.json")):
@@ -42,6 +64,12 @@ class SpeakerDaemon:
 
     def _extract_text(self, event: dict[str, Any]) -> str:
         data = event.get("data") if isinstance(event.get("data"), dict) else {}
+        event_name = str(event.get("event", "")).strip()
+
+        # Voice command completion events are high-volume and can create echo loops.
+        if event_name == "command:voice_command":
+            return ""
+
         if isinstance(data.get("message"), str) and data["message"].strip():
             return data["message"].strip()
         if isinstance(data.get("model_reply"), str) and data["model_reply"].strip():
@@ -49,8 +77,8 @@ class SpeakerDaemon:
         if isinstance(data.get("status"), str) and data["status"].strip():
             agent_name = self.source_filter.replace("_", " ").title()
             return f"{agent_name} status: {data['status'].strip()}"
-        if isinstance(event.get("event"), str) and str(event.get("event")).startswith("command:"):
-            command = str(event.get("event", "")).split(":", 1)[1]
+        if event_name.startswith("command:"):
+            command = event_name.split(":", 1)[1]
             if command:
                 agent_name = str(event.get("source", self.source_filter)).replace("_", " ").title()
                 return f"{agent_name} completed {command}."
@@ -68,6 +96,7 @@ class SpeakerDaemon:
             return {"ok": False, "message": f"profile missing: {profile_abs}"}
 
         profile = json.loads(profile_abs.read_text(encoding="utf-8"))
+        auto_play = bool(profile.get("auto_play", True))
         xtts_python = str(profile.get("xtts_env_python", ".venv-xtts\\Scripts\\python.exe"))
         output_rel = f"voices/{source}/out/{stem}.wav"
         script_abs = (Path(__file__).resolve().parent / "xtts_speak.py").resolve()
@@ -83,10 +112,17 @@ class SpeakerDaemon:
             output_rel,
         ]
         try:
-            subprocess.check_output(cmd, cwd=str(self.root), stderr=subprocess.STDOUT, text=True)
-            return {"ok": True, "output": output_rel}
+            subprocess.check_output(cmd, cwd=str(self.root), stderr=subprocess.STDOUT, text=True, timeout=90)
+            return {"ok": True, "output": output_rel, "auto_play": auto_play}
+        except subprocess.TimeoutExpired:
+            return {
+                "ok": False,
+                "message": "xtts_speak timed out after 90s",
+                "output": output_rel,
+                "auto_play": auto_play,
+            }
         except Exception as ex:
-            return {"ok": False, "message": str(ex), "output": output_rel}
+            return {"ok": False, "message": str(ex), "output": output_rel, "auto_play": auto_play}
 
     def handle_event(self, event: dict[str, Any]) -> None:
         if event.get("type") != "event":
@@ -103,6 +139,13 @@ class SpeakerDaemon:
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         stem = f"{source}_{stamp}"
         result = self._synthesize(text=text, stem=stem, source=source)
+        should_play = bool(result.get("auto_play", True))
+        if result.get("ok") and should_play:
+            playback = self._play_output(str(result.get("output", "")))
+        elif result.get("ok") and not should_play:
+            playback = {"played": False, "play_message": "auto_play disabled in voice profile"}
+        else:
+            playback = {"played": False, "play_message": "skipped"}
 
         self.bus.emit_event(
             "speaker",
@@ -111,6 +154,7 @@ class SpeakerDaemon:
                 "source_event": event.get("_event_file", ""),
                 "source_agent": source,
                 "text": text,
+                **playback,
                 **result,
             },
             level="info" if result.get("ok") else "warning",

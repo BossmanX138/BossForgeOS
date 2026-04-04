@@ -1,0 +1,8 @@
+{
+  "events": {
+    "SystemNotification": "C:/BossForge/sounds/notification.wav",
+    "MailBeep": "C:/BossForge/sounds/mail.wav",
+    "WindowsLogon": "C:/BossForge/sounds/logon.wav",
+    "WindowsLogoff": "C:/BossForge/sounds/logoff.wav"
+  }
+}

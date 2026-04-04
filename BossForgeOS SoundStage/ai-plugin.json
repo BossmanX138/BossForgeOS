@@ -1,0 +1,53 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SoundStage Tools",
+  "name_for_model": "soundstage_tools",
+  "description_for_human": "Control and monitor the BossForgeOS SoundStage deterministic sound engine.",
+  "description_for_model": "Provides tools for monitoring program events, playing sounds, setting sound mappings, and retrieving logs/status from the SoundStage engine.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:PORT/openapi.json"
+  },
+  "logo_url": "https://placeholder.logo/soundstage.png",
+  "contact_email": "support@bossforgeos.local",
+  "legal_info_url": "https://bossforgeos.local/legal",
+  "endpoints": [
+    {
+      "name": "monitorProgramEvents",
+      "url": "ws://localhost:PORT/events",
+      "method": "websocket",
+      "description": "Subscribe to real-time program open/close events."
+    },
+    {
+      "name": "playSound",
+      "url": "http://localhost:PORT/api/play",
+      "method": "POST",
+      "request": { "soundId": "string", "volume": "number (optional)" },
+      "response": { "status": "string", "message": "string (optional)" }
+    },
+    {
+      "name": "setSoundMapping",
+      "url": "http://localhost:PORT/api/mapping",
+      "method": "POST",
+      "request": { "program": "string", "soundId": "string" },
+      "response": { "status": "string", "message": "string (optional)" }
+    },
+    {
+      "name": "getLogs",
+      "url": "http://localhost:PORT/api/logs",
+      "method": "GET",
+      "request": { "since": "string (optional)" },
+      "response": { "logs": "array" }
+    },
+    {
+      "name": "getStatus",
+      "url": "http://localhost:PORT/api/status",
+      "method": "GET",
+      "request": {},
+      "response": { "status": "string", "activePrograms": "array", "soundMappings": "object" }
+    }
+  ]
+}

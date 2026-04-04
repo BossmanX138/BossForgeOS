@@ -23,6 +23,10 @@
     ],
     "custom_agent": [
       "emberforge"
+    ],
+    "test_sentinel": [
+      "test sentinel",
+      "test_sentinel"
     ]
   }
 }

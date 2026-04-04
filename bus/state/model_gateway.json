@@ -1,6 +1,6 @@
 {
   "service": "model_gateway",
-  "pid": 2016,
+  "pid": 28444,
   "configured_endpoints": [
     "lmstudio",
     "ollama",
@@ -13,5 +13,5 @@
     "ok": true,
     "message": "idle"
   },
-  "timestamp": "2026-03-11T17:48:45.409372+00:00"
+  "timestamp": "2026-03-20T17:39:54.024244+00:00"
 }

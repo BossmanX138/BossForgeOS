@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helios Deck - Audio Interface Showdown</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="aurora"></div>
+
+  <main class="app-shell">
+    <header class="hero">
+      <p class="kicker">BossCrafts Audio Interface Showdown</p>
+      <h1>Helios Deck</h1>
+      <p class="subtitle">A tactile web audio cockpit with cinematic signal feedback.</p>
+    </header>
+
+    <section class="player-grid">
+      <article class="panel now-playing" aria-live="polite">
+        <h2>Now Playing</h2>
+        <p id="trackTitle" class="track-title">No track selected</p>
+        <p id="trackMeta" class="track-meta">Choose from the queue or drop your own files</p>
+      </article>
+
+      <article class="panel transport">
+        <h2>Transport</h2>
+
+        <div class="transport-controls">
+          <button id="playPauseBtn" class="btn primary" type="button">Play</button>
+          <button id="stopBtn" class="btn" type="button">Stop</button>
+          <button id="prevBtn" class="btn" type="button" aria-label="Previous track">Prev</button>
+          <button id="nextBtn" class="btn" type="button" aria-label="Next track">Next</button>
+        </div>
+
+        <div class="progress-wrap">
+          <label for="seekBar">Timeline</label>
+          <input id="seekBar" type="range" min="0" max="1000" value="0" />
+          <div class="time-row">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+          </div>
+        </div>
+
+        <div class="mix-row">
+          <label for="volumeSlider">Volume</label>
+          <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.85" />
+          <button id="muteBtn" class="btn" type="button" aria-pressed="false">Mute</button>
+        </div>
+
+        <div class="toggles">
+          <label class="switch"><input id="loopToggle" type="checkbox" /> Loop</label>
+          <label class="switch"><input id="shuffleToggle" type="checkbox" /> Shuffle</label>
+          <label class="speed">
+            Speed
+            <select id="speedSelect">
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+            </select>
+          </label>
+        </div>
+      </article>
+
+      <article class="panel visualizer-panel">
+        <h2>Signal</h2>
+        <canvas id="visualizer" width="960" height="220" aria-label="Audio spectrum visualizer"></canvas>
+      </article>
+
+      <article class="panel playlist-panel">
+        <h2>Playlist</h2>
+        <ul id="playlist" class="playlist" aria-label="Playlist"></ul>
+      </article>
+
+      <article class="panel import-panel">
+        <h2>Load Audio</h2>
+        <div id="dropZone" class="drop-zone" tabindex="0">
+          Drag and drop audio files here
+          <span>or</span>
+          <label for="fileInput" class="file-picker">Pick files</label>
+          <input id="fileInput" type="file" accept="audio/*" multiple />
+        </div>
+      </article>
+    </section>
+
+    <footer class="shortcuts">
+      <p>Shortcuts: <strong>Space</strong> Play/Pause, <strong>ArrowLeft</strong> -5s, <strong>ArrowRight</strong> +5s, <strong>M</strong> Mute</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

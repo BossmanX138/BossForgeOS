@@ -31,6 +31,32 @@
 
 Archivist starts with the unified launcher and listens for archivist-targeted commands.
 
+## Onboarding: Connectors & Voice Profiles
+
+### GitHub Connector
+- **Location:** `core/github_connector.py`
+- **Purpose:** Secure integration with GitHub API for agent workflows (issue creation, PR listing, repo status).
+- **Setup:**
+   - Store your GitHub token securely using the Security Sentinel vault:
+      - `python -m core.bforge security secret-set github_token <YOUR_TOKEN>`
+   - Use bus commands (`github_create_issue`, `github_list_prs`, `github_repo_status`) or import the connector in your agent code.
+
+### Hugging Face Connector
+- **Location:** `core/huggingface_connector.py`
+- **Purpose:** Secure integration with Hugging Face API for agent workflows (model search, listing, download).
+- **Setup:**
+   - Store your Hugging Face token securely using the Security Sentinel vault:
+      - `python -m core.bforge security secret-set hf_token <YOUR_TOKEN>`
+   - Use bus commands (`hf_search_models`, `hf_list_models`, `hf_download_model`) or import the connector in your agent code.
+
+### Voice-Layer Profile Contract
+- **Location:** `voices/voice_profile.schema.json`
+- **Purpose:** Canonical JSON schema for onboarding and validating agent voice profiles.
+- **Usage:**
+   - Reference this schema when creating new voice profiles for agents.
+   - Validate profiles using standard JSON schema tools.
+   - Example profiles: `voices/codemage/profile.json`, `voices/runeforge/profile.json`
+
 ## Build a Windows EXE
 
 1. Build executable launcher:

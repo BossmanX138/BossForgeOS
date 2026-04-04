@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\src\app\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\src\core\Equalizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\src\core\Upmix72.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\src\core\DeviceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\src\core\PipelineEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{EA896EC3-4F8C-3029-95EA-5FB7BF5EF30E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

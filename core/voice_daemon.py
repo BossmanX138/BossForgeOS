@@ -13,12 +13,20 @@ from core.runeforge_agent import RuneforgeAgent
 
 
 class VoiceDaemon:
-    def __init__(self, interval_seconds: int = 1, root: Path | None = None) -> None:
+    def __init__(
+        self,
+        interval_seconds: int = 1,
+        root: Path | None = None,
+        session_timeout_seconds: float = 60.0,
+    ) -> None:
         self.interval_seconds = interval_seconds
         self.root = root or resolve_root_from_env()
         self.bus = RuneBus(self.root)
         self.seen_commands: set[str] = set()
         self.muted = False
+        self.session_timeout_seconds = max(5.0, float(session_timeout_seconds))
+        self.session_active = False
+        self.session_expires_at = 0.0
         self.runeforge = RuneforgeAgent(interval_seconds=9, root=self.root)
         self.voice_script = Path(__file__).resolve().parents[1] / "Runeforge OS Edition" / "audio_dictation.py"
 
@@ -67,6 +75,46 @@ class VoiceDaemon:
         normalized = self._normalize(text)
         return normalized.startswith("bossforge") or normalized.startswith("runeforge")
 
+    def _strip_activation_prefix(self, text: str) -> str:
+        normalized = self._normalize(text)
+        for prefix in ("bossforge", "runeforge"):
+            if normalized.startswith(prefix):
+                return normalized[len(prefix):].strip(" ,:-|")
+        return normalized
+
+    def _session_is_active(self) -> bool:
+        if not self.session_active:
+            return False
+        if time.monotonic() <= self.session_expires_at:
+            return True
+        self.session_active = False
+        return False
+
+    def _start_session(self) -> None:
+        self.session_active = True
+        self.session_expires_at = time.monotonic() + self.session_timeout_seconds
+
+    def _touch_session(self) -> None:
+        if self.session_active:
+            self.session_expires_at = time.monotonic() + self.session_timeout_seconds
+
+    def _end_session(self) -> None:
+        self.session_active = False
+        self.session_expires_at = 0.0
+
+    def _is_session_end_intent(self, text: str) -> bool:
+        normalized = self._normalize(text)
+        if normalized in {
+            "stop listening",
+            "end session",
+            "session over",
+            "goodbye",
+            "thank you runeforge",
+            "thanks runeforge",
+        }:
+            return True
+        return False
+
     def _control_intent(self, text: str) -> str | None:
         normalized = self._normalize(text)
         if normalized in {
@@ -99,6 +147,43 @@ class VoiceDaemon:
     def _emit_voice_feedback(self, message: str, level: str = "info") -> None:
         self.bus.emit_event("runeforge", "voice_feedback", {"message": message}, level=level)
 
+    def _emit_result_feedback(self, spoken_text: str, result: dict[str, Any]) -> None:
+        voice_result = result.get("voice_result") if isinstance(result.get("voice_result"), dict) else {}
+        if not voice_result:
+            self._emit_voice_feedback("I heard you, but I could not process that yet.", level="warning")
+            return
+
+        if not bool(result.get("ok")):
+            message = str(voice_result.get("message", "")).strip() or "I could not execute that command."
+            self._emit_voice_feedback(message, level="warning")
+            return
+
+        action = str(voice_result.get("voice_action", "")).strip()
+        if action == "agent_ping":
+            target = str(((voice_result.get("result") or {}) if isinstance(voice_result.get("result"), dict) else {}).get("agent", "agent"))
+            self._emit_voice_feedback(f"{target.replace('_', ' ').title()} is online.")
+            return
+        if action == "agent_task_assignment":
+            details = str(((voice_result.get("result") or {}) if isinstance(voice_result.get("result"), dict) else {}).get("message", "")).strip()
+            self._emit_voice_feedback(details or "Task assigned.")
+            return
+        if action == "record_agent_alias":
+            alias = str(voice_result.get("recorded_alias", "")).strip()
+            self._emit_voice_feedback(f"Alias recorded: {alias}." if alias else "Alias recorded.")
+            return
+        if action == "register_agent_alias":
+            self._emit_voice_feedback("Alias registration complete.")
+            return
+        if action == "os_action":
+            os_result = voice_result.get("result") if isinstance(voice_result.get("result"), dict) else {}
+            if bool(os_result.get("ok")):
+                self._emit_voice_feedback("Command completed.")
+            else:
+                self._emit_voice_feedback("I heard the command, but execution failed.", level="warning")
+            return
+
+        self._emit_voice_feedback(f"I heard: {spoken_text}")
+
     def _handle_control(self, intent: str) -> bool:
         if intent == "mute":
             self.muted = True
@@ -127,7 +212,16 @@ class VoiceDaemon:
             self._emit_voice_feedback("Voice daemon stopping by bus command.")
             return True
         elif command == "status_ping":
-            self.bus.emit_event("voice_daemon", "command:status_ping", {"ok": True, "status": "alive", "muted": self.muted})
+            self.bus.emit_event(
+                "voice_daemon",
+                "command:status_ping",
+                {
+                    "ok": True,
+                    "status": "alive",
+                    "muted": self.muted,
+                    "session_active": self._session_is_active(),
+                },
+            )
         return False
 
     def run(self, stop_event: threading.Event | None = None) -> None:
@@ -139,6 +233,7 @@ class VoiceDaemon:
                     "pid": os.getpid(),
                     "status": "running",
                     "muted": self.muted,
+                    "session_active": self._session_is_active(),
                 },
             )
 
@@ -161,8 +256,17 @@ class VoiceDaemon:
                 time.sleep(self.interval_seconds)
                 continue
 
+            is_activation = self._is_activation(spoken_text)
+            session_active = self._session_is_active()
+
+            if self._is_session_end_intent(spoken_text) and (is_activation or session_active):
+                self._end_session()
+                self._emit_voice_feedback("Session ended. Say Runeforge to begin again.")
+                time.sleep(0.1)
+                continue
+
             intent = self._control_intent(spoken_text)
-            if intent and self._is_activation(spoken_text):
+            if intent and (is_activation or session_active):
                 if self._handle_control(intent):
                     break
                 time.sleep(0.1)
@@ -172,14 +276,34 @@ class VoiceDaemon:
                 time.sleep(0.1)
                 continue
 
-            result = self.runeforge.run_voice_text({"text": spoken_text})
-            if not result.get("ok"):
-                self.bus.emit_event("runeforge", "voice_error", {"message": "Voice command failed", "spoken_text": spoken_text, "result": result}, level="warning")
+            if is_activation:
+                self._start_session()
+
+            if not is_activation and not session_active:
+                time.sleep(0.1)
+                continue
+
+            text_for_runeforge = spoken_text
+            if is_activation:
+                stripped = self._strip_activation_prefix(spoken_text)
+                if not stripped:
+                    self._emit_voice_feedback("Listening. You can speak naturally for the rest of this session.")
+                    time.sleep(0.1)
+                    continue
             else:
-                vr = result.get("voice_result") if isinstance(result.get("voice_result"), dict) else {}
-                if vr.get("voice_action") == "agent_ping":
-                    target = str(((vr.get("result") or {}) if isinstance(vr.get("result"), dict) else {}).get("agent", "agent"))
-                    self._emit_voice_feedback(f"{target.replace('_', ' ').title()} is online.")
+                text_for_runeforge = f"Runeforge {spoken_text}"
+
+            self._touch_session()
+
+            result = self.runeforge.run_voice_text({"text": text_for_runeforge})
+            if not result.get("ok"):
+                self.bus.emit_event(
+                    "runeforge",
+                    "voice_error",
+                    {"message": "Voice command failed", "spoken_text": spoken_text, "result": result},
+                    level="warning",
+                )
+            self._emit_result_feedback(spoken_text=spoken_text, result=result)
 
             time.sleep(self.interval_seconds)
 
@@ -190,9 +314,13 @@ class VoiceDaemon:
 def main() -> None:
     parser = argparse.ArgumentParser(description="BossForgeOS continuous voice daemon")
     parser.add_argument("--interval", type=float, default=0.5, help="Loop interval in seconds")
+    parser.add_argument("--session-timeout", type=float, default=60.0, help="Active voice session timeout in seconds")
     args = parser.parse_args()
 
-    daemon = VoiceDaemon(interval_seconds=max(0.1, args.interval))
+    daemon = VoiceDaemon(
+        interval_seconds=max(0.1, args.interval),
+        session_timeout_seconds=max(5.0, float(args.session_timeout)),
+    )
     daemon.run_forever()
 
 

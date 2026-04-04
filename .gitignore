@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments and runtime sandboxes
+.venv/
+.venv-*/
+.runtime/
+
+# Local model payloads and caches
+.models/
+
+# Build and packaging outputs
+build/
+dist/
+releases/
+*.spec
+
+# Local bus/state/event artifacts
+bus/
+archives/
+
+# Local machine/user state
+archivist_onboarded_projects.json
+*.sqlite3
+
+# Logs
+*.log
+build_exe.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Shippable agent voice assets (intentionally versioned)
+!*_voice.wav
+!voices/
+!voices/**

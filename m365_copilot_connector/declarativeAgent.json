@@ -1,0 +1,19 @@
+{
+  "$schema": "https://microsoft.github.io/mcp/schemas/declarativeAgent.schema.json",
+  "name": "BossCrafts_Devlot_MkII (Official Microsoft Ambassador Runtime)",
+  "description": "Merged Devlot + M365 MCP runtime for BossForgeOS, designating Devlot as the official BossCrafts ambassador for Microsoft ecosystem operations across Outlook, Teams, OneDrive, and Calendar.",
+  "tools": [
+    { "name": "readEmail", "description": "Read Outlook emails", "parameters": {"folder": "string", "max_results": "integer"} },
+    { "name": "sendEmail", "description": "Send Outlook email", "parameters": {"to": "string", "subject": "string", "body": "string"} },
+    { "name": "getCalendarEvents", "description": "Get calendar events", "parameters": {"start": "string", "end": "string", "max_results": "integer"} },
+    { "name": "sendTeamsMessage", "description": "Send Teams message", "parameters": {"channel": "string", "message": "string"} },
+    { "name": "readTeamsMessages", "description": "Read Teams messages", "parameters": {"channel": "string", "max_results": "integer"} },
+    { "name": "onedriveListFiles", "description": "List OneDrive files", "parameters": {"path": "string"} },
+    { "name": "onedriveDownloadFile", "description": "Download OneDrive file", "parameters": {"file_id": "string"} },
+    { "name": "onedriveUploadFile", "description": "Upload file to OneDrive", "parameters": {"path": "string", "content": "string"} }
+  ],
+  "extensionPoints": [
+    { "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },
+    { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  ]
+}

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Bosscrafts\BossForgeOS\competitions\windows-sound-system-showdown-race\devlot_submission\build_vs\CMakeFiles\dd960474dcf30452be7d58007a0b6daa\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{2A9DBD6C-62EC-3B05-A693-EEDA79A2C0C7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

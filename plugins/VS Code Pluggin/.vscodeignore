@@ -1,0 +1,8 @@
+node_modules
+out
+.vscode
+.git
+.gitignore
+README.md
+todos.md
+ledger-2026-03-30.md

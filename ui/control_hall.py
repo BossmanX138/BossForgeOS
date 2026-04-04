@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, render_template_string, request, send_file
 
 from core.model_gateway_agent import ModelGatewayAgent
 from core.rune_bus import RuneBus, resolve_root_from_env
@@ -53,9 +53,9 @@ PAGE = """
         h1 { margin:0 0 6px; color:var(--accent); font-size:22px; }
         h2 { margin:0 0 10px; color:var(--accent); font-size:16px; }
         .muted { color:var(--muted); font-size:12px; }
-        .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-        button { border:1px solid var(--line); border-radius:9px; background:#172636; color:var(--ink); padding:8px 12px; cursor:pointer; }
-        button:hover { border-color:var(--accent); }
+            soundEvents = data.events || [];
+            soundScheme = data.scheme || {};
+            renderSoundEvents();
         input, select { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; }
         textarea { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; min-height:78px; width:100%; }
         pre { margin:0; max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px; }
@@ -81,10 +81,17 @@ PAGE = """
             <button class="nav-btn" data-view="view_manual" onclick="switchView('view_manual')">Manual Command</button>
             <button class="nav-btn" data-view="view_seal" onclick="switchView('view_seal')">Seal Queue</button>
             <button class="nav-btn" data-view="view_events" onclick="switchView('view_events')">Recent Events</button>
+            <button class="nav-btn" data-view="view_cicd" onclick="switchView('view_cicd')" style="color:#57d183; font-weight:bold;">CI/CD</button>
+            <button class="nav-btn" data-view="view_onboarding" onclick="switchView('view_onboarding')" style="color:#f2c96b; font-weight:bold;">Onboarding Wizard</button>
+            <button class="nav-btn" data-view="view_scheduler" onclick="switchView('view_scheduler')" style="color:#f2c96b; font-weight:bold;">Scheduler</button>
+            <button class="nav-btn" data-view="view_cicd" onclick="switchView('view_cicd')" style="color:#57d183; font-weight:bold;">CI/CD</button>
             <div class="group-label">Assistants</div>
             <button class="nav-btn" data-view="view_chat" onclick="switchView('view_chat')">Model Chat</button>
             <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">Agent Maker</button>
             <button class="nav-btn" data-view="view_security" onclick="switchView('view_security')">Security</button>
+            <button class="nav-btn" data-view="view_sounds" onclick="switchView('view_sounds')" style="color:#39ff14; font-weight:bold;">Sounds</button>
+            <div class="group-label">Scheduler</div>
+            <button class="nav-btn" data-view="view_scheduler" onclick="switchView('view_scheduler')">Scheduler</button>
         </aside>
 
         <main class="wrap">
@@ -161,6 +168,39 @@ PAGE = """
                 <div class="row"><button onclick="refreshSecretsList()">Refresh Secret Keys</button></div>
                 <pre id="security_secrets">No secrets loaded.</pre>
             </section>
+
+
+            <section id="view_onboarding" class="card view-panel">
+                <h2 style="color:#f2c96b;">Onboarding Wizard</h2>
+                <div class="muted">Guide for initial setup: secrets, tokens, and voice profile. (Coming soon)</div>
+                <div id="onboarding_status" style="margin-top:12px;"></div>
+            </section>
+
+            <section id="view_scheduler" class="card view-panel">
+                <h2 style="color:#f2c96b;">Scheduler</h2>
+                <div class="muted">Panel for scheduling tasks and rituals. (Coming soon)</div>
+                <div id="scheduler_status" style="margin-top:12px;"></div>
+            </section>
+
+            <section id="view_cicd" class="card view-panel">
+                <h2 style="color:#57d183;">CI/CD</h2>
+                <div class="muted">Panel for test/lint results and CI status. (Coming soon)</div>
+                <div id="cicd_status" style="margin-top:12px;"></div>
+            </section>
+
+
+                <div class="row">
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundstageBundle()">Export Bundle</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                </div>
+                <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
+                <input type="file" id="soundstage_bundle_file" style="display:none;" accept=".B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
+                <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
+                <div id="soundstage_schemes_list" class="muted" style="margin-top:10px;"></div>
+            </section>
         </main>
     </div>
 
@@ -178,6 +218,7 @@ PAGE = """
             const btn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
             if (btn) btn.classList.add('active');
             syncPinControls();
+            if (viewId === 'view_sounds') fetchSoundEvents();
         }
 
         async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
@@ -448,6 +489,71 @@ PAGE = """
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
         }
 
+        // === SoundStage Bundle UI Logic ===
+        async function exportSoundstageBundle() {
+            const btn = event && event.target;
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch('/api/soundstage/export_bundle', { method: 'POST' });
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'exported.B4Gsoundstage';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
+                setSoundSchemeStatus('Exported bundle downloaded.');
+            } catch (e) {
+                setSoundSchemeStatus('Export failed: ' + e);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function showImportBundleDialog() {
+            document.getElementById('soundstage_bundle_file').click();
+        }
+
+        async function handleImportBundle(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('bundle', file);
+            formData.append('scheme_name', file.name.replace(/\.B4Gsoundstage$/i, ''));
+            setSoundSchemeStatus('Importing bundle...');
+            try {
+                const res = await fetch('/api/soundstage/import_bundle', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.message || 'Import failed');
+                setSoundSchemeStatus('Imported: ' + data.message);
+                await listSoundstageSchemes();
+            } catch (e) {
+                setSoundSchemeStatus('Import failed: ' + e);
+            }
+        }
+
+        async function listSoundstageSchemes() {
+            try {
+                const res = await fetch('/api/soundstage/list_schemes');
+                const data = await res.json();
+                if (!data.ok) throw new Error('Failed to list schemes');
+                const el = document.getElementById('soundstage_schemes_list');
+                if (el) {
+                    el.innerHTML = 'Available Schemes: ' + (data.schemes && data.schemes.length ? data.schemes.map(s => `<span class="pill">${s}</span>`).join(' ') : 'None');
+                }
+            } catch (e) {
+                setSoundSchemeStatus('Failed to list schemes: ' + e);
+            }
+        }
+
+        function setSoundSchemeStatus(msg) {
+            const el = document.getElementById('sound_scheme_status');
+            if (el) el.textContent = msg;
+        }
+
+        // Call on load
         switchView(currentView);
         refreshPinState();
         refreshChatEndpoints();
@@ -455,6 +561,7 @@ PAGE = """
         refreshSecurityState();
         refreshSecretsList();
         refresh();
+        listSoundstageSchemes();
         setInterval(refresh, 4000);
         setInterval(refreshPinState, 3000);
     </script>
@@ -810,9 +917,139 @@ def read_agent_state() -> dict[str, dict[str, str]]:
     return result
 
 
+# === SoundStage Bundle Endpoints ===
+import zipfile
+import shutil
+
+SOUNDSTAGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_config.json")
+SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_schemes")
+SOUNDSTAGE_SOUNDS_DIR = os.path.join(SOUNDSTAGE_SCHEMES_DIR, "sounds")
+os.makedirs(SOUNDSTAGE_SCHEMES_DIR, exist_ok=True)
+os.makedirs(SOUNDSTAGE_SOUNDS_DIR, exist_ok=True)
+
+def _rewrite_config_paths(config, sound_dir="sounds"):
+    # Rewrites all sound file paths in config to be relative to sound_dir
+    def rewrite_entry(entry):
+        if not entry or not isinstance(entry, dict):
+            return entry
+        files = entry.get("files", [])
+        entry["files"] = [os.path.join(sound_dir, os.path.basename(f)) for f in files]
+        return entry
+    if "global" in config:
+        for k, v in config["global"].items():
+            config["global"][k] = rewrite_entry(v)
+    if "per_app" in config:
+        for app, events in config["per_app"].items():
+            for k, v in events.items():
+                config["per_app"][app][k] = rewrite_entry(v)
+    return config
+
+@app.post("/api/soundstage/export_bundle")
+def export_soundstage_bundle():
+    """Export current config + all referenced sounds as a .B4Gsoundstage zip bundle."""
+    try:
+        with open(SOUNDSTAGE_CONFIG_PATH, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception as e:
+        return jsonify({"ok": False, "message": f"Failed to load config: {e}"}), 500
+    # Gather all sound files
+    sound_files = set()
+    def gather_files(entry):
+        if not entry or not isinstance(entry, dict):
+            return
+        for f in entry.get("files", []):
+            if f: sound_files.add(f)
+    if "global" in config:
+        for v in config["global"].values():
+            gather_files(v)
+    if "per_app" in config:
+        for events in config["per_app"].values():
+            for v in events.values():
+                gather_files(v)
+    # Prepare bundle
+    bundle_path = os.path.join(SOUNDSTAGE_SCHEMES_DIR, "exported.B4Gsoundstage")
+    with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as z:
+        # Add config (rewrite paths to just 'sounds/filename')
+        config_for_bundle = _rewrite_config_paths(json.loads(json.dumps(config)), sound_dir="sounds")
+        z.writestr("soundstage_config.json", json.dumps(config_for_bundle, indent=2))
+        # Add all sound files
+        for f in sound_files:
+            if os.path.exists(f):
+                z.write(f, arcname=os.path.join("sounds", os.path.basename(f)))
+    return send_file(bundle_path, as_attachment=True, download_name="exported.B4Gsoundstage")
+
+@app.post("/api/soundstage/import_bundle")
+def import_soundstage_bundle():
+    """Import a .B4Gsoundstage zip bundle: extract config + sounds, rewrite config paths, activate scheme."""
+    if "bundle" not in request.files:
+        return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
+    bundle = request.files["bundle"]
+    scheme_name = request.form.get("scheme_name", "imported_scheme")
+    scheme_dir = os.path.join(SOUNDSTAGE_SCHEMES_DIR, scheme_name)
+    os.makedirs(scheme_dir, exist_ok=True)
+    # Extract bundle
+    with zipfile.ZipFile(bundle, "r") as z:
+        z.extractall(scheme_dir)
+    # Move/copy sounds to managed dir
+    sounds_src = os.path.join(scheme_dir, "sounds")
+    for fname in os.listdir(sounds_src):
+        src = os.path.join(sounds_src, fname)
+        dst = os.path.join(SOUNDSTAGE_SOUNDS_DIR, fname)
+        shutil.copy2(src, dst)
+    # Load and rewrite config
+    config_path = os.path.join(scheme_dir, "soundstage_config.json")
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+    config = _rewrite_config_paths(config, sound_dir="core/soundstage_schemes/sounds")
+    # Save as active config
+    with open(SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+    return jsonify({"ok": True, "message": f"Imported scheme '{scheme_name}' and activated."})
+
+@app.get("/api/soundstage/list_schemes")
+def list_soundstage_schemes():
+    """List available imported soundstage schemes."""
+    schemes = []
+    for name in os.listdir(SOUNDSTAGE_SCHEMES_DIR):
+        path = os.path.join(SOUNDSTAGE_SCHEMES_DIR, name)
+        if os.path.isdir(path):
+            schemes.append(name)
+    return jsonify({"ok": True, "schemes": schemes})
+
+
 def main() -> None:
     app.run(host="127.0.0.1", port=5005, debug=False)
 
 
 if __name__ == "__main__":
     main()
+
+# === Scheduler Endpoint Stub ===
+@app.route('/api/scheduler', methods=['GET', 'POST'])
+def scheduler():
+    # Placeholder for scheduler logic
+    if request.method == 'POST':
+        # Process scheduling form (future)
+        return jsonify({'ok': True, 'message': 'Scheduler step processed.'})
+    # For GET, return scheduler status (future)
+    return jsonify({'ok': True, 'status': 'Scheduler panel coming soon.'})
+
+# === CI/CD Endpoint Stub ===
+@app.route('/api/cicd', methods=['GET', 'POST'])
+def cicd():
+    # Placeholder for CI/CD logic
+    if request.method == 'POST':
+        # Process CI/CD form (future)
+        return jsonify({'ok': True, 'message': 'CI/CD step processed.'})
+    # For GET, return CI/CD status (future)
+    return jsonify({'ok': True, 'status': 'CI/CD panel coming soon.'})
+
+# === Onboarding Wizard Endpoint Stub ===
+@app.route('/onboarding', methods=['GET', 'POST'])
+def onboarding():
+    # Placeholder for onboarding wizard logic
+    if request.method == 'POST':
+        # Process onboarding form (future)
+        return jsonify({'ok': True, 'message': 'Onboarding step processed.'})
+    # For GET, return onboarding status (future)
+    return jsonify({'ok': True, 'status': 'Onboarding wizard coming soon.'})

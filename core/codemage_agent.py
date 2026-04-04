@@ -11,6 +11,9 @@ from urllib import error, request
 
 from core.rune_bus import RuneBus, resolve_root_from_env
 
+# GitHubConnector import
+from core.github_connector import GitHubConnector
+
 
 CODEMAGE_PROFILE: dict[str, Any] = {
     "id": "codemage",
@@ -112,6 +115,34 @@ STATE_NAMES = {
 }
 
 
+class ModelKeeperCompat:
+    """Compatibility stub for model_keeper identity and status."""
+    def __init__(self, bus: RuneBus):
+        self.bus = bus
+        self.profile = {
+            "id": "model_keeper",
+            "name": "Model Keeper (Compat)",
+            "version": "0.1.0",
+            "description": "Compatibility layer for model_keeper in BossForgeOS.",
+        }
+
+    def handle_command(self, payload: dict[str, Any]) -> None:
+        if payload.get("target") != "model_keeper":
+            return
+        command = str(payload.get("command", ""))
+        if command == "status_ping":
+            result = {
+                "ok": True,
+                "status": "alive",
+                "profile": self.profile,
+            }
+            self.bus.emit_event("model_keeper", "command:status_ping", result)
+            self.bus.write_state("model_keeper", {"service": "model_keeper", **result})
+        else:
+            result = {"ok": False, "message": f"unknown command: {command}"}
+            self.bus.emit_event("model_keeper", f"command:{command}", result)
+
+
 class CodeMageAgent:
     def __init__(self, interval_seconds: int = 8, root: Path | None = None) -> None:
         self.interval_seconds = interval_seconds
@@ -124,6 +155,16 @@ class CodeMageAgent:
         self.last_transition = ""
         self._ensure_profile()
         self._load_work_packets()
+        self.model_keeper_compat = ModelKeeperCompat(self.bus)
+
+        # GitHubConnector instance (token from env)
+        try:
+            self.github = GitHubConnector()
+        except Exception as ex:
+            self.github = None
+            self.bus.emit_event(
+                "codemage", "github_connector_init_failed", {"ok": False, "error": str(ex)}
+            )
 
     def _ensure_profile(self) -> None:
         if not self.profile_path.exists():
@@ -560,7 +601,37 @@ class CodeMageAgent:
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
 
-        if command == "status_ping":
+
+        # === GitHub Connector Commands ===
+        if command == "github_create_issue":
+            if not self.github:
+                result = {"ok": False, "error": "GitHubConnector not initialized"}
+            else:
+                owner = args.get("owner", "")
+                repo = args.get("repo", "")
+                title = args.get("title", "")
+                body = args.get("body", "")
+                result = self.github.create_issue(owner, repo, title, body)
+            self.bus.emit_event("codemage", "github_create_issue", result)
+        elif command == "github_list_prs":
+            if not self.github:
+                result = {"ok": False, "error": "GitHubConnector not initialized"}
+            else:
+                owner = args.get("owner", "")
+                repo = args.get("repo", "")
+                state = args.get("state", "open")
+                result = self.github.list_prs(owner, repo, state)
+            self.bus.emit_event("codemage", "github_list_prs", result)
+        elif command == "github_repo_status":
+            if not self.github:
+                result = {"ok": False, "error": "GitHubConnector not initialized"}
+            else:
+                owner = args.get("owner", "")
+                repo = args.get("repo", "")
+                result = self.github.repo_status(owner, repo)
+            self.bus.emit_event("codemage", "github_repo_status", result)
+        # === End GitHub Connector Commands ===
+        elif command == "status_ping":
             model_cfg = self._model_config()
             result = {
                 "ok": True,
@@ -620,6 +691,7 @@ class CodeMageAgent:
             )
             for _, payload in self.bus.poll_commands(self.seen_commands):
                 self.handle_command(payload)
+                self.model_keeper_compat.handle_command(payload)
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

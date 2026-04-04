@@ -1,0 +1,24 @@
+{
+  "global": {
+    "open_program": { "files": ["C:/Windows/Media/Windows Logon.wav"], "volume": 1.0, "rate": 1.0 },
+    "close_program": { "files": ["C:/Windows/Media/Windows Logoff.wav"], "volume": 1.0, "rate": 1.0 },
+    "system_notification": { "files": ["C:/Windows/Media/Windows Notify.wav"], "volume": 1.0, "rate": 1.0 },
+    "menu_popup": { "files": ["C:/Windows/Media/Menu Popup.wav"], "volume": 1.0, "rate": 1.0 },
+    "menu_command": { "files": ["C:/Windows/Media/Menu Command.wav"], "volume": 1.0, "rate": 1.0 },
+    "minimize": { "files": ["C:/Windows/Media/Minimize.wav"], "volume": 1.0, "rate": 1.0 },
+    "maximize": { "files": ["C:/Windows/Media/Maximize.wav"], "volume": 1.0, "rate": 1.0 },
+    "restore": { "files": ["C:/Windows/Media/Restore.wav"], "volume": 1.0, "rate": 1.0 },
+    "device_connect": { "files": ["C:/Windows/Media/Device Connect.wav"], "volume": 1.0, "rate": 1.0 },
+    "device_disconnect": { "files": ["C:/Windows/Media/Device Disconnect.wav"], "volume": 1.0, "rate": 1.0 },
+    "empty_recycle_bin": { "files": ["C:/Windows/Media/Empty Recycle Bin.wav"], "volume": 1.0, "rate": 1.0 },
+    "mouse_left_click": { "files": [], "volume": 1.0, "rate": 1.0 },
+    "keyboard_key_press": { "files": [], "volume": 1.0, "rate": 1.0 }
+  },
+  "per_app": {
+    "notepad.exe": {
+      "open_program": { "files": ["C:/Windows/Media/notify.wav"], "volume": 1.0, "rate": 1.0 },
+      "close_program": { "files": ["C:/Windows/Media/notify.wav"], "volume": 1.0, "rate": 1.0 }
+    }
+    // Add more per-app profiles here
+  }
+}

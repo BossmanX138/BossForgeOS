@@ -1,0 +1,47 @@
+{
+  "name": "bossforgeos-vscode-extension",
+  "displayName": "BossForgeOS VS Code Extension",
+  "description": "Integrates BossForgeOS features into VS Code, including onboarding wizard.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": ">=1.70.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onCommand:bossforgeos.onboard"
+  ],
+  "main": "extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bossforgeos.onboard",
+        "title": "BossForgeOS: Onboarding Wizard"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bossforgeosSidebar",
+          "title": "BossForgeOS",
+          "icon": "media/bossforgeos.svg"
+        }
+      ]
+    },
+    "views": {
+      "bossforgeosSidebar": [
+        {
+          "id": "bossforgeosOnboarding",
+          "name": "Onboarding"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npx tsc -p ."
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.70.0",
+    "typescript": "^4.8.0"
+  },
+  "dependencies": {}
+}

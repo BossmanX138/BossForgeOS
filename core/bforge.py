@@ -25,7 +25,9 @@ AGENTS = {
     "codemage": "codemage",
     "runeforge": "runeforge",
     "devlot": "devlot",
+    "model-keeper": "model_keeper",  # CLI alias for compatibility layer
     "speaker": "speaker",
+    "model_keeper": "model_keeper",
 }
 
 PLUGIN_LOAD_STATE: list[dict[str, str]] = []
@@ -96,6 +98,11 @@ def cmd_status(_: argparse.Namespace) -> None:
     }
     pretty(out)
 
+
+    # Model-Keeper compatibility alias
+    p_model_keeper = subparsers.add_parser("model-keeper", help="Model-Keeper compatibility commands")
+    p_model_keeper.add_argument("action", choices=["status"], help="Action to perform")
+    p_model_keeper.set_defaults(func=cmd_model_keeper)
 
 def cmd_tail(args: argparse.Namespace) -> None:
     bus = RuneBus(resolve_root_from_env())

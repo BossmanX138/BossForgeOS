@@ -1,0 +1,18 @@
+{
+  "$schema": "https://microsoft.github.io/mcp/schemas/mcp.schema.json",
+  "id": "bosscrafts-devlot-mkii-m365-runtime",
+  "name": "BossCrafts_Devlot_MkII (Official Microsoft Ambassador Runtime)",
+  "description": "Merged MCP runtime for Devlot with Microsoft 365 service actions under official BossCrafts Microsoft ambassador designation.",
+  "entryPoint": "mcp_server.py",
+  "tools": [
+    "readEmail",
+    "sendEmail",
+    "getCalendarEvents",
+    "sendTeamsMessage",
+    "readTeamsMessages",
+    "onedriveListFiles",
+    "onedriveDownloadFile",
+    "onedriveUploadFile"
+  ],
+  "extensionPoints": ["BossForgeOSAgentOrchestration", "DevlotAutonomyHooks"]
+}

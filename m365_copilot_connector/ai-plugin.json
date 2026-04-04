@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "BossCrafts Devlot Microsoft Ambassador",
+  "name_for_model": "bosscrafts_devlot_microsoft_ambassador",
+  "description_for_human": "Official BossCrafts ambassador for Microsoft ecosystem operations (M365, Copilot, and Graph-backed workflows)",
+  "description_for_model": "Official Microsoft ambassador runtime for BossCrafts, providing MCP tools for Outlook, Teams, calendar, and OneDrive workflows.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "/openapi.yaml"
+  },
+  "logo_url": "https://raw.githubusercontent.com/BossCrafts/BossForgeOS/main/docs/logo.png",
+  "contact_email": "support@bosscrafts.com",
+  "legal_info_url": "https://bosscrafts.com/legal"
+}

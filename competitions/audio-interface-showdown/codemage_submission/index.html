@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aether Deck Audio Interface</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-shape-a"></div>
+  <div class="bg-shape bg-shape-b"></div>
+
+  <main class="deck" aria-label="Audio interface">
+    <header class="deck-header">
+      <p class="eyebrow">BossCrafts Audio Interface Showdown</p>
+      <h1>Aether Deck</h1>
+      <p class="subtitle">A standalone browser audio console with playlist control, keyboard command, and live spectrum feedback.</p>
+    </header>
+
+    <section class="now-playing" aria-live="polite">
+      <p class="label">Now Playing</p>
+      <h2 id="trackTitle">No track loaded</h2>
+      <p id="trackMeta">Drop audio files or use the built-in demo tracks.</p>
+    </section>
+
+    <section class="visualizer-panel" aria-label="Audio visualizer">
+      <div id="bars" class="bars" role="img" aria-label="Live frequency bars"></div>
+    </section>
+
+    <section class="transport" aria-label="Playback controls">
+      <div class="transport-buttons">
+        <button id="prevBtn" class="btn ghost" type="button">Prev</button>
+        <button id="playPauseBtn" class="btn primary" type="button">Play</button>
+        <button id="stopBtn" class="btn ghost" type="button">Stop</button>
+        <button id="nextBtn" class="btn ghost" type="button">Next</button>
+      </div>
+
+      <div class="timing-row">
+        <span id="currentTime">00:00</span>
+        <input id="seekBar" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek track position" />
+        <span id="duration">00:00</span>
+      </div>
+
+      <div class="control-grid">
+        <label class="field" for="volumeSlider">
+          <span>Volume</span>
+          <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.85" />
+        </label>
+
+        <button id="muteBtn" class="btn ghost" type="button">Mute</button>
+
+        <button id="shuffleBtn" class="btn ghost" type="button" aria-pressed="false">Shuffle Off</button>
+
+        <button id="loopBtn" class="btn ghost" type="button" aria-pressed="false">Loop Off</button>
+
+        <label class="field" for="speedSelect">
+          <span>Speed</span>
+          <select id="speedSelect" aria-label="Playback speed">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="playlist-panel" aria-label="Playlist">
+      <div class="playlist-header">
+        <h3>Playlist</h3>
+        <span id="trackCount">0 tracks</span>
+      </div>
+      <ol id="playlist" class="playlist"></ol>
+    </section>
+
+    <section class="dropzone-panel" aria-label="Local audio loading">
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <p>Drag and drop audio files here</p>
+        <p class="hint">or</p>
+        <label class="btn primary file-pick" for="fileInput">Choose Files</label>
+        <input id="fileInput" type="file" accept="audio/*" multiple />
+      </div>
+    </section>
+
+    <section class="recent-panel" aria-label="Recently played">
+      <h3>Recently Played</h3>
+      <ul id="recentList" class="recent-list"></ul>
+    </section>
+
+    <footer class="deck-footer">
+      <p>Shortcuts: Space play or pause, Left or Right seek, M mute.</p>
+    </footer>
+  </main>
+
+  <audio id="audio" preload="metadata"></audio>
+  <script src="app.js"></script>
+</body>
+</html>
