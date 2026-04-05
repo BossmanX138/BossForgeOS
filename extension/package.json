@@ -12,6 +12,17 @@
   ],
   "main": "./src/extension.js",
   "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "BossForgeOS Integration",
+      "properties": {
+        "bosscrafts.endpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:5005",
+          "description": "BossForgeOS Control Hall backend endpoint URL."
+        }
+      }
+    },
     "commands": [
       {
         "command": "bosscrafts.status",
@@ -28,6 +39,10 @@
       {
         "command": "bosscrafts.refreshPanel",
         "title": "BossCrafts: Refresh Sidebar Panel"
+      },
+      {
+        "command": "bossforgeos.onboard",
+        "title": "BossForgeOS: Onboarding Wizard"
       }
     ],
     "viewsContainers": {

@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import psutil
 
-from core.rune_bus import resolve_root_from_env
+from core.rune.rune_bus import resolve_root_from_env
 
 
 def snapshot_disk() -> Dict[str, Any]:

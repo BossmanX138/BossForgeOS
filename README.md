@@ -99,6 +99,8 @@ See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForge
 ## Documentation & Further Reading
 
 - [docs/architecture.md](docs/architecture.md): System architecture
+- [docs/bossgate_connector.md](docs/bossgate_connector.md): BossGate connector purpose and roadmap
+- [docs/bossgate_protocol.md](docs/bossgate_protocol.md): BossGate transport/protocol draft
 - [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md): GUI feature audit
 - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog

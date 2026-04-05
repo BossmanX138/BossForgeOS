@@ -2,6 +2,41 @@ import argparse
 import json
 import os
 import signal
+import sys
+import pathlib
+
+# === Path Resolver for Bundled/Source Modes ===
+def get_project_root():
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundled mode
+        return pathlib.Path(sys.executable).parent
+    return pathlib.Path(__file__).resolve().parent.parent
+
+PROJECT_ROOT = get_project_root()
+sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / 'core'))
+sys.path.insert(0, str(PROJECT_ROOT / 'ui'))
+sys.path.insert(0, str(PROJECT_ROOT / 'modules'))
+import sys
+import pathlib
+# Debug: print sys.path to diagnose import issues
+print('LAUNCHER sys.path:', sys.path)
+# Ensure project root is in sys.path for PyInstaller bundled execution
+if getattr(sys, 'frozen', False):
+    bundle_dir = pathlib.Path(sys.executable).parent.parent
+    sys.path.insert(0, str(bundle_dir))
+    sys.path.insert(0, str(bundle_dir / 'core'))
+    sys.path.insert(0, str(bundle_dir / 'ui'))
+    sys.path.insert(0, str(bundle_dir / 'modules'))
+import sys
+import pathlib
+# Ensure project root is in sys.path for PyInstaller bundled execution
+if getattr(sys, 'frozen', False):
+    bundle_dir = pathlib.Path(sys.executable).parent.parent
+    sys.path.insert(0, str(bundle_dir))
+    sys.path.insert(0, str(bundle_dir / 'core'))
+    sys.path.insert(0, str(bundle_dir / 'ui'))
+    sys.path.insert(0, str(bundle_dir / 'modules'))
 import threading
 import time
 import webbrowser
@@ -9,19 +44,21 @@ from pathlib import Path
 
 from werkzeug.serving import make_server
 
-from core.archivist_agent import ArchivistAgent
-from core.codemage_agent import CodeMageAgent
-from core.devlot_agent import DevlotAgent
-from core.hearth_tender_daemon import HearthTender
-from core.internal_vllm_service import InternalVLLMService
-from core.model_gateway_agent import ModelGatewayAgent
-from core.rune_bus import RuneBus, resolve_root_from_env
-from core.runeforge_agent import RuneforgeAgent
-from core.security_sentinel_agent import SecuritySentinelAgent
-from core.speaker_daemon import SpeakerDaemon
-from core.test_sentinel_agent import TestSentinelAgent
-from core.voice_daemon import VoiceDaemon
+from core.agents.archivist_agent import ArchivistAgent
+from core.agents.codemage_agent import CodeMageAgent
+from core.agents.devlot_agent import DevlotAgent
+from core.daemons.hearth_tender_daemon import HearthTender
+from core.model.internal_vllm_service import InternalVLLMService
+from core.connectors.huggingface_connector import HuggingFaceConnector
+from core.agents.model_gateway_agent import ModelGatewayAgent
+from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from core.agents.runeforge_agent import RuneforgeAgent
+from core.security.security_sentinel_agent import SecuritySentinelAgent
+from core.daemons.speaker_daemon import SpeakerDaemon
+from core.agents.test_sentinel_agent import TestSentinelAgent
+from core.daemons.voice_daemon import VoiceDaemon
 from ui.control_hall import app
+from core.daemons.voice_daemon import VoiceDaemon
 
 
 class ControlHallServer:

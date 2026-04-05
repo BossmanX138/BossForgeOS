@@ -70,7 +70,8 @@ class CodeMageAgentTests(unittest.TestCase):
             self.assertTrue(added.get("ok"))
 
             class _FakeResponse:
-                def __enter__(self):
+                def R:\Making_Runeforge
+                __enter__(self):
                     return self
 
                 def __exit__(self, exc_type, exc, tb):

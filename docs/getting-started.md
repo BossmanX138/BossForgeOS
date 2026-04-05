@@ -33,6 +33,25 @@ Archivist starts with the unified launcher and listens for archivist-targeted co
 
 ## Onboarding: Connectors & Voice Profiles
 
+## Agent Maker: Core vs Prime
+
+Agent Maker supports two classes of model profiles:
+
+1. `core`: service-first agents that do not require an embedded LLM for their main behavior.
+2. `prime`: model-backed agents intended for reasoning/generative workloads.
+
+Both classes can persist relationship memory in the model gateway memory database.
+
+### Agent Interaction Memory (SQLite)
+
+- **Database path:** `bus/state/agent_memory.sqlite3`
+- **Tracks:** interactions with users/employers/projects and collaborating agents.
+- **Use cases:** continuity, relationship context, historical recall for future runs.
+
+Example API recall:
+
+- `GET /api/model/agents/memory?name=<agent_name>&limit=25`
+
 ### GitHub Connector
 - **Location:** `core/github_connector.py`
 - **Purpose:** Secure integration with GitHub API for agent workflows (issue creation, PR listing, repo status).

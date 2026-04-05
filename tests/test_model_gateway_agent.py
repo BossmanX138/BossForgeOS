@@ -4,14 +4,16 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from core.model_gateway_agent import ModelGatewayAgent
+from core.agents.model_gateway_agent import ModelGatewayAgent
 
 
 class ModelGatewayAgentTests(unittest.TestCase):
     def setUp(self) -> None:
         self._old_root = os.environ.get("BOSSFORGE_ROOT")
+        self._old_presence_flag = os.environ.get("BOSSGATE_DISABLE_PRESENCE_BROADCAST")
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["BOSSFORGE_ROOT"] = self.tmp.name
+        os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = "1"
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -19,6 +21,10 @@ class ModelGatewayAgentTests(unittest.TestCase):
             os.environ.pop("BOSSFORGE_ROOT", None)
         else:
             os.environ["BOSSFORGE_ROOT"] = self._old_root
+        if self._old_presence_flag is None:
+            os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
+        else:
+            os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = self._old_presence_flag
 
     def test_default_endpoints_written(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -58,7 +64,7 @@ class ModelGatewayAgentTests(unittest.TestCase):
     def test_serve_and_stop_server_commands(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
 
-        with patch("core.model_gateway_agent.subprocess.Popen") as popen:
+        with patch("core.agents.model_gateway_agent.subprocess.Popen") as popen:
             proc = popen.return_value
             proc.pid = 4321
             proc.poll.return_value = None
@@ -169,6 +175,24 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(created["ok"])
         self.assertEqual(agent.agent_profiles["toolsmith"]["tools"], ["filesystem"])
 
+    def test_bossgate_enabled_profile_forces_llm(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="traveler",
+            endpoint="ollama",
+            system_prompt="Travel-capable agent.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+            agent_class="core",
+            has_llm=False,
+            bossgate_enabled=True,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["traveler"]
+        self.assertTrue(profile["bossgate_enabled"])
+        self.assertTrue(profile["has_llm"])
+
     def test_export_import_json_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.set_mcp_server(name="filesystem", command="fs-mcp")
@@ -212,6 +236,117 @@ class ModelGatewayAgentTests(unittest.TestCase):
         imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
         self.assertTrue(imported["ok"])
         self.assertIn("scribe", imported_agent.agent_profiles)
+
+    def test_discover_travel_targets_command(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch("core.agents.model_gateway_agent.discover_transfer_targets", return_value=[{"address": "10.0.0.5", "allowed_for_transfer": True}]):
+            result = agent.discover_travel_targets(timeout=3, assistance_only=True)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["timeout"], 3)
+        self.assertTrue(result["assistance_only"])
+        self.assertEqual(len(result["targets"]), 1)
+
+    def test_set_and_list_agent_assistance_requests(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.create_agent_profile(
+            name="helper",
+            endpoint="ollama",
+            system_prompt="Help other agents.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        set_result = agent.set_agent_assistance_request(name="helper", requested=True, reason="Need debugging backup")
+        self.assertTrue(set_result["ok"])
+        self.assertTrue(set_result["assistance_requested"])
+
+        listed = agent.list_assistance_requests()
+        self.assertTrue(listed["ok"])
+        self.assertIn("helper", listed["requests"])
+
+    def test_assistance_requests_persist_between_instances(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.create_agent_profile(
+            name="watcher",
+            endpoint="ollama",
+            system_prompt="Watch and assist.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        set_result = agent.set_agent_assistance_request(name="watcher", requested=True, reason="Escalation requested")
+        self.assertTrue(set_result["ok"])
+
+        fresh_agent = ModelGatewayAgent(interval_seconds=1)
+        listed = fresh_agent.list_assistance_requests()
+        self.assertTrue(listed["ok"])
+        self.assertIn("watcher", listed["requests"])
+        self.assertTrue(listed["requests"]["watcher"]["requested"])
+
+    def test_created_agent_records_owner_node(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="cartographer",
+            endpoint="ollama",
+            system_prompt="Track locations.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["cartographer"]
+        self.assertEqual(profile["created_by_node"], agent.node_id)
+        self.assertEqual(profile["current_node"], agent.node_id)
+
+    def test_owned_agent_locations_refresh_uses_discovery(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        agent.create_agent_profile(
+            name="pathfinder",
+            endpoint="ollama",
+            system_prompt="Navigate.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        discovered = [
+            {
+                "address": "10.1.2.3",
+                "node_id": "remote-node-1",
+                "agent_name": "pathfinder",
+                "agent_class": "prime",
+                "created_by_node": agent.node_id,
+                "current_node": "remote-node-1",
+                "target_type": "bossgate_connector",
+                "allowed_for_transfer": True,
+                "assistance_requested": True,
+                "assistance_reason": "Need help",
+            }
+        ]
+        with patch("core.agents.model_gateway_agent.discover_transfer_targets", return_value=discovered):
+            result = agent.list_owned_agent_locations(refresh=True)
+
+        self.assertTrue(result["ok"])
+        self.assertIn("pathfinder", result["agents"])
+        entry = result["agents"]["pathfinder"]
+        self.assertEqual(entry["node_id"], "remote-node-1")
+        self.assertEqual(entry["source"], "beacon")
+
+    def test_validate_transfer_target_command(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        mock_result = {
+            "ok": False,
+            "allowed_for_transfer": False,
+            "target_type": "unknown",
+            "reason": "Destination rejected",
+            "base_url": "http://example.com",
+            "endpoints": [],
+            "metadata": {},
+        }
+        with patch("core.agents.model_gateway_agent.scan_rest_endpoints", return_value=mock_result):
+            result = agent.validate_transfer_target("example.com")
+        self.assertFalse(result["ok"])
+        self.assertFalse(result["allowed_for_transfer"])
+        self.assertEqual(result["destination"], "example.com")
 
 
 if __name__ == "__main__":

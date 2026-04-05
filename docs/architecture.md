@@ -1,56 +1,57 @@
-# BossForgeOS v1 Architecture
+# BossForgeOS Architecture
 
 ## Overview
 
-BossForgeOS v1 implements a local operating layer with three core planes:
+BossForgeOS is a modular, local-first orchestration layer with:
 
-1. Command plane: writes command runes into the bus.
-2. Event plane: records system and agent events.
-3. State plane: keeps rolling snapshots for daemon and services.
+1. Command plane: writes command runes into the bus
+2. Event plane: records system and agent events
+3. State plane: rolling snapshots for daemons and services
+4. SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics
+5. Control Hall GUI: web dashboard for agent status, commands, events, sound schemes, onboarding, scheduling, CI/CD, collaboration, analytics
+6. VS Code extension: onboarding, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
 
 ## Rune Bus
 
-Root location defaults to %USERPROFILE%\\BossCrafts and contains:
+Root: %USERPROFILE%\\BossCrafts
+- bus/events: event JSON files
+- bus/commands: command JSON files
+- bus/state: service state files
 
-- bus/events: event JSON files.
-- bus/commands: command JSON files.
-- bus/state: service state files.
-
-This is a durable, inspectable IPC model that does not require sockets or brokers.
+Durable, inspectable IPC model (no sockets/brokers required)
 
 ## Components
 
-- core/rune_bus.py
-  - Emits commands and events.
-  - Writes state snapshots.
-  - Polls unread commands.
-
-- core/hearth_tender_daemon.py
-  - Polls command runes for hearth/hearth_tender targets.
-  - Emits result events.
-  - Writes periodic state snapshots.
-  - Produces disk threshold warnings.
-
-- core/bforge.py
-  - status: show recent events.
-  - tail: print latest event stream.
-  - agent: enqueue agent command runes.
-  - os snapshot: read environment telemetry.
-  - os daemon: enqueue daemon actions.
-
-- modules/os_snapshot.py
-  - Captures disk usage.
-  - Attempts Docker usage snapshot when available.
-  - Captures WSL VHD location and size when present.
-
-- ui/control_hall.py
-  - GET / for summary payload.
-  - GET /events for recent events.
-  - POST /command for ad hoc command emission.
-  - GET /health for liveness.
+- core/rune_bus.py: emits commands/events, writes state snapshots, polls commands
+- core/hearth_tender_daemon.py: polls commands, emits events, writes snapshots, disk threshold warnings
+- core/bforge.py: CLI (status, tail, agent, os snapshot, daemon, shell, ritual, plugin)
+- core/connectors/bossgate_connector.py: BossGate prototype for secure transport discovery and endpoint scanning
+- core/state/agent_memory_store.py: SQLite-backed interaction memory for agents (users, employers, projects, counterpart agents)
+- modules/os_snapshot.py: disk usage, Docker/WSL VHD snapshot
+- core/soundstage/BossForgeOS_SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics, HTTP API
+- ui/control_hall.py: Flask server, web dashboard (agent status, commands, events, sound schemes, onboarding, scheduling, CI/CD, collaboration, analytics)
+- extension/: VS Code extension (onboarding, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard)
 
 ## Safety Notes
 
-- Docker actions are no-op when Docker is unavailable.
-- WSL compaction is intentionally manual-first to avoid unsafe privileged operations.
-- Command handling is target-filtered to avoid accidental cross-agent execution.
+- Docker actions are no-op if unavailable
+- WSL compaction is manual-first for safety
+- Command handling is target-filtered to avoid cross-agent execution
+
+## Agent Classes and Memory
+
+1. Core agents are service-oriented and do not require an embedded LLM to provide deterministic capabilities.
+2. Prime agents are model-backed and can run reasoning/generative workloads.
+3. Both classes can persist memory of interactions (projects, employers/users, and collaborating agents) via `agent_memory.sqlite3`.
+4. Agent memory is designed to support continuity, relationship context, and long-term operational recall.
+
+## Cross-References
+
+- [README.md](../README.md): Project overview
+- [docs/bossgate_connector.md](bossgate_connector.md): BossGate connector spec
+- [docs/bossgate_protocol.md](bossgate_protocol.md): BossGate protocol draft
+- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](../core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
+- [docs/todos.md](todos.md): Actionable todos
+- [docs/CHANGELOG.md](CHANGELOG.md): Changelog
+- [docs/decisions.md](decisions.md): Decision log

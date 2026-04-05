@@ -1,16 +1,27 @@
+
 import atexit
 import json
 import os
 import subprocess
 import sys
+
 from datetime import datetime, timezone
 from pathlib import Path
 
+# === Path Resolver for Bundled/Source Modes ===
+def get_project_root():
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundled mode
+        return Path(sys.executable).parent
+    return Path(__file__).resolve().parent.parent
+
+PROJECT_ROOT = get_project_root()
+
 from flask import Flask, jsonify, render_template_string, request, send_file
 
-from core.model_gateway_agent import ModelGatewayAgent
-from core.rune_bus import RuneBus, resolve_root_from_env
-from core.security_sentinel_agent import SecuritySentinelAgent
+
+from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from core.security.security_sentinel_agent import SecuritySentinelAgent
 from modules.os_snapshot import snapshot_all
 
 
@@ -53,9 +64,6 @@ PAGE = """
         h1 { margin:0 0 6px; color:var(--accent); font-size:22px; }
         h2 { margin:0 0 10px; color:var(--accent); font-size:16px; }
         .muted { color:var(--muted); font-size:12px; }
-            soundEvents = data.events || [];
-            soundScheme = data.scheme || {};
-            renderSoundEvents();
         input, select { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; }
         textarea { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; min-height:78px; width:100%; }
         pre { margin:0; max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px; }
@@ -67,6 +75,112 @@ PAGE = """
         .view-panel { display:none; }
         .view-panel.active { display:block; }
         .pin-note { color: var(--muted); font-size: 12px; }
+        .busy-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #0d1621;
+            color: var(--muted);
+            font-size: 12px;
+            opacity: 0;
+            transform: translateY(-2px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+        }
+        .busy-indicator.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(232, 241, 255, 0.25);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .discovery-controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+        .map-shell {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background:
+                radial-gradient(circle at 20% 15%, rgba(87, 209, 131, 0.12), transparent 35%),
+                radial-gradient(circle at 80% 85%, rgba(242, 201, 107, 0.14), transparent 40%),
+                linear-gradient(180deg, #0f1a28, #0b1420);
+            min-height: 330px;
+            overflow: hidden;
+        }
+        .map-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(to right, rgba(53, 81, 111, 0.35) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(53, 81, 111, 0.35) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+        .map-watermark {
+            position: absolute;
+            right: 12px;
+            bottom: 8px;
+            font-size: 11px;
+            color: rgba(157, 177, 201, 0.65);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .map-pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50% 50% 50% 0;
+            transform-origin: 40% 75%;
+            transform: translate(-50%, -100%) rotate(-45deg);
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .map-pin::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.55);
+            left: 3px;
+            top: 3px;
+        }
+        .map-pin:hover,
+        .map-pin.active {
+            box-shadow: 0 0 0 2px rgba(242, 201, 107, 0.5), 0 0 16px rgba(242, 201, 107, 0.25);
+            transform: translate(-50%, -100%) rotate(-45deg) scale(1.1);
+        }
+        .map-pin.assist { background: #f17171; }
+        .map-pin.available { background: #57d183; }
+        .map-pin.remote { background: #6bb7f2; }
+        .discovery-loadout {
+            margin-top: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            background: #0d1621;
+            min-height: 120px;
+        }
+        .discovery-legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:12px; color:var(--muted); }
+        .legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+        .legend-dot.assist { background:#f17171; }
+        .legend-dot.available { background:#57d183; }
+        .legend-dot.remote { background:#6bb7f2; }
     </style>
 </head>
 <body>
@@ -88,10 +202,13 @@ PAGE = """
             <div class="group-label">Assistants</div>
             <button class="nav-btn" data-view="view_chat" onclick="switchView('view_chat')">Model Chat</button>
             <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">Agent Maker</button>
+            <button class="nav-btn" data-view="view_discovery" onclick="switchView('view_discovery')">Discovery Map</button>
             <button class="nav-btn" data-view="view_security" onclick="switchView('view_security')">Security</button>
             <button class="nav-btn" data-view="view_sounds" onclick="switchView('view_sounds')" style="color:#39ff14; font-weight:bold;">Sounds</button>
             <div class="group-label">Scheduler</div>
             <button class="nav-btn" data-view="view_scheduler" onclick="switchView('view_scheduler')">Scheduler</button>
+            <div class="group-label">Diagnostics</div>
+            <button class="nav-btn" data-view="view_diagnostics" onclick="switchView('view_diagnostics')" style="color:#f17171; font-weight:bold;">Diagnostics</button>
         </aside>
 
         <main class="wrap">
@@ -104,6 +221,10 @@ PAGE = """
                     <span id="pin_note" class="pin-note">No desktop pin active</span>
                 </div>
                 <div id="toast" class="muted" style="margin-top:8px;"></div>
+                <div id="busy_indicator" class="busy-indicator" aria-live="polite">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span id="busy_text">Loading...</span>
+                </div>
             </section>
 
             <section id="view_status" class="card view-panel"><h2>Agent Status</h2><div id="agents" class="muted">Loading...</div></section>
@@ -133,12 +254,45 @@ PAGE = """
             <section id="view_seal" class="card view-panel"><h2>Seal Queue</h2><pre id="seal">Loading...</pre></section>
             <section id="view_events" class="card view-panel"><h2>Recent Events</h2><pre id="events">Loading...</pre></section>
 
+            <section id="view_discovery" class="card view-panel">
+                <h2>Discovery Map</h2>
+                <div class="muted">Network map-style targeting with pin loadouts for discovered agents and nodes.</div>
+                <div class="discovery-controls">
+                    <label class="muted"><input type="checkbox" id="discovery_assistance_only" /> Assistance only</label>
+                    <button onclick="refreshDiscoveryMap()">Refresh Discovery</button>
+                    <button onclick="refreshOwnedLocations()">Refresh My Agent Locations</button>
+                    <span id="discovery_summary" class="muted"></span>
+                </div>
+                <div id="discovery_map" class="map-shell">
+                    <div class="map-grid"></div>
+                    <div class="map-watermark">BossGate Tactical Grid</div>
+                </div>
+                <div class="discovery-legend">
+                    <span><span class="legend-dot assist"></span>Assistance Requested</span>
+                    <span><span class="legend-dot available"></span>Travel-Eligible</span>
+                    <span><span class="legend-dot remote"></span>Remote or Restricted</span>
+                </div>
+                <div id="discovery_loadout" class="discovery-loadout muted">Select a pin to inspect its loadout.</div>
+                <pre id="discovery_raw">No discovery data loaded.</pre>
+            </section>
+
             <section id="view_chat" class="card view-panel">
                 <h2>Model Chat</h2>
                 <div class="row"><select id="chat_endpoint"></select><input id="chat_system" value="You are BossForgeOS assistant." placeholder="system prompt" /></div>
                 <pre id="chat_log">No messages yet.</pre>
                 <textarea id="chat_prompt" placeholder="Message model endpoint..."></textarea>
                 <div class="row"><button onclick="sendChat()">Send</button></div>
+            <section id="view_diagnostics" class="card view-panel">
+                <h2 style="color:#f17171;">Diagnostics</h2>
+                <div class="muted">Agent health, recent errors, and TODOs across the system.</div>
+                <pre id="diagnostics_output">Open this panel to load diagnostics.</pre>
+                <div class="row"><button onclick="refreshDiagnostics()">Refresh Diagnostics</button></div>
+            </section>
+
+            <section id="view_sounds" class="card view-panel">
+                <h2 style="color:#39ff14;">Sounds</h2>
+                <div class="muted">Sound scheme and soundstage bundle tools.</div>
+                <pre id="sound_events">Open this panel to load sound status.</pre>
             </section>
 
             <section id="view_maker" class="card view-panel">
@@ -157,6 +311,12 @@ PAGE = """
                     <select id="maker_override_endpoint"></select>
                     <button onclick="runAgentProfile()">Run</button>
                     <button onclick="deleteAgentProfile()">Delete</button>
+                </div>
+                <div class="row">
+                    <input id="maker_user" placeholder="user (optional)" />
+                    <input id="maker_employer" placeholder="employer (optional)" />
+                    <input id="maker_project" placeholder="project (optional)" />
+                    <input id="maker_counterpart" placeholder="counterpart agent (optional)" />
                 </div>
                 <pre id="maker_result">No agent operation yet.</pre>
             </section>
@@ -208,8 +368,258 @@ PAGE = """
         let currentView = 'view_status';
         let chatHistory = [];
         let pinnedOverlayViewId = '';
+        let soundEvents = [];
+        let soundScheme = {};
+        let pendingLoads = 0;
+        let discoveryTargets = [];
+        let discoveryLocations = {};
+        let activeDiscoveryKey = '';
+
+        function beginBusy(message) {
+            pendingLoads += 1;
+            const root = document.getElementById('busy_indicator');
+            const text = document.getElementById('busy_text');
+            if (!root || !text) return;
+            if (message) text.textContent = message;
+            root.classList.add('active');
+        }
+
+        function endBusy() {
+            pendingLoads = Math.max(0, pendingLoads - 1);
+            const root = document.getElementById('busy_indicator');
+            const text = document.getElementById('busy_text');
+            if (!root || !text) return;
+            if (pendingLoads === 0) {
+                root.classList.remove('active');
+                text.textContent = 'Loading...';
+            }
+        }
+
+        async function refreshDiagnostics() {
+            const el = document.getElementById('diagnostics_output');
+            if (!el) return;
+            el.textContent = 'Loading...';
+
+            const statusData = await fetchJsonWithTimeout('/api/status');
+            const eventsData = await fetchJsonWithTimeout('/api/events?limit=20');
+            const lines = [];
+
+            const agentState = (statusData && statusData.agent_state && typeof statusData.agent_state === 'object')
+                ? statusData.agent_state
+                : {};
+            const names = Object.keys(agentState);
+            lines.push('Agent Health:');
+            if (names.length) {
+                for (const name of names) {
+                    const info = agentState[name] || {};
+                    lines.push('- ' + name + ': ' + (info.health || 'unknown') + ' (last seen: ' + (info.last_seen || 'never') + ')');
+                }
+            } else {
+                lines.push('- No agent health data available.');
+            }
+
+            lines.push('');
+            lines.push('Recent Events:');
+            const events = (eventsData && Array.isArray(eventsData.items)) ? eventsData.items : [];
+            if (events.length) {
+                for (const item of events.slice(0, 10)) {
+                    const stamp = item && item.timestamp ? String(item.timestamp) : 'unknown-time';
+                    const evt = item && (item.event || item.type) ? String(item.event || item.type) : 'event';
+                    lines.push('- ' + stamp + ' :: ' + evt);
+                }
+            } else {
+                lines.push('- No events available.');
+            }
+
+            el.textContent = lines.join('\n');
+        }
+
+        function htmlEscape(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function stableHash(input) {
+            const text = String(input || '');
+            let hash = 2166136261;
+            for (let i = 0; i < text.length; i += 1) {
+                hash ^= text.charCodeAt(i);
+                hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+            }
+            return Math.abs(hash >>> 0);
+        }
+
+        function targetKey(target) {
+            const node = (target.node_id || target.current_node || target.address || 'node').trim();
+            const agent = (target.agent_name || '').trim();
+            return node + '::' + agent;
+        }
+
+        function targetPinClass(target) {
+            if (target.assistance_requested) return 'assist';
+            if (target.allowed_for_transfer) return 'available';
+            return 'remote';
+        }
+
+        function renderDiscoveryLoadout(target) {
+            const root = document.getElementById('discovery_loadout');
+            if (!root) return;
+            if (!target) {
+                root.innerHTML = '<span class="muted">Select a pin to inspect its loadout.</span>';
+                return;
+            }
+            const lines = [
+                ['Agent', target.agent_name || '(node-level target)'],
+                ['Node', target.node_id || target.current_node || '(unknown)'],
+                ['Address', target.address || '(unknown)'],
+                ['Creator Node', target.created_by_node || '(unspecified)'],
+                ['Current Node', target.current_node || target.node_id || '(unspecified)'],
+                ['Target Type', target.target_type || '(unknown)'],
+                ['Agent Class', target.agent_class || '(unknown)'],
+                ['Travel Eligible', target.allowed_for_transfer ? 'yes' : 'no'],
+                ['Assistance Requested', target.assistance_requested ? 'yes' : 'no'],
+                ['Assistance Reason', target.assistance_reason || '(none)'],
+                ['Source', target.source || target.reason || '(discovery)'],
+            ];
+            root.innerHTML = lines.map((pair) => '<div><strong>' + htmlEscape(pair[0]) + ':</strong> ' + htmlEscape(pair[1]) + '</div>').join('');
+        }
+
+        function renderDiscoveryMapPins() {
+            const map = document.getElementById('discovery_map');
+            const summary = document.getElementById('discovery_summary');
+            if (!map || !summary) return;
+
+            map.querySelectorAll('.map-pin').forEach((el) => el.remove());
+
+            const all = Array.isArray(discoveryTargets) ? discoveryTargets : [];
+            summary.textContent = all.length ? (all.length + ' target(s) mapped') : 'No targets discovered yet';
+
+            if (!all.length) {
+                renderDiscoveryLoadout(null);
+                return;
+            }
+
+            all.forEach((target, idx) => {
+                const key = targetKey(target);
+                const seed = stableHash(key + ':' + idx);
+                const x = 8 + (seed % 84);
+                const y = 16 + (Math.floor(seed / 101) % 74);
+
+                const pin = document.createElement('button');
+                pin.className = 'map-pin ' + targetPinClass(target);
+                if (activeDiscoveryKey === key) pin.classList.add('active');
+                pin.style.left = x + '%';
+                pin.style.top = y + '%';
+                pin.title = (target.agent_name || target.node_id || target.address || 'target') + ' [' + (target.target_type || 'unknown') + ']';
+                pin.setAttribute('aria-label', pin.title);
+                pin.onclick = () => {
+                    activeDiscoveryKey = key;
+                    renderDiscoveryMapPins();
+                    renderDiscoveryLoadout(target);
+                };
+                map.appendChild(pin);
+            });
+
+            const selected = all.find((t) => targetKey(t) === activeDiscoveryKey) || all[0];
+            activeDiscoveryKey = targetKey(selected);
+            renderDiscoveryLoadout(selected);
+            map.querySelectorAll('.map-pin').forEach((el) => {
+                if (el.title.startsWith((selected.agent_name || selected.node_id || selected.address || ''))) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        function mergeDiscoveryData(targets, locations) {
+            const merged = [];
+            const seen = new Set();
+            for (const item of (Array.isArray(targets) ? targets : [])) {
+                const key = targetKey(item);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                merged.push(item);
+            }
+            if (locations && typeof locations === 'object') {
+                for (const [name, loc] of Object.entries(locations)) {
+                    if (!loc || typeof loc !== 'object') continue;
+                    const item = {
+                        agent_name: name,
+                        address: loc.address || '',
+                        node_id: loc.node_id || loc.current_node || '',
+                        current_node: loc.current_node || loc.node_id || '',
+                        created_by_node: loc.created_by_node || '',
+                        target_type: loc.target_type || 'bossforgeos',
+                        agent_class: loc.agent_class || 'prime',
+                        assistance_requested: !!loc.assistance_requested,
+                        assistance_reason: loc.assistance_reason || '',
+                        allowed_for_transfer: loc.target_type ? true : !!loc.online,
+                        source: loc.source || 'owned-location-ledger',
+                    };
+                    const key = targetKey(item);
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    merged.push(item);
+                }
+            }
+            return merged;
+        }
+
+        async function refreshOwnedLocations() {
+            const data = await fetchJsonWithTimeout('/api/model/agents/locations?refresh=true', 5000);
+            discoveryLocations = (data && data.ok && data.agents && typeof data.agents === 'object') ? data.agents : {};
+            discoveryTargets = mergeDiscoveryData(discoveryTargets, discoveryLocations);
+            const raw = document.getElementById('discovery_raw');
+            if (raw) raw.textContent = JSON.stringify({ targets: discoveryTargets, locations: discoveryLocations }, null, 2);
+            renderDiscoveryMapPins();
+        }
+
+        async function refreshDiscoveryMap() {
+            const assistanceOnly = !!document.getElementById('discovery_assistance_only')?.checked;
+            const data = await fetchJsonWithTimeout('/api/model/travel/discover?timeout=5&assistance_only=' + (assistanceOnly ? 'true' : 'false'), 5000);
+            const discovered = (data && data.ok && Array.isArray(data.targets)) ? data.targets : [];
+            const locationsData = await fetchJsonWithTimeout('/api/model/agents/locations?refresh=true', 5000);
+            discoveryLocations = (locationsData && locationsData.ok && locationsData.agents && typeof locationsData.agents === 'object') ? locationsData.agents : {};
+            discoveryTargets = mergeDiscoveryData(discovered, discoveryLocations);
+
+            const raw = document.getElementById('discovery_raw');
+            if (raw) {
+                raw.textContent = JSON.stringify(
+                    {
+                        discover_response: data,
+                        owned_locations: discoveryLocations,
+                        merged_targets: discoveryTargets,
+                    },
+                    null,
+                    2
+                );
+            }
+            renderDiscoveryMapPins();
+        }
+
+        function renderSoundEvents() {
+            const root = document.getElementById('sound_events');
+            if (!root) return;
+            root.textContent = JSON.stringify({ events: soundEvents, scheme: soundScheme }, null, 2);
+        }
+
+        async function fetchSoundEvents() {
+            const data = await fetchJsonWithTimeout('/api/soundstage/list_schemes');
+            if (data && data.ok) {
+                soundEvents = [];
+                soundScheme = { available_schemes: data.schemes || [] };
+                setSoundSchemeStatus('Sound schemes loaded.');
+            } else {
+                setSoundSchemeStatus('Unable to load sound schemes.');
+            }
+            renderSoundEvents();
+        }
 
         function switchView(viewId) {
+            beginBusy('Loading tab...');
             currentView = viewId;
             document.querySelectorAll('.view-panel').forEach((el) => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach((el) => el.classList.remove('active'));
@@ -218,12 +628,16 @@ PAGE = """
             const btn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
             if (btn) btn.classList.add('active');
             syncPinControls();
+            if (viewId === 'view_diagnostics') refreshDiagnostics();
             if (viewId === 'view_sounds') fetchSoundEvents();
+            if (viewId === 'view_discovery') refreshDiscoveryMap();
+            setTimeout(endBusy, 180);
         }
 
         async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
             const ctl = new AbortController();
             const timer = setTimeout(() => ctl.abort(), timeoutMs);
+            beginBusy('Fetching data...');
             try {
                 const res = await fetch(url, { signal: ctl.signal });
                 if (!res.ok) return { ok: false, error: 'HTTP ' + res.status };
@@ -232,6 +646,7 @@ PAGE = """
                 return { ok: false, error: String(err) };
             } finally {
                 clearTimeout(timer);
+                endBusy();
             }
         }
 
@@ -399,6 +814,12 @@ PAGE = """
                 name: (document.getElementById('maker_agent_select').value || '').trim(),
                 task: (document.getElementById('maker_task').value || '').trim(),
                 endpoint: (document.getElementById('maker_override_endpoint').value || '').trim(),
+                memory_context: {
+                    user: (document.getElementById('maker_user').value || '').trim(),
+                    employer: (document.getElementById('maker_employer').value || '').trim(),
+                    project: (document.getElementById('maker_project').value || '').trim(),
+                    counterpart_agent: (document.getElementById('maker_counterpart').value || '').trim(),
+                },
             };
             if (!payload.name || !payload.task) {
                 alert('name and task are required');
@@ -521,7 +942,7 @@ PAGE = """
             if (!file) return;
             const formData = new FormData();
             formData.append('bundle', file);
-            formData.append('scheme_name', file.name.replace(/\.B4Gsoundstage$/i, ''));
+            formData.append('scheme_name', file.name.replace(/\\.B4Gsoundstage$/i, ''));
             setSoundSchemeStatus('Importing bundle...');
             try {
                 const res = await fetch('/api/soundstage/import_bundle', { method: 'POST', body: formData });
@@ -551,6 +972,33 @@ PAGE = """
         function setSoundSchemeStatus(msg) {
             const el = document.getElementById('sound_scheme_status');
             if (el) el.textContent = msg;
+        }
+
+        function saveSoundScheme() {
+            setSoundSchemeStatus('Save Scheme is not yet wired in this build.');
+        }
+
+        function loadSoundScheme() {
+            document.getElementById('sound_scheme_file').click();
+        }
+
+        function createNewScheme() {
+            soundScheme = { name: 'new-scheme', created_at: new Date().toISOString() };
+            renderSoundEvents();
+            setSoundSchemeStatus('Created in-memory scheme draft.');
+        }
+
+        async function handleSchemeFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                soundScheme = JSON.parse(text);
+                renderSoundEvents();
+                setSoundSchemeStatus('Loaded scheme from file: ' + file.name);
+            } catch (e) {
+                setSoundSchemeStatus('Failed to load scheme file: ' + e);
+            }
         }
 
         // Call on load
@@ -646,30 +1094,47 @@ def model_endpoints():
 
 @app.get("/api/model/agents")
 def model_agents():
-    gateway = ModelGatewayAgent(interval_seconds=5)
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
     return jsonify({"agents": gateway.list_agent_profiles()})
 
 
 @app.post("/api/model/agents/create")
 def model_agents_create():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     endpoint = str(payload.get("endpoint", "")).strip()
     system = str(payload.get("system", "You are a helpful specialist agent."))
     temperature = float(payload.get("temperature", 0.2))
     max_tokens = int(payload.get("max_tokens", 900))
+    agent_class = str(payload.get("agent_class", "prime")).strip().lower()
+    has_llm_raw = payload.get("has_llm")
+    has_llm = bool(has_llm_raw) if isinstance(has_llm_raw, bool) else None
+    bossgate_enabled_raw = payload.get("bossgate_enabled")
+    bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
 
-    gateway = ModelGatewayAgent(interval_seconds=5)
-    result = gateway.create_agent_profile(name, endpoint, system, temperature, max_tokens)
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.create_agent_profile(
+        name,
+        endpoint,
+        system,
+        temperature,
+        max_tokens,
+        agent_class=agent_class,
+        has_llm=has_llm,
+        bossgate_enabled=bossgate_enabled,
+    )
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/delete")
 def model_agents_delete():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5)
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
     result = gateway.delete_agent_profile(name)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
@@ -677,18 +1142,86 @@ def model_agents_delete():
 
 @app.post("/api/model/agents/run")
 def model_agents_run():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     task = str(payload.get("task", "")).strip()
     endpoint = str(payload.get("endpoint", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5)
-    result = gateway.run_agent_profile(name, task, endpoint)
+    memory_context = payload.get("memory_context") if isinstance(payload.get("memory_context"), dict) else {}
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.run_agent_profile(name, task, endpoint, memory_context=memory_context)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/agents/memory")
+def model_agents_memory():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    name = str(request.args.get("name", "")).strip()
+    limit = int(request.args.get("limit", "25"))
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.recall_agent_memory(name=name, limit=limit)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/travel/discover")
+def model_travel_discover():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    timeout = int(request.args.get("timeout", "5"))
+    assistance_only = str(request.args.get("assistance_only", "false")).strip().lower() in {"1", "true", "yes", "on"}
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/model/travel/validate")
+def model_travel_validate():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    payload = request.get_json(force=True, silent=True) or {}
+    destination = str(payload.get("destination", "")).strip()
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.validate_transfer_target(destination=destination)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/model/agents/assistance")
+def model_agents_assistance_set():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    payload = request.get_json(force=True, silent=True) or {}
+    name = str(payload.get("name", "")).strip()
+    requested = bool(payload.get("requested", True))
+    reason = str(payload.get("reason", "")).strip()
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.set_agent_assistance_request(name=name, requested=requested, reason=reason)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/agents/assistance")
+def model_agents_assistance_list():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.list_assistance_requests()
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/agents/locations")
+def model_agents_locations():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    result = gateway.list_owned_agent_locations(refresh=refresh)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/chat")
 def model_chat():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     endpoint = str(payload.get("endpoint", "")).strip()
     prompt = str(payload.get("prompt", "")).strip()
@@ -699,7 +1232,7 @@ def model_chat():
     if not endpoint or not prompt:
         return jsonify({"ok": False, "message": "endpoint and prompt are required"}), 400
 
-    gateway = ModelGatewayAgent(interval_seconds=5)
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
     result = gateway.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
     return jsonify(result)
 
@@ -1017,12 +1550,71 @@ def list_soundstage_schemes():
     return jsonify({"ok": True, "schemes": schemes})
 
 
+
 def main() -> None:
-    app.run(host="127.0.0.1", port=5005, debug=False)
+    # Use Flask-SocketIO for collaborative editing
+    socketio.run(app, host="0.0.0.0", port=5005, debug=True)
 
 
 if __name__ == "__main__":
     main()
+###############################
+# Collaborative Agent Editing #
+###############################
+
+try:
+    from flask_socketio import SocketIO, emit, join_room, leave_room
+    socketio = SocketIO(app, cors_allowed_origins="*")
+    # In-memory presence and edit state (not persistent)
+    agent_editors = {}  # {agent_name: set(user_ids)}
+    agent_locks = {}    # {agent_name: user_id}
+
+    @socketio.on('join_agent')
+    def handle_join_agent(data):
+        agent = str(data.get('agent', '')).strip().lower()
+        user = str(data.get('user', 'anon')).strip()
+        join_room(agent)
+        agent_editors.setdefault(agent, set()).add(user)
+        emit('presence', {'agent': agent, 'editors': list(agent_editors[agent]), 'lock': agent_locks.get(agent)}, room=agent)
+
+    @socketio.on('leave_agent')
+    def handle_leave_agent(data):
+        agent = str(data.get('agent', '')).strip().lower()
+        user = str(data.get('user', 'anon')).strip()
+        leave_room(agent)
+        if agent in agent_editors:
+            agent_editors[agent].discard(user)
+            if not agent_editors[agent]:
+                agent_editors.pop(agent)
+        if agent_locks.get(agent) == user:
+            agent_locks.pop(agent)
+        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+
+    @socketio.on('lock_agent')
+    def handle_lock_agent(data):
+        agent = str(data.get('agent', '')).strip().lower()
+        user = str(data.get('user', 'anon')).strip()
+        if agent_locks.get(agent) in (None, user):
+            agent_locks[agent] = user
+        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+
+    @socketio.on('unlock_agent')
+    def handle_unlock_agent(data):
+        agent = str(data.get('agent', '')).strip().lower()
+        user = str(data.get('user', 'anon')).strip()
+        if agent_locks.get(agent) == user:
+            agent_locks.pop(agent)
+        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+
+    @socketio.on('edit_agent')
+    def handle_edit_agent(data):
+        agent = str(data.get('agent', '')).strip().lower()
+        user = str(data.get('user', 'anon')).strip()
+        content = data.get('content', {})
+        # Broadcast edit to all in room except sender
+        emit('agent_edit', {'agent': agent, 'user': user, 'content': content}, room=agent, include_self=False)
+except ImportError:
+    socketio = None
 
 # === Scheduler Endpoint Stub ===
 @app.route('/api/scheduler', methods=['GET', 'POST'])
