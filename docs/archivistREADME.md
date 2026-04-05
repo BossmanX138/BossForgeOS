@@ -1,6 +1,6 @@
 # Archivist Stewardship
 
-This file records Archivist maintenance operations and outputs.
+The Archivist agent maintains, audits, and stewards all project documentation, feature logs, and actionable todos. It ensures BossForgeOS documentation reflects the current system state, including SoundStage, GUI, VS Code extension, and all advanced features.
 
 ## Table of Contents
 
@@ -9,11 +9,13 @@ This file records Archivist maintenance operations and outputs.
 - [Automated README Stewardship](#automated-readme-stewardship)
 - [Policy Configuration](#policy-configuration)
 - [Limitations](#limitations)
+- [Cross-References](#cross-references)
 
 ## Scope
 
-- Maintained by the Archivist agent.
-- Tracks stewardship-oriented maintenance notes and outputs.
+- Maintained by the Archivist agent
+- Tracks stewardship-oriented maintenance notes, outputs, and documentation updates
+- Integrates with SoundStage, Control Hall GUI, and VS Code extension for full coverage
 
 ## Operator Quick Guide
 
@@ -37,10 +39,10 @@ Expected outputs from each summon include updates to:
 
 ## Automated README Stewardship
 
-- Archivist now auto-stewards project-owned README markdown files.
-- It refreshes a clickable `Table of Contents` based on `##` section headings.
-- It is idempotent: existing generated TOC blocks are replaced cleanly.
-- Third-party/runtime trees are skipped by default.
+- Archivist auto-stewards all project-owned README markdown files
+- Refreshes clickable Table of Contents based on `##` section headings
+- Idempotent: existing TOC blocks are replaced cleanly
+- Third-party/runtime trees are skipped by default
 
 ## Policy Configuration
 
@@ -68,6 +70,16 @@ Example:
 
 ## Limitations
 
-- TODO detection is still pattern-based and does not perform deep semantic intent analysis.
-- README stewardship currently focuses on structure/navigation, not full prose rewriting.
-- Seal operations still require operator approval by design.
+- TODO detection is pattern-based (not deep semantic intent)
+- README stewardship focuses on structure/navigation, not full prose rewriting
+- Seal operations require operator approval by design
+
+## Cross-References
+
+- [README.md](../README.md): Project overview
+- [docs/architecture.md](architecture.md): System architecture
+- [core/soundstage/BossForgeOS_SoundStage/README.md](../core/soundstage/BossForgeOS_SoundStage/README.md): SoundStage
+- [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
+- [docs/todos.md](todos.md): Actionable todos
+- [docs/CHANGELOG.md](CHANGELOG.md): Changelog
+- [docs/decisions.md](decisions.md): Decision log

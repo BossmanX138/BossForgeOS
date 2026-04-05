@@ -1,13 +1,18 @@
 # BossForgeOS
 
-BossForgeOS is a local command-and-control layer for orchestrating agents through a Rune Bus, daemon services, and a Control Hall interface.
+BossForgeOS is a modular, local-first command-and-control operating layer for orchestrating agents, sound events, and automation through a unified Rune Bus, daemon services, Control Hall GUI, and deep VS Code extension integration.
 
 ## Table of Contents
 
-- [Implemented v1 Foundation](#implemented-v1-foundation)
+- [Features Overview](#features-overview)
 - [Project Layout](#project-layout)
+- [SoundStage Engine](#soundstage-engine)
+- [Control Hall GUI](#control-hall-gui)
+- [VS Code Extension](#vs-code-extension)
 - [Unified Launcher](#unified-launcher)
-- [Global bforge CLI](#global-bforge-cli)
+- [CLI & Plugin System](#cli-plugin-system)
+- [Onboarding, Scheduler, CI/CD, Collaboration](#onboarding-scheduler-cicd-collaboration)
+- [Documentation & Further Reading](#documentation-further-reading)
 - [Test Sentinel Agent](#test-sentinel-agent)
 - [Internal vLLM (Runeforge Core)](#internal-vllm-runeforge-core)
 - [Archivist Agent](#archivist-agent)
@@ -23,61 +28,87 @@ BossForgeOS is a local command-and-control layer for orchestrating agents throug
 - [Bus Root](#bus-root)
 - [Next Steps](#next-steps)
 
-## Implemented v1 Foundation
+## Features Overview
 
-- File-based Rune Bus for commands, events, and state snapshots.
-- Hearth-Tender daemon loop with command polling and health events.
-- BossForge CLI (`bforge`) with status, tail, shell mode, ritual record/play/list, agent command dispatch, and OS daemon commands.
-- Control Hall dashboard and API using Flask.
-- OS snapshot module for disk, Docker, and WSL VHD checks.
-- Integrated Archivist agent service for log archiving, event summaries, and state snapshots.
+- File-based Rune Bus for commands, events, and state snapshots
+- Modular daemons: Hearth-Tender, SoundStage, Voice, Security, Archivist
+- BossForge CLI (`bforge`) with status, tail, shell, agent dispatch, ritual record/play/list, plugin support
+- Control Hall dashboard (Flask/HTML/JS) with panels for agent status, commands, events, sound scheme management, onboarding, scheduling, CI/CD, collaboration, analytics
+- SoundStage deterministic sound event engine: per-app/event mapping, system sound replacement, rollback, diagnostics, bundle import/export
+- Deep VS Code extension: onboarding wizard, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
+- Integrated onboarding, scheduler, CI/CD, and real-time collaboration features
 
 ## Project Layout
 
+- `core/`: bus, daemons, CLI, connectors (GitHub, Hugging Face, SoundStage, Voice)
+- `modules/`: system modules and snapshots
+- `ui/`: Control Hall server (Flask/HTML/JS)
+- `docs/`: architecture, runbook, feature audits, todos, changelogs
+- `extension/`: VS Code extension (TypeScript/JS)
+- `tests/`: unit and integration tests
+- `voices/`: canonical voice-layer profile schema and agent profiles
 
-- `core/`: bus, daemon, CLI, connectors (GitHub, Hugging Face).
-- `modules/`: system modules and snapshots.
-- `ui/`: Control Hall server.
-- `docs/`: architecture and runbook.
-- `tests/`: unit tests.
-- `voices/`: canonical voice-layer profile schema and agent profiles.
+## SoundStage Engine
 
-1. Install dependencies.
-   - `pip install -r requirements.txt`
-2. Run the daemon.
-   - `python -m core.hearth_tender_daemon`
-3. Run the Control Hall.
-   - `python -m ui.control_hall`
-4. Use the CLI.
-   - `python -m core.bforge status`
-   - `python -m core.bforge os snapshot`
-   - `python -m core.bforge agent hearth light_prune`
-   - `python -m core.bforge shell`
-   - `python -m core.bforge ritual list`
-5. Open Control Hall dashboard.
-   - <http://127.0.0.1:5005>
+See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForgeOS_SoundStage/README.md) and [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
+
+- Deterministic Windows sound event engine (restores true "Open/Close Program" sounds)
+- Per-app/event mapping, system sound replacement, rollback, diagnostics
+- Pre-speaker interception, 10-band EQ, stereo-to-7.2 upmix, output switching
+- PowerShell registry manager for system event sounds with backup/rollback
+- HTTP API for integration and control
+
+## Control Hall GUI
+
+- Web-based dashboard (Flask/HTML/JS)
+- Panels for agent status, commands, events, sound scheme management, onboarding, scheduling, CI/CD, collaboration, analytics
+- Real-time event streaming, onboarding wizard, agent builder, import/export, collaborative editing, CLI integration, analytics dashboard
+- See [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md) for GUI feature coverage
+
+## VS Code Extension
+
+- Sidebar panel with onboarding wizard, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
+- REST API integration with Control Hall and SoundStage
+- Status bar, command palette, extension settings
+- See `extension/README.md` for usage
 
 ## Unified Launcher
 
-- Standard launch:
-  - `start_bossforge.cmd`
-- Internal vLLM launch (Windows runtime contract):
-  - `start_bossforge_internal_vllm.cmd`
-- Internal vLLM launch via WSL:
-  - `start_bossforge_internal_vllm_wsl.cmd`
-- Python entrypoint:
-  - `python -m launcher.bossforge_launcher`
-- Optional modes:
-  - `python -m launcher.bossforge_launcher --daemon-only`
-  - `python -m launcher.bossforge_launcher --hall-only`
+- Standard launch: `start_bossforge.cmd`
+- Internal vLLM launch: `start_bossforge_internal_vllm.cmd`
+- Internal vLLM launch via WSL: `start_bossforge_internal_vllm_wsl.cmd`
+- Python entrypoint: `python -m launcher.bossforge_launcher`
+- Optional: `--daemon-only`, `--hall-only`
 
-## Global bforge CLI
+## CLI & Plugin System
 
 - Install global shims:
   - `powershell -ExecutionPolicy Bypass -File .\install_bforge_cli.ps1`
   - `install_bforge_cli.cmd`
-- Verify:
-  - `bforge status`
+- Verify: `bforge status`
+- Drop-in CLI plugins: see [docs/plugins.md](docs/plugins.md)
+
+## Onboarding, Scheduler, CI/CD, Collaboration
+
+- Step-by-step onboarding wizard (GUI & CLI)
+- Integrated scheduler (APScheduler/Celery) with GUI/CLI task management
+- CI/CD integration: run tests/lint, view results in GUI
+- Real-time multi-user collaboration: agent editing, session management, permissions
+- See [docs/todos.md](docs/todos.md) and [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md) for actionable features and coverage
+
+## Documentation & Further Reading
+
+- [docs/architecture.md](docs/architecture.md): System architecture
+- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md): GUI feature audit
+- [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
+- [docs/CHANGELOG.md](docs/CHANGELOG.md): Changelog
+- [docs/decisions.md](docs/decisions.md): Decision log
+- [docs/archivistREADME.md](docs/archivistREADME.md): Archivist stewardship
+- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
+
+---
+For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `core/soundstage/BossForgeOS_SoundStage/` directories.
   - `bforge os snapshot`
 - Uninstall global shims:
   - `powershell -ExecutionPolicy Bypass -File .\uninstall_bforge_cli.ps1`

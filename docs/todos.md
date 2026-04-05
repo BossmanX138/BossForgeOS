@@ -44,71 +44,58 @@ Document CI/CD setup and usage
 
 7. Windows-Centric Features
 
-Audit all Windows-only features
-Add macOS/Linux equivalents or document alternatives
-Use cross-platform packaging tools (PyInstaller, etc.)
-Update docs for platform-specific steps
+# Open Todos
 
-8. No Real-Time Collaboration
+This section contains actionable refactoring and optimization todos based on the current BossForgeOS codebase, recent feature additions, and GUI audit. Completed items are marked as such; new actionable items are listed below.
 
-Research collaborative agent/command models (websockets, shared bus, etc.)
-Prototype multi-user Control Hall or CLI sessions
-Add user/session management and permissions
-Document collaboration features and limitations
+---
 
-9. Documentation Gaps
+## General Agent System Improvements (2026-04-04)
+- [ ] Centralize agent registration and discovery for better orchestration
+- [ ] Add a unified web UI for agent management, monitoring, and configuration
+- [ ] Implement semantic analysis and advanced diagnostics across all agents
+- [ ] Enhance error handling, logging, and user feedback for all integrations
 
+## 2026-04-04 Refactoring & Optimization Todos
 
-# 2026-03-30 Feature Audit: Actionable TODOs
+### Distributed/Cloud Orchestration (In Progress)
+- [ ] Finalize pluggable bus backend for remote/distributed operation (e.g., Redis, RabbitMQ, Azure Service Bus)
+- [ ] Complete agent registration/discovery for remote bus
+- [ ] Harden config for cloud endpoints and authentication
+- [ ] Document distributed/cloud deployment steps
 
-## Distributed/Cloud Orchestration (Partial)
-- Research and prototype a pluggable bus backend for remote/distributed operation (e.g., Redis, RabbitMQ, Azure Service Bus).
-- Implement agent registration/discovery for remote bus.
-- Add config options for cloud endpoints and authentication.
-- Document distributed/cloud deployment steps.
+### Code Modularity & Maintainability
+- [ ] Refactor core daemons and CLI for improved modularity and testability
+- [ ] Extract reusable components (event streaming, onboarding, scheduling) into shared modules
+- [ ] Audit and reduce code duplication across daemons, UI, and extension
 
-## Onboarding Automation (Partial)
-- Implement a CLI onboarding wizard for secrets/tokens and voice profiles.
-- Add validation and auto-detection for missing onboarding steps.
-- Integrate onboarding status into Control Hall UI.
-- Add onboarding flow documentation and screenshots.
+### Test Coverage & Automation
+- [ ] Expand unit and integration test coverage for SoundStage, Control Hall, and extension
+- [ ] Add automated regression tests for onboarding, scheduler, CI/CD, and collaboration features
+- [ ] Integrate test results into Control Hall analytics dashboard
 
-## Scheduler (Missing)
-- Evaluate and select a Python scheduler (APScheduler, Celery, etc.).
-- Integrate scheduler with bus and agent command system.
-- Add CLI and Control Hall UI for scheduling tasks/rituals.
-- Document scheduling features and usage.
+### Performance & Diagnostics
+- [ ] Profile and optimize event streaming and sound playback latency
+- [ ] Enhance diagnostics logging and error reporting (daemon, GUI, extension)
+- [ ] Add performance metrics to analytics dashboard
 
-## Error Handling (Partial)
-- Audit CLI and agent error handling for unhandled exceptions.
-- Add user-friendly error messages and recovery suggestions.
-- Log errors to bus/events and Control Hall UI.
-- Add automated diagnostics for common setup issues.
+### Documentation & Developer Experience
+- [ ] Ensure all new features are fully documented (SoundStage, onboarding, scheduler, CI/CD, collaboration)
+- [ ] Add developer onboarding guide and architecture diagrams
+- [ ] Cross-link all major docs for discoverability
 
-## TODO Noise Filtering (Partial)
-- Update Archivist/todo extraction to ignore .venv, site-packages, and external folders.
-- Add config for custom ignore patterns.
-- Document filtering behavior.
+---
 
-## CI/CD (Missing)
-- Add GitHub Actions or other CI templates to the repo.
-- Provide CLI for running tests/lint locally.
-- Integrate test results into Control Hall UI.
-- Document CI/CD setup and usage.
+## Completed Todos (2026-04-04)
+- [x] Onboarding wizard (GUI & CLI)
+- [x] Scheduler (GUI & CLI)
+- [x] CI/CD integration (GUI)
+- [x] Real-time collaboration (GUI & extension)
+- [x] Analytics dashboard (GUI & extension)
+- [x] Platform support (Windows/macOS/Linux)
+- [x] Automated diagnostics and error handling (GUI)
+- [x] Comprehensive help/documentation section (GUI)
 
-## Cross-Platform Support (Partial)
-- Audit all Windows-only features and document them.
-- Add macOS/Linux equivalents or document alternatives.
-- Use cross-platform packaging tools (PyInstaller, etc.).
-- Update docs for platform-specific steps.
+---
 
-## Real-Time Collaboration (Missing)
-- Research collaborative agent/command models (websockets, shared bus, etc.).
-- Prototype multi-user Control Hall or CLI sessions.
-- Add user/session management and permissions.
-- Document collaboration features and limitations.
-
-## Documentation Gaps (Partial)
-- Audit docs for missing/unclear features.
-- Add usage examples, screenshots, and onboarding guides.
-- Automate doc updates from code/comments where possible.
+For previous audits and backlog, see earlier sections below.
