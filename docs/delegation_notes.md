@@ -11770,3 +11770,105 @@
   context: prev='"command": "analyze_selection",' | next='}'
   next: Add or improve tests, then record updated test metrics
 
+## 2026-04-14 04:22:44
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:46 :: - `docs/`: architecture, runbook, feature audits, todos, changelogs
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:97 :: - See [docs/todos.md](docs/todos.md) and [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md) for actionable features and coverage
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:106 :: - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:172 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
+- [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+- [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:44 :: - On assignment to a project, automatically scans project files for TODOs and actionable items.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:45 :: - Prioritizes TODOs based on impact, urgency, and dependencies.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:46 :: - Attempts to complete TODOs autonomously, delegating to other agents when appropriate.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\architecture.md:55 :: - [docs/todos.md](todos.md): Actionable todos
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:3 :: The Archivist agent maintains, audits, and stewards all project documentation, feature logs, and actionable todos. It ensures BossForgeOS documentation reflects the current system state, including SoundStage, GUI, VS Code extension, and all
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:35 :: - `docs/todos.md`
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:55 :: - `todo_scan_suffixes`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:56 :: - `todo_ignore_dir_names`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:57 :: - `todo_ignore_file_names`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:59 :: - `todo_patterns`
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:65 :: "todo_patterns": ["TODO", "FIXME", "TBD", "ACTIONITEM"],
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:66 :: "todo_scan_suffixes": [".md", ".txt", ".py"],
+- [runeforge] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:67 :: "todo_ignore_dir_names": [".git", ".venv", ".models", ".runtime"]
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:73 :: - TODO detection is pattern-based (not deep semantic intent)
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:83 :: - [docs/todos.md](todos.md): Actionable todos
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\CHANGELOG.md:6 :: - Major documentation update: README, archivistREADME, architecture, GUI audit, todos, SoundStage docs
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:11 :: - todos_detected: 427
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:16 :: - todos_detected: 528
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:21 :: - todos_detected: 630
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:26 :: - todos_detected: 731
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:31 :: - todos_detected: 832
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:36 :: - todos_detected: 933
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:41 :: - todos_detected: 1034
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:46 :: - todos_detected: 1136
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:51 :: - todos_detected: 1237
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:56 :: - todos_detected: 1338
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:61 :: - todos_detected: 1439
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:66 :: - todos_detected: 1540
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:71 :: - todos_detected: 1641
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:76 :: - todos_detected: 1742
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:81 :: - todos_detected: 1843
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:86 :: - todos_detected: 1944
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:91 :: - todos_detected: 2045
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:96 :: - todos_detected: 2146
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:101 :: - todos_detected: 2247
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:106 :: - todos_detected: 2348
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:111 :: - todos_detected: 2449
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:116 :: - todos_detected: 2550
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:121 :: - todos_detected: 2651
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:126 :: - todos_detected: 2752
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:131 :: - todos_detected: 2853
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:136 :: - todos_detected: 2954
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:141 :: - todos_detected: 3055
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:146 :: - todos_detected: 3156
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:151 :: - todos_detected: 3257
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:156 :: - todos_detected: 3358
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:161 :: - todos_detected: 3461
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:166 :: - todos_detected: 3562
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:171 :: - todos_detected: 3663
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:176 :: - todos_detected: 3764
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:181 :: - todos_detected: 3865
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:186 :: - todos_detected: 3966
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:191 :: - todos_detected: 4067
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:196 :: - todos_detected: 4168
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:201 :: - todos_detected: 4269
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:206 :: - todos_detected: 4371
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:211 :: - todos_detected: 4472
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:216 :: - todos_detected: 4573
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:221 :: - todos_detected: 4674
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:226 :: - todos_detected: 4785
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:231 :: - todos_detected: 4886
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:236 :: - todos_detected: 4987
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:241 :: - todos_detected: 5088
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:246 :: - todos_detected: 5430
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:251 :: - todos_detected: 5531
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:256 :: - todos_detected: 5632
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:261 :: - todos_detected: 5733
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:266 :: - todos_detected: 5834
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:271 :: - todos_detected: 5935
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:276 :: - todos_detected: 6036
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:281 :: - todos_detected: 18005
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:286 :: - todos_detected: 5818
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:291 :: - todos_detected: 5721
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:296 :: - todos_detected: 105
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:301 :: - todos_detected: 47
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:306 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:313 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:320 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:327 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:334 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:341 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:349 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:357 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:365 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:373 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:381 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:389 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:397 :: - todos_detected: 0
+
