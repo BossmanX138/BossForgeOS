@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from core.codemage_agent import CodeMageAgent
-from core.rune_bus import RuneBus
+from core.agents.codemage_agent import CodeMageAgent
+from core.rune.rune_bus import RuneBus
 
 
 class CodeMageAgentTests(unittest.TestCase):
@@ -70,8 +70,7 @@ class CodeMageAgentTests(unittest.TestCase):
             self.assertTrue(added.get("ok"))
 
             class _FakeResponse:
-                def R:\Making_Runeforge
-                __enter__(self):
+                def __enter__(self):
                     return self
 
                 def __exit__(self, exc_type, exc, tb):
@@ -80,7 +79,7 @@ class CodeMageAgentTests(unittest.TestCase):
                 def read(self):
                     return b'{"choices":[{"message":{"content":"1. Validate requirements\\n2. Implement changes\\n3. Run tests"}}],"usage":{"total_tokens":42}}'
 
-            with patch("core.codemage_agent.request.urlopen", return_value=_FakeResponse()):
+            with patch("core.agents.codemage_agent.request.urlopen", return_value=_FakeResponse()):
                 out = agent.execute_work_packet({"id": "P0.1"})
             self.assertTrue(out.get("ok"))
             self.assertEqual(out.get("id"), "P0.1")

@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.runeforge_agent import RuneforgeAgent
+from core.agents.runeforge_agent import RuneforgeAgent
 
 
 class RuneforgeAgentTests(unittest.TestCase):

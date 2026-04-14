@@ -9,6 +9,7 @@ a = Analysis(
         ('core/**/*', 'core'),
         ('ui/**/*', 'ui'),
         ('modules/**/*', 'modules'),
+        ('assets/images/BossCrafts_Tray.ico', 'assets/images'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -36,6 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='assets/images/BossCrafts_Tray.ico',
 )
 coll = COLLECT(
     exe,

@@ -593,7 +593,7 @@ class ArchivistAgent:
         if not isinstance(cipher, str) or not cipher:
             return ""
         try:
-            from core.security_vault import unprotect_text
+            from core.security.security_vault import unprotect_text
 
             return str(unprotect_text(cipher))
         except Exception:

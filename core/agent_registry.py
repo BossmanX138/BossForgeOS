@@ -47,3 +47,26 @@ def get_agent_profile(agent_id: str) -> Optional[Dict[str, Any]]:
 
 def list_agents() -> Dict[str, Dict[str, Any]]:
     return registry.list_agents()
+
+
+def list_all_agents() -> Dict[str, Dict[str, Any]]:
+    """Return all known agents from the master manifest merged with runtime registrations."""
+    combined: Dict[str, Dict[str, Any]] = {}
+
+    try:
+        from core.agents.master_agents import get_master_agent_manifest
+
+        combined.update(get_master_agent_manifest())
+    except Exception:
+        # Keep runtime list available even if manifest import fails.
+        pass
+
+    for agent_id, profile in registry.list_agents().items():
+        existing = combined.get(agent_id, {})
+        merged = dict(existing)
+        merged.update(profile or {})
+        if "id" not in merged:
+            merged["id"] = agent_id
+        combined[agent_id] = merged
+
+    return combined

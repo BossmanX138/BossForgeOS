@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.security_sentinel_agent import SecuritySentinelAgent
+from core.security.security_sentinel_agent import SecuritySentinelAgent
 
 
 class SecuritySentinelTests(unittest.TestCase):

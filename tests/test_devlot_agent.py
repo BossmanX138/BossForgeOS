@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.devlot_agent import DevlotAgent
+from core.agents.devlot_agent import DevlotAgent
 
 
 class DevlotAgentTests(unittest.TestCase):

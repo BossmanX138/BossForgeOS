@@ -1,4 +1,3 @@
-
 import atexit
 import json
 import os
@@ -181,6 +180,208 @@ PAGE = """
         .legend-dot.assist { background:#f17171; }
         .legend-dot.available { background:#57d183; }
         .legend-dot.remote { background:#6bb7f2; }
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .gauge-card {
+            border: 1px solid rgba(57, 255, 20, 0.38);
+            border-radius: 10px;
+            padding: 8px;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(57, 255, 20, 0.2), transparent 38%),
+                linear-gradient(155deg, rgba(4, 22, 18, 0.96), rgba(7, 32, 24, 0.94));
+            box-shadow:
+                inset 0 0 16px rgba(57, 255, 20, 0.13),
+                0 0 12px rgba(57, 255, 20, 0.16);
+            position: relative;
+            overflow: hidden;
+        }
+        .gauge-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(to right, rgba(57, 255, 20, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(57, 255, 20, 0.05) 1px, transparent 1px);
+            background-size: 16px 16px;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+        .gauge-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+            color: #9bff9b;
+        }
+        .gauge-head .muted {
+            font-size: 11px;
+            color: #6dffb2;
+        }
+        .tachometer {
+            --pct: 0;
+            --tone: #39ff14;
+            height: 88px;
+            border-radius: 999px 999px 0 0;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 100%, #030f0a 0 48%, transparent 49%);
+            border: 1px solid rgba(87, 209, 131, 0.5);
+            box-shadow: inset 0 0 26px rgba(57, 255, 20, 0.18);
+        }
+        .tachometer svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .tachometer .arc-bg {
+            fill: none;
+            stroke: rgba(11, 51, 30, 0.9);
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        .tachometer .arc-fg {
+            fill: none;
+            stroke: var(--tone);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: calc(100 - var(--pct));
+            transition: stroke-dashoffset 0.35s ease, stroke 0.35s ease;
+            filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.55));
+        }
+        .tachometer .halo {
+            position: absolute;
+            inset: -9px;
+            border-radius: 999px 999px 0 0;
+            border: 1px solid rgba(57, 255, 20, 0.18);
+            pointer-events: none;
+            filter: blur(1px);
+            opacity: 0.25;
+            animation: haloPulseLow 3.2s ease-in-out infinite;
+        }
+        .tachometer.pulse-mid .halo {
+            opacity: 0.42;
+            animation: haloPulseMid 2.1s ease-in-out infinite;
+        }
+        .tachometer.pulse-high .halo {
+            opacity: 0.6;
+            border-color: rgba(57, 255, 20, 0.42);
+            animation: haloPulseHigh 1.3s ease-in-out infinite;
+        }
+        .tachometer .ticks {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: repeating-conic-gradient(
+                from 180deg,
+                rgba(151, 255, 176, 0.45) 0deg,
+                rgba(151, 255, 176, 0.45) 1deg,
+                transparent 1deg,
+                transparent 8deg
+            );
+            mask: radial-gradient(circle at 50% 100%, transparent 0 45%, #000 46% 100%);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .tachometer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(57, 255, 20, 0.09) 0px, rgba(57, 255, 20, 0.09) 1px, transparent 3px, transparent 6px);
+            animation: holoScan 2.6s linear infinite;
+            pointer-events: none;
+        }
+        .tachometer::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 3px;
+            height: 44px;
+            border-radius: 2px;
+            background: #7dff8b;
+            transform-origin: 50% 100%;
+            transform: translateX(-50%) rotate(calc((var(--pct) - 50) * 1.8deg));
+            box-shadow: 0 0 14px rgba(125, 255, 139, 0.78);
+            transition: transform 0.35s ease;
+        }
+        .tachometer.sweep::after {
+            animation: needleSweep 1.05s cubic-bezier(0.2, 0.8, 0.15, 1) 1;
+        }
+        @keyframes holoScan {
+            0% { transform: translateY(-100%); opacity: 0.2; }
+            45% { opacity: 0.5; }
+            100% { transform: translateY(100%); opacity: 0.15; }
+        }
+        @keyframes needleSweep {
+            0% {
+                transform: translateX(-50%) rotate(-90deg);
+                box-shadow: 0 0 4px rgba(125, 255, 139, 0.4);
+            }
+            65% {
+                transform: translateX(-50%) rotate(92deg);
+                box-shadow: 0 0 16px rgba(125, 255, 139, 0.95);
+            }
+            100% {
+                transform: translateX(-50%) rotate(calc((var(--pct) - 50) * 1.8deg));
+                box-shadow: 0 0 14px rgba(125, 255, 139, 0.78);
+            }
+        }
+        @keyframes haloPulseLow {
+            0% { box-shadow: 0 0 8px rgba(57, 255, 20, 0.12); }
+            50% { box-shadow: 0 0 18px rgba(57, 255, 20, 0.22); }
+            100% { box-shadow: 0 0 8px rgba(57, 255, 20, 0.12); }
+        }
+        @keyframes haloPulseMid {
+            0% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+            50% { box-shadow: 0 0 24px rgba(57, 255, 20, 0.38); }
+            100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        }
+        @keyframes haloPulseHigh {
+            0% { box-shadow: 0 0 12px rgba(57, 255, 20, 0.28); }
+            50% { box-shadow: 0 0 28px rgba(57, 255, 20, 0.55); }
+            100% { box-shadow: 0 0 12px rgba(57, 255, 20, 0.28); }
+        }
+        .gauge-foot {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #6dffb2;
+            margin-top: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        .snapshot-warning-list {
+            margin: 0 0 10px;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 4px;
+        }
+        .snapshot-warning-item {
+            border: 1px solid rgba(57, 255, 20, 0.48);
+            background: rgba(57, 255, 20, 0.12);
+            color: #8bff9d;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 12px;
+            box-shadow: inset 0 0 8px rgba(57, 255, 20, 0.16);
+        }
+        .snapshot-warning-item.good {
+            border-color: rgba(87, 209, 131, 0.55);
+            background: rgba(87, 209, 131, 0.14);
+            color: #9bffb5;
+        }
+        .snapshot-warning-item.bad {
+            border-color: #8a3737;
+            background: rgba(241, 113, 113, 0.14);
+            color: #f17171;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +421,21 @@ PAGE = """
                     <button onclick="clearPinnedView()">Unpin</button>
                     <span id="pin_note" class="pin-note">No desktop pin active</span>
                 </div>
+                <button class="anvil-btn" onclick="launchAnvilShuttle()">Launch Anvil Secured Shuttle</button>
+                <div id="anvil_status" class="muted" style="margin-top:8px;"></div>
+                <script>
+                async function launchAnvilShuttle() {
+                    const statusEl = document.getElementById('anvil_status');
+                    if (statusEl) statusEl.textContent = 'Launching Anvil Secured Shuttle...';
+                    try {
+                        const res = await fetch('/api/launch_anvil_shuttle', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                        const data = await res.json();
+                        if (statusEl) statusEl.textContent = data.ok ? 'Anvil Secured Shuttle launched.' : ('Launch failed: ' + (data.message || 'unknown error'));
+                    } catch (e) {
+                        if (statusEl) statusEl.textContent = 'Launch error: ' + e;
+                    }
+                }
+                </script>
                 <div id="toast" class="muted" style="margin-top:8px;"></div>
                 <div id="busy_indicator" class="busy-indicator" aria-live="polite">
                     <span class="spinner" aria-hidden="true"></span>
@@ -228,7 +444,16 @@ PAGE = """
             </section>
 
             <section id="view_status" class="card view-panel"><h2>Agent Status</h2><div id="agents" class="muted">Loading...</div></section>
-            <section id="view_snapshot" class="card view-panel"><h2>OS Snapshot</h2><pre id="snapshot">Loading...</pre></section>
+            <section id="view_snapshot" class="card view-panel">
+                <h2>OS Snapshot</h2>
+                <div id="runeforge_voice_status" class="agent-item" style="margin-bottom:10px;">
+                    <strong>Runeforge Voice Safety</strong>
+                    <div class="muted">Loading approval and execution status...</div>
+                </div>
+                <div id="snapshot_dashboard" class="snapshot-grid"></div>
+                <ul id="snapshot_warnings" class="snapshot-warning-list"></ul>
+                <pre id="snapshot">Loading...</pre>
+            </section>
 
             <section id="view_commands" class="card view-panel">
                 <h2>Quick Commands</h2>
@@ -282,6 +507,8 @@ PAGE = """
                 <pre id="chat_log">No messages yet.</pre>
                 <textarea id="chat_prompt" placeholder="Message model endpoint..."></textarea>
                 <div class="row"><button onclick="sendChat()">Send</button></div>
+            </section>
+
             <section id="view_diagnostics" class="card view-panel">
                 <h2 style="color:#f17171;">Diagnostics</h2>
                 <div class="muted">Agent health, recent errors, and TODOs across the system.</div>
@@ -293,6 +520,17 @@ PAGE = """
                 <h2 style="color:#39ff14;">Sounds</h2>
                 <div class="muted">Sound scheme and soundstage bundle tools.</div>
                 <pre id="sound_events">Open this panel to load sound status.</pre>
+                <div class="row">
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundstageBundle()">Export Bundle</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                </div>
+                <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
+                <input type="file" id="soundstage_bundle_file" style="display:none;" accept=".B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
+                <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
+                <div id="soundstage_schemes_list" class="muted" style="margin-top:10px;"></div>
             </section>
 
             <section id="view_maker" class="card view-panel">
@@ -347,20 +585,6 @@ PAGE = """
                 <div class="muted">Panel for test/lint results and CI status. (Coming soon)</div>
                 <div id="cicd_status" style="margin-top:12px;"></div>
             </section>
-
-
-                <div class="row">
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundstageBundle()">Export Bundle</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
-                </div>
-                <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
-                <input type="file" id="soundstage_bundle_file" style="display:none;" accept=".B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
-                <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
-                <div id="soundstage_schemes_list" class="muted" style="margin-top:10px;"></div>
-            </section>
         </main>
     </div>
 
@@ -374,6 +598,7 @@ PAGE = """
         let discoveryTargets = [];
         let discoveryLocations = {};
         let activeDiscoveryKey = '';
+        let snapshotGaugeBooted = false;
 
         function beginBusy(message) {
             pendingLoads += 1;
@@ -431,7 +656,7 @@ PAGE = """
                 lines.push('- No events available.');
             }
 
-            el.textContent = lines.join('\n');
+            el.textContent = lines.join('\\n');
         }
 
         function htmlEscape(value) {
@@ -756,7 +981,7 @@ PAGE = """
                 root.textContent = 'No messages yet.';
                 return;
             }
-            root.textContent = chatHistory.map((m) => `${m.role.toUpperCase()} (${m.endpoint}): ${m.content}`).join('\n\n');
+            root.textContent = chatHistory.map((m) => `${m.role.toUpperCase()} (${m.endpoint}): ${m.content}`).join('\\n\\n');
         }
 
         async function sendChat() {
@@ -887,6 +1112,130 @@ PAGE = """
             root.innerHTML = entries || '<div class="muted">No agents found.</div>';
         }
 
+        function gaugeTone(percent) {
+            const safe = Number.isFinite(percent) ? percent : 0;
+            if (safe >= 90) return '#39ff14';
+            if (safe >= 75) return '#5dff68';
+            return '#00f5a0';
+        }
+
+        function percentValue(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n)) return 0;
+            return Math.max(0, Math.min(100, n));
+        }
+
+        function pulseClass(percent) {
+            const p = percentValue(percent);
+            if (p >= 85) return ' pulse-high';
+            if (p >= 65) return ' pulse-mid';
+            return '';
+        }
+
+        function renderSnapshotDashboard(snapshot) {
+            const root = document.getElementById('snapshot_dashboard');
+            const warningsRoot = document.getElementById('snapshot_warnings');
+            if (!root || !warningsRoot) return;
+
+            const system = (snapshot && snapshot.system && typeof snapshot.system === 'object') ? snapshot.system : {};
+            const memory = (system.memory && typeof system.memory === 'object') ? system.memory : {};
+            const swap = (system.swap && typeof system.swap === 'object') ? system.swap : {};
+            const disk = (snapshot && snapshot.disk && typeof snapshot.disk === 'object') ? snapshot.disk : {};
+            const gpu = (snapshot && snapshot.gpu_vram && Array.isArray(snapshot.gpu_vram.gpus)) ? snapshot.gpu_vram.gpus[0] : null;
+
+            const gauges = [
+                {
+                    label: 'CPU',
+                    percent: percentValue(system.cpu_percent),
+                    detail: String(Number.isFinite(Number(system.cpu_percent)) ? Number(system.cpu_percent).toFixed(1) : '0.0') + '%',
+                },
+                {
+                    label: 'RAM',
+                    percent: percentValue(memory.percent),
+                    detail: (memory.used_gb ?? '?') + ' / ' + (memory.total_gb ?? '?') + ' GB',
+                },
+                {
+                    label: 'Disk',
+                    percent: percentValue(disk.percent),
+                    detail: (disk.used_gb ?? '?') + ' / ' + (disk.total_gb ?? '?') + ' GB',
+                },
+                {
+                    label: 'Swap',
+                    percent: percentValue(swap.percent),
+                    detail: (swap.used_gb ?? '?') + ' / ' + (swap.total_gb ?? '?') + ' GB',
+                },
+            ];
+
+            if (gpu) {
+                gauges.push({
+                    label: 'GPU VRAM',
+                    percent: percentValue(gpu.percent),
+                    detail: (gpu.used_gb ?? '?') + ' / ' + (gpu.total_gb ?? '?') + ' GB',
+                });
+            }
+
+            root.innerHTML = gauges.map((item) => {
+                const p = percentValue(item.percent);
+                const tone = gaugeTone(p);
+                const sweepClass = snapshotGaugeBooted ? '' : ' sweep';
+                const pulse = pulseClass(p);
+                return '<div class="gauge-card">'
+                    + '<div class="gauge-head"><strong>' + htmlEscape(item.label) + '</strong><span class="muted">' + p.toFixed(1) + '%</span></div>'
+                    + '<div class="tachometer' + sweepClass + pulse + '" style="--pct:' + p.toFixed(1) + ';--tone:' + tone + ';">'
+                    + '<div class="halo"></div>'
+                    + '<svg viewBox="0 0 100 60" aria-hidden="true">'
+                    + '<path class="arc-bg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '<path class="arc-fg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '</svg>'
+                    + '<div class="ticks"></div>'
+                    + '</div>'
+                    + '<div class="gauge-foot"><span>0%</span><span>' + htmlEscape(String(item.detail)) + '</span><span>100%</span></div>'
+                    + '</div>';
+            }).join('');
+            snapshotGaugeBooted = true;
+
+            const warnings = (snapshot && Array.isArray(snapshot.warnings)) ? snapshot.warnings : [];
+            if (!warnings.length) {
+                warningsRoot.innerHTML = '<li class="snapshot-warning-item good">No active pressure warnings</li>';
+            } else {
+                warningsRoot.innerHTML = warnings.map((w) => {
+                    const text = String(w || 'warning');
+                    const bad = text.toLowerCase().includes('critical') ? ' bad' : '';
+                    return '<li class="snapshot-warning-item' + bad + '">' + htmlEscape(text) + '</li>';
+                }).join('');
+            }
+        }
+
+        function renderRuneforgeVoiceStatus(data) {
+            const root = document.getElementById('runeforge_voice_status');
+            if (!root) return;
+
+            const pending = (data && data.pending_approval && typeof data.pending_approval === 'object') ? data.pending_approval : null;
+            const report = (data && data.last_report && typeof data.last_report === 'object') ? data.last_report : null;
+
+            let html = '<strong>Runeforge Voice Safety</strong>';
+            if (pending && pending.type) {
+                const pType = htmlEscape(String(pending.type));
+                const created = htmlEscape(String(pending.created_at || 'unknown'));
+                html += '<div class="snapshot-warning-item bad" style="margin-top:6px;">Pending approval: ' + pType + ' (' + created + ')</div>';
+            } else {
+                html += '<div class="snapshot-warning-item good" style="margin-top:6px;">No pending approvals.</div>';
+            }
+
+            if (report) {
+                const actionType = htmlEscape(String(report.action_type || report.execution_method || 'n/a'));
+                const okText = report.ok === false ? 'failed' : 'ok';
+                const est = (report.estimated_restored_mb !== undefined && report.estimated_restored_mb !== null)
+                    ? (' | est. restored: ' + htmlEscape(String(report.estimated_restored_mb)) + ' MB')
+                    : '';
+                html += '<div class="muted" style="margin-top:6px;">Last report: ' + actionType + ' (' + okText + ')' + est + '</div>';
+            } else {
+                html += '<div class="muted" style="margin-top:6px;">No execution report yet.</div>';
+            }
+
+            root.innerHTML = html;
+        }
+
         async function refresh() {
             document.getElementById('toast').textContent = 'Refreshing...';
 
@@ -894,6 +1243,7 @@ PAGE = """
             const eventsData = await fetchJsonWithTimeout('/api/events?limit=40');
             const snapData = await fetchJsonWithTimeout('/api/snapshot');
             const sealData = await fetchJsonWithTimeout('/api/archivist/seal');
+            const voiceData = await fetchJsonWithTimeout('/api/runeforge/voice_status');
 
             if (statusData && statusData.agent_state) {
                 renderAgents(statusData.agent_state);
@@ -904,9 +1254,11 @@ PAGE = """
 
             document.getElementById('events').textContent = JSON.stringify((eventsData && eventsData.items) ? eventsData.items : eventsData, null, 2);
             document.getElementById('snapshot').textContent = JSON.stringify(snapData, null, 2);
+            renderSnapshotDashboard(snapData);
+            renderRuneforgeVoiceStatus(voiceData);
             document.getElementById('seal').textContent = JSON.stringify(sealData, null, 2);
 
-            const failed = [statusData, eventsData, snapData, sealData].filter(x => x && x.ok === false).length;
+            const failed = [statusData, eventsData, snapData, sealData, voiceData].filter(x => x && x.ok === false).length;
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
         }
 
@@ -1055,6 +1407,19 @@ def command():
     path = bus.emit_command(target=target, command=command_name, args=args, issued_by="control_hall")
     return jsonify({"ok": True, "written": str(path)})
 
+# === Anvil Secured Shuttle Launcher Endpoint ===
+@app.post("/api/launch_anvil_shuttle")
+def launch_anvil_shuttle():
+    try:
+        script = os.path.join(PROJECT_ROOT, "launch_anvil_shuttle.py")
+        if not os.path.exists(script):
+            return jsonify({"ok": False, "message": "Launcher script missing."}), 500
+        # Launch as detached process
+        subprocess.Popen([sys.executable, script], cwd=PROJECT_ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)}), 500
+
 
 @app.get("/api/events")
 def events():
@@ -1065,6 +1430,54 @@ def events():
 @app.get("/api/snapshot")
 def snapshot():
     return jsonify(snapshot_all())
+
+
+@app.get("/api/runeforge/voice_status")
+def runeforge_voice_status():
+    pending_path = bus.state / "runeforge_pending_approval.json"
+    runeforge_state_path = bus.state / "runeforge.json"
+
+    pending = None
+    if pending_path.exists():
+        try:
+            payload = json.loads(pending_path.read_text(encoding="utf-8"))
+            if isinstance(payload, dict):
+                pending = payload
+        except (OSError, json.JSONDecodeError):
+            pending = {"error": "invalid pending approval state"}
+
+    last_report = None
+    if runeforge_state_path.exists():
+        try:
+            state = json.loads(runeforge_state_path.read_text(encoding="utf-8"))
+            if isinstance(state, dict):
+                if isinstance(state.get("report"), dict):
+                    last_report = state.get("report")
+                elif isinstance(state.get("execution"), dict) and isinstance(state.get("execution", {}).get("report"), dict):
+                    last_report = state.get("execution", {}).get("report")
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    if last_report is None:
+        events = bus.read_latest_events(limit=120)
+        for item in events:
+            if str(item.get("source", "")).strip() != "runeforge":
+                continue
+            event_name = str(item.get("event", "")).strip()
+            data = item.get("data") if isinstance(item.get("data"), dict) else {}
+            if event_name in {"sentinel_plan_approval_result", "sentinel_recommendations_applied", "os_action_approval_result"}:
+                if isinstance(data.get("report"), dict):
+                    last_report = data.get("report")
+                elif isinstance(data.get("execution"), dict) and isinstance(data.get("execution", {}).get("report"), dict):
+                    last_report = data.get("execution", {}).get("report")
+                else:
+                    last_report = {
+                        "action_type": event_name,
+                        "ok": bool(data.get("ok", True)),
+                    }
+                break
+
+    return jsonify({"ok": True, "pending_approval": pending, "last_report": last_report})
 
 
 @app.get("/api/archivist/seal")
@@ -1552,8 +1965,11 @@ def list_soundstage_schemes():
 
 
 def main() -> None:
-    # Use Flask-SocketIO for collaborative editing
-    socketio.run(app, host="0.0.0.0", port=5005, debug=True)
+    if socketio is not None:
+        socketio.run(app, host="127.0.0.1", port=5005, debug=False)
+    else:
+        from werkzeug.serving import run_simple
+        run_simple("127.0.0.1", 5005, app, use_reloader=False, use_debugger=False, threaded=True)
 
 
 if __name__ == "__main__":

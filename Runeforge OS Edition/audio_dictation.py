@@ -26,10 +26,39 @@ def capture_text(timeout_seconds: int = 8, phrase_time_limit: int = 12) -> tuple
         with sr.Microphone() as source:
             recognizer.adjust_for_ambient_noise(source, duration=0.5)
             audio = recognizer.listen(source, timeout=timeout_seconds, phrase_time_limit=phrase_time_limit)
-        text = recognizer.recognize_google(audio)
-        return True, text.strip()
+        try:
+            text = recognizer.recognize_google(audio)
+            return True, text.strip()
+        except Exception:
+            # Offline fallback if PocketSphinx is available in environment.
+            text = recognizer.recognize_sphinx(audio)
+            return True, text.strip()
     except Exception as ex:
         return False, str(ex)
+
+
+def _confidence_for_command(text: str, action: dict | None) -> float:
+    if not isinstance(action, dict):
+        return 0.2
+    lowered = text.lower().strip()
+    if any(lowered.startswith(prefix) for prefix in [
+        "lock file",
+        "unlock file",
+        "unblock file",
+        "open app",
+        "launch app",
+        "start app",
+        "close app",
+        "stop app",
+        "kill app",
+        "open file",
+        "open website",
+        "open url",
+        "set volume",
+        "play ",
+    ]):
+        return 0.95
+    return 0.7
 
 
 def _extract_path(text: str) -> str:
@@ -122,43 +151,53 @@ def interpret_voice_command(text: str) -> dict:
 
     # File lock lifecycle.
     if lower.startswith("lock file"):
-        return {"ok": True, "action": {"action_type": "lock_file", "params": {"path": path}}}
+        action = {"action_type": "lock_file", "params": {"path": path}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
     if lower.startswith("unlock file"):
-        return {"ok": True, "action": {"action_type": "unlock_file", "params": {"path": path}}}
+        action = {"action_type": "unlock_file", "params": {"path": path}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
     if lower.startswith("unblock file"):
-        return {"ok": True, "action": {"action_type": "unblock_file", "params": {"path": path}}}
+        action = {"action_type": "unblock_file", "params": {"path": path}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
     if lower.startswith("list locks") or lower.startswith("list file locks"):
-        return {"ok": True, "action": {"action_type": "list_file_locks", "params": {"active_only": True}}}
+        action = {"action_type": "list_file_locks", "params": {"active_only": True}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
     if lower.startswith("list all locks"):
-        return {"ok": True, "action": {"action_type": "list_file_locks", "params": {"active_only": False}}}
+        action = {"action_type": "list_file_locks", "params": {"active_only": False}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     # App/process controls.
     if lower.startswith(("open app", "launch app", "start app")):
         app_target = _extract_after_prefix(command_text, ["open app", "launch app", "start app"]) or path
-        return {"ok": True, "action": {"action_type": "open_app", "params": {"path": app_target}}}
+        action = {"action_type": "open_app", "params": {"path": app_target}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower.startswith("open ") and not lower.startswith(("open file", "open document", "open folder", "open directory", "open url", "open website", "open web")):
         app_target = _extract_after_prefix(command_text, ["open"])
-        return {"ok": True, "action": {"action_type": "open_app", "params": {"path": app_target}}}
+        action = {"action_type": "open_app", "params": {"path": app_target}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower.startswith(("close app", "stop app", "kill app", "close process", "kill process")):
         process_name = _extract_after_prefix(
             command_text,
             ["close app", "stop app", "kill app", "close process", "kill process"],
         )
-        return {"ok": True, "action": {"action_type": "close_app", "params": {"name": process_name}}}
+        action = {"action_type": "close_app", "params": {"name": process_name}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     # File and directory operations.
     if lower.startswith(("open file", "open document")):
         file_path = path or _extract_after_prefix(command_text, ["open file", "open document"])
-        return {"ok": True, "action": {"action_type": "open_file", "params": {"path": file_path}}}
+        action = {"action_type": "open_file", "params": {"path": file_path}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower.startswith(("list directory", "list folder", "show directory", "show folder", "open folder")):
         dir_path = path or _extract_after_prefix(
             command_text,
             ["list directory", "list folder", "show directory", "show folder", "open folder"],
         )
-        return {"ok": True, "action": {"action_type": "list_directory", "params": {"path": dir_path}}}
+        action = {"action_type": "list_directory", "params": {"path": dir_path}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     # Browser and URL commands.
     if lower.startswith(("open url", "open website", "open web", "go to", "browse to")):
@@ -167,7 +206,8 @@ def interpret_voice_command(text: str) -> dict:
             url = _extract_after_prefix(command_text, ["open url", "open website", "open web", "go to", "browse to"])
             if url and not url.lower().startswith(("http://", "https://")):
                 url = f"https://{url}"
-        return {"ok": True, "action": {"action_type": "open_url", "params": {"url": url}}}
+        action = {"action_type": "open_url", "params": {"url": url}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower.startswith("play "):
         query = command_text[5:].strip()
@@ -178,7 +218,8 @@ def interpret_voice_command(text: str) -> dict:
                 "example": "Runeforge play Metallica Black Album",
             }
         url = f"https://www.youtube.com/results?search_query={quote_plus(query)}"
-        return {"ok": True, "action": {"action_type": "open_url", "params": {"url": url}}}
+        action = {"action_type": "open_url", "params": {"url": url}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     # Volume controls.
     if lower.startswith(("set volume", "change volume", "volume")):
@@ -190,13 +231,16 @@ def interpret_voice_command(text: str) -> dict:
                 "example": "BossForge set volume to 35",
             }
         clamped = max(0, min(100, level))
-        return {"ok": True, "action": {"action_type": "set_volume", "params": {"level": clamped}}}
+        action = {"action_type": "set_volume", "params": {"level": clamped}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower in ("mute", "mute volume", "volume mute"):
-        return {"ok": True, "action": {"action_type": "set_volume", "params": {"level": 0}}}
+        action = {"action_type": "set_volume", "params": {"level": 0}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     if lower in ("max volume", "maximum volume", "volume max"):
-        return {"ok": True, "action": {"action_type": "set_volume", "params": {"level": 100}}}
+        action = {"action_type": "set_volume", "params": {"level": 100}}
+        return {"ok": True, "action": action, "confidence": _confidence_for_command(lower, action)}
 
     return {
         "ok": False,

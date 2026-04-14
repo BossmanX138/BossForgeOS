@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import json
 import os
 import signal
@@ -17,26 +18,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / 'core'))
 sys.path.insert(0, str(PROJECT_ROOT / 'ui'))
 sys.path.insert(0, str(PROJECT_ROOT / 'modules'))
-import sys
-import pathlib
-# Debug: print sys.path to diagnose import issues
-print('LAUNCHER sys.path:', sys.path)
-# Ensure project root is in sys.path for PyInstaller bundled execution
-if getattr(sys, 'frozen', False):
-    bundle_dir = pathlib.Path(sys.executable).parent.parent
-    sys.path.insert(0, str(bundle_dir))
-    sys.path.insert(0, str(bundle_dir / 'core'))
-    sys.path.insert(0, str(bundle_dir / 'ui'))
-    sys.path.insert(0, str(bundle_dir / 'modules'))
-import sys
-import pathlib
-# Ensure project root is in sys.path for PyInstaller bundled execution
-if getattr(sys, 'frozen', False):
-    bundle_dir = pathlib.Path(sys.executable).parent.parent
-    sys.path.insert(0, str(bundle_dir))
-    sys.path.insert(0, str(bundle_dir / 'core'))
-    sys.path.insert(0, str(bundle_dir / 'ui'))
-    sys.path.insert(0, str(bundle_dir / 'modules'))
 import threading
 import time
 import webbrowser
@@ -49,7 +30,6 @@ from core.agents.codemage_agent import CodeMageAgent
 from core.agents.devlot_agent import DevlotAgent
 from core.daemons.hearth_tender_daemon import HearthTender
 from core.model.internal_vllm_service import InternalVLLMService
-from core.connectors.huggingface_connector import HuggingFaceConnector
 from core.agents.model_gateway_agent import ModelGatewayAgent
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from core.agents.runeforge_agent import RuneforgeAgent
@@ -58,14 +38,203 @@ from core.daemons.speaker_daemon import SpeakerDaemon
 from core.agents.test_sentinel_agent import TestSentinelAgent
 from core.daemons.voice_daemon import VoiceDaemon
 from ui.control_hall import app
-from core.daemons.voice_daemon import VoiceDaemon
+
+
+class SystemTrayIcon:
+    def __init__(
+        self,
+        icon_path: Path,
+        tooltip: str,
+        open_url: str,
+        stop_event: threading.Event,
+        on_exit: callable | None = None,
+    ) -> None:
+        self.icon_path = icon_path
+        self.tooltip = tooltip
+        self.open_url = open_url
+        self.stop_event = stop_event
+        self.on_exit = on_exit
+        self._thread: threading.Thread | None = None
+        self._hwnd = None
+        self._hicon = None
+
+    def start(self) -> bool:
+        if os.name != "nt":
+            return False
+        if self._thread and self._thread.is_alive():
+            return True
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+        return True
+
+    def stop(self) -> None:
+        self.stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=3)
+
+    def _run(self) -> None:
+        try:
+            import win32api  # type: ignore
+            import win32con  # type: ignore
+            import win32gui  # type: ignore
+        except Exception as ex:
+            print(f"System tray disabled (pywin32 unavailable): {ex}")
+            return
+
+        msg_tray = win32con.WM_USER + 20
+        menu_open = 1001
+        menu_exit = 1002
+
+        def _wndproc(hwnd, msg, wparam, lparam):
+            if msg == msg_tray:
+                if lparam in (win32con.WM_LBUTTONUP, win32con.WM_LBUTTONDBLCLK):
+                    try:
+                        webbrowser.open(self.open_url)
+                    except Exception:
+                        pass
+                elif lparam == win32con.WM_RBUTTONUP:
+                    try:
+                        menu = win32gui.CreatePopupMenu()
+                        win32gui.AppendMenu(menu, win32con.MF_STRING, menu_open, "Open Control Hall")
+                        win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, None)
+                        win32gui.AppendMenu(menu, win32con.MF_STRING, menu_exit, "Exit the Forge")
+                        pos = win32gui.GetCursorPos()
+                        win32gui.SetForegroundWindow(hwnd)
+                        win32gui.TrackPopupMenu(menu, win32con.TPM_LEFTALIGN | win32con.TPM_BOTTOMALIGN, pos[0], pos[1], 0, hwnd, None)
+                        win32gui.PostMessage(hwnd, win32con.WM_NULL, 0, 0)
+                    except Exception:
+                        pass
+                return 0
+            if msg == win32con.WM_COMMAND:
+                cmd = int(wparam) & 0xFFFF
+                if cmd == menu_open:
+                    try:
+                        webbrowser.open(self.open_url)
+                    except Exception:
+                        pass
+                    return 0
+                if cmd == menu_exit:
+                    try:
+                        if self.on_exit:
+                            self.on_exit()
+                        else:
+                            self.stop_event.set()
+                    except Exception:
+                        self.stop_event.set()
+                    return 0
+            if msg == win32con.WM_DESTROY:
+                return 0
+            return win32gui.DefWindowProc(hwnd, msg, wparam, lparam)
+
+        hinst = win32api.GetModuleHandle(None)
+        class_name = "BossForgeOSTrayWindow"
+        wc = win32gui.WNDCLASS()
+        wc.hInstance = hinst
+        wc.lpszClassName = class_name
+        wc.lpfnWndProc = _wndproc
+
+        try:
+            win32gui.RegisterClass(wc)
+        except Exception:
+            pass
+
+        hwnd = win32gui.CreateWindow(class_name, class_name, 0, 0, 0, 0, 0, 0, 0, hinst, None)
+        self._hwnd = hwnd
+
+        icon_flags = win32con.LR_LOADFROMFILE | win32con.LR_DEFAULTSIZE
+        try:
+            self._hicon = win32gui.LoadImage(0, str(self.icon_path), win32con.IMAGE_ICON, 0, 0, icon_flags)
+        except Exception:
+            self._hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)
+
+        nid = (hwnd, 0, win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP, msg_tray, self._hicon, self.tooltip)
+        try:
+            win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, nid)
+        except Exception as ex:
+            print(f"System tray icon failed to initialize: {ex}")
+            try:
+                win32gui.DestroyWindow(hwnd)
+            except Exception:
+                pass
+            return
+
+        try:
+            while not self.stop_event.is_set():
+                win32gui.PumpWaitingMessages()
+                time.sleep(0.2)
+        finally:
+            try:
+                win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, nid)
+            except Exception:
+                pass
+            try:
+                if self._hicon:
+                    win32gui.DestroyIcon(self._hicon)
+            except Exception:
+                pass
+            try:
+                if hwnd:
+                    win32gui.DestroyWindow(hwnd)
+            except Exception:
+                pass
+
+
+def _resolve_tray_icon_path() -> Path:
+    candidate = PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico"
+    if candidate.exists():
+        return candidate
+    return PROJECT_ROOT / "assets" / "build" / "BossCrafts_Tray.ico"
+
+
+def _hide_console_window() -> None:
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+
+        SW_HIDE = 0
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, SW_HIDE)
+    except Exception:
+        pass
+
+
+def _install_minimize_to_tray_handler(stop_event: threading.Event) -> None:
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+
+        CTRL_C_EVENT = 0
+        CTRL_BREAK_EVENT = 1
+        CTRL_CLOSE_EVENT = 2
+
+        def _handler(ctrl_type: int) -> bool:
+            if ctrl_type == CTRL_CLOSE_EVENT:
+                # Keep process alive and hide console; user exits from tray menu.
+                _hide_console_window()
+                print("BossForgeOS minimized to tray. Use tray menu > Exit the Forge to stop.")
+                return True
+            if ctrl_type in (CTRL_C_EVENT, CTRL_BREAK_EVENT):
+                stop_event.set()
+                return True
+            return False
+
+        handler = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_uint)(_handler)
+        ctypes.windll.kernel32.SetConsoleCtrlHandler(handler, True)
+        # Keep reference alive.
+        setattr(_install_minimize_to_tray_handler, "_handler_ref", handler)
+    except Exception:
+        pass
 
 
 class ControlHallServer:
-    def __init__(self, host: str = "127.0.0.1", port: int = 5005) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = 5005, threaded: bool = True) -> None:
         self.host = host
         self.port = port
-        self._server = make_server(self.host, self.port, app)
+        # Use threaded serving so slow API handlers do not block the whole UI.
+        self._server = make_server(self.host, self.port, app, threaded=threaded)
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
 
     def start(self) -> None:
@@ -74,6 +243,70 @@ class ControlHallServer:
     def stop(self) -> None:
         self._server.shutdown()
         self._thread.join(timeout=5)
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        try:
+            import ctypes
+
+            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+            handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                return True
+            return False
+        except Exception:
+            return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _acquire_launcher_lock() -> pathlib.Path:
+    lock_dir = PROJECT_ROOT / ".runtime"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = lock_dir / "bossforge_launcher.lock"
+
+    if lock_path.exists():
+        try:
+            payload = json.loads(lock_path.read_text(encoding="utf-8"))
+            existing_pid = int(payload.get("pid", 0)) if isinstance(payload, dict) else 0
+            if _pid_alive(existing_pid):
+                raise SystemExit(
+                    f"BossForgeOS launcher already running (pid {existing_pid}). "
+                    "Stop existing instance before starting another."
+                )
+        except SystemExit:
+            raise
+        except Exception:
+            pass
+
+    lock_path.write_text(
+        json.dumps(
+            {
+                "pid": os.getpid(),
+                "started_at": time.time(),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def _release_lock() -> None:
+        try:
+            if lock_path.exists():
+                payload = json.loads(lock_path.read_text(encoding="utf-8"))
+                if int(payload.get("pid", -1)) == os.getpid():
+                    lock_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    atexit.register(_release_lock)
+    return lock_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -92,6 +325,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--speaker-interval", type=int, default=3, help="Speaker poll interval in seconds")
     parser.add_argument("--voice-interval", type=float, default=0.5, help="Voice daemon loop interval in seconds")
     parser.add_argument("--no-voice-daemon", action="store_true", help="Disable continuous voice daemon")
+    parser.add_argument("--no-speaker-daemon", action="store_true", help="Disable speaker daemon")
+    parser.add_argument("--safe-mode", action="store_true", help="Disable heavy background services (voice, speaker, internal vLLM)")
     parser.add_argument("--no-internal-vllm", action="store_true", help="Disable internal vLLM startup for Runeforge router")
     parser.add_argument("--internal-vllm-host", default="127.0.0.1", help="Internal vLLM bind host")
     parser.add_argument("--internal-vllm-port", type=int, default=8011, help="Internal vLLM bind port")
@@ -105,6 +340,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warn-threshold", type=float, default=80.0, help="Disk warning threshold percentage")
     parser.add_argument("--host", default="127.0.0.1", help="Control Hall bind host")
     parser.add_argument("--port", type=int, default=5005, help="Control Hall bind port")
+    parser.add_argument("--hall-single-thread", action="store_true", help="Run Control Hall in single-threaded mode")
+    parser.add_argument("--no-tray-icon", action="store_true", help="Disable Windows system tray icon")
     return parser.parse_args()
 
 
@@ -169,6 +406,13 @@ def _resolve_internal_vllm_python(explicit_path: str) -> str | None:
 
 def main() -> None:
     args = parse_args()
+    _acquire_launcher_lock()
+
+    if args.safe_mode:
+        args.no_voice_daemon = True
+        args.no_speaker_daemon = True
+        args.no_internal_vllm = True
+
     if args.daemon_only and args.hall_only:
         raise SystemExit("Choose only one mode: --daemon-only or --hall-only")
 
@@ -185,6 +429,10 @@ def main() -> None:
     voice_daemon_thread: threading.Thread | None = None
     internal_vllm: InternalVLLMService | None = None
     hall: ControlHallServer | None = None
+    tray_icon: SystemTrayIcon | None = None
+    shutdown_called = False
+
+    _install_minimize_to_tray_handler(stop_event)
 
     if not args.hall_only:
         daemon = HearthTender(interval_seconds=args.interval, warn_threshold=args.warn_threshold)
@@ -255,18 +503,19 @@ def main() -> None:
         test_sentinel_thread.start()
         print("Test Sentinel started")
 
-        global_speaker = SpeakerDaemon(
-            interval_seconds=args.speaker_interval,
-            profile_path="voices/runeforge/profile.json",
-            source_filter="*",
-        )
-        voice_router_speaker_thread = threading.Thread(
-            target=global_speaker.run,
-            kwargs={"stop_event": stop_event},
-            daemon=True,
-        )
-        voice_router_speaker_thread.start()
-        print("Speaker started (all agents)")
+        if not args.no_speaker_daemon:
+            global_speaker = SpeakerDaemon(
+                interval_seconds=args.speaker_interval,
+                profile_path="voices/runeforge/profile.json",
+                source_filter="*",
+            )
+            voice_router_speaker_thread = threading.Thread(
+                target=global_speaker.run,
+                kwargs={"stop_event": stop_event},
+                daemon=True,
+            )
+            voice_router_speaker_thread.start()
+            print("Speaker started (all agents)")
 
         if not args.no_voice_daemon:
             voice_daemon = VoiceDaemon(interval_seconds=max(0.1, args.voice_interval))
@@ -279,13 +528,32 @@ def main() -> None:
             print("Voice daemon started (continuous listening)")
 
     if not args.daemon_only:
-        hall = ControlHallServer(host=args.host, port=args.port)
+        hall = ControlHallServer(host=args.host, port=args.port, threaded=not args.hall_single_thread)
         hall.start()
         print(f"Control Hall started on http://{args.host}:{args.port}")
         if not args.no_browser:
             webbrowser.open(f"http://{args.host}:{args.port}")
 
+    if not args.no_tray_icon and os.name == "nt":
+        tray_icon_path = _resolve_tray_icon_path()
+        if tray_icon_path.exists():
+            tray_icon = SystemTrayIcon(
+                icon_path=tray_icon_path,
+                tooltip="BossForgeOS (running)",
+                open_url=f"http://{args.host}:{args.port}",
+                stop_event=stop_event,
+                on_exit=lambda: stop_event.set(),
+            )
+            tray_icon.start()
+            print(f"System tray icon active: {tray_icon_path}")
+        else:
+            print(f"System tray icon missing: {tray_icon_path}")
+
     def _shutdown(*_: object) -> None:
+        nonlocal shutdown_called
+        if shutdown_called:
+            return
+        shutdown_called = True
         stop_event.set()
         if hall is not None:
             hall.stop()
@@ -309,6 +577,8 @@ def main() -> None:
             voice_router_speaker_thread.join(timeout=5)
         if voice_daemon_thread is not None and voice_daemon_thread.is_alive():
             voice_daemon_thread.join(timeout=5)
+        if tray_icon is not None:
+            tray_icon.stop()
         if internal_vllm is not None:
             stop_result = internal_vllm.stop()
             if not stop_result.get("ok"):
@@ -321,6 +591,8 @@ def main() -> None:
         while not stop_event.is_set():
             time.sleep(0.25)
     except KeyboardInterrupt:
+        _shutdown()
+    finally:
         _shutdown()
 
 

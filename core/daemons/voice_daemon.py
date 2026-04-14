@@ -181,6 +181,18 @@ class VoiceDaemon:
             else:
                 self._emit_voice_feedback("I heard the command, but execution failed.", level="warning")
             return
+        if action == "request_os_action_approval":
+            self._emit_voice_feedback("Approval required. Say Runeforge yes to proceed or Runeforge no to cancel.", level="warning")
+            return
+        if action in {"approve_pending_action", "reject_pending_action"}:
+            approval = voice_result.get("result") if isinstance(voice_result.get("result"), dict) else {}
+            msg = str(approval.get("message", "")).strip()
+            self._emit_voice_feedback(msg or ("Approval handled." if action == "approve_pending_action" else "Action canceled."))
+            return
+        if action == "clarification_required":
+            msg = str(voice_result.get("message", "")).strip() or "Please repeat the command with more detail."
+            self._emit_voice_feedback(msg, level="warning")
+            return
 
         self._emit_voice_feedback(f"I heard: {spoken_text}")
 
@@ -294,8 +306,26 @@ class VoiceDaemon:
                 text_for_runeforge = f"Runeforge {spoken_text}"
 
             self._touch_session()
+            command_start = time.monotonic()
 
             result = self.runeforge.run_voice_text({"text": text_for_runeforge})
+            voice_result = result.get("voice_result") if isinstance(result.get("voice_result"), dict) else {}
+            confidence = voice_result.get("confidence") if isinstance(voice_result.get("confidence"), (int, float)) else None
+            self.bus.emit_event(
+                "voice_daemon",
+                "voice_telemetry",
+                {
+                    "spoken_text": spoken_text,
+                    "text_for_runeforge": text_for_runeforge,
+                    "ok": bool(result.get("ok")),
+                    "voice_action": str(voice_result.get("voice_action", "")),
+                    "confidence": confidence,
+                    "latency_ms": int((time.monotonic() - command_start) * 1000),
+                    "session_active": self._session_is_active(),
+                    "activation_used": is_activation,
+                },
+                level="info" if result.get("ok") else "warning",
+            )
             if not result.get("ok"):
                 self.bus.emit_event(
                     "runeforge",

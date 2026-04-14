@@ -28,8 +28,10 @@ class SpeakerDaemon:
         self.bus = RuneBus(self.root)
         self.profile_path = Path(profile_path)
         self.source_filter = source_filter
+        self.seen_commands: set[str] = set()
         # Start from "now" so the daemon speaks only fresh events.
         self.seen_events: set[str] = {p.name for p in self.bus.events.glob("*.json")}
+        self.muted = False
 
     def _play_output(self, output_rel: str) -> dict[str, Any]:
         if not output_rel:
@@ -127,6 +129,8 @@ class SpeakerDaemon:
     def handle_event(self, event: dict[str, Any]) -> None:
         if event.get("type") != "event":
             return
+        if self.muted:
+            return
         source = str(event.get("source", "")).strip()
         if not source:
             return
@@ -160,14 +164,41 @@ class SpeakerDaemon:
             level="info" if result.get("ok") else "warning",
         )
 
+    def _handle_command(self, payload: dict[str, Any]) -> bool:
+        if payload.get("target") != "speaker":
+            return False
+
+        command = str(payload.get("command", "")).strip().lower()
+        if command == "stop":
+            self.bus.emit_event("speaker", "command:stop", {"ok": True, "status": "stopping"})
+            return True
+        if command == "mute":
+            self.muted = True
+            self.bus.emit_event("speaker", "command:mute", {"ok": True, "muted": True})
+        elif command == "unmute":
+            self.muted = False
+            self.bus.emit_event("speaker", "command:unmute", {"ok": True, "muted": False})
+        elif command == "status_ping":
+            self.bus.emit_event("speaker", "command:status_ping", {"ok": True, "status": "alive", "muted": self.muted})
+        return False
+
     def run(self, stop_event: threading.Event | None = None) -> None:
         while stop_event is None or not stop_event.is_set():
+            should_stop = False
+            for _, payload in self.bus.poll_commands(self.seen_commands):
+                if self._handle_command(payload):
+                    should_stop = True
+                    break
+            if should_stop:
+                break
+
             self.bus.write_state(
                 "speaker",
                 {
                     "service": "speaker",
                     "pid": os.getpid(),
                     "status": "running",
+                    "muted": self.muted,
                     "source_filter": self.source_filter,
                     "profile": str(self.profile_path),
                 },

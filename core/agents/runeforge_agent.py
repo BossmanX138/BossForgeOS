@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import pathlib
@@ -16,6 +17,7 @@ def get_project_root():
 PROJECT_ROOT = get_project_root()
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib import error, request
@@ -29,8 +31,7 @@ RUNEFORGE_PROFILE: dict[str, Any] = {
     "id": "runeforge",
     "name": "Runeforge, First Mind of the Forge",
     "version": "1.0.0",
-    "description": "Model/runtime infrastructure steward get nitdone"
-    "for BossForge workloads.",
+    "description": "Model/runtime infrastructure steward for BossForge workloads.",
     "llm_router": {
         "enabled": True,
         "provider": "openai_compatible",
@@ -50,6 +51,21 @@ class RuneforgeAgent(PrimeAgent):
         self.interval_seconds = interval_seconds
         self.root = root or resolve_root_from_env()
         self.bus = RuneBus(self.root)
+        self.seen_commands: set[str] = set()
+        self.profile_path = self.bus.state / "runeforge_profile.json"
+        self.tasks_path = self.bus.state / "runeforge_tasks.json"
+        self.voice_aliases_path = self.bus.state / "runeforge_voice_aliases.json"
+        self.pending_approval_path = self.bus.state / "runeforge_pending_approval.json"
+        self.tasks: list[dict] = []
+        self._sigil_registry: dict = {}
+        self._system_laws: dict = {}
+        self._fate_workflows: list = []
+        self._banished_agents: set = set()
+        self.os_edition_dir = self.root / "Runeforge OS Edition"
+        self._ensure_profile()
+        self._ensure_voice_aliases()
+        self._load_tasks()
+
     # === Persistence helpers ===
     def _prime_state_path(self, key: str) -> Path:
         return self.bus.state / f"runeforge_{key}.json"
@@ -137,6 +153,8 @@ class RuneforgeAgent(PrimeAgent):
             result = self.run_voice_text(args)
         elif command == "voice_listen":
             result = self.listen_voice_once(args)
+        elif command == "accept_sentinel_recommendations":
+            result = self.accept_sentinel_recommendations(args)
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 
@@ -386,6 +404,46 @@ class RuneforgeAgent(PrimeAgent):
         values = payload.get("supported_action_types", []) if isinstance(payload, dict) else []
         return [str(v).strip() for v in values if isinstance(v, str) and str(v).strip()]
 
+    def _high_risk_action_types(self) -> set[str]:
+        schema_path = self.os_edition_dir / "action_schema.json"
+        if not schema_path.exists():
+            return set()
+        try:
+            payload = json.loads(schema_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return set()
+        values = payload.get("high_risk_action_types", []) if isinstance(payload, dict) else []
+        return {str(v).strip() for v in values if isinstance(v, str) and str(v).strip()}
+
+    def _confirmation_only_action_types(self) -> set[str]:
+        # Confirmation is required, but command code is not.
+        return {"close_app", "set_volume"}
+
+    def _command_code_required_action_types(self) -> set[str]:
+        configured = set(self._high_risk_action_types())
+        # Explicit carve-out: close_app only needs confirmation, not command code.
+        configured.discard("close_app")
+        # Volume changes are confirmation-level, not command-code level.
+        configured.discard("set_volume")
+        # Secret/privileged scopes should require command code.
+        configured.update({
+            "grant_permission",
+            "revoke_permission",
+            "delete_file",
+            "move_file",
+            "copy_file",
+            "registry_edit",
+        })
+        return configured
+
+    def _voice_confidence_threshold(self) -> float:
+        return 0.65
+
+    def _needs_clarification(self, confidence: float | None) -> bool:
+        if confidence is None:
+            return False
+        return float(confidence) < self._voice_confidence_threshold()
+
     def _invoke_llm_router(self, spoken_text: str) -> dict[str, Any]:
         cfg = self._llm_router_config()
         if not bool(cfg.get("enabled", True)):
@@ -483,6 +541,19 @@ class RuneforgeAgent(PrimeAgent):
 
         route = routed.get("route") if isinstance(routed.get("route"), dict) else {}
         intent_type = str(route.get("intent_type", "none")).strip().lower()
+        confidence_raw = route.get("confidence")
+        confidence = float(confidence_raw) if isinstance(confidence_raw, (int, float)) else None
+
+        if self._needs_clarification(confidence):
+            msg = "I heard your command, but confidence is low. Please repeat with more detail."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="warning")
+            return {
+                "ok": False,
+                "spoken_text": spoken_text,
+                "voice_action": "clarification_required",
+                "confidence": confidence,
+                "message": msg,
+            }
 
         if intent_type == "none":
             return None
@@ -523,6 +594,17 @@ class RuneforgeAgent(PrimeAgent):
             action_type = str(action.get("action_type", "")).strip()
             if action_type and action_type not in set(self._supported_action_types()):
                 return None
+            if action_type in self._high_risk_action_types():
+                approval = self.request_os_action_approval({"action": action, "spoken_text": spoken_text, "source": "voice_llm"})
+                return {
+                    "ok": bool(approval.get("ok")),
+                    "spoken_text": spoken_text,
+                    "voice_action": "request_os_action_approval",
+                    "confidence": confidence,
+                    "via": "llm_router",
+                    "llm_route": route,
+                    "result": approval,
+                }
             cli_args = ["--action-json", json.dumps(action), "--agent", "runeforge"]
             if command_code:
                 cli_args.extend(["--command-code", command_code])
@@ -531,6 +613,7 @@ class RuneforgeAgent(PrimeAgent):
                 "ok": bool(os_result.get("ok")),
                 "spoken_text": spoken_text,
                 "voice_action": "os_action",
+                "confidence": confidence,
                 "via": "llm_router",
                 "llm_route": route,
                 "parsed_action": action,
@@ -613,6 +696,49 @@ class RuneforgeAgent(PrimeAgent):
             }
         cleaned = str(moniker.get("content", "")).strip()
 
+        if "sentinel" in cleaned and ("plan" in cleaned or "recommendation" in cleaned) and any(
+            token in cleaned for token in ["review", "seek", "show", "request", "propose"]
+        ):
+            requested_pids = [int(value) for value in re.findall(r"\b\d+\b", cleaned)]
+            requested = self.request_sentinel_plan_approval({"accept_all": not bool(requested_pids), "pids": requested_pids})
+            return {
+                "ok": bool(requested.get("ok")),
+                "spoken_text": text,
+                "voice_action": "request_sentinel_plan_approval",
+                "result": requested,
+            }
+
+        pending = self._load_pending_approval()
+        pending_type = str(pending.get("type", "")).strip().lower()
+        if pending_type in {"sentinel_plan", "os_action"}:
+            if self._is_affirmative_phrase(cleaned):
+                code = self._extract_command_code(cleaned)
+                result = self.respond_pending_approval({"approved": True, "source": "voice", "spoken_text": text, "command_code": code})
+                return {
+                    "ok": bool(result.get("ok")),
+                    "spoken_text": text,
+                    "voice_action": "approve_pending_action",
+                    "result": result,
+                }
+            if self._is_negative_phrase(cleaned):
+                result = self.respond_pending_approval({"approved": False, "source": "voice", "spoken_text": text})
+                return {
+                    "ok": bool(result.get("ok")),
+                    "spoken_text": text,
+                    "voice_action": "reject_pending_action",
+                    "result": result,
+                }
+            if pending_type == "os_action":
+                code = self._extract_command_code(cleaned)
+                if code:
+                    result = self.respond_pending_approval({"approved": True, "source": "voice", "spoken_text": text, "command_code": code})
+                    return {
+                        "ok": bool(result.get("ok")),
+                        "spoken_text": text,
+                        "voice_action": "approve_pending_action",
+                        "result": result,
+                    }
+
         # Voice registration command: "BossForge register voice alias <alias> to agent <id>"
         match = re.match(r"^(register|assign) (voice )?(alias|command) (.+?) (to|for) agent ([a-z0-9_\- ]+)$", cleaned)
         if match:
@@ -653,6 +779,16 @@ class RuneforgeAgent(PrimeAgent):
                 "result": ping_result,
             }
 
+        if cleaned.startswith("accept sentinel recommendation") or cleaned.startswith("accept sentinel recommendations"):
+            mentioned_pids = [int(value) for value in re.findall(r"\b\d+\b", cleaned)]
+            accepted = self.request_sentinel_plan_approval({"accept_all": not bool(mentioned_pids), "pids": mentioned_pids})
+            return {
+                "ok": bool(accepted.get("ok")),
+                "spoken_text": text,
+                "voice_action": "request_sentinel_plan_approval",
+                "result": accepted,
+            }
+
         # LLM router attempt for fuzzy/complex commands.
         llm_route = self._try_route_with_llm(cleaned, command_code=command_code)
         if llm_route is not None:
@@ -678,6 +814,30 @@ class RuneforgeAgent(PrimeAgent):
         if not isinstance(action, dict):
             return {"ok": False, "spoken_text": text, "message": "voice parser did not return an action"}
 
+        confidence_raw = parsed.get("confidence") if isinstance(parsed, dict) else None
+        confidence = float(confidence_raw) if isinstance(confidence_raw, (int, float)) else None
+        if self._needs_clarification(confidence):
+            msg = "I am not fully confident about that command. Please repeat it with more detail."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="warning")
+            return {
+                "ok": False,
+                "spoken_text": text,
+                "voice_action": "clarification_required",
+                "confidence": confidence,
+                "message": msg,
+            }
+
+        action_type = str(action.get("action_type", "")).strip()
+        if action_type in self._high_risk_action_types():
+            approval = self.request_os_action_approval({"action": action, "spoken_text": text, "source": "voice_parser"})
+            return {
+                "ok": bool(approval.get("ok")),
+                "spoken_text": text,
+                "voice_action": "request_os_action_approval",
+                "confidence": confidence,
+                "result": approval,
+            }
+
         cli_args = ["--action-json", json.dumps(action), "--agent", "runeforge"]
         if command_code:
             cli_args.extend(["--command-code", command_code])
@@ -687,6 +847,7 @@ class RuneforgeAgent(PrimeAgent):
             "ok": bool(os_result.get("ok")),
             "spoken_text": text,
             "voice_action": "os_action",
+            "confidence": confidence,
             "parsed_action": action,
             "result": os_result.get("parsed") if isinstance(os_result.get("parsed"), dict) else None,
             "command_processor": {
@@ -728,6 +889,397 @@ class RuneforgeAgent(PrimeAgent):
             except json.JSONDecodeError:
                 continue
         return payload
+
+    def _system_memory_available_mb(self) -> int | None:
+        try:
+            import psutil  # type: ignore
+
+            return int((psutil.virtual_memory().available or 0) / (1024 * 1024))
+        except Exception:
+            return None
+
+    def _load_pending_approval(self) -> dict[str, Any]:
+        if not self.pending_approval_path.exists():
+            return {}
+        try:
+            payload = json.loads(self.pending_approval_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def _save_pending_approval(self, payload: dict[str, Any]) -> None:
+        self.pending_approval_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _clear_pending_approval(self) -> None:
+        try:
+            self.pending_approval_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+    def _is_affirmative_phrase(self, text: str) -> bool:
+        cleaned = self._normalize_phrase(text)
+        if cleaned in {"yes", "yep", "yeah", "approve", "approved", "agree", "accepted", "accept", "do it", "proceed", "confirm"}:
+            return True
+        return "approve sentinel" in cleaned or "accept sentinel" in cleaned or "agree with sentinel" in cleaned
+
+    def _is_negative_phrase(self, text: str) -> bool:
+        cleaned = self._normalize_phrase(text)
+        if cleaned in {"no", "nope", "deny", "decline", "reject", "cancel", "stop"}:
+            return True
+        return "reject sentinel" in cleaned or "decline sentinel" in cleaned or "cancel sentinel" in cleaned
+
+    def _extract_command_code(self, text: str) -> str:
+        cleaned = self._normalize_phrase(text)
+        match = re.search(r"(?:command\s+code|code)\s+([a-z0-9\-]{3,64})", cleaned)
+        if not match:
+            return ""
+        return str(match.group(1)).strip()
+
+    def request_os_action_approval(self, args: dict[str, Any]) -> dict[str, Any]:
+        action = args.get("action") if isinstance(args.get("action"), dict) else None
+        if not action:
+            return {"ok": False, "message": "action is required"}
+        action_type = str(action.get("action_type", "")).strip()
+        if not action_type:
+            return {"ok": False, "message": "action_type is required"}
+
+        requires_command_code = bool(args.get("requires_command_code", action_type in self._command_code_required_action_types()))
+        pending = {
+            "type": "os_action",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "action": action,
+            "spoken_text": str(args.get("spoken_text", "")).strip(),
+            "source": str(args.get("source", "voice")).strip() or "voice",
+            "requires_command_code": requires_command_code,
+        }
+        self._save_pending_approval(pending)
+
+        if requires_command_code:
+            msg = (
+                f"High-risk action {action_type} requires your command code. "
+                "Say: Runeforge command code YOURCODE. "
+                "Or say Runeforge no to cancel."
+            )
+        else:
+            msg = (
+                f"Action {action_type} requires confirmation. "
+                "Say Runeforge yes to proceed or Runeforge no to cancel."
+            )
+        self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="warning")
+        self.bus.emit_event("runeforge", "os_action_approval_requested", {"ok": True, "pending": pending, "message": msg}, level="warning")
+        return {"ok": True, "message": "os action approval requested", "pending": pending}
+
+    def _load_sentinel_recommendations(self) -> list[dict[str, Any]]:
+        state_path = self.bus.state / "security_sentinel.json"
+        if not state_path.exists():
+            return []
+
+        try:
+            payload = json.loads(state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return []
+
+        stability = payload.get("stability") if isinstance(payload, dict) and isinstance(payload.get("stability"), dict) else {}
+        process_recs = stability.get("process_recommendations") if isinstance(stability, dict) and isinstance(stability.get("process_recommendations"), dict) else {}
+        recs = process_recs.get("recommendations") if isinstance(process_recs.get("recommendations"), list) else []
+
+        output: list[dict[str, Any]] = []
+        for item in recs:
+            if not isinstance(item, dict):
+                continue
+            pid = int(item.get("pid", 0) or 0)
+            if pid <= 0:
+                continue
+            output.append(
+                {
+                    "pid": pid,
+                    "name": str(item.get("name", "process")),
+                    "rss_mb": int(item.get("rss_mb", 0) or 0),
+                    "recommendation": str(item.get("recommendation", "")),
+                }
+            )
+        return output
+
+    def request_sentinel_plan_approval(self, args: dict[str, Any] | None = None) -> dict[str, Any]:
+        params = args or {}
+        recommendations = self._load_sentinel_recommendations()
+        if not recommendations:
+            return {"ok": False, "message": "no sentinel recommendations available"}
+
+        requested = params.get("pids") if isinstance(params.get("pids"), list) else []
+        requested_pids = {int(value) for value in requested if str(value).strip().isdigit()}
+        accept_all = bool(params.get("accept_all", not requested_pids))
+        targets = recommendations if accept_all else [item for item in recommendations if int(item.get("pid", 0) or 0) in requested_pids]
+        if not targets:
+            return {
+                "ok": False,
+                "message": "no matching recommended processes for approval request",
+                "available": recommendations,
+            }
+
+        estimated_restore_mb = sum(int(item.get("rss_mb", 0) or 0) for item in targets)
+        approval = {
+            "type": "sentinel_plan",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "accept_all": accept_all,
+            "requested_pids": sorted(list(requested_pids)),
+            "targets": targets,
+            "estimated_restore_mb": estimated_restore_mb,
+            "pre_available_memory_mb": self._system_memory_available_mb(),
+        }
+        self._save_pending_approval(approval)
+
+        top_names = ", ".join(str(item.get("name", "process")).replace(".exe", "") for item in targets[:3])
+        voice_message = (
+            "Sentinel submitted a stabilization plan requiring your approval. "
+            f"Suggested closures: {top_names}. "
+            f"Estimated memory recovery is about {estimated_restore_mb} megabytes. "
+            "Reply with: Runeforge yes to execute, or Runeforge no to cancel."
+        )
+        self.bus.emit_event("runeforge", "voice_feedback", {"message": voice_message}, level="warning")
+        self.bus.emit_event(
+            "runeforge",
+            "sentinel_plan_approval_requested",
+            {
+                "ok": True,
+                "approval": approval,
+                "message": voice_message,
+            },
+            level="warning",
+        )
+        return {
+            "ok": True,
+            "message": "sentinel plan approval requested",
+            "approval": approval,
+        }
+
+    def _terminate_pid(self, pid: int) -> dict[str, Any]:
+        if pid <= 0:
+            return {"ok": False, "pid": pid, "message": "invalid pid"}
+        if pid == os.getpid():
+            return {"ok": False, "pid": pid, "message": "refusing to terminate own process"}
+
+        try:
+            import psutil  # type: ignore
+
+            proc = psutil.Process(pid)
+            proc_name = proc.name()
+            proc.terminate()
+            try:
+                proc.wait(timeout=3)
+            except Exception:
+                proc.kill()
+                proc.wait(timeout=3)
+            return {"ok": True, "pid": pid, "name": proc_name, "method": "psutil"}
+        except Exception:
+            pass
+
+        if os.name == "nt":
+            try:
+                subprocess.check_output(["taskkill", "/PID", str(pid), "/F"], text=True, stderr=subprocess.STDOUT, timeout=8)
+                return {"ok": True, "pid": pid, "method": "taskkill"}
+            except Exception as ex:
+                return {"ok": False, "pid": pid, "message": str(ex)}
+
+        try:
+            os.kill(pid, signal.SIGTERM)
+            return {"ok": True, "pid": pid, "method": "os.kill"}
+        except Exception as ex:
+            return {"ok": False, "pid": pid, "message": str(ex)}
+
+    def accept_sentinel_recommendations(self, args: dict[str, Any]) -> dict[str, Any]:
+        pre_available_mb = self._system_memory_available_mb()
+        recommendations = self._load_sentinel_recommendations()
+        if not recommendations:
+            return {"ok": False, "message": "no sentinel recommendations available"}
+
+        pid_list = args.get("pids") if isinstance(args.get("pids"), list) else []
+        selected_pids = {int(value) for value in pid_list if str(value).strip().isdigit()}
+        accept_all = bool(args.get("accept_all", not selected_pids))
+
+        if accept_all:
+            targets = recommendations
+        else:
+            targets = [item for item in recommendations if int(item.get("pid", 0) or 0) in selected_pids]
+
+        if not targets:
+            return {
+                "ok": False,
+                "message": "no matching recommended processes to terminate",
+                "available": recommendations,
+            }
+
+        results: list[dict[str, Any]] = []
+        for item in targets:
+            pid = int(item.get("pid", 0) or 0)
+            outcome = self._terminate_pid(pid)
+            outcome["recommended_name"] = str(item.get("name", "process"))
+            outcome["recommended_rss_mb"] = int(item.get("rss_mb", 0) or 0)
+            results.append(outcome)
+
+        terminated = [item for item in results if item.get("ok")]
+        failed = [item for item in results if not item.get("ok")]
+        estimated_restored_mb = sum(int(item.get("recommended_rss_mb", 0) or 0) for item in terminated)
+        post_available_mb = self._system_memory_available_mb()
+        observed_restore_mb = None
+        if pre_available_mb is not None and post_available_mb is not None:
+            observed_restore_mb = post_available_mb - pre_available_mb
+
+        if terminated:
+            names = ", ".join(str(item.get("recommended_name", "process")).replace(".exe", "") for item in terminated[:3])
+            voice_message = (
+                "Runeforge applied Sentinel recommendations with user approval. "
+                f"Terminated {len(terminated)} process or processes: {names}. "
+                f"Estimated memory restored: {estimated_restored_mb} megabytes."
+            )
+            if observed_restore_mb is not None:
+                voice_message += f" Observed available memory delta: {observed_restore_mb} megabytes."
+            if failed:
+                voice_message += f" {len(failed)} could not be terminated."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": voice_message}, level="warning")
+        else:
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": "Runeforge could not terminate the recommended processes."}, level="warning")
+
+        self.bus.emit_event(
+            "runeforge",
+            "sentinel_recommendations_applied",
+            {
+                "accept_all": accept_all,
+                "requested_pids": sorted(list(selected_pids)),
+                "terminated_count": len(terminated),
+                "failed_count": len(failed),
+                "estimated_restored_mb": estimated_restored_mb,
+                "observed_available_memory_delta_mb": observed_restore_mb,
+                "results": results,
+            },
+            level="warning" if failed else "info",
+        )
+
+        return {
+            "ok": bool(terminated),
+            "accept_all": accept_all,
+            "requested_pids": sorted(list(selected_pids)),
+            "terminated": terminated,
+            "failed": failed,
+            "report": {
+                "execution_method": "terminate recommended process ids",
+                "terminated_count": len(terminated),
+                "failed_count": len(failed),
+                "estimated_restored_mb": estimated_restored_mb,
+                "observed_available_memory_delta_mb": observed_restore_mb,
+                "pre_available_memory_mb": pre_available_mb,
+                "post_available_memory_mb": post_available_mb,
+            },
+        }
+
+    def respond_sentinel_plan_approval(self, args: dict[str, Any]) -> dict[str, Any]:
+        pending = self._load_pending_approval()
+        if str(pending.get("type", "")).strip().lower() != "sentinel_plan":
+            return {"ok": False, "message": "no pending sentinel plan awaiting approval"}
+
+        approved = bool(args.get("approved", False))
+        source = str(args.get("source", "text")).strip() or "text"
+        if not approved:
+            self._clear_pending_approval()
+            msg = "Sentinel plan rejected. No process actions were executed."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="info")
+            self.bus.emit_event("runeforge", "sentinel_plan_approval_result", {"ok": True, "approved": False, "source": source, "message": msg}, level="info")
+            return {"ok": True, "approved": False, "message": msg}
+
+        targets = pending.get("targets") if isinstance(pending.get("targets"), list) else []
+        pids = [int(item.get("pid", 0) or 0) for item in targets if isinstance(item, dict)]
+        accept_all = bool(pending.get("accept_all", not pids))
+        execution = self.accept_sentinel_recommendations({"accept_all": accept_all, "pids": pids})
+        self._clear_pending_approval()
+
+        report = execution.get("report") if isinstance(execution.get("report"), dict) else {}
+        self.bus.emit_event(
+            "runeforge",
+            "sentinel_plan_approval_result",
+            {
+                "ok": bool(execution.get("ok")),
+                "approved": True,
+                "source": source,
+                "execution": execution,
+                "report": report,
+            },
+            level="warning" if not execution.get("ok") else "info",
+        )
+        return {
+            "ok": bool(execution.get("ok")),
+            "approved": True,
+            "source": source,
+            "execution": execution,
+            "report": report,
+        }
+
+    def respond_pending_approval(self, args: dict[str, Any]) -> dict[str, Any]:
+        pending = self._load_pending_approval()
+        ptype = str(pending.get("type", "")).strip().lower()
+        if ptype == "sentinel_plan":
+            return self.respond_sentinel_plan_approval(args)
+        if ptype != "os_action":
+            return {"ok": False, "message": "no pending approval"}
+
+        approved = bool(args.get("approved", False))
+        source = str(args.get("source", "text")).strip() or "text"
+        action = pending.get("action") if isinstance(pending.get("action"), dict) else None
+        if not action:
+            self._clear_pending_approval()
+            return {"ok": False, "message": "pending approval action missing"}
+
+        if not approved:
+            self._clear_pending_approval()
+            msg = "High-risk action rejected. No command executed."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="info")
+            self.bus.emit_event("runeforge", "os_action_approval_result", {"ok": True, "approved": False, "source": source, "message": msg}, level="info")
+            return {"ok": True, "approved": False, "message": msg}
+
+        command_code = str(args.get("command_code", "")).strip() if args.get("command_code") is not None else ""
+        requires_command_code = bool(pending.get("requires_command_code", True))
+        if requires_command_code and not command_code:
+            msg = "Command code required before executing this high-risk action. Say: Runeforge command code YOURCODE."
+            self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="warning")
+            return {
+                "ok": False,
+                "approved": False,
+                "requires_command_code": True,
+                "message": msg,
+            }
+        cli_args = ["--action-json", json.dumps(action), "--agent", "runeforge"]
+        if command_code:
+            cli_args.extend(["--command-code", command_code])
+        os_result = self._run_os_command_processor(cli_args, timeout_seconds=180)
+        self._clear_pending_approval()
+
+        report = {
+            "execution_method": "command_processor",
+            "action_type": str(action.get("action_type", "")),
+            "ok": bool(os_result.get("ok")),
+            "returncode": os_result.get("returncode"),
+        }
+        msg = "Approved high-risk action executed." if os_result.get("ok") else "Approved high-risk action failed during execution."
+        self.bus.emit_event("runeforge", "voice_feedback", {"message": msg}, level="info" if os_result.get("ok") else "warning")
+        self.bus.emit_event(
+            "runeforge",
+            "os_action_approval_result",
+            {
+                "ok": bool(os_result.get("ok")),
+                "approved": True,
+                "source": source,
+                "action": action,
+                "result": os_result.get("parsed") if isinstance(os_result.get("parsed"), dict) else os_result,
+                "report": report,
+            },
+            level="info" if os_result.get("ok") else "warning",
+        )
+        return {
+            "ok": bool(os_result.get("ok")),
+            "approved": True,
+            "source": source,
+            "result": os_result.get("parsed") if isinstance(os_result.get("parsed"), dict) else os_result,
+            "report": report,
+        }
 
     def _run_voice_dictation(self, args: list[str], timeout_seconds: int = 120) -> dict[str, Any]:
         voice_script = self._voice_dictation_path()
@@ -797,6 +1349,14 @@ class RuneforgeAgent(PrimeAgent):
         command_code = str(args.get("command_code", "")).strip() if args.get("command_code") is not None else ""
         if not isinstance(action, dict):
             return {"ok": False, "message": "args.action must be an object"}
+
+        action_type = str(action.get("action_type", "")).strip()
+        confirmed = bool(args.get("approved", False) or args.get("confirmed", False))
+        if not confirmed:
+            if action_type in self._command_code_required_action_types():
+                return self.request_os_action_approval({"action": action, "source": "command", "requires_command_code": True})
+            if action_type in self._confirmation_only_action_types():
+                return self.request_os_action_approval({"action": action, "source": "command", "requires_command_code": False})
 
         cli_args = ["--action-json", json.dumps(action), "--agent", "runeforge"]
         if command_code:
@@ -894,7 +1454,17 @@ class RuneforgeAgent(PrimeAgent):
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
 
-        if command == "status_ping":
+        if command == "reality_weaving":
+            result = self.reality_weaving(**args)
+        elif command == "sigil_synthesis":
+            result = self.sigil_synthesis(**args)
+        elif command == "system_scribe":
+            result = self.system_scribe(**args)
+        elif command == "fate_threading":
+            result = self.fate_threading(**args)
+        elif command == "sanctum_of_invocation":
+            result = self.sanctum_of_invocation(**args)
+        elif command == "status_ping":
             result = {"ok": True, "status": "alive", "queued_tasks": len(self.tasks)}
         elif command == "work_packet":
             result = self.add_work_packet(args)
@@ -912,6 +1482,16 @@ class RuneforgeAgent(PrimeAgent):
             result = self.run_voice_text(args)
         elif command == "voice_listen":
             result = self.listen_voice_once(args)
+        elif command == "request_sentinel_plan_approval":
+            result = self.request_sentinel_plan_approval(args)
+        elif command == "respond_sentinel_plan_approval":
+            result = self.respond_sentinel_plan_approval(args)
+        elif command == "respond_pending_approval":
+            result = self.respond_pending_approval(args)
+        elif command == "request_os_action_approval":
+            result = self.request_os_action_approval(args)
+        elif command == "accept_sentinel_recommendations":
+            result = self.accept_sentinel_recommendations(args)
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 

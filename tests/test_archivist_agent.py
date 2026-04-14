@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from core.archivist_agent import ArchivistAgent
-from core.rune_bus import RuneBus
+from core.agents.archivist_agent import ArchivistAgent
+from core.rune.rune_bus import RuneBus
 
 
 class ArchivistAgentTests(unittest.TestCase):
@@ -149,7 +149,8 @@ class ArchivistAgentTests(unittest.TestCase):
             before_pending = len(preview_before.get("pending", []))
             seal_id = preview_before["pending"][-1]["seal_id"]
 
-            approved = agent.approve_seal(seal_id=seal_id, init_repo_if_missing=False)
+            with patch.object(agent, "_is_git_repo", return_value=False):
+                approved = agent.approve_seal(seal_id=seal_id, init_repo_if_missing=False)
             self.assertTrue(approved["ok"])
             self.assertEqual(approved["status"], "sealed_no_git")
 
