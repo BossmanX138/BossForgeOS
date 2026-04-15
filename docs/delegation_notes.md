@@ -11872,3 +11872,480 @@
 - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:389 :: - todos_detected: 51
 - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:397 :: - todos_detected: 0
 
+## 2026-04-14 04:41:33
+### General Backlog
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  context: prev='- After completing each step, mark it complete and add a summary.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  context: prev='- Uses the merged M365 MCP runtime in `m365_copilot_connector/` for Outlook, Teams, OneDrive, and Calendar actions' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  context: prev='- Notifies users or agents if manual intervention is required.' | next='- If stuck on a coding problem or not proficient in a language (e.g., C++), may access the web for information and learning only (never for code download or execution).'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:73 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  context: prev='}' | next=''
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:90 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"name": "ArchivistAgent",' | next='}'
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:247 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  context: prev='lower = text.lower()' | next='return "high"'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:249 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  context: prev='return "high"' | next='return "low"'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:281 :: if "todo" in lower:
+  context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:392 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  context: prev='lines = content.splitlines()' | next='return {'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:472 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  context: prev='upper = stripped.upper()' | next='todo_or_open.append(stripped)'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"class": "ArchivistAgent",' | next='},'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  context: prev='' | next='|------------------------------------------------------------------|------------------------|-------------|'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  context: prev='- CodeMage, Devlot, and Archivist are now responsible for their assigned todos.' | next='- Next step: Each agent begins implementation and reports status.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  context: prev='{ "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },' | next=']'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  context: prev='- Runtime identity is defined as `BossCrafts_Devlot_MkII (M365 Runtime)` in MCP/declarative manifests.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:72 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:91 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-04-14 04:41:34
+### General Backlog
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  context: prev='- After completing each step, mark it complete and add a summary.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  context: prev='- Uses the merged M365 MCP runtime in `m365_copilot_connector/` for Outlook, Teams, OneDrive, and Calendar actions' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  context: prev='- Notifies users or agents if manual intervention is required.' | next='- If stuck on a coding problem or not proficient in a language (e.g., C++), may access the web for information and learning only (never for code download or execution).'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:73 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  context: prev='}' | next=''
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:90 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"name": "ArchivistAgent",' | next='}'
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:247 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  context: prev='lower = text.lower()' | next='return "high"'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:249 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  context: prev='return "high"' | next='return "low"'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:281 :: if "todo" in lower:
+  context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:392 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  context: prev='lines = content.splitlines()' | next='return {'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:472 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  context: prev='upper = stripped.upper()' | next='todo_or_open.append(stripped)'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"class": "ArchivistAgent",' | next='},'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  context: prev='' | next='|------------------------------------------------------------------|------------------------|-------------|'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  context: prev='- CodeMage, Devlot, and Archivist are now responsible for their assigned todos.' | next='- Next step: Each agent begins implementation and reports status.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  context: prev='{ "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },' | next=']'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  context: prev='- Runtime identity is defined as `BossCrafts_Devlot_MkII (M365 Runtime)` in MCP/declarative manifests.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:72 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:91 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-04-14 04:41:35
+### General Backlog
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  context: prev='- After completing each step, mark it complete and add a summary.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  context: prev='- Uses the merged M365 MCP runtime in `m365_copilot_connector/` for Outlook, Teams, OneDrive, and Calendar actions' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  context: prev='- Notifies users or agents if manual intervention is required.' | next='- If stuck on a coding problem or not proficient in a language (e.g., C++), may access the web for information and learning only (never for code download or execution).'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:73 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  context: prev='}' | next=''
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:90 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"name": "ArchivistAgent",' | next='}'
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:247 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  context: prev='lower = text.lower()' | next='return "high"'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:249 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  context: prev='return "high"' | next='return "low"'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:281 :: if "todo" in lower:
+  context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:392 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  context: prev='lines = content.splitlines()' | next='return {'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:472 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  context: prev='upper = stripped.upper()' | next='todo_or_open.append(stripped)'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"class": "ArchivistAgent",' | next='},'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  context: prev='' | next='|------------------------------------------------------------------|------------------------|-------------|'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  context: prev='- CodeMage, Devlot, and Archivist are now responsible for their assigned todos.' | next='- Next step: Each agent begins implementation and reports status.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  context: prev='{ "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },' | next=']'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  context: prev='- Runtime identity is defined as `BossCrafts_Devlot_MkII (M365 Runtime)` in MCP/declarative manifests.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:72 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:91 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-04-14 04:41:35
+### General Backlog
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  context: prev='- After completing each step, mark it complete and add a summary.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  context: prev='- Uses the merged M365 MCP runtime in `m365_copilot_connector/` for Outlook, Teams, OneDrive, and Calendar actions' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  context: prev='- Notifies users or agents if manual intervention is required.' | next='- If stuck on a coding problem or not proficient in a language (e.g., C++), may access the web for information and learning only (never for code download or execution).'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:73 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  context: prev='}' | next=''
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:90 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"name": "ArchivistAgent",' | next='}'
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:247 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  context: prev='lower = text.lower()' | next='return "high"'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:249 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  context: prev='return "high"' | next='return "low"'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:281 :: if "todo" in lower:
+  context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:392 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  context: prev='lines = content.splitlines()' | next='return {'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:472 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  context: prev='upper = stripped.upper()' | next='todo_or_open.append(stripped)'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"class": "ArchivistAgent",' | next='},'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  context: prev='' | next='|------------------------------------------------------------------|------------------------|-------------|'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  context: prev='- CodeMage, Devlot, and Archivist are now responsible for their assigned todos.' | next='- Next step: Each agent begins implementation and reports status.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  context: prev='{ "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },' | next=']'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  context: prev='- Runtime identity is defined as `BossCrafts_Devlot_MkII (M365 Runtime)` in MCP/declarative manifests.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:72 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:91 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-04-14 04:41:36
+### General Backlog
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  context: prev='- After completing each step, mark it complete and add a summary.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  context: prev='- Uses the merged M365 MCP runtime in `m365_copilot_connector/` for Outlook, Teams, OneDrive, and Calendar actions' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  context: prev='- Notifies users or agents if manual intervention is required.' | next='- If stuck on a coding problem or not proficient in a language (e.g., C++), may access the web for information and learning only (never for code download or execution).'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:73 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  context: prev='}' | next=''
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:90 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"name": "ArchivistAgent",' | next='}'
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:247 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  context: prev='lower = text.lower()' | next='return "high"'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:249 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  context: prev='return "high"' | next='return "low"'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:281 :: if "todo" in lower:
+  context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:392 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  context: prev='lines = content.splitlines()' | next='return {'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:472 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  context: prev='upper = stripped.upper()' | next='todo_or_open.append(stripped)'
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  context: prev='"class": "ArchivistAgent",' | next='},'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  context: prev='' | next='|------------------------------------------------------------------|------------------------|-------------|'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  context: prev='- CodeMage, Devlot, and Archivist are now responsible for their assigned todos.' | next='- Next step: Each agent begins implementation and reports status.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  context: prev='{ "name": "BossForgeOSAgentOrchestration", "description": "Hooks for BossForgeOS agent orchestration and extension." },' | next=']'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  context: prev='- Runtime identity is defined as `BossCrafts_Devlot_MkII (M365 Runtime)` in MCP/declarative manifests.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:72 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:91 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-04-14 04:57:12
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:46 :: - `docs/`: architecture, runbook, feature audits, todos, changelogs
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:97 :: - See [docs/todos.md](docs/todos.md) and [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md) for actionable features and coverage
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:106 :: - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
+- [archivist] D:\Bosscrafts\BossForgeOS\README.md:172 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
+- [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+- [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:44 :: - On assignment to a project, automatically scans project files for TODOs and actionable items.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:45 :: - Prioritizes TODOs based on impact, urgency, and dependencies.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:46 :: - Attempts to complete TODOs autonomously, delegating to other agents when appropriate.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+- [devlot] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\architecture.md:55 :: - [docs/todos.md](todos.md): Actionable todos
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:3 :: The Archivist agent maintains, audits, and stewards all project documentation, feature logs, and actionable todos. It ensures BossForgeOS documentation reflects the current system state, including SoundStage, GUI, VS Code extension, and all
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:35 :: - `docs/todos.md`
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:55 :: - `todo_scan_suffixes`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:56 :: - `todo_ignore_dir_names`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:57 :: - `todo_ignore_file_names`
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:59 :: - `todo_patterns`
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:65 :: "todo_patterns": ["TODO", "FIXME", "TBD", "ACTIONITEM"],
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:66 :: "todo_scan_suffixes": [".md", ".txt", ".py"],
+- [runeforge] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:67 :: "todo_ignore_dir_names": [".git", ".venv", ".models", ".runtime"]
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:73 :: - TODO detection is pattern-based (not deep semantic intent)
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:83 :: - [docs/todos.md](todos.md): Actionable todos
+- [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+- [archivist] D:\Bosscrafts\BossForgeOS\docs\CHANGELOG.md:6 :: - Major documentation update: README, archivistREADME, architecture, GUI audit, todos, SoundStage docs
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:11 :: - todos_detected: 427
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:16 :: - todos_detected: 528
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:21 :: - todos_detected: 630
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:26 :: - todos_detected: 731
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:31 :: - todos_detected: 832
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:36 :: - todos_detected: 933
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:41 :: - todos_detected: 1034
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:46 :: - todos_detected: 1136
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:51 :: - todos_detected: 1237
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:56 :: - todos_detected: 1338
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:61 :: - todos_detected: 1439
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:66 :: - todos_detected: 1540
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:71 :: - todos_detected: 1641
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:76 :: - todos_detected: 1742
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:81 :: - todos_detected: 1843
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:86 :: - todos_detected: 1944
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:91 :: - todos_detected: 2045
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:96 :: - todos_detected: 2146
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:101 :: - todos_detected: 2247
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:106 :: - todos_detected: 2348
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:111 :: - todos_detected: 2449
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:116 :: - todos_detected: 2550
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:121 :: - todos_detected: 2651
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:126 :: - todos_detected: 2752
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:131 :: - todos_detected: 2853
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:136 :: - todos_detected: 2954
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:141 :: - todos_detected: 3055
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:146 :: - todos_detected: 3156
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:151 :: - todos_detected: 3257
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:156 :: - todos_detected: 3358
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:161 :: - todos_detected: 3461
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:166 :: - todos_detected: 3562
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:171 :: - todos_detected: 3663
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:176 :: - todos_detected: 3764
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:181 :: - todos_detected: 3865
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:186 :: - todos_detected: 3966
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:191 :: - todos_detected: 4067
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:196 :: - todos_detected: 4168
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:201 :: - todos_detected: 4269
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:206 :: - todos_detected: 4371
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:211 :: - todos_detected: 4472
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:216 :: - todos_detected: 4573
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:221 :: - todos_detected: 4674
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:226 :: - todos_detected: 4785
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:231 :: - todos_detected: 4886
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:236 :: - todos_detected: 4987
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:241 :: - todos_detected: 5088
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:246 :: - todos_detected: 5430
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:251 :: - todos_detected: 5531
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:256 :: - todos_detected: 5632
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:261 :: - todos_detected: 5733
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:266 :: - todos_detected: 5834
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:271 :: - todos_detected: 5935
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:276 :: - todos_detected: 6036
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:281 :: - todos_detected: 18005
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:286 :: - todos_detected: 5818
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:291 :: - todos_detected: 5721
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:296 :: - todos_detected: 105
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:301 :: - todos_detected: 47
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:306 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:313 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:320 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:327 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:334 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:341 :: - todos_detected: 53
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:349 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:357 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:365 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:373 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:381 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:389 :: - todos_detected: 51
+- [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:397 :: - todos_detected: 0
+
