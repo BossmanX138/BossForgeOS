@@ -19,12 +19,13 @@ import shutil
 import sqlite3
 import subprocess
 import threading
-import time
-from datetime import datetime, time as dt_time, timezone
+from datetime import datetime, timedelta, time as dt_time, timezone
 from pathlib import Path
 from typing import Any
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from core.rune.discovery_handoff import run_discovery_handoff
+from core.rune.agent_consumer import AgentConsumerLoop
 
 from core.agent_registry import register_agent
 
@@ -33,6 +34,7 @@ class ArchivistAgent:
     TODO_SCAN_SUFFIXES = {".md", ".txt", ".py", ".ps1", ".json", ".yaml", ".yml"}
     TODO_IGNORE_DIR_NAMES = {
         ".git",
+        ".continue",
         ".venv",
         ".venv-xtts",
         ".venv-vllm",
@@ -53,6 +55,7 @@ class ArchivistAgent:
         "changelog.md",
         "decisions.md",
         "archivistreadme.md",
+        "agent_task_assignments.md",
     }
     README_IGNORE_DIR_NAMES = {
         ".git",
@@ -71,6 +74,30 @@ class ArchivistAgent:
         "site-packages",
     }
     TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+    RUNEBUS_IMPORTANT_LEVELS = {"warning", "error", "critical"}
+    RUNEBUS_IMPORTANT_KEYWORDS = {
+        "error",
+        "fail",
+        "failed",
+        "exception",
+        "critical",
+        "security",
+        "incident",
+        "seal",
+        "deploy",
+        "rollback",
+        "panic",
+    }
+    RUNEBUS_PROJECT_KEYS = {
+        "project",
+        "project_id",
+        "project_path",
+        "project_root",
+        "repo",
+        "repository",
+        "ticket",
+        "issue",
+    }
 
     def __init__(self, interval_seconds: int = 15, root: Path | None = None, daily_run_time: str = "00:45") -> None:
         self.interval_seconds = interval_seconds
@@ -80,6 +107,8 @@ class ArchivistAgent:
         self.archives_root = self.bus.root / "archives"
         self.archives_root.mkdir(parents=True, exist_ok=True)
         self.last_daily_run_key: str | None = None
+        self.maintenance_state_path = self.bus.state / "archivist_bus_maintenance.json"
+        self.last_bus_maintenance_at = self._load_last_bus_maintenance_at()
         self.policy_path = self.bus.state / "archivist_policy.json"
         self.policy = self._load_policy()
         
@@ -98,7 +127,158 @@ class ArchivistAgent:
             "todo_ignore_file_names": sorted(self.TODO_IGNORE_FILE_NAMES),
             "readme_ignore_dir_names": sorted(self.README_IGNORE_DIR_NAMES),
             "todo_patterns": list(self.TODO_PATTERNS),
+            "runebus_maintenance": {
+                "enabled": True,
+                "interval_hours": 24,
+                "min_age_hours": 24,
+            },
         }
+
+    def _load_last_bus_maintenance_at(self) -> datetime | None:
+        if not self.maintenance_state_path.exists():
+            return None
+        try:
+            payload = json.loads(self.maintenance_state_path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                return None
+            value = str(payload.get("last_run_at", "")).strip()
+            if not value:
+                return None
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except (OSError, json.JSONDecodeError, ValueError):
+            return None
+
+    def _save_last_bus_maintenance_at(self, at: datetime) -> None:
+        payload = {"last_run_at": at.astimezone(timezone.utc).isoformat()}
+        try:
+            self.maintenance_state_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError:
+            pass
+
+    def _runebus_maintenance_config(self) -> dict[str, Any]:
+        cfg = self.policy.get("runebus_maintenance")
+        if not isinstance(cfg, dict):
+            return {"enabled": True, "interval_hours": 24, "min_age_hours": 24}
+        enabled = bool(cfg.get("enabled", True))
+        interval_hours = max(1, int(cfg.get("interval_hours", 24) or 24))
+        min_age_hours = max(1, int(cfg.get("min_age_hours", 24) or 24))
+        return {
+            "enabled": enabled,
+            "interval_hours": interval_hours,
+            "min_age_hours": min_age_hours,
+        }
+
+    def _is_runebus_payload_important(self, payload: dict[str, Any], file_name: str) -> bool:
+        level = str(payload.get("level", "")).strip().lower()
+        if level in self.RUNEBUS_IMPORTANT_LEVELS:
+            return True
+
+        source = str(payload.get("source", "")).strip().lower()
+        if source in {"security_sentinel", "archivist", "test_sentinel"}:
+            return True
+
+        text_fields = [
+            file_name,
+            str(payload.get("event", "")),
+            str(payload.get("command", "")),
+            str(payload.get("message", "")),
+        ]
+        blob = " ".join(text_fields).lower()
+        if any(token in blob for token in self.RUNEBUS_IMPORTANT_KEYWORDS):
+            return True
+
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+        for key in self.RUNEBUS_PROJECT_KEYS:
+            if key in payload and str(payload.get(key, "")).strip():
+                return True
+            if key in data and str(data.get(key, "")).strip():
+                return True
+            if key in args and str(args.get(key, "")).strip():
+                return True
+
+        return False
+
+    def _maintain_runebus_folder(
+        self,
+        folder: Path,
+        archive_folder: Path,
+        min_age: timedelta,
+    ) -> dict[str, int]:
+        now = datetime.now(timezone.utc)
+        stats = {
+            "inspected": 0,
+            "archived": 0,
+            "deleted": 0,
+            "important": 0,
+            "unimportant": 0,
+            "errors": 0,
+        }
+
+        try:
+            with os.scandir(folder) as it:
+                for entry in it:
+                    if not entry.is_file() or not entry.name.endswith(".json"):
+                        continue
+                    stats["inspected"] += 1
+
+                    try:
+                        mtime = datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc)
+                        if (now - mtime) < min_age:
+                            continue
+                    except OSError:
+                        stats["errors"] += 1
+                        continue
+
+                    src = Path(entry.path)
+                    try:
+                        payload = json.loads(src.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = {}
+
+                    payload = payload if isinstance(payload, dict) else {}
+                    important = self._is_runebus_payload_important(payload, entry.name)
+
+                    try:
+                        if important:
+                            archive_folder.mkdir(parents=True, exist_ok=True)
+                            src.replace(archive_folder / entry.name)
+                            stats["archived"] += 1
+                            stats["important"] += 1
+                        else:
+                            src.unlink(missing_ok=True)
+                            stats["deleted"] += 1
+                            stats["unimportant"] += 1
+                    except OSError:
+                        stats["errors"] += 1
+        except OSError:
+            stats["errors"] += 1
+
+        return stats
+
+    def maintain_runebus_unread(self) -> dict[str, Any]:
+        cfg = self._runebus_maintenance_config()
+        if not cfg.get("enabled", True):
+            return {"ok": True, "skipped": True, "reason": "disabled"}
+
+        min_age = timedelta(hours=int(cfg.get("min_age_hours", 24)))
+        target = self._new_archive_dir("runebus")
+        events_archive = target / "events"
+        commands_archive = target / "commands"
+
+        events_stats = self._maintain_runebus_folder(self.bus.events, events_archive, min_age)
+        commands_stats = self._maintain_runebus_folder(self.bus.commands, commands_archive, min_age)
+
+        result = {
+            "ok": True,
+            "archive_path": str(target),
+            "config": cfg,
+            "events": events_stats,
+            "commands": commands_stats,
+        }
+
+        self.bus.emit_event("archivist", "runebus_maintenance", result)
+        return result
 
     def _normalize_list(self, value: Any) -> list[str]:
         if not isinstance(value, list):
@@ -987,6 +1167,10 @@ class ArchivistAgent:
 
         command = payload.get("command")
         args = payload.get("args") or {}
+        if not isinstance(args, dict):
+            args = {}
+
+        discovery = run_discovery_handoff(self.bus, "archivist", args, root=self.bus.root)
 
         if command == "archive_logs":
             result = self.archive_logs()
@@ -996,6 +1180,8 @@ class ArchivistAgent:
             result = self.snapshot_state()
         elif command in {"on_invoke", "run_daily"}:
             result = self.on_invoke()
+        elif command == "maintain_runebus_unread":
+            result = self.maintain_runebus_unread()
         elif command == "preview_seal":
             result = self.preview_seal()
         elif command == "approve_seal":
@@ -1027,15 +1213,34 @@ class ArchivistAgent:
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 
+        if isinstance(result, dict):
+            result.setdefault("discovery", discovery)
+
         self.bus.emit_event("archivist", f"command:{command}", result)
         self.bus.write_state("archivist", {"service": "archivist", "pid": os.getpid(), "last_command": command, **result})
 
     def run(self, stop_event: threading.Event | None = None) -> None:
-        while stop_event is None or not stop_event.is_set():
+        def on_idle() -> None:
             now = datetime.now()
             current_key = now.strftime("%Y-%m-%d")
             run_time = dt_time.fromisoformat(self.daily_run_time)
             should_run_daily = now.time().hour == run_time.hour and now.time().minute == run_time.minute and self.last_daily_run_key != current_key
+
+            maintenance_cfg = self._runebus_maintenance_config()
+            should_run_maintenance = False
+            if maintenance_cfg.get("enabled", True):
+                interval = timedelta(hours=int(maintenance_cfg.get("interval_hours", 24)))
+                now_utc = datetime.now(timezone.utc)
+                should_run_maintenance = (
+                    self.last_bus_maintenance_at is None
+                    or (now_utc - self.last_bus_maintenance_at) >= interval
+                )
+
+            if should_run_maintenance:
+                maintenance_result = self.maintain_runebus_unread()
+                self.last_bus_maintenance_at = datetime.now(timezone.utc)
+                self._save_last_bus_maintenance_at(self.last_bus_maintenance_at)
+                self.bus.emit_event("archivist", "scheduled:runebus_maintenance", maintenance_result)
 
             if should_run_daily:
                 daily_result = self.on_invoke()
@@ -1050,11 +1255,18 @@ class ArchivistAgent:
                     "status": "idle",
                     "daily_run_time": self.daily_run_time,
                     "last_daily_run": self.last_daily_run_key,
+                    "last_runebus_maintenance": self.last_bus_maintenance_at.isoformat() if self.last_bus_maintenance_at else None,
                 },
             )
-            for _, payload in self.bus.poll_commands(self.seen_commands):
-                self.handle_command(payload)
-            time.sleep(self.interval_seconds)
+
+        loop = AgentConsumerLoop(
+            bus=self.bus,
+            seen_commands=self.seen_commands,
+            interval_seconds=self.interval_seconds,
+            on_idle=on_idle,
+            on_command=self.handle_command,
+        )
+        loop.run(stop_check=lambda: bool(stop_event is not None and stop_event.is_set()))
 
     def run_forever(self) -> None:
         self.run(stop_event=None)
