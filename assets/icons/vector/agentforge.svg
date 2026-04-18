@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="AgentForge">
+  <g fill="none" stroke="#D4A857" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="56"/>
+    <polygon points="64,38 84,50 84,74 64,86 44,74 44,50"/>
+    <path d="M34 42l23 12-6 10-23-12z"/>
+    <path d="M54 50l8-14 13 8-8 14z"/>
+    <path d="M91 36l7-5M97 43l9-1M90 46l7 6"/>
+  </g>
+</svg>

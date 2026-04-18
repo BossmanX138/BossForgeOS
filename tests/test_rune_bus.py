@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.rune_bus import RuneBus
+from core.rune.rune_bus import RuneBus
 
 
 class RuneBusTests(unittest.TestCase):

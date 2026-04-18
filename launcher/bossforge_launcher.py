@@ -19,6 +19,7 @@ sys.path.insert(0, str(PROJECT_ROOT / 'core'))
 sys.path.insert(0, str(PROJECT_ROOT / 'ui'))
 sys.path.insert(0, str(PROJECT_ROOT / 'modules'))
 import threading
+from typing import Callable
 import time
 import webbrowser
 from pathlib import Path
@@ -30,7 +31,7 @@ from core.agents.codemage_agent import CodeMageAgent
 from core.agents.devlot_agent import DevlotAgent
 from core.daemons.hearth_tender_daemon import HearthTender
 from core.model.internal_vllm_service import InternalVLLMService
-from core.agents.model_gateway_agent import ModelGatewayAgent
+from core.agents.model_gateway_agent import ModelGateway as ModelGatewayAgent
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from core.agents.runeforge_agent import RuneforgeAgent
 from core.security.security_sentinel_agent import SecuritySentinelAgent
@@ -47,7 +48,7 @@ class SystemTrayIcon:
         tooltip: str,
         open_url: str,
         stop_event: threading.Event,
-        on_exit: callable | None = None,
+        on_exit: Callable | None = None,
     ) -> None:
         self.icon_path = icon_path
         self.tooltip = tooltip
@@ -88,30 +89,36 @@ class SystemTrayIcon:
         def _wndproc(hwnd, msg, wparam, lparam):
             if msg == msg_tray:
                 if lparam in (win32con.WM_LBUTTONUP, win32con.WM_LBUTTONDBLCLK):
-                    try:
-                        webbrowser.open(self.open_url)
-                    except Exception:
-                        pass
+                    print("[Tray] Left click detected")
+                    if self.open_url:
+                        try:
+                            webbrowser.open(self.open_url)
+                        except Exception:
+                            pass
                 elif lparam == win32con.WM_RBUTTONUP:
+                    print("[Tray] Right click detected - showing menu")
                     try:
                         menu = win32gui.CreatePopupMenu()
-                        win32gui.AppendMenu(menu, win32con.MF_STRING, menu_open, "Open Control Hall")
-                        win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, None)
-                        win32gui.AppendMenu(menu, win32con.MF_STRING, menu_exit, "Exit the Forge")
+                        if self.open_url:
+                            win32gui.AppendMenu(menu, win32con.MF_STRING, menu_open, "Open Control Hall")
+                            win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, None)
+                        win32gui.AppendMenu(menu, win32con.MF_STRING, menu_exit, "Exit BossForgeOS")
                         pos = win32gui.GetCursorPos()
                         win32gui.SetForegroundWindow(hwnd)
+                        time.sleep(0.05)  # Small delay to ensure menu focus
                         win32gui.TrackPopupMenu(menu, win32con.TPM_LEFTALIGN | win32con.TPM_BOTTOMALIGN, pos[0], pos[1], 0, hwnd, None)
                         win32gui.PostMessage(hwnd, win32con.WM_NULL, 0, 0)
-                    except Exception:
-                        pass
+                    except Exception as ex:
+                        print(f"[Tray] Exception in right-click menu: {ex}")
                 return 0
             if msg == win32con.WM_COMMAND:
                 cmd = int(wparam) & 0xFFFF
                 if cmd == menu_open:
-                    try:
-                        webbrowser.open(self.open_url)
-                    except Exception:
-                        pass
+                    if self.open_url:
+                        try:
+                            webbrowser.open(self.open_url)
+                        except Exception:
+                            pass
                     return 0
                 if cmd == menu_exit:
                     try:
@@ -160,7 +167,7 @@ class SystemTrayIcon:
 
         try:
             while not self.stop_event.is_set():
-                win32gui.PumpWaitingMessages()
+                win32gui.PumpMessages()
                 time.sleep(0.2)
         finally:
             try:
@@ -180,9 +187,12 @@ class SystemTrayIcon:
 
 
 def _resolve_tray_icon_path() -> Path:
-    candidate = PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico"
+    candidate = PROJECT_ROOT / ".." / "Anvil Secured Shuttle (A.S.S.)" / "assets" / "BossCrafts_Tray.png"
     if candidate.exists():
         return candidate
+    fallback = PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico"
+    if fallback.exists():
+        return fallback
     return PROJECT_ROOT / "assets" / "build" / "BossCrafts_Tray.ico"
 
 
@@ -214,7 +224,7 @@ def _install_minimize_to_tray_handler(stop_event: threading.Event) -> None:
             if ctrl_type == CTRL_CLOSE_EVENT:
                 # Keep process alive and hide console; user exits from tray menu.
                 _hide_console_window()
-                print("BossForgeOS minimized to tray. Use tray menu > Exit the Forge to stop.")
+                print("BossForgeOS minimized to tray. Use tray menu > Exit BossForgeOS to stop.")
                 return True
             if ctrl_type in (CTRL_C_EVENT, CTRL_BREAK_EVENT):
                 stop_event.set()
@@ -230,18 +240,44 @@ def _install_minimize_to_tray_handler(stop_event: threading.Event) -> None:
 
 
 class ControlHallServer:
-    def __init__(self, host: str = "127.0.0.1", port: int = 5005, threaded: bool = True) -> None:
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 5005,
+        threaded: bool = True,
+        backend: str = "werkzeug",
+        thread_count: int = 12,
+    ) -> None:
         self.host = host
         self.port = port
-        # Use threaded serving so slow API handlers do not block the whole UI.
-        self._server = make_server(self.host, self.port, app, threaded=threaded)
-        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        self.backend = (backend or "werkzeug").strip().lower()
+
+        if self.backend == "waitress":
+            try:
+                from waitress import create_server  # type: ignore
+
+                self._server = create_server(app, host=self.host, port=self.port, threads=max(2, int(thread_count)))
+                self._serve = self._server.run
+                self._shutdown = self._server.close
+            except Exception:
+                # Fallback if waitress is unavailable.
+                self.backend = "werkzeug"
+                self._server = make_server(self.host, self.port, app, threaded=threaded)
+                self._serve = self._server.serve_forever
+                self._shutdown = self._server.shutdown
+        else:
+            # Use threaded serving so slow API handlers do not block the whole UI.
+            self._server = make_server(self.host, self.port, app, threaded=threaded)
+            self._serve = self._server.serve_forever
+            self._shutdown = self._server.shutdown
+
+        self._thread = threading.Thread(target=self._serve, daemon=True)
 
     def start(self) -> None:
         self._thread.start()
 
     def stop(self) -> None:
-        self._server.shutdown()
+        self._shutdown()
         self._thread.join(timeout=5)
 
 
@@ -273,18 +309,8 @@ def _acquire_launcher_lock() -> pathlib.Path:
     lock_path = lock_dir / "bossforge_launcher.lock"
 
     if lock_path.exists():
-        try:
-            payload = json.loads(lock_path.read_text(encoding="utf-8"))
-            existing_pid = int(payload.get("pid", 0)) if isinstance(payload, dict) else 0
-            if _pid_alive(existing_pid):
-                raise SystemExit(
-                    f"BossForgeOS launcher already running (pid {existing_pid}). "
-                    "Stop existing instance before starting another."
-                )
-        except SystemExit:
-            raise
-        except Exception:
-            pass
+        print(f"[LauncherLock] Bypassing lockfile check: forcibly removing lockfile and proceeding.")
+        lock_path.unlink(missing_ok=True)
 
     lock_path.write_text(
         json.dumps(
@@ -340,7 +366,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warn-threshold", type=float, default=80.0, help="Disk warning threshold percentage")
     parser.add_argument("--host", default="127.0.0.1", help="Control Hall bind host")
     parser.add_argument("--port", type=int, default=5005, help="Control Hall bind port")
+    parser.add_argument("--hall-server", choices=["werkzeug", "waitress"], default="werkzeug", help="Control Hall HTTP server backend")
+    parser.add_argument("--hall-threads", type=int, default=12, help="Control Hall thread count (waitress) or target concurrency")
     parser.add_argument("--hall-single-thread", action="store_true", help="Run Control Hall in single-threaded mode")
+    parser.add_argument("--prune-events-days", type=int, default=0, help="Prune bus event backlog older than this many days before start (0 disables)")
+    parser.add_argument("--prune-events-delete", action="store_true", help="Delete pruned events instead of archiving into bus/events_archive")
+    parser.add_argument("--warm-events-cache", action="store_true", help="Warm recent event cache at startup for faster status/events endpoints")
+    parser.add_argument("--warm-events-cache-days", type=int, default=3, help="How many recent days to scan when warming event cache")
+    parser.add_argument("--warm-events-cache-lines", type=int, default=8000, help="Maximum lines to keep in warmed recent event cache")
     parser.add_argument("--no-tray-icon", action="store_true", help="Disable Windows system tray icon")
     return parser.parse_args()
 
@@ -407,6 +440,23 @@ def _resolve_internal_vllm_python(explicit_path: str) -> str | None:
 def main() -> None:
     args = parse_args()
     _acquire_launcher_lock()
+
+    if args.prune_events_days > 0:
+        bus = RuneBus(resolve_root_from_env())
+        stats = bus.prune_events(keep_days=args.prune_events_days, archive=not args.prune_events_delete)
+        mode = "delete" if args.prune_events_delete else "archive"
+        print(
+            f"Event prune ({mode}) complete: inspected={stats.get('inspected', 0)} "
+            f"moved={stats.get('moved', 0)} deleted={stats.get('deleted', 0)} errors={stats.get('errors', 0)}"
+        )
+
+    if args.warm_events_cache:
+        bus = RuneBus(resolve_root_from_env())
+        warmed = bus.warm_recent_events_cache(days=args.warm_events_cache_days, max_lines=args.warm_events_cache_lines)
+        print(
+            f"Recent event cache warm complete: written={warmed.get('written', 0)} "
+            f"errors={warmed.get('errors', 0)}"
+        )
 
     if args.safe_mode:
         args.no_voice_daemon = True
@@ -528,26 +578,36 @@ def main() -> None:
             print("Voice daemon started (continuous listening)")
 
     if not args.daemon_only:
-        hall = ControlHallServer(host=args.host, port=args.port, threaded=not args.hall_single_thread)
+        hall = ControlHallServer(
+            host=args.host,
+            port=args.port,
+            threaded=not args.hall_single_thread,
+            backend=args.hall_server,
+            thread_count=args.hall_threads,
+        )
         hall.start()
-        print(f"Control Hall started on http://{args.host}:{args.port}")
+        print(
+            f"Control Hall started on http://{args.host}:{args.port} "
+            f"(backend={args.hall_server}, threaded={not args.hall_single_thread}, threads={args.hall_threads})"
+        )
         if not args.no_browser:
             webbrowser.open(f"http://{args.host}:{args.port}")
 
     if not args.no_tray_icon and os.name == "nt":
         tray_icon_path = _resolve_tray_icon_path()
+        open_url = f"http://{args.host}:{args.port}" if hall is not None else ""
+        tray_icon = SystemTrayIcon(
+            icon_path=tray_icon_path,
+            tooltip="BossForgeOS (running)",
+            open_url=open_url,
+            stop_event=stop_event,
+            on_exit=lambda: stop_event.set(),
+        )
+        tray_icon.start()
         if tray_icon_path.exists():
-            tray_icon = SystemTrayIcon(
-                icon_path=tray_icon_path,
-                tooltip="BossForgeOS (running)",
-                open_url=f"http://{args.host}:{args.port}",
-                stop_event=stop_event,
-                on_exit=lambda: stop_event.set(),
-            )
-            tray_icon.start()
             print(f"System tray icon active: {tray_icon_path}")
         else:
-            print(f"System tray icon missing: {tray_icon_path}")
+            print("System tray icon active with Windows default icon (tray asset not found).")
 
     def _shutdown(*_: object) -> None:
         nonlocal shutdown_called

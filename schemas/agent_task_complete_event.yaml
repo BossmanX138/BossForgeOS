@@ -1,0 +1,15 @@
+# Agent Task Completion Event Schema (BossForgeOS)
+
+# This schema defines the structure for agent task completion events emitted on the Rune Bus.
+
+schema_version: 1.0
+
+type: bossforge.agent.task_complete
+
+fields:
+  agent_name: str  # Name of the agent emitting the event
+  task_id: str     # Unique identifier or description of the assigned task
+  status: str      # 'success' | 'failure' | 'partial'
+  completed_at: str  # ISO8601 timestamp
+  result_summary: str  # Short summary of result or output (optional)
+  artifact_path: str   # Path or URI to output artifact (optional)

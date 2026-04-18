@@ -1,0 +1,62 @@
+{
+  "schema_version": "iconforge.windows.targets.v1",
+  "tray": {
+    "idle": "tray_idle",
+    "active": "tray_active",
+    "alert": "tray_alert",
+    "daemon": {
+      "runeforge": "tray_daemon_runeforge",
+      "hearthfire": "tray_daemon_hearthfire",
+      "halcyon": "tray_daemon_halcyon"
+    },
+    "update": "tray_update"
+  },
+  "folders": {
+    "default": "folder_default",
+    "agents": "folder_agents",
+    "daemons": "folder_daemons",
+    "rituals": "folder_rituals",
+    "bossgate": "folder_bossgate",
+    "schemas": "folder_schemas"
+  },
+  "file_extensions": {
+    ".rune": "ext_rune",
+    ".forge": "ext_forge",
+    ".sigil": "ext_sigil",
+    ".ritual": "ext_ritual",
+    ".agent.json": "ext_agent_json",
+    ".bossgate": "ext_bossgate"
+  },
+  "agents": {
+    "class": {
+      "normalized": "class_normalized",
+      "skilled": "class_skilled",
+      "prime": "class_prime"
+    },
+    "type": {
+      "authority": "type_authority",
+      "controller": "type_controller",
+      "worker": "type_worker",
+      "security": "type_security",
+      "tester": "type_tester",
+      "ranger": "type_ranger"
+    },
+    "rank": {
+      "cadet": "rank_cadet",
+      "specialist": "rank_specialist",
+      "lieutenant": "rank_lieutenant",
+      "captain": "rank_captain",
+      "commander": "rank_commander",
+      "general": "rank_general",
+      "admiral": "rank_admiral"
+    }
+  },
+  "daemons": {
+    "runeforge": "daemon_runeforge",
+    "hearthfire": "daemon_hearthfire",
+    "halcyon": "daemon_halcyon",
+    "archivist": "daemon_archivist",
+    "codemage": "daemon_codemage",
+    "security_sentinel": "daemon_security_sentinel"
+  }
+}

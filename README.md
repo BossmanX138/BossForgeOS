@@ -6,18 +6,20 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 
 - [Features Overview](#features-overview)
 - [Project Layout](#project-layout)
-- [SoundStage Engine](#soundstage-engine)
+- [SoundForge Engine](#soundforge-engine)
 - [Control Hall GUI](#control-hall-gui)
 - [VS Code Extension](#vs-code-extension)
 - [Unified Launcher](#unified-launcher)
 - [CLI & Plugin System](#cli-plugin-system)
 - [Onboarding, Scheduler, CI/CD, Collaboration](#onboarding-scheduler-cicd-collaboration)
-- [Documentation & Further Reading](#documentation-further-reading)
+- [AgentForge README](#agentforge-readme)
+- [Documentation & Further Reading](#documentation--further-reading)
 - [Test Sentinel Agent](#test-sentinel-agent)
 - [Internal vLLM (Runeforge Core)](#internal-vllm-runeforge-core)
 - [Archivist Agent](#archivist-agent)
 - [Windows Context Menus](#windows-context-menus)
 - [Model Gateway Agent (Ollama, vLLM, LM Studio)](#model-gateway-agent-ollama-vllm-lm-studio)
+- [IconForge (Windows Icon Creator & Replacement)](#iconforge-windows-icon-creator--replacement)
 - [CodeMage Model Backing (vLLM)](#codemage-model-backing-vllm)
 - [Security Sentinel Agent](#security-sentinel-agent)
 - [Runeforge Voice Commands](#runeforge-voice-commands)
@@ -31,16 +33,16 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 ## Features Overview
 
 - File-based Rune Bus for commands, events, and state snapshots
-- Modular daemons: Hearth-Tender, SoundStage, Voice, Security, Archivist
+- Modular daemons: Hearth-Tender, SoundForge (legacy SoundStage), Voice, Security, Archivist
 - BossForge CLI (`bforge`) with status, tail, shell, agent dispatch, ritual record/play/list, plugin support
 - Control Hall dashboard (Flask/HTML/JS) with panels for agent status, commands, events, sound scheme management, onboarding, scheduling, CI/CD, collaboration, analytics
-- SoundStage deterministic sound event engine: per-app/event mapping, system sound replacement, rollback, diagnostics, bundle import/export
+- SoundForge deterministic sound event engine: per-app/event mapping, system sound replacement, rollback, diagnostics, bundle import/export
 - Deep VS Code extension: onboarding wizard, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
 - Integrated onboarding, scheduler, CI/CD, and real-time collaboration features
 
 ## Project Layout
 
-- `core/`: bus, daemons, CLI, connectors (GitHub, Hugging Face, SoundStage, Voice)
+- `core/`: bus, daemons, CLI, connectors (GitHub, Hugging Face, SoundForge, Voice)
 - `modules/`: system modules and snapshots
 - `ui/`: Control Hall server (Flask/HTML/JS)
 - `docs/`: architecture, runbook, feature audits, todos, changelogs
@@ -48,9 +50,11 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 - `tests/`: unit and integration tests
 - `voices/`: canonical voice-layer profile schema and agent profiles
 
-## SoundStage Engine
+## SoundForge Engine
 
 See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForgeOS_SoundStage/README.md) and [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
+
+SoundForge is the renamed module surface for the legacy SoundStage engine. Existing legacy paths and API routes remain available for compatibility.
 
 - Deterministic Windows sound event engine (restores true "Open/Close Program" sounds)
 - Per-app/event mapping, system sound replacement, rollback, diagnostics
@@ -80,6 +84,16 @@ See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForge
 - Python entrypoint: `python -m launcher.bossforge_launcher`
 - Optional: `--daemon-only`, `--hall-only`
 
+### Current Runtime Entry Points
+
+- Primary runtime entrypoint is `python -m launcher.bossforge_launcher`.
+- Operational startup scripts are maintained in `scripts` and include launcher and daemon variants.
+- Treat this section as source of truth for local runtime startup.
+
+### TODO
+
+- Re-verify launch/install command references in a clean shell and annotate any environment-specific caveats.
+
 ## CLI & Plugin System
 
 - Install global shims:
@@ -96,9 +110,15 @@ See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForge
 - Real-time multi-user collaboration: agent editing, session management, permissions
 - See [docs/todos.md](docs/todos.md) and [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md) for actionable features and coverage
 
+## AgentForge README
+
+- Agent forging requirements and guardrails are documented in [docs/AgentForge_readme.md](docs/AgentForge_readme.md).
+- Includes Prime baseline requirements, grant-based execution rules, and safetyrails for high-impact actions.
+
 ## Documentation & Further Reading
 
 - [docs/architecture.md](docs/architecture.md): System architecture
+- [docs/AgentForge_readme.md](docs/AgentForge_readme.md): Requirements and guardrails for forging Prime and normalized agents
 - [docs/bossgate_connector.md](docs/bossgate_connector.md): BossGate connector purpose and roadmap
 - [docs/bossgate_protocol.md](docs/bossgate_protocol.md): BossGate transport/protocol draft
 - [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
@@ -111,7 +131,9 @@ See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForge
 
 ---
 For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `core/soundstage/BossForgeOS_SoundStage/` directories.
-  - `bforge os snapshot`
+
+- `bforge os snapshot`
+
 - Uninstall global shims:
   - `powershell -ExecutionPolicy Bypass -File .\uninstall_bforge_cli.ps1`
   - `uninstall_bforge_cli.cmd`
@@ -258,6 +280,54 @@ Supported bus commands:
 - `serve_model`
 - `stop_model_server`
 - `stop_all_model_servers`
+
+## IconForge (Windows Icon Creator & Replacement)
+
+BossForgeOS now includes `IconForge`, a Windows-focused icon toolkit available through `bforge icons`.
+
+Capabilities:
+
+- Create `.ico` files from images
+- Create `.ico` files from short text glyphs
+- Replace folder icons (`desktop.ini` + folder attributes)
+- Replace shortcut (`.lnk`) icons
+- Replace file-type icons (extension-based shell override)
+- Replace executable app icons at shell-level (`HKCU\\Software\\Classes\\Applications\\<app>.exe\\DefaultIcon`)
+- Backup and restore icon override operations
+- Export/import full icon sets (portable bundle)
+- Trigger Windows icon cache refresh
+
+Examples:
+
+- Create icon from image:
+  - `python -m core.bforge icons create-from-image "D:/art/logo.png" "D:/art/logo.ico"`
+- Create icon from text:
+  - `python -m core.bforge icons create-from-text "BF" "D:/art/bf.ico" --background "#0b1f3a" --foreground "#f0d77a"`
+- Set folder icon:
+  - `python -m core.bforge icons set-folder "D:/Projects/MyFolder" "D:/art/bf.ico"`
+- Set shortcut icon:
+  - `python -m core.bforge icons set-shortcut "D:/Desktop/MyApp.lnk" "D:/art/bf.ico"`
+- Set file type icon:
+  - `python -m core.bforge icons set-filetype .txt "D:/art/text.ico"`
+- Set app icon override:
+  - `python -m core.bforge icons set-app notepad.exe "D:/art/notepad.ico"`
+- List backups:
+  - `python -m core.bforge icons backups`
+- Export full icon set:
+  - `python -m core.bforge icons export-set "D:/BossCrafts/icon_sets/arcane_theme"`
+- Dry-run import full icon set:
+  - `python -m core.bforge icons import-set "D:/BossCrafts/icon_sets/arcane_theme" --dry-run`
+- Import full icon set and refresh cache:
+  - `python -m core.bforge icons import-set "D:/BossCrafts/icon_sets/arcane_theme" --refresh`
+- Restore one override:
+  - `python -m core.bforge icons restore "folder::d:\\projects\\myfolder"`
+- Refresh icon cache:
+  - `python -m core.bforge icons refresh`
+
+Notes:
+
+- EXE binary resources are not patched by IconForge; `set-app` applies a shell-level icon override.
+- `create-from-image` and `create-from-text` require Pillow (`pip install pillow`).
 - `list_mcp_servers`
 - `set_mcp_server`
 - `remove_mcp_server`

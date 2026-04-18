@@ -1,0 +1,31 @@
+{
+  "theme": "bossforgeos-blackstone-v1",
+  "version": "1.0.0",
+  "colors": {
+    "blackstone_core": "#0A0A0C",
+    "forge_gold": "#D4A857",
+    "ember_orange": "#FF7A2F",
+    "runic_blue": "#4DA6FF",
+    "ash_grey": "#2A2C31",
+    "iron_silver": "#A9B1C1",
+    "coal_shadow": "#141417",
+    "status_success": "#4CC46A",
+    "status_warning": "#FFB84D",
+    "status_error": "#FF4D4D",
+    "status_travel": "#4DA6FF"
+  },
+  "motion": {
+    "idle_breathe_seconds": 10,
+    "shimmer_interval_seconds": 10,
+    "active_ring_deg_per_sec": 15,
+    "alert_hz": 1.2,
+    "reduced_motion_supported": true
+  },
+  "icon_style": {
+    "stroke_px": 1.75,
+    "stroke_cap": "round",
+    "system_frame": "circular",
+    "filetype_frame": "rounded-square",
+    "folder_frame": "folder-silhouette"
+  }
+}

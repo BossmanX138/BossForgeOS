@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from core.archivist_agent import ArchivistAgent
+from core.icons import IconForge
 from core.rune_bus import RuneBus, resolve_root_from_env
 from modules.os_snapshot import snapshot_all
 
@@ -509,6 +510,7 @@ def cmd_model(args: argparse.Namespace) -> None:
             "temperature": args.temperature,
             "max_tokens": args.max_tokens,
             "tools": tools,
+            "encrypt_profile": bool(args.encrypt_profile),
         }
         path = bus.emit_command("model_gateway", "create_agent", payload, issued_by="bforge")
         print(f"command written: {path}")
@@ -654,6 +656,71 @@ def cmd_model(args: argparse.Namespace) -> None:
     raise SystemExit("unknown model command")
 
 
+def cmd_icons(args: argparse.Namespace) -> None:
+    forge = IconForge(resolve_root_from_env())
+
+    if args.sub == "create-from-image":
+        sizes = [int(item.strip()) for item in (args.sizes or "").split(",") if item.strip()]
+        pretty(forge.create_icon_from_image(image_path=args.image, output_ico=args.output, sizes=sizes))
+        return
+
+    if args.sub == "create-from-text":
+        pretty(
+            forge.create_icon_from_text(
+                text=args.text,
+                output_ico=args.output,
+                background=args.background,
+                foreground=args.foreground,
+                size=args.size,
+            )
+        )
+        return
+
+    if args.sub == "set-folder":
+        pretty(forge.set_folder_icon(folder_path=args.folder, icon_path=args.icon))
+        return
+
+    if args.sub == "set-shortcut":
+        pretty(forge.set_shortcut_icon(shortcut_path=args.shortcut, icon_path=args.icon))
+        return
+
+    if args.sub == "set-filetype":
+        pretty(forge.set_file_extension_icon(extension=args.extension, icon_path=args.icon))
+        return
+
+    if args.sub == "set-app":
+        pretty(forge.set_application_icon(exe_name=args.exe, icon_path=args.icon))
+        return
+
+    if args.sub == "backups":
+        pretty({"ok": True, "items": forge.list_backups()})
+        return
+
+    if args.sub == "export-set":
+        pretty(forge.export_icon_set(output_dir=args.output_dir))
+        return
+
+    if args.sub == "import-set":
+        pretty(
+            forge.import_icon_set(
+                source=args.source,
+                apply_changes=not bool(args.dry_run),
+                refresh_cache=bool(args.refresh),
+            )
+        )
+        return
+
+    if args.sub == "restore":
+        pretty(forge.restore(backup_key=args.backup_key))
+        return
+
+    if args.sub == "refresh":
+        pretty(forge.refresh_icon_cache())
+        return
+
+    raise SystemExit("unknown icons command")
+
+
 def _find_latest_ledger(result: Dict[str, Any]) -> str:
     docs = result.get("doc_updates", [])
     if not isinstance(docs, list):
@@ -766,6 +833,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_model_agent_create.add_argument("--temperature", type=float, default=0.2)
     p_model_agent_create.add_argument("--max-tokens", type=int, default=900)
     p_model_agent_create.add_argument("--tools", default="", help="Comma-separated MCP server names")
+    p_model_agent_create.add_argument("--encrypt-profile", dest="encrypt_profile", action="store_true", default=True)
+    p_model_agent_create.add_argument("--no-encrypt-profile", dest="encrypt_profile", action="store_false")
     p_model_agent_create.set_defaults(func=cmd_model)
 
     p_model_agent_delete = p_model_sub.add_parser("agent-delete", help="Delete a model-backed agent profile")
@@ -853,6 +922,63 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_model_stop_all = p_model_sub.add_parser("stop-all", help="Stop all tracked model servers")
     p_model_stop_all.set_defaults(func=cmd_model)
+
+    p_icons = sub.add_parser("icons", help="IconForge: create icons and apply Windows icon overrides")
+    p_icons_sub = p_icons.add_subparsers(dest="sub")
+
+    p_icons_create_img = p_icons_sub.add_parser("create-from-image", help="Create .ico from an existing image")
+    p_icons_create_img.add_argument("image", help="Source image path")
+    p_icons_create_img.add_argument("output", help="Output .ico path")
+    p_icons_create_img.add_argument("--sizes", default="16,24,32,48,64,128,256", help="Comma-separated icon sizes")
+    p_icons_create_img.set_defaults(func=cmd_icons)
+
+    p_icons_create_txt = p_icons_sub.add_parser("create-from-text", help="Create .ico from short text glyph")
+    p_icons_create_txt.add_argument("text", help="Short text label, e.g. BF")
+    p_icons_create_txt.add_argument("output", help="Output .ico path")
+    p_icons_create_txt.add_argument("--background", default="#1d3557")
+    p_icons_create_txt.add_argument("--foreground", default="#f1faee")
+    p_icons_create_txt.add_argument("--size", type=int, default=256)
+    p_icons_create_txt.set_defaults(func=cmd_icons)
+
+    p_icons_set_folder = p_icons_sub.add_parser("set-folder", help="Set a folder icon")
+    p_icons_set_folder.add_argument("folder", help="Folder path")
+    p_icons_set_folder.add_argument("icon", help="Icon .ico path")
+    p_icons_set_folder.set_defaults(func=cmd_icons)
+
+    p_icons_set_shortcut = p_icons_sub.add_parser("set-shortcut", help="Set a .lnk shortcut icon")
+    p_icons_set_shortcut.add_argument("shortcut", help="Shortcut .lnk path")
+    p_icons_set_shortcut.add_argument("icon", help="Icon .ico path")
+    p_icons_set_shortcut.set_defaults(func=cmd_icons)
+
+    p_icons_set_filetype = p_icons_sub.add_parser("set-filetype", help="Set default icon for a file extension")
+    p_icons_set_filetype.add_argument("extension", help="Extension like .txt or txt")
+    p_icons_set_filetype.add_argument("icon", help="Icon .ico path")
+    p_icons_set_filetype.set_defaults(func=cmd_icons)
+
+    p_icons_set_app = p_icons_sub.add_parser("set-app", help="Set shell icon override for an executable name")
+    p_icons_set_app.add_argument("exe", help="Executable name, e.g. notepad.exe")
+    p_icons_set_app.add_argument("icon", help="Icon .ico path")
+    p_icons_set_app.set_defaults(func=cmd_icons)
+
+    p_icons_backups = p_icons_sub.add_parser("backups", help="List IconForge backups")
+    p_icons_backups.set_defaults(func=cmd_icons)
+
+    p_icons_export_set = p_icons_sub.add_parser("export-set", help="Export all icon overrides as a portable icon set bundle")
+    p_icons_export_set.add_argument("output_dir", help="Output directory for bundle manifest and icon files")
+    p_icons_export_set.set_defaults(func=cmd_icons)
+
+    p_icons_import_set = p_icons_sub.add_parser("import-set", help="Import and apply a full icon set bundle")
+    p_icons_import_set.add_argument("source", help="Bundle directory or icon_set_manifest.json path")
+    p_icons_import_set.add_argument("--dry-run", action="store_true", help="Validate import entries without applying changes")
+    p_icons_import_set.add_argument("--refresh", action="store_true", help="Refresh icon cache after successful apply")
+    p_icons_import_set.set_defaults(func=cmd_icons)
+
+    p_icons_restore = p_icons_sub.add_parser("restore", help="Restore a previous icon override from backup key")
+    p_icons_restore.add_argument("backup_key")
+    p_icons_restore.set_defaults(func=cmd_icons)
+
+    p_icons_refresh = p_icons_sub.add_parser("refresh", help="Refresh Windows icon cache")
+    p_icons_refresh.set_defaults(func=cmd_icons)
 
     p_assign = sub.add_parser("assign", help="Assign an agent to a file/folder")
     p_assign_sub = p_assign.add_subparsers(dest="sub")

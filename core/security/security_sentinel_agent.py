@@ -250,7 +250,7 @@ class SecuritySentinelAgent:
             "voice_daemon.py",
             "speaker_daemon.py",
             "runeforge_agent.py",
-            "model_gateway_agent.py",
+            "model_gateway.py",
             "archivist_agent.py",
             "codemage_agent.py",
             "devlot_agent.py",

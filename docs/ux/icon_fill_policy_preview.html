@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Icon Fill Policy Preview</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --panel: #15161b;
+      --line: #5f4a27;
+      --ink: #e6ddcb;
+      --muted: #a9b1c1;
+      --accent: #d4a857;
+      --fill: rgba(212, 168, 87, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(255, 122, 47, 0.15), transparent 40%),
+        radial-gradient(circle at 82% 84%, rgba(77, 166, 255, 0.12), transparent 35%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+    h1 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 24px;
+    }
+    p {
+      margin: 0 0 14px;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: linear-gradient(180deg, #1b1d22, var(--panel));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 16px;
+    }
+    .meta {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .slot {
+      border: 1px solid rgba(212, 168, 87, 0.35);
+      border-radius: 8px;
+      background: #0e1015;
+      min-height: 88px;
+      display: grid;
+      place-items: center;
+      padding: 6px;
+    }
+    .lbl {
+      margin-top: 5px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    svg {
+      width: 64px;
+      height: 64px;
+    }
+    .outline * {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .filled * {
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .filled .shape {
+      fill: var(--fill);
+    }
+    .filled .line {
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Icon Fill Policy Preview</h1>
+  <p>Use this to choose policy for idle state. Left is strict outline-only. Right is selective idle fill for silhouette regions.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Option A: Outline-Only (Current Baseline)</h2>
+      <div class="meta">No idle fill. Fill reserved for active or alert states only.</div>
+      <div class="row">
+        <div>
+          <div class="slot">
+            <svg class="outline" viewBox="0 0 128 128" aria-label="Crest outline">
+              <circle cx="64" cy="64" r="56" />
+              <circle cx="64" cy="64" r="46" />
+              <path d="M36 76h56" />
+              <path d="M46 76l5-18h26l5 18" />
+              <path d="M64 24v80" />
+            </svg>
+          </div>
+          <div class="lbl">BossCrafts Crest</div>
+        </div>
+        <div>
+          <div class="slot">
+            <svg class="outline" viewBox="0 0 128 128" aria-label="Runebus outline">
+              <rect x="18" y="28" width="92" height="64" rx="10" />
+              <path d="M30 48h68" />
+              <path d="M30 64h68" />
+              <circle cx="36" cy="100" r="8" />
+              <circle cx="92" cy="100" r="8" />
+            </svg>
+          </div>
+          <div class="lbl">Runebus</div>
+        </div>
+        <div>
+          <div class="slot">
+            <svg class="outline" viewBox="0 0 128 128" aria-label="AgentForge outline">
+              <circle cx="64" cy="64" r="56" />
+              <polygon points="64,38 84,50 84,74 64,86 44,74 44,50" />
+              <path d="M91 36l7-5M97 43l9-1M90 46l7 6" />
+            </svg>
+          </div>
+          <div class="lbl">AgentForge</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Option B: Selective Idle Fill</h2>
+      <div class="meta">Key silhouette surfaces get subtle fill while linework remains identical.</div>
+      <div class="row">
+        <div>
+          <div class="slot">
+            <svg class="filled" viewBox="0 0 128 128" aria-label="Crest selective fill">
+              <circle class="line" cx="64" cy="64" r="56" />
+              <circle class="shape" cx="64" cy="64" r="46" />
+              <path class="line" d="M36 76h56" />
+              <path class="shape" d="M46 76l5-18h26l5 18z" />
+              <path class="line" d="M64 24v80" />
+            </svg>
+          </div>
+          <div class="lbl">BossCrafts Crest</div>
+        </div>
+        <div>
+          <div class="slot">
+            <svg class="filled" viewBox="0 0 128 128" aria-label="Runebus selective fill">
+              <rect class="shape" x="18" y="28" width="92" height="64" rx="10" />
+              <path class="line" d="M30 48h68" />
+              <path class="line" d="M30 64h68" />
+              <circle class="shape" cx="36" cy="100" r="8" />
+              <circle class="shape" cx="92" cy="100" r="8" />
+            </svg>
+          </div>
+          <div class="lbl">Runebus</div>
+        </div>
+        <div>
+          <div class="slot">
+            <svg class="filled" viewBox="0 0 128 128" aria-label="AgentForge selective fill">
+              <circle class="line" cx="64" cy="64" r="56" />
+              <polygon class="shape" points="64,38 84,50 84,74 64,86 44,74 44,50" />
+              <path class="line" d="M91 36l7-5M97 43l9-1M90 46l7 6" />
+            </svg>
+          </div>
+          <div class="lbl">AgentForge</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

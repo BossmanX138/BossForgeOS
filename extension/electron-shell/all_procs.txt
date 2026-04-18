@@ -1,0 +1,344 @@
+
+   Id ProcessName                              MainWindowTitle
+   -- -----------                              ---------------                  
+ 4876 AggregatorHost                                                            
+ 4448 AppleMobileDeviceService                                                  
+ 7480 ApplicationFrameHost                     Settings                         
+19628 AppVShNotify                                                              
+14736 azmcp                                                                     
+20644 CameraHelperShell                                                         
+ 4484 CamoService                                                               
+18356 CamoStudio                                                                
+ 1880 Code                                     config.yaml - Untitled (Workspac…
+ 4628 Code                                                                      
+ 8348 Code                                                                      
+10212 Code                                                                      
+10840 Code                                                                      
+11840 Code                                                                      
+12596 Code                                                                      
+15636 Code                                                                      
+17336 Code                                                                      
+17764 Code                                                                      
+19128 Code                                                                      
+19200 Code                                                                      
+20600 Code                                                                      
+22984 Code                                                                      
+23380 Code                                                                      
+24172 Code                                                                      
+24176 Code                                                                      
+25508 Code                                                                      
+25864 Code                                                                      
+26232 Code                                                                      
+26376 Code                                                                      
+27028 Code                                                                      
+29604 Code                                                                      
+29876 Code                                                                      
+ 3300 CompPkgSrv                                                                
+  876 conhost                                                                   
+ 1288 conhost                                                                   
+ 4024 conhost                                                                   
+ 8160 conhost                                                                   
+ 8204 conhost                                                                   
+ 8984 conhost                                                                   
+ 9136 conhost                                                                   
+ 9152 conhost                                                                   
+ 9180 conhost                                                                   
+15552 conhost                                                                   
+17204 conhost                                                                   
+18916 conhost                                                                   
+28816 conhost                                                                   
+  516 csrss                                                                     
+  732 csrss                                                                     
+ 8940 ctfmon                                                                    
+ 3916 dasHost                                                                   
+ 9204 Dell.CoreServices.Client                                                  
+ 4468 Dell.TechHub                                                              
+ 8128 Dell.TechHub.Analytics.SubAgent                                           
+ 9168 Dell.TechHub.DataManager.SubAgent                                         
+ 9144 Dell.TechHub.Diagnostics.SubAgent                                         
+ 9128 Dell.TechHub.Instrumentation.SubAgent                                     
+15004 Dell.TechHub.Instrumentation.UserProcess                                  
+ 9116 Dell.Update.SubAgent                                                      
+ 5576 DismHost                                                                  
+ 5644 dllhost                                                                   
+ 7788 dllhost                                                                   
+18892 dllhost                                                                   
+ 1464 dwm                                                                       
+ 9304 explorer                                                                  
+  480 fontdrvhost                                                               
+  948 fontdrvhost                                                               
+    0 Idle                                                                      
+ 4544 inetinfo                                                                  
+22736 Inference.Service.Agent                                                   
+ 4032 Intel_PIE_Service                                                         
+ 7608 language_server_windows_x64                                               
+15236 language_server_windows_x64                                               
+10708 LM Studio                                                                 
+17020 LM Studio                                                                 
+19324 LM Studio                                                                 
+30432 LM Studio                                                                 
+30880 LM Studio                                                                 
+10368 logioptionsplus_agent                                                     
+11324 logioptionsplus_appbroker                                                 
+ 4804 logioptionsplus_updater                                                   
+  796 lsass                                                                     
+20612 LWS                                                                       
+ 2644 Memory Compression                                                        
+14888 Microsoft.CmdPal.UI                                                       
+30528 Microsoft.CodeAnalysis.LanguageServer                                     
+21788 MicrosoftEdgeUpdate                                                       
+20444 MicrosoftSecurityApp                                                      
+24284 MoUsoCoreWorker                                                           
+ 4708 MpDefenderCoreService                                                     
+ 4764 mqsvc                                                                     
+12496 msedge                                                                    
+13388 msedge                                                                    
+16652 msedge                                                                    
+19416 msedge                                                                    
+22020 msedge                                                                    
+22940 msedge                                                                    
+24344 msedge                                                                    
+24848 msedge                                                                    
+27640 msedge                                                                    
+31128 msedge                                                                    
+23400 MsMpEng                                                                   
+ 4848 MuseAuthService                                                           
+18224 MusNotifyIcon                                                             
+29108 NisSrv                                                                    
+ 2144 NVDisplay.Container                                                       
+ 3068 NVDisplay.Container                                                       
+20256 OfficeClickToRun                                                          
+13336 ollama                                                                    
+  616 ollama app                                                                
+18020 OneDrive                                                                  
+19448 OneDrive.Sync.Service                                                     
+30740 ONENOTEM                                                                  
+ 1164 OpenConsole                                                               
+ 1708 OpenConsole                                                               
+ 2896 OpenConsole                                                               
+ 3160 OpenConsole                                                               
+ 4732 OpenConsole                                                               
+ 5572 OpenConsole                                                               
+ 8904 OpenConsole                                                               
+12688 OpenConsole                                                               
+16300 OpenConsole                                                               
+16696 OpenConsole                                                               
+17452 OpenConsole                                                               
+18780 OpenConsole                                                               
+19096 OpenConsole                                                               
+19600 OpenConsole                                                               
+19896 OpenConsole                                                               
+20416 OpenConsole                                                               
+21468 OpenConsole                                                               
+23200 OpenConsole                                                               
+26536 OpenConsole                                                               
+28224 OpenConsole                                                               
+28276 OpenConsole                                                               
+28648 OpenConsole                                                               
+29296 OpenConsole                                                               
+29424 OpenConsole                                                               
+29484 OpenConsole                                                               
+29488 OpenConsole                                                               
+30928 OpenConsole                                                               
+31060 OpenConsole                                                               
+31528 OpenConsole                                                               
+ 4252 pet                                                                       
+24620 PhoneExperienceHost                                                       
+15856 PowerToys                                                                 
+24916 PowerToys.AdvancedPaste                                                   
+15404 PowerToys.AlwaysOnTop                                                     
+15436 PowerToys.Awake                                                           
+ 4144 PowerToys.ColorPickerUI                                                   
+ 3680 PowerToys.CropAndLock                                                     
+18348 PowerToys.FancyZones                                                      
+16116 PowerToys.KeyboardManagerEngine                                           
+29764 PowerToys.MouseWithoutBorders                                             
+31064 PowerToys.MouseWithoutBordersHelper                                       
+18656 PowerToys.Peek.UI                                                         
+20184 PowerToys.PowerLauncher                                                   
+30352 PowerToys.PowerOCR                                                        
+ 3908 PowerToys.QuickAccess                    PowerToys Quick Access (Preview) 
+12192 PowerToys.Settings                       PowerToys Settings               
+ 3092 pwsh                                                                      
+ 4276 pwsh                                                                      
+ 8800 pwsh                                                                      
+11580 pwsh                                                                      
+12476 pwsh                                                                      
+12840 pwsh                                                                      
+13236 pwsh                                                                      
+14360 pwsh                                                                      
+15512 pwsh                                                                      
+15696 pwsh                                                                      
+18448 pwsh                                                                      
+20620 pwsh                                                                      
+21960 pwsh                                                                      
+23408 pwsh                                                                      
+24360 pwsh                                                                      
+25072 pwsh                                                                      
+25484 pwsh                                                                      
+26280 pwsh                                                                      
+26588 pwsh                                                                      
+27396 pwsh                                                                      
+27552 pwsh                                                                      
+27556 pwsh                                                                      
+27660 pwsh                                                                      
+28536 pwsh                                                                      
+28716 pwsh                                                                      
+29252 pwsh                                                                      
+29264 pwsh                                                                      
+29504 pwsh                                                                      
+31664 pwsh                                                                      
+ 3508 RAVBg64                                                                   
+15768 RAVBg64                                                                   
+22732 rdrleakdiag                                                               
+  124 Registry                                                                  
+ 3224 RtkAudioService64                                                         
+  692 RtkNGUI64                                                                 
+ 3892 RuntimeBroker                                                             
+ 4304 RuntimeBroker                                                             
+10236 RuntimeBroker                                                             
+12100 RuntimeBroker                                                             
+12424 RuntimeBroker                                                             
+13292 RuntimeBroker                                                             
+16712 RuntimeBroker                                                             
+16980 RuntimeBroker                                                             
+25524 RuntimeBroker                                                             
+12012 SearchApp                                                                 
+29792 SearchFilterHost                                                          
+25344 SearchIndexer                                                             
+26072 SearchProtocolHost                                                        
+16212 SecurityHealthService                                                     
+16168 SecurityHealthSystray                                                     
+  768 services                                                                  
+12800 ServiceShell                                                              
+18940 ShellExperienceHost                                                       
+ 9624 sihost                                                                    
+  472 smss                                                                      
+ 5088 SMSvcHost                                                                 
+ 6452 SMSvcHost                                                                 
+ 4984 snmp                                                                      
+ 4092 spoolsv                                                                   
+ 4868 sshd                                                                      
+ 5044 ss_conn_service                                                           
+ 5040 ss_conn_service2                                                          
+11660 StartMenuExperienceHost                                                   
+16040 SupportAssistAgent                                                        
+  736 svchost                                                                   
+ 1092 svchost                                                                   
+ 1140 svchost                                                                   
+ 1292 svchost                                                                   
+ 1328 svchost                                                                   
+ 1336 svchost                                                                   
+ 1344 svchost                                                                   
+ 1352 svchost                                                                   
+ 1360 svchost                                                                   
+ 1564 svchost                                                                   
+ 1620 svchost                                                                   
+ 1768 svchost                                                                   
+ 1836 svchost                                                                   
+ 1936 svchost                                                                   
+ 1948 svchost                                                                   
+ 1980 svchost                                                                   
+ 2064 svchost                                                                   
+ 2092 svchost                                                                   
+ 2212 svchost                                                                   
+ 2264 svchost                                                                   
+ 2416 svchost                                                                   
+ 2492 svchost                                                                   
+ 2500 svchost                                                                   
+ 2508 svchost                                                                   
+ 2620 svchost                                                                   
+ 2684 svchost                                                                   
+ 2692 svchost                                                                   
+ 2732 svchost                                                                   
+ 2872 svchost                                                                   
+ 2912 svchost                                                                   
+ 3116 svchost                                                                   
+ 3268 svchost                                                                   
+ 3372 svchost                                                                   
+ 3532 svchost                                                                   
+ 3536 svchost                                                                   
+ 3548 svchost                                                                   
+ 3704 svchost                                                                   
+ 3788 svchost                                                                   
+ 3860 svchost                                                                   
+ 4028 svchost                                                                   
+ 4244 svchost                                                                   
+ 4404 svchost                                                                   
+ 4424 svchost                                                                   
+ 4432 svchost                                                                   
+ 4440 svchost                                                                   
+ 4460 svchost                                                                   
+ 4508 svchost                                                                   
+ 4588 svchost                                                                   
+ 4620 svchost                                                                   
+ 4636 svchost                                                                   
+ 4652 svchost                                                                   
+ 4776 svchost                                                                   
+ 4832 svchost                                                                   
+ 4932 svchost                                                                   
+ 4968 svchost                                                                   
+ 5172 svchost                                                                   
+ 5264 svchost                                                                   
+ 5540 svchost                                                                   
+ 5588 svchost                                                                   
+ 6248 svchost                                                                   
+ 6360 svchost                                                                   
+ 6768 svchost                                                                   
+ 7364 svchost                                                                   
+ 8256 svchost                                                                   
+ 8736 svchost                                                                   
+ 8916 svchost                                                                   
+ 9352 svchost                                                                   
+ 9404 svchost                                                                   
+ 9620 svchost                                                                   
+ 9660 svchost                                                                   
+ 9680 svchost                                                                   
+ 9756 svchost                                                                   
+ 9928 svchost                                                                   
+10112 svchost                                                                   
+10444 svchost                                                                   
+11024 svchost                                                                   
+11728 svchost                                                                   
+11924 svchost                                                                   
+12060 svchost                                                                   
+12796 svchost                                                                   
+12932 svchost                                                                   
+14412 svchost                                                                   
+16408 svchost                                                                   
+16448 svchost                                                                   
+17348 svchost                                                                   
+18404 svchost                                                                   
+19648 svchost                                                                   
+20268 svchost                                                                   
+23612 svchost                                                                   
+25648 svchost                                                                   
+27016 svchost                                                                   
+    4 System                                                                    
+ 2960 SystemSettingsAdminFlows                                                  
+12844 SystemSettingsAdminFlows                                                  
+17540 SystemSettingsBroker                                                      
+ 7444 taskhostw                                                                 
+10192 taskhostw                                                                 
+21956 taskhostw                                                                 
+10764 Taskmgr                                  Task Manager                     
+ 4860 TCPSVCS                                                                   
+14548 TextInputHost                            Microsoft Text Input Application 
+ 6544 TiWorker                                                                  
+14440 TrustedInstaller                                                          
+10524 unsecapp                                                                  
+12332 UserOOBEBroker                                                            
+21972 Video.UI                                                                  
+16532 WindowsPackageManagerServer                                               
+  636 wininit                                                                   
+  852 winlogon                                                                  
+ 4000 wlanext                                                                   
+ 6268 WmiPrvSE                                                                  
+ 8180 WmiPrvSE                                                                  
+ 2160 wsl                                                                       
+ 9096 wsl                                                                       
+14972 wsl                                                                       
+28404 wsl                                                                       
+ 2012 WUDFHost                                                                  
+ 2772 WUDFHost                                                                  
+

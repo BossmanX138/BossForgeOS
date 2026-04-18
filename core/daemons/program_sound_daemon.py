@@ -36,9 +36,11 @@ import contextlib
 import tempfile
 import subprocess
 
-SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "soundstage_schemes")
-SOUNDSTAGE_SOUNDS_DIR = os.path.join(SOUNDSTAGE_SCHEMES_DIR, "sounds")
-os.makedirs(SOUNDSTAGE_SOUNDS_DIR, exist_ok=True)
+SOUNDFORGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "soundforge_schemes")
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "soundstage_schemes")
+SOUNDFORGE_SOUNDS_DIR = os.path.join(SOUNDFORGE_SCHEMES_DIR, "sounds")
+LEGACY_SOUNDSTAGE_SOUNDS_DIR = os.path.join(LEGACY_SOUNDSTAGE_SCHEMES_DIR, "sounds")
+os.makedirs(SOUNDFORGE_SOUNDS_DIR, exist_ok=True)
 
 
 def resolve_sound_path(path):
@@ -47,9 +49,12 @@ def resolve_sound_path(path):
     if os.path.isabs(path) and os.path.exists(path):
         return path
     # Try managed dir
-    managed = os.path.join(SOUNDSTAGE_SOUNDS_DIR, os.path.basename(path))
+    managed = os.path.join(SOUNDFORGE_SOUNDS_DIR, os.path.basename(path))
     if os.path.exists(managed):
         return managed
+    legacy_managed = os.path.join(LEGACY_SOUNDSTAGE_SOUNDS_DIR, os.path.basename(path))
+    if os.path.exists(legacy_managed):
+        return legacy_managed
     # Fallback: original path
     return path if os.path.exists(path) else None
 
@@ -97,7 +102,7 @@ def play_sound_advanced(event, exe=None):
 
 def log_diagnostics(event, exe, path, volume, rate):
     try:
-        diag_path = os.path.join(os.path.dirname(__file__), "soundstage_diagnostics.log")
+        diag_path = os.path.join(os.path.dirname(__file__), "soundforge_diagnostics.log")
         with open(diag_path, "a", encoding="utf-8") as f:
             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | event={event} | exe={exe} | path={path} | volume={volume} | rate={rate}\n")
     except Exception:
@@ -107,7 +112,7 @@ def import_sound_file(src_path):
     """Copy a sound file into the managed directory, return new path."""
     if not src_path or not os.path.exists(src_path):
         return None
-    dst = os.path.join(SOUNDSTAGE_SOUNDS_DIR, os.path.basename(src_path))
+    dst = os.path.join(SOUNDFORGE_SOUNDS_DIR, os.path.basename(src_path))
     shutil.copy2(src_path, dst)
     return dst
 
@@ -115,15 +120,17 @@ def import_sound_file(src_path):
 # =========================
 # CONFIG
 # =========================
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "soundstage_config.json")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "soundforge_config.json")
+LEGACY_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "soundstage_config.json")
 DEFAULT_POLL_RATE = 0.5  # seconds
 
 def load_config():
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        config_path = CONFIG_PATH if os.path.exists(CONFIG_PATH) else LEGACY_CONFIG_PATH
+        with open(config_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        print(f"[SoundStage] Failed to load config: {e}")
+        print(f"[SoundForge] Failed to load config: {e}")
         return {}
 
 config = load_config()
@@ -336,7 +343,7 @@ def handle_keyboard_key_press(stop_event=None):
 
 
 def main():
-    print("[SoundStage] Starting. Press Ctrl+C to exit.")
+    print("[SoundForge] Starting. Press Ctrl+C to exit.")
     stop_event = threading.Event()
     threads = []
     # Start all event handlers in background threads
@@ -354,7 +361,7 @@ def main():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("[SoundStage] Exiting.")
+        print("[SoundForge] Exiting.")
         stop_event.set()
         for t in threads:
             t.join(timeout=2)

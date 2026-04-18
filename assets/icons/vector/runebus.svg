@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="RuneBus">
+  <g fill="none" stroke="#D4A857" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="56"/>
+    <circle cx="64" cy="64" r="40"/>
+    <path d="M64 24L95 80H33z"/>
+    <circle cx="64" cy="24" r="3"/>
+    <circle cx="95" cy="80" r="3"/>
+    <circle cx="33" cy="80" r="3"/>
+    <path d="M49 50h6M76 50h6M64 92h0"/>
+  </g>
+</svg>

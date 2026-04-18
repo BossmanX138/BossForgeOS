@@ -193,6 +193,23 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(profile["bossgate_enabled"])
         self.assertTrue(profile["has_llm"])
 
+    def test_create_agent_can_disable_encryption(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="plain_profile",
+            endpoint="ollama",
+            system_prompt="Local non-encrypted profile.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+            encrypt_profile=False,
+            bossgate_enabled=True,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["plain_profile"]
+        self.assertFalse(profile["encrypt_profile"])
+        self.assertFalse(profile["bossgate_enabled"])
+
     def test_export_import_json_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.set_mcp_server(name="filesystem", command="fs-mcp")

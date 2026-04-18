@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 from urllib import error, request
 
+from core.adapters.bossgate_hands_on_adapter import BossGateHandsOnAdapter
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from core.agent_registry import register_agent
 from core.prime_agent import PrimeAgent
@@ -31,7 +32,25 @@ RUNEFORGE_PROFILE: dict[str, Any] = {
     "id": "runeforge",
     "name": "Runeforge, First Mind of the Forge",
     "version": "1.0.0",
+    "agent_class": "prime",
+    "agent_type": "authority",
+    "rank": "admiral",
     "description": "Model/runtime infrastructure steward for BossForge workloads.",
+    "skills": [
+        "command",
+        "web_search",
+        "runtime_observation",
+        "os_action_execution",
+        "voice_command_routing",
+        "task_queue_management",
+    ],
+    "sigils": [
+        "agent_spawn",
+        "agent_transmutation",
+        "agent_banishment",
+        "prime_law_binding",
+        "fate_weaving",
+    ],
     "llm_router": {
         "enabled": True,
         "provider": "openai_compatible",
@@ -46,11 +65,15 @@ RUNEFORGE_PROFILE: dict[str, Any] = {
 
 
 class RuneforgeAgent(PrimeAgent):
+    # Agents in this set are explicitly excluded from hands-on task assignment.
+    NON_HANDS_ON_AGENT_IDS = {"archivist", "security_sentinel"}
+
     def __init__(self, interval_seconds: int = 15, root: Path | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.interval_seconds = interval_seconds
         self.root = root or resolve_root_from_env()
         self.bus = RuneBus(self.root)
+        self.runtime_adapter = BossGateHandsOnAdapter(self.bus)
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "runeforge_profile.json"
         self.tasks_path = self.bus.state / "runeforge_tasks.json"
@@ -61,6 +84,7 @@ class RuneforgeAgent(PrimeAgent):
         self._system_laws: dict = {}
         self._fate_workflows: list = []
         self._banished_agents: set = set()
+        self._last_scheduled_discovery_key: str | None = None
         self.os_edition_dir = self.root / "Runeforge OS Edition"
         self._ensure_profile()
         self._ensure_voice_aliases()
@@ -260,6 +284,16 @@ class RuneforgeAgent(PrimeAgent):
         return {"type": "none", "agent": "", "content": normalized}
 
     def _assign_voice_task_to_agent(self, agent: str, details: str, spoken_text: str) -> dict[str, Any]:
+        agent_id = str(agent).strip().lower()
+        if agent_id in self.NON_HANDS_ON_AGENT_IDS:
+            return {
+                "ok": False,
+                "spoken_text": spoken_text,
+                "voice_action": "agent_task_assignment",
+                "message": f"Agent '{agent}' is not eligible for hands-on task assignment.",
+                "blocked_agents": sorted(self.NON_HANDS_ON_AGENT_IDS),
+            }
+
         task_details = details.strip()
         if not task_details:
             return {
@@ -1401,8 +1435,29 @@ class RuneforgeAgent(PrimeAgent):
             if key not in profile:
                 profile[key] = value
                 changed = True
+        if not isinstance(profile.get("skills"), list):
+            profile["skills"] = list(RUNEFORGE_PROFILE["skills"])
+            changed = True
+        if not isinstance(profile.get("sigils"), list):
+            profile["sigils"] = list(RUNEFORGE_PROFILE["sigils"])
+            changed = True
         if not isinstance(profile.get("llm_router"), dict):
             profile["llm_router"] = RUNEFORGE_PROFILE["llm_router"]
+            changed = True
+        if str(profile.get("agent_class", "")).strip().lower() != "prime":
+            profile["agent_class"] = "prime"
+            changed = True
+        if str(profile.get("rank", "")).strip().lower() != "admiral":
+            profile["rank"] = "admiral"
+            changed = True
+        if str(profile.get("agent_type", "")).strip().lower() != "authority":
+            profile["agent_type"] = "authority"
+            changed = True
+        if "command" not in [str(item).strip().lower() for item in profile.get("skills", []) if isinstance(item, str)]:
+            profile["skills"] = sorted({*profile.get("skills", []), "command"})
+            changed = True
+        if profile.get("skills") == profile.get("sigils"):
+            profile["sigils"] = list(RUNEFORGE_PROFILE["sigils"])
             changed = True
         if changed:
             self._save_profile(profile)
@@ -1439,6 +1494,12 @@ class RuneforgeAgent(PrimeAgent):
             "details": str(args.get("details", "")).strip(),
             "owner": "runeforge",
             "status": "queued",
+            "source": str(args.get("source", "")).strip(),
+            "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "discovered_owner": str(args.get("discovered_owner", "")).strip(),
+            "source_path": str(args.get("source_path", "")).strip(),
+            "source_line": int(args.get("source_line", 0) or 0),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
         self.tasks.append(item)
         self._save_tasks()
@@ -1453,6 +1514,8 @@ class RuneforgeAgent(PrimeAgent):
 
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+
+        discovery = self.runtime_adapter.handle_incoming_discovery("runeforge", args, root=self.root)
 
         if command == "reality_weaving":
             result = self.reality_weaving(**args)
@@ -1495,6 +1558,9 @@ class RuneforgeAgent(PrimeAgent):
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 
+        if isinstance(result, dict):
+            result.setdefault("discovery", discovery)
+
         self.bus.emit_event("runeforge", f"command:{command}", result)
         self.bus.write_state(
             "runeforge",
@@ -1509,6 +1575,14 @@ class RuneforgeAgent(PrimeAgent):
 
     def run(self, stop_event: threading.Event | None = None) -> None:
         while stop_event is None or not stop_event.is_set():
+            discovery_cycle = self.runtime_adapter.run_periodic_discovery(
+                agent_id="runeforge",
+                root=self.root,
+                last_window_key=self._last_scheduled_discovery_key,
+                window_minutes=2,
+            )
+            self._last_scheduled_discovery_key = discovery_cycle.get("last_window_key")
+            discovery_mode_active = bool(discovery_cycle.get("discovery_mode_active", False))
             self.bus.write_state(
                 "runeforge",
                 {
@@ -1516,10 +1590,17 @@ class RuneforgeAgent(PrimeAgent):
                     "pid": os.getpid(),
                     "status": "idle",
                     "queued_tasks": len(self.tasks),
+                    "discovery_mode_active": discovery_mode_active,
                 },
             )
             for _, payload in self.bus.poll_commands(self.seen_commands):
                 self.handle_command(payload)
+
+            self.runtime_adapter.auto_complete_discovery(
+                agent_id="runeforge",
+                items=self.tasks,
+                save_items=self._save_tasks,
+            )
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

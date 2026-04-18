@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 from urllib import error, request
 
+from core.adapters.bossgate_hands_on_adapter import BossGateHandsOnAdapter
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 
 from core.agent_registry import register_agent
@@ -32,7 +33,24 @@ CODEMAGE_PROFILE: dict[str, Any] = {
     "id": "codemage",
     "name": "CodeMage, Arch-Scribe of the Forge",
     "version": "1.0.0",
+    "agent_class": "skilled",
+    "agent_type": "controller",
+    "rank": "captain",
     "description": "Arcane engineer for code and scroll interpretation in BossForge.",
+    "skills": [
+        "command",
+        "bossgate_travel_control",
+        "web_search",
+        "runtime_observation",
+        "task_queue_management"
+    ],
+    "dispatch_policy": {
+        "autonomous_bus_intake": True,
+        "proactive_remote_hunt": False,
+        "preferred_scope": "host",
+        "can_leave_host_without_command": False,
+        "can_leave_host_for_lan_when_host_idle": True
+    },
     "persona": {
         "short_title": "Arcane Engineer and Scroll-Reader",
         "identity": [
@@ -160,10 +178,12 @@ class CodeMageAgent:
     def __init__(self, interval_seconds: int = 8, root: Path | None = None) -> None:
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(root or resolve_root_from_env())
+        self.runtime_adapter = BossGateHandsOnAdapter(self.bus)
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "codemage_profile.json"
         self.work_path = self.bus.state / "codemage_work_packets.json"
         self.work_packets: list[dict[str, Any]] = []
+        self._last_scheduled_discovery_key: str | None = None
         self.current_state = "Idle"
         self.last_transition = ""
         self._ensure_profile()
@@ -204,13 +224,36 @@ class CodeMageAgent:
             if key not in merged:
                 merged[key] = value
         # Keep schema shape aligned for nested keys used by runtime.
-        for nested in ["persona", "scroll_rituals", "state_machine", "io", "models"]:
+        for nested in ["persona", "scroll_rituals", "state_machine", "io", "models", "dispatch_policy"]:
             if not isinstance(merged.get(nested), dict):
                 merged[nested] = CODEMAGE_PROFILE[nested]
         if not isinstance(merged.get("apprentices"), list):
             merged["apprentices"] = CODEMAGE_PROFILE["apprentices"]
         if not isinstance(merged.get("rules"), list):
             merged["rules"] = CODEMAGE_PROFILE["rules"]
+        if str(merged.get("agent_class", "")).strip().lower() != "skilled":
+            merged["agent_class"] = "skilled"
+        if str(merged.get("rank", "")).strip().lower() != "captain":
+            merged["rank"] = "captain"
+        if str(merged.get("agent_type", "")).strip().lower() != "controller":
+            merged["agent_type"] = "controller"
+        if not isinstance(merged.get("skills"), list):
+            merged["skills"] = list(CODEMAGE_PROFILE["skills"])
+        else:
+            normalized_skills = sorted({str(item).strip() for item in merged.get("skills", []) if str(item).strip()})
+            if "command" not in normalized_skills:
+                normalized_skills.append("command")
+            if "bossgate_travel_control" not in normalized_skills:
+                normalized_skills.append("bossgate_travel_control")
+            merged["skills"] = sorted(set(normalized_skills))
+
+        dispatch_policy = merged.get("dispatch_policy") if isinstance(merged.get("dispatch_policy"), dict) else {}
+        dispatch_policy["autonomous_bus_intake"] = True
+        dispatch_policy["proactive_remote_hunt"] = False
+        dispatch_policy["preferred_scope"] = "host"
+        dispatch_policy["can_leave_host_without_command"] = False
+        dispatch_policy["can_leave_host_for_lan_when_host_idle"] = True
+        merged["dispatch_policy"] = dispatch_policy
 
         self.profile_path.write_text(json.dumps(merged, indent=2), encoding="utf-8")
 
@@ -508,6 +551,24 @@ class CodeMageAgent:
         self._save_work_packets()
         return {"ok": True, "work_packet": packet, "queued_total": len(self.work_packets)}
 
+    def add_work_item(self, args: dict[str, Any]) -> dict[str, Any]:
+        item = {
+            "packet_id": str(args.get("packet_id", "")).strip(),
+            "title": str(args.get("title", "")).strip(),
+            "details": str(args.get("details", "")).strip(),
+            "owner": "codemage",
+            "status": "queued",
+            "source": str(args.get("source", "")).strip(),
+            "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "discovered_owner": str(args.get("discovered_owner", "")).strip(),
+            "source_path": str(args.get("source_path", "")).strip(),
+            "source_line": int(args.get("source_line", 0) or 0),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self.work_packets.append(item)
+        self._save_work_packets()
+        return {"ok": True, "work_item": item, "queued_total": len(self.work_packets)}
+
     def list_work_packets(self) -> dict[str, Any]:
         return {"ok": True, "work_packets": self.work_packets}
 
@@ -622,6 +683,8 @@ class CodeMageAgent:
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
 
+        discovery = self.runtime_adapter.handle_incoming_discovery("codemage", args, root=self.bus.root)
+
 
         # === GitHub Connector Commands ===
         if command == "github_create_issue":
@@ -668,6 +731,8 @@ class CodeMageAgent:
             }
         elif command == "work_packet":
             result = self.add_work_packet(args)
+        elif command == "work_item":
+            result = self.add_work_item(args)
         elif command == "analyze_selection":
             result = self.analyze_selection(args)
         elif command == "workspace_indexing":
@@ -682,6 +747,9 @@ class CodeMageAgent:
             result = self.set_model_backend(args)
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
+
+        if isinstance(result, dict):
+            result.setdefault("discovery", discovery)
 
         self.bus.emit_event("codemage", f"command:{command}", result)
         self.bus.write_state(
@@ -699,6 +767,14 @@ class CodeMageAgent:
 
     def run(self, stop_event: threading.Event | None = None) -> None:
         while stop_event is None or not stop_event.is_set():
+            discovery_cycle = self.runtime_adapter.run_periodic_discovery(
+                agent_id="codemage",
+                root=self.bus.root,
+                last_window_key=self._last_scheduled_discovery_key,
+                window_minutes=2,
+            )
+            self._last_scheduled_discovery_key = discovery_cycle.get("last_window_key")
+            discovery_mode_active = bool(discovery_cycle.get("discovery_mode_active", False))
             self.bus.write_state(
                 "codemage",
                 {
@@ -708,11 +784,18 @@ class CodeMageAgent:
                     "queued_work_packets": len(self.work_packets),
                     "state": self.current_state,
                     "last_transition": self.last_transition,
+                    "discovery_mode_active": discovery_mode_active,
                 },
             )
             for _, payload in self.bus.poll_commands(self.seen_commands):
                 self.handle_command(payload)
                 self.model_keeper_compat.handle_command(payload)
+
+            self.runtime_adapter.auto_complete_discovery(
+                agent_id="codemage",
+                items=self.work_packets,
+                save_items=self._save_work_packets,
+            )
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

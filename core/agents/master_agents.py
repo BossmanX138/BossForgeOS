@@ -32,9 +32,9 @@ AGENT_MANIFEST: dict[str, dict[str, Any]] = {
     },
     "model_gateway": {
         "id": "model_gateway",
-        "name": "ModelGatewayAgent",
+        "name": "ModelGateway",
         "module": "core.agents.model_gateway_agent",
-        "class": "ModelGatewayAgent",
+        "class": "ModelGateway",
         "description": "Model endpoint router and cross-node orchestration gateway.",
     },
     "runeforge": {

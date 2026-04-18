@@ -1,0 +1,439 @@
+BossCrafts Unified Guide: Agents, AgentForge, BossGate Connector, and Schema
+Version: 2026-04-17
+Scope: BossForgeOS implementation + policy docs
+
+====================================================================
+1) What This File Is
+====================================================================
+This file is a single technical reference for:
+- How BossCrafts agents are modeled and enforced
+- What AgentForge policies require
+- What BossGate connector/protocol currently do
+- How schema validation works (JSON schema + runtime validator)
+- How command, rank, travel, and MCP constraints are applied
+
+Primary source anchors in this repository:
+- docs/AgentForge_readme.md
+- docs/bossgate_connector.md
+- docs/bossgate_protocol.md
+- core/schemas/bosscrafts_agent.schema.json
+- core/schemas/agent_schema.py
+- core/connectors/bossgate_connector.py
+- core/agents/master_agents.py
+
+====================================================================
+2) Agent System at a Glance
+====================================================================
+BossCrafts agent identity is governed by three independent axes:
+- agent_class (power tier): normalized, skilled, prime
+- agent_type (function role): authority, controller, worker, security, tester, ranger
+- rank (command hierarchy): cadet -> specialist -> lieutenant -> captain -> commander -> general -> admiral
+
+These axes are orthogonal by design:
+- A prime agent is not automatically a commander.
+- Leadership is determined by rank + command skill, not class.
+- Type constrains allowed/required skill sets and MCP server categories.
+
+Canonical manifest examples are registered in:
+- core/agents/master_agents.py
+
+====================================================================
+3) AgentForge Policy Model
+====================================================================
+AgentForge defines the canonical creation guardrails.
+
+3.1 Core requirements
+- Prime agents require active LLM backing.
+- High-impact actions should use dual-control confirmation by default.
+- Explicit session/time grants can satisfy confirmation in scope.
+- No silent escalation from read-only to write/execute.
+- Least privilege is required.
+- High-impact actions must be auditable.
+
+3.2 Tier rules
+A) normalized
+- No skills
+- No sigils
+- Capability comes from MCP servers
+- Must have MCP enabled and at least one MCP server
+
+B) skilled
+- Must choose one specialization path:
+  - Skills path: one or more skills, no sigils
+  - Sigil specialist path: exactly one sigil, currently only sigil_transporter
+- llm.enabled must be true
+- Prime-only skill namespaces are forbidden
+- If BossGate travel_capable is enabled, dedicated model fields are required:
+  provider, model_name, endpoint
+
+C) prime
+- Sigils required
+- llm.enabled must be true with model configuration
+- Prime can use prime-only namespaces
+- Does not automatically imply command authority
+
+3.3 Rank and command rules
+- command skill requires rank captain or higher
+- Mandatory assistance behavior is rank-driven
+- A commander can issue command only when rank is higher than target rank
+- If commander rank >= captain and target rank < captain, assistance is mandatory
+
+Runtime implementation functions:
+- can_issue_command(...)
+- is_assistance_mandatory(...)
+
+====================================================================
+4) Agent Type Constraints
+====================================================================
+Types are enforced in both schema and runtime validator.
+
+4.1 authority
+- Must include command
+- Cannot include bossgate_travel_control
+- MCP server name prefixes allowed:
+  bossgate_, authority_, audit_, policy_
+
+4.2 controller
+- Must include command
+- May include bossgate_travel_control
+- Dispatch lock: local-first orchestration behavior
+- MCP prefixes:
+  orchestration_, controller_, workflow_, coordination_
+
+4.3 worker
+- Cannot include command
+- MCP prefixes:
+  worker_, task_, ops_, runtime_, file_, shell_
+
+4.4 security
+- Cannot include bossgate_travel_control
+- MCP prefixes:
+  security_, audit_, policy_, sentinel_
+
+4.5 tester
+- Cannot include command
+- MCP prefixes:
+  test_, qa_, validation_, sentinel_
+
+4.6 ranger
+- Must include bossgate_travel_control
+- Cannot include command
+- Designed for remote repair/maintenance workloads
+- MCP prefixes:
+  ranger_, repair_, maintenance_, diagnostic_, runtime_, ops_, shell_, remote_
+
+====================================================================
+5) Rank Capacity Limits
+====================================================================
+Rank caps apply to skill count, sigil count, and MCP server count.
+
+- cadet:      skills <= 1,  sigils <= 0, MCP <= 2
+- specialist: skills <= 2,  sigils <= 0, MCP <= 3
+- lieutenant: skills <= 3,  sigils <= 1, MCP <= 4
+- captain:    skills <= 5,  sigils <= 2, MCP <= 6
+- commander:  skills <= 7,  sigils <= 3, MCP <= 8
+- general:    skills <= 9,  sigils <= 4, MCP <= 10
+- admiral:    skills <= 12, sigils <= 5, MCP <= 12
+
+Runtime constants:
+- _RANK_SKILL_CAP
+- _RANK_SIGIL_CAP
+- _RANK_MCP_CAP
+
+====================================================================
+6) Dispatch Policy Rules
+====================================================================
+Dispatch policy fields:
+- autonomous_bus_intake (bool)
+- proactive_remote_hunt (bool)
+- preferred_scope (host|lan|remote)
+- can_leave_host_without_command (bool)
+- can_leave_host_for_lan_when_host_idle (bool)
+
+Controller lock:
+- autonomous_bus_intake = true
+- proactive_remote_hunt = false
+- preferred_scope in {host, lan}
+- can_leave_host_without_command = false
+- can_leave_host_for_lan_when_host_idle = true
+
+Ranger lock:
+- autonomous_bus_intake = true
+- proactive_remote_hunt = true
+- preferred_scope = remote
+- can_leave_host_without_command = true
+
+Local ranger personality mode (ranger_local / introvert_local presets):
+- keeps autonomous intake
+- disables proactive remote hunt
+- disallows host-leave-without-command
+- constrains preferred scope to host/lan
+
+====================================================================
+7) Personality Wrapper and Routing Bias
+====================================================================
+Personality is a soft assignment signal, not a hard privilege override.
+
+Supported behavior patterns:
+- authority_like
+- controller_like
+- worker_like
+- security_like
+- tester_like
+- ranger_like
+- ranger_local
+
+Interest affinity:
+- metadata.personality_wrapper.interests can bias incident matching
+- hard constraints still dominate (class/type/rank/skills/sigils/policy)
+
+Runtime incident routing helpers:
+- infer_incident_domains(incident)
+- compute_adaptive_priority(agent_profile, incident, weights=None)
+- rank_agents_for_incident(incident, agent_profiles, weights=None)
+
+Default priority weights:
+- urgency: 0.35
+- risk: 0.25
+- proximity: 0.20
+- confidence: 0.20
+
+====================================================================
+8) BossGate Connector (Current Reality)
+====================================================================
+BossGate is intended as secure transport + interoperability + controlled distribution.
+
+Documented intent:
+- Move agents across approved systems
+- Protect payloads (encrypted, policy-bound)
+- Restrict metadata disclosure by policy
+- Enable licensing/usage tracking for rent/sell flows
+- Support remote diagnostics with authorization and audit
+- Discover target integration surfaces and assist connector generation
+
+Current repository implementation status is prototype-level.
+Implemented in core/connectors/bossgate_connector.py:
+- LAN beacon broadcast/discovery
+- Presence packet parsing
+- Target classification and allowlist checks
+- Basic REST endpoint scanning from common OpenAPI/Swagger paths
+
+Not implemented end-to-end yet:
+- Full encrypted transfer envelope pipeline
+- Complete policy-driven metadata visibility controls
+- Full licensing and billing flow
+- Runtime attestation and complete audit stream
+- Unified bus command API for all planned BossGate commands
+
+Allowed transfer target types currently include:
+- bossgate_connector
+- ass
+- bossforgeos
+- bridgebase_alpha
+
+====================================================================
+9) BossGate Protocol Draft (Design Layer)
+====================================================================
+Draft protocol layers:
+1. Discovery
+2. Capability negotiation
+3. Secure transfer
+4. Runtime control
+5. Telemetry and audit
+
+Draft transfer envelope fields:
+- envelope_version
+- agent_id
+- agent_version
+- issuer
+- target_system_id
+- created_at
+- expires_at
+- cipher_suite
+- encrypted_payload
+- payload_hash
+- signature
+- policy_ref
+
+Metadata visibility profiles:
+- none
+- id_card_only
+- model_card_only
+- id_and_model_card
+
+Design principles:
+- deny by default
+- explicit authorization
+- auditability
+- revocability
+
+====================================================================
+10) JSON Schema Contract (core/schemas/bosscrafts_agent.schema.json)
+====================================================================
+10.1 Required top-level fields
+- id
+- name
+- description
+- schema_version
+- agent_card
+- proprietary
+- agent_class
+- agent_type
+- rank
+- skills
+- sigils
+- llm
+- integration
+- mcp
+- system_wrapper
+- instructions
+
+10.2 Important required nested fields
+A) agent_card requires:
+- id, name, description, agent_class, agent_type, rank
+
+B) proprietary requires:
+- managed_by (const bossgate_connector)
+- encrypted (const true)
+- encryption_scheme
+- sealed_fields (min 1)
+
+C) llm requires:
+- enabled
+- if enabled=true, model object required
+
+D) integration.bossgate requires:
+- enabled
+- travel_capable
+- connector
+- allowed_targets
+
+E) mcp requires:
+- enabled
+- servers
+
+F) instructions requires:
+- system
+
+10.3 Key conditional categories in schema allOf
+- class-specific constraints (normalized/skilled/prime)
+- type-specific required/disallowed skill constraints
+- rank-based caps and command-gate constraints
+- travel gating constraints
+- llm model requirements for travel-capable skilled agents
+- dispatch policy lock behavior for controller/ranger
+
+====================================================================
+11) Runtime Validator and Normalizer (core/schemas/agent_schema.py)
+====================================================================
+The runtime enforcer does more than schema shape checking.
+
+11.1 normalize_agent_profile(agent_id, profile)
+Normalizes and synthesizes defaults for:
+- id/name/description/schema_version
+- class/type/rank defaults
+- skills/sigils normalization and de-overlap
+- llm settings from llm/llm_router/models.inference fallback chain
+- mcp server shape normalization
+- system_wrapper and instructions defaults
+- proprietary default sealing/encryption metadata
+- integration.bossgate derived travel capability
+- dispatch policy defaults by type
+- personality wrapper normalization and behavior pattern sanitization
+- generated agent_card mirror
+
+Important travel derivation rule:
+- integration.bossgate.travel_capable is true only when bossgate is enabled and either:
+  - requested travel_capable + bossgate_travel_control skill, or
+  - sigil_transporter is present
+
+11.2 validate_agent_profile(profile)
+Hard-fails invalid profiles with explicit ValueError messages.
+
+Major enforcement areas:
+- ID pattern and required text fields
+- schema_version must be 1.x
+- class/type/rank enum validity
+- skills/sigils list shape and disjointness
+- normalized: no skills and no sigils
+- skilled: choose skills OR one allowed sigil specialist path
+- prime: must declare at least one sigil
+- command requires captain+
+- class/rank caps and bossgate travel skill restrictions
+- type required/disallowed skill checks
+- dispatch policy booleans and preferred_scope validity
+- controller/ranger dispatch lock enforcement
+- personality behavior pattern allowlist and interests count limit
+- llm requiredness and model requiredness when llm.enabled=true
+- skilled travel-capable model field requirements
+- integration.bossgate object validity and travel gating
+- proprietary policy lock (managed_by bossgate_connector, encrypted=true)
+- mcp requiredness and per-rank server cap
+- mcp per-type name-prefix allowlists
+- instructions.system requiredness
+
+====================================================================
+12) Travel, Command, and Assistance Interplay
+====================================================================
+Travel and command are separate controls:
+- command skill controls delegation authority (with rank logic)
+- bossgate_travel_control controls direct travel capability
+- controller can have command and optionally travel control
+- ranger must have travel control and cannot have command
+
+Mandatory assist logic:
+- Only applies when commander can validly command target by rank/skill
+- Then escalates to required assist if commander is captain+ and target is below captain
+
+====================================================================
+13) Master Manifest and Registry Bootstrap
+====================================================================
+core/agents/master_agents.py provides canonical manifest entries for:
+- archivist
+- codemage
+- devlot
+- model_gateway
+- runeforge
+- security_sentinel
+
+bootstrap_master_agent_registry() registers these into runtime registry.
+
+====================================================================
+14) Practical Forge Checklist
+====================================================================
+Use this sequence when creating/updating an agent profile:
+1) Choose class, type, and rank intentionally (they are independent).
+2) Apply type constraints first (required/disallowed skills).
+3) Verify rank capacity against skills/sigils/MCP counts.
+4) Configure dispatch policy to match type lock rules.
+5) Configure llm according to class and travel requirements.
+6) Configure integration.bossgate with correct travel gating.
+7) Ensure proprietary block is present and policy-locked.
+8) Ensure mcp server names match type prefix allowlist.
+9) Normalize profile and run validation before registration.
+10) Store/transport sensitive internals under sealed_fields policy.
+
+====================================================================
+15) Known Gaps and Next Engineering Priorities
+====================================================================
+Highest impact follow-ups:
+- Implement full BossGate encrypted envelope lifecycle (package/transfer/install)
+- Implement policy-driven metadata visibility enforcement end-to-end
+- Add licensing and metered usage pipeline
+- Add runtime attestation and richer audit stream
+- Expose unified BossGate bus command surface in production form
+- Extend integration tests around dispatch-policy lock + travel gates + command rank rules
+
+====================================================================
+16) Quick Terms Reference
+====================================================================
+- Skill: bounded operational capability
+- Sigil: elevated power capability (prime or approved specialist path)
+- Class: power tier (normalized/skilled/prime)
+- Type: functional role (authority/controller/worker/security/tester/ranger)
+- Rank: command hierarchy and capacity limiter
+- BossGate: secure transport and interoperability layer
+- Agent Card: public identity snapshot
+- Proprietary block: encrypted/managed internal fields policy metadata
+
+End of guide.

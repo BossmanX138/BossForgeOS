@@ -80,7 +80,9 @@ class AgentMemoryStore:
             return
         now = datetime.now(timezone.utc).isoformat()
         klass = (agent_class or "prime").strip().lower()
-        if klass not in {"prime", "core"}:
+        if klass == "core":
+            klass = "normalized"
+        if klass not in {"prime", "skilled", "normalized"}:
             klass = "prime"
         with self._connection() as con:
             con.execute(

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="BossGate">
+  <defs>
+    <linearGradient id="travel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4A857"/>
+      <stop offset="100%" stop-color="#4DA6FF"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#travel)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="56"/>
+    <circle cx="64" cy="64" r="44"/>
+    <rect x="52" y="58" width="24" height="22" rx="4"/>
+    <path d="M57 58v-7a7 7 0 0 1 14 0v7"/>
+    <path d="M64 22v10M64 96v10M22 64h10M96 64h10"/>
+  </g>
+</svg>

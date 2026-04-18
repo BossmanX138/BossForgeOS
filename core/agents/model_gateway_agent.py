@@ -46,26 +46,28 @@ DEFAULT_ENDPOINTS: Dict[str, Dict[str, Any]] = {
 }
 
 
-class ModelGatewayAgent:
+class ModelGateway:
     def __init__(self, interval_seconds: int = 5, enable_presence_broadcast: bool = True) -> None:
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(resolve_root_from_env())
         self.seen_commands: set[str] = set()
         self.node_id_path = self.bus.state / "bossgate_node_id.txt"
         self.config_path = self.bus.state / "model_endpoints.json"
-        self.agents_path = self.bus.state / "model_agents.json"
+        self.profiles_path = self.bus.state / "model_profiles.json"
         self.mcp_path = self.bus.state / "mcp_servers.json"
-        self.assistance_path = self.bus.state / "agent_assistance_requests.json"
-        self.locations_path = self.bus.state / "owned_agent_locations.json"
-        self.memory_db_path = self.bus.state / "agent_memory.sqlite3"
+        self.assistance_path = self.bus.state / "gateway_assistance_requests.json"
+        self.locations_path = self.bus.state / "owned_gateway_locations.json"
+        self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
         self.node_id = self._load_or_create_node_id()
         self.endpoints = self._load_endpoints()
-        self.agent_profiles = self._load_agent_profiles()
+        self.profiles = self._load_profiles()
+        # Compatibility alias: newer control surfaces and commands refer to agent_profiles.
+        self.agent_profiles = self.profiles
         self.mcp_servers = self._load_mcp_servers()
         self.memory_store = AgentMemoryStore(self.memory_db_path)
         self.servers: Dict[str, subprocess.Popen[Any]] = {}
         self.assistance_requests: Dict[str, Dict[str, Any]] = self._load_assistance_requests()
-        self.owned_agent_locations: Dict[str, Dict[str, Any]] = self._load_owned_agent_locations()
+        self.owned_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
         self._last_location_refresh = 0.0
         self._presence_stop_event = threading.Event()
         self._presence_thread: threading.Thread | None = None
@@ -100,18 +102,30 @@ class ModelGatewayAgent:
         self.node_id_path.write_text(generated, encoding="utf-8")
         return generated
 
-    def _normalize_agent_profile(self, key: str, profile: Dict[str, Any]) -> Dict[str, Any]:
+    def _normalize_profile(self, key: str, profile: Dict[str, Any]) -> Dict[str, Any]:
         normalized = dict(profile)
         normalized["name"] = key
 
+        encrypt_profile_raw = normalized.get("encrypt_profile")
+        encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
+        normalized["encrypt_profile"] = encrypt_profile
+
         tools = normalized.get("tools")
         normalized["tools"] = sorted({str(t).strip() for t in tools if str(t).strip()}) if isinstance(tools, list) else []
+        skills = normalized.get("skills")
+        normalized["skills"] = sorted({str(s).strip().lower() for s in skills if str(s).strip()}) if isinstance(skills, list) else []
+        sigils = normalized.get("sigils")
+        normalized["sigils"] = sorted({str(s).strip().lower() for s in sigils if str(s).strip()}) if isinstance(sigils, list) else []
 
         profile_class = str(normalized.get("agent_class", "prime")).strip().lower()
-        normalized["agent_class"] = profile_class if profile_class in {"prime", "core"} else "prime"
+        if profile_class == "core":
+            profile_class = "normalized"
+        normalized["agent_class"] = profile_class if profile_class in {"prime", "skilled", "normalized"} else "prime"
 
         bossgate_enabled_raw = normalized.get("bossgate_enabled")
         bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
+        if not encrypt_profile:
+            bossgate_enabled = False
         normalized["bossgate_enabled"] = bossgate_enabled
 
         has_llm_raw = normalized.get("has_llm")
@@ -132,10 +146,10 @@ class ModelGatewayAgent:
         normalized["current_node"] = current_node or self.node_id
         return normalized
 
-    def _load_agent_profiles(self) -> Dict[str, Dict[str, Any]]:
-        if self.agents_path.exists():
+    def _load_profiles(self) -> Dict[str, Dict[str, Any]]:
+        if self.profiles_path.exists():
             try:
-                raw = json.loads(self.agents_path.read_text(encoding="utf-8"))
+                raw = json.loads(self.profiles_path.read_text(encoding="utf-8"))
                 if isinstance(raw, dict):
                     out: Dict[str, Dict[str, Any]] = {}
                     for k, v in raw.items():
@@ -144,15 +158,22 @@ class ModelGatewayAgent:
                         key = str(k).strip().lower()
                         if not key:
                             continue
-                        out[key] = self._normalize_agent_profile(key, dict(v))
+                        out[key] = self._normalize_profile(key, dict(v))
                     return out
             except (OSError, json.JSONDecodeError):
                 pass
-        self.agents_path.write_text("{}", encoding="utf-8")
+        self.profiles_path.write_text("{}", encoding="utf-8")
         return {}
 
+    def _save_profiles(self) -> None:
+        self.profiles_path.write_text(json.dumps(self.profiles, indent=2), encoding="utf-8")
+
+    # Compatibility aliases for older/newer call-sites.
+    def _normalize_agent_profile(self, key: str, profile: Dict[str, Any]) -> Dict[str, Any]:
+        return self._normalize_profile(key, profile)
+
     def _save_agent_profiles(self) -> None:
-        self.agents_path.write_text(json.dumps(self.agent_profiles, indent=2), encoding="utf-8")
+        self._save_profiles()
 
     def _load_mcp_servers(self) -> Dict[str, Dict[str, Any]]:
         if self.mcp_path.exists():
@@ -190,7 +211,7 @@ class ModelGatewayAgent:
     def _save_assistance_requests(self) -> None:
         self.assistance_path.write_text(json.dumps(self.assistance_requests, indent=2), encoding="utf-8")
 
-    def _load_owned_agent_locations(self) -> Dict[str, Dict[str, Any]]:
+    def _load_owned_locations(self) -> Dict[str, Dict[str, Any]]:
         if self.locations_path.exists():
             try:
                 raw = json.loads(self.locations_path.read_text(encoding="utf-8"))
@@ -201,8 +222,8 @@ class ModelGatewayAgent:
         self.locations_path.write_text("{}", encoding="utf-8")
         return {}
 
-    def _save_owned_agent_locations(self) -> None:
-        self.locations_path.write_text(json.dumps(self.owned_agent_locations, indent=2), encoding="utf-8")
+    def _save_owned_locations(self) -> None:
+        self.locations_path.write_text(json.dumps(self.owned_locations, indent=2), encoding="utf-8")
 
     def _detect_format(self, file_path: str, format_hint: str = "") -> str:
         if format_hint.strip().lower() in {"json", "yaml"}:
@@ -216,7 +237,7 @@ class ModelGatewayAgent:
         return {
             "schema_version": 1,
             "endpoints": self.endpoints,
-            "agents": self.agent_profiles,
+            "profiles": self.profiles,
             "mcp_servers": self.mcp_servers,
         }
 
@@ -264,29 +285,29 @@ class ModelGatewayAgent:
             return {"ok": False, "message": str(ex)}
 
         imported_endpoints = payload.get("endpoints", {})
-        imported_agents = payload.get("agents", {})
+        imported_profiles = payload.get("profiles", {})
         imported_mcp = payload.get("mcp_servers", {})
 
-        if not isinstance(imported_endpoints, dict) or not isinstance(imported_agents, dict) or not isinstance(imported_mcp, dict):
-            return {"ok": False, "message": "endpoints, agents, and mcp_servers must be objects"}
+        if not isinstance(imported_endpoints, dict) or not isinstance(imported_profiles, dict) or not isinstance(imported_mcp, dict):
+            return {"ok": False, "message": "endpoints, profiles, and mcp_servers must be objects"}
 
         if merge:
             self.endpoints.update({str(k): dict(v) for k, v in imported_endpoints.items() if isinstance(v, dict)})
-            self.agent_profiles.update({str(k): dict(v) for k, v in imported_agents.items() if isinstance(v, dict)})
+            self.profiles.update({str(k): dict(v) for k, v in imported_profiles.items() if isinstance(v, dict)})
             self.mcp_servers.update({str(k): dict(v) for k, v in imported_mcp.items() if isinstance(v, dict)})
         else:
             self.endpoints = {str(k): dict(v) for k, v in imported_endpoints.items() if isinstance(v, dict)}
-            self.agent_profiles = {str(k): dict(v) for k, v in imported_agents.items() if isinstance(v, dict)}
+            self.profiles = {str(k): dict(v) for k, v in imported_profiles.items() if isinstance(v, dict)}
             self.mcp_servers = {str(k): dict(v) for k, v in imported_mcp.items() if isinstance(v, dict)}
 
-        for key, profile in list(self.agent_profiles.items()):
+        for key, profile in list(self.profiles.items()):
             if not isinstance(profile, dict):
-                self.agent_profiles.pop(key, None)
+                self.profiles.pop(key, None)
                 continue
-            self.agent_profiles[key] = self._normalize_agent_profile(key, profile)
+            self.profiles[key] = self._normalize_profile(key, profile)
 
         self._save_endpoints()
-        self._save_agent_profiles()
+        self._save_profiles()
         self._save_mcp_servers()
 
         return {
@@ -296,7 +317,7 @@ class ModelGatewayAgent:
             "merge": merge,
             "counts": {
                 "endpoints": len(self.endpoints),
-                "agents": len(self.agent_profiles),
+                "profiles": len(self.profiles),
                 "mcp_servers": len(self.mcp_servers),
             },
         }
@@ -512,8 +533,38 @@ class ModelGatewayAgent:
         agent_class: str = "prime",
         has_llm: bool | None = None,
         bossgate_enabled: bool = True,
+        encrypt_profile: bool = True,
+        agent_type: str | None = None,
+        rank: str | None = None,
+        skills: list[str] | None = None,
+        sigils: list[str] | None = None,
+        dispatch_policy: Dict[str, Any] | None = None,
+        personality_wrapper: Dict[str, Any] | None = None,
+        system_wrapper: Dict[str, Any] | None = None,
+        instructions: Dict[str, Any] | None = None,
+        custom_icon_path: str | None = None,
     ) -> Dict[str, Any]:
-        return self._create_agent_profile(name, endpoint, system_prompt, temperature, max_tokens, tools, agent_class, has_llm, bossgate_enabled)
+        return self._create_agent_profile(
+            name,
+            endpoint,
+            system_prompt,
+            temperature,
+            max_tokens,
+            tools,
+            agent_class,
+            has_llm,
+            bossgate_enabled,
+            encrypt_profile,
+            agent_type,
+            rank,
+            skills,
+            sigils,
+            dispatch_policy,
+            personality_wrapper,
+            system_wrapper,
+            instructions,
+            custom_icon_path,
+        )
 
     def delete_agent_profile(self, name: str) -> Dict[str, Any]:
         key = name.strip().lower()
@@ -744,6 +795,16 @@ class ModelGatewayAgent:
         agent_class: str = "prime",
         has_llm: bool | None = None,
         bossgate_enabled: bool = True,
+        encrypt_profile: bool = True,
+        agent_type: str | None = None,
+        rank: str | None = None,
+        skills: list[str] | None = None,
+        sigils: list[str] | None = None,
+        dispatch_policy: Dict[str, Any] | None = None,
+        personality_wrapper: Dict[str, Any] | None = None,
+        system_wrapper: Dict[str, Any] | None = None,
+        instructions: Dict[str, Any] | None = None,
+        custom_icon_path: str | None = None,
     ) -> Dict[str, Any]:
         key = name.strip().lower()
         if not key:
@@ -752,12 +813,15 @@ class ModelGatewayAgent:
             return {"ok": False, "message": f"unknown endpoint: {endpoint}"}
 
         klass = agent_class.strip().lower()
-        if klass not in {"prime", "core"}:
+        if klass == "core":
+            klass = "normalized"
+        if klass not in {"prime", "skilled", "normalized"}:
             klass = "prime"
         llm_enabled = (klass == "prime") if has_llm is None else bool(has_llm)
 
         profile = {
             "name": key,
+            "id": key,
             "endpoint": endpoint,
             "system": system_prompt,
             "temperature": temperature,
@@ -766,10 +830,55 @@ class ModelGatewayAgent:
             "agent_class": klass,
             "has_llm": llm_enabled,
             "bossgate_enabled": bool(bossgate_enabled),
+            "encrypt_profile": bool(encrypt_profile),
             "created_by_node": self.node_id,
             "current_node": self.node_id,
             "memory_enabled": True,
         }
+        if agent_type:
+            profile["agent_type"] = str(agent_type).strip().lower()
+        if rank:
+            profile["rank"] = str(rank).strip().lower()
+        if isinstance(skills, list):
+            profile["skills"] = sorted({str(item).strip().lower() for item in skills if str(item).strip()})
+        if isinstance(sigils, list):
+            profile["sigils"] = sorted({str(item).strip().lower() for item in sigils if str(item).strip()})
+        if isinstance(dispatch_policy, dict):
+            profile["dispatch_policy"] = dict(dispatch_policy)
+        if isinstance(personality_wrapper, dict):
+            profile_metadata = profile.get("metadata") if isinstance(profile.get("metadata"), dict) else {}
+            profile_metadata["personality_wrapper"] = {
+                "preset": str(personality_wrapper.get("preset", "balanced")).strip().lower() or "balanced",
+                "notes": str(personality_wrapper.get("notes", "")).strip(),
+                "behavior_patterns": [
+                    str(item).strip().lower()
+                    for item in (personality_wrapper.get("behavior_patterns") if isinstance(personality_wrapper.get("behavior_patterns"), list) else [])
+                    if str(item).strip()
+                ],
+                "interests": [
+                    str(item).strip().lower()
+                    for item in (personality_wrapper.get("interests") if isinstance(personality_wrapper.get("interests"), list) else [])
+                    if str(item).strip()
+                ],
+            }
+            profile["metadata"] = profile_metadata
+        if isinstance(system_wrapper, dict):
+            profile["system_wrapper"] = {
+                "enabled": bool(system_wrapper.get("enabled", True)),
+                "name": str(system_wrapper.get("name", "personality_wrapper")).strip() or "personality_wrapper",
+                "mode": str(system_wrapper.get("mode", "balanced")).strip().lower() or "balanced",
+                "entrypoint": str(system_wrapper.get("entrypoint", "agentforge_personality_v1")).strip() or "agentforge_personality_v1",
+                "contract_version": str(system_wrapper.get("contract_version", "1.0")).strip() or "1.0",
+            }
+        if isinstance(instructions, dict):
+            profile["instructions"] = {
+                "system": str(instructions.get("system", system_prompt)).strip() or str(system_prompt).strip(),
+                "developer": str(instructions.get("developer", "")).strip(),
+                "operational": instructions.get("operational") if isinstance(instructions.get("operational"), list) else [],
+                "safety": instructions.get("safety") if isinstance(instructions.get("safety"), list) else [],
+            }
+        if custom_icon_path:
+            profile["custom_icon_path"] = str(custom_icon_path).strip()
         profile = self._normalize_agent_profile(key, profile)
         self.agent_profiles[key] = profile
         self._save_agent_profiles()
@@ -863,6 +972,17 @@ class ModelGatewayAgent:
             has_llm = bool(has_llm_raw) if isinstance(has_llm_raw, bool) else None
             bossgate_enabled_raw = args.get("bossgate_enabled")
             bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
+            encrypt_profile_raw = args.get("encrypt_profile")
+            encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
+            agent_type = str(args.get("agent_type", "")).strip().lower() or None
+            rank = str(args.get("rank", "")).strip().lower() or None
+            skills_raw = args.get("skills")
+            skills = skills_raw if isinstance(skills_raw, list) else None
+            sigils_raw = args.get("sigils")
+            sigils = sigils_raw if isinstance(sigils_raw, list) else None
+            dispatch_policy_raw = args.get("dispatch_policy")
+            dispatch_policy = dispatch_policy_raw if isinstance(dispatch_policy_raw, dict) else None
+            custom_icon_path = str(args.get("custom_icon_path", "")).strip() or None
             result = self._create_agent_profile(
                 name,
                 endpoint,
@@ -873,6 +993,13 @@ class ModelGatewayAgent:
                 agent_class,
                 has_llm,
                 bossgate_enabled,
+                encrypt_profile,
+                agent_type,
+                rank,
+                skills,
+                sigils,
+                dispatch_policy,
+                custom_icon_path=custom_icon_path,
             )
         elif command == "list_mcp_servers":
             result = {"ok": True, "mcp_servers": self.mcp_servers}
@@ -1049,12 +1176,17 @@ class ModelGatewayAgent:
         self.run(stop_event=None)
 
 
+class ModelGatewayAgent(ModelGateway):
+    """Compatibility wrapper preserving historic class name for callers."""
+    pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="BossForgeOS model gateway service")
     parser.add_argument("--interval", type=int, default=5)
     args = parser.parse_args()
 
-    service = ModelGatewayAgent(interval_seconds=args.interval)
+    service = ModelGateway(interval_seconds=args.interval)
     service.run_forever()
 
 

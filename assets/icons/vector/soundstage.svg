@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SoundStage">
+  <g fill="none" stroke="#D4A857" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="64" cy="64" r="56"/>
+    <path d="M54 38v36M74 38v36M54 38h20"/>
+    <path d="M39 50a28 28 0 0 1 0 28"/>
+    <path d="M89 50a28 28 0 0 0 0 28"/>
+    <path d="M31 44a38 38 0 0 1 0 40"/>
+    <path d="M97 44a38 38 0 0 0 0 40"/>
+    <path d="M61 86l3-5 3 5-3 5z"/>
+  </g>
+</svg>

@@ -13,11 +13,13 @@ def get_project_root():
 
 PROJECT_ROOT = get_project_root()
 import threading
-import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from core.adapters.bossgate_hands_on_adapter import BossGateHandsOnAdapter
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from core.rune.agent_consumer import AgentConsumerLoop
 
 from core.agent_registry import register_agent
 
@@ -37,10 +39,12 @@ class DevlotAgent:
     def __init__(self, interval_seconds: int = 10, root: Path | None = None) -> None:
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(root or resolve_root_from_env())
+        self.runtime_adapter = BossGateHandsOnAdapter(self.bus)
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "devlot_profile.json"
         self.tasks_path = self.bus.state / "devlot_tasks.json"
         self.work_packets: list[dict[str, Any]] = []
+        self._last_scheduled_discovery_key: str | None = None
         self._ensure_profile()
         self._load_tasks()
         
@@ -98,6 +102,12 @@ class DevlotAgent:
             "details": str(args.get("details", "")).strip(),
             "owner": "devlot",
             "status": "queued",
+            "source": str(args.get("source", "")).strip(),
+            "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "discovered_owner": str(args.get("discovered_owner", "")).strip(),
+            "source_path": str(args.get("source_path", "")).strip(),
+            "source_line": int(args.get("source_line", 0) or 0),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
         self.work_packets.append(item)
         self._save_tasks()
@@ -125,6 +135,8 @@ class DevlotAgent:
 
         command = str(payload.get("command", ""))
         args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+
+        discovery = self.runtime_adapter.handle_incoming_discovery("devlot", args, root=self.bus.root)
 
 
         # === Hugging Face Connector Commands ===
@@ -167,6 +179,9 @@ class DevlotAgent:
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 
+        if isinstance(result, dict):
+            result.setdefault("discovery", discovery)
+
         self.bus.emit_event("devlot", f"command:{command}", result)
         self.bus.write_state(
             "devlot",
@@ -180,7 +195,15 @@ class DevlotAgent:
         )
 
     def run(self, stop_event: threading.Event | None = None) -> None:
-        while stop_event is None or not stop_event.is_set():
+        def on_idle() -> None:
+            discovery_cycle = self.runtime_adapter.run_periodic_discovery(
+                agent_id="devlot",
+                root=self.bus.root,
+                last_window_key=self._last_scheduled_discovery_key,
+                window_minutes=2,
+            )
+            self._last_scheduled_discovery_key = discovery_cycle.get("last_window_key")
+            discovery_mode_active = bool(discovery_cycle.get("discovery_mode_active", False))
             self.bus.write_state(
                 "devlot",
                 {
@@ -188,11 +211,24 @@ class DevlotAgent:
                     "pid": os.getpid(),
                     "status": "idle",
                     "queued_work_packets": len(self.work_packets),
+                    "discovery_mode_active": discovery_mode_active,
                 },
             )
-            for _, payload in self.bus.poll_commands(self.seen_commands):
-                self.handle_command(payload)
-            time.sleep(self.interval_seconds)
+
+            self.runtime_adapter.auto_complete_discovery(
+                agent_id="devlot",
+                items=self.work_packets,
+                save_items=self._save_tasks,
+            )
+
+        loop = AgentConsumerLoop(
+            bus=self.bus,
+            seen_commands=self.seen_commands,
+            interval_seconds=self.interval_seconds,
+            on_idle=on_idle,
+            on_command=self.handle_command,
+        )
+        loop.run(stop_check=lambda: bool(stop_event is not None and stop_event.is_set()))
 
     def run_forever(self) -> None:
         self.run(stop_event=None)

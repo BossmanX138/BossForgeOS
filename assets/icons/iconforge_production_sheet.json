@@ -1,0 +1,129 @@
+{
+  "schema_version": "iconforge.production.v1",
+  "name": "BossForgeOS Mythic-Industrial Icon Pack",
+  "style": {
+    "stroke_px": 1.75,
+    "stroke_cap": "round",
+    "lighting": {
+      "highlight": "top-left",
+      "shadow": "bottom-right"
+    },
+    "frames": {
+      "system": "circular",
+      "filetype": "rounded-square",
+      "folder": "folder-silhouette"
+    }
+  },
+  "categories": {
+    "core_system": [
+      "bosscrafts_crest",
+      "runebus",
+      "agentforge",
+      "bossgate",
+      "soundstage"
+    ],
+    "tray_states": [
+      "tray_idle",
+      "tray_active",
+      "tray_alert",
+      "tray_daemon_runeforge",
+      "tray_daemon_hearthfire",
+      "tray_daemon_halcyon",
+      "tray_update"
+    ],
+    "folders": [
+      "folder_default",
+      "folder_agents",
+      "folder_daemons",
+      "folder_rituals",
+      "folder_bossgate",
+      "folder_schemas"
+    ],
+    "filetypes": [
+      "ext_rune",
+      "ext_forge",
+      "ext_sigil",
+      "ext_ritual",
+      "ext_agent_json",
+      "ext_bossgate"
+    ],
+    "agent_class": [
+      "class_normalized",
+      "class_skilled",
+      "class_prime"
+    ],
+    "agent_type": [
+      "type_authority",
+      "type_controller",
+      "type_worker",
+      "type_security",
+      "type_tester",
+      "type_ranger"
+    ],
+    "rank": [
+      "rank_cadet",
+      "rank_specialist",
+      "rank_lieutenant",
+      "rank_captain",
+      "rank_commander",
+      "rank_general",
+      "rank_admiral"
+    ],
+    "daemon": [
+      "daemon_runeforge",
+      "daemon_hearthfire",
+      "daemon_halcyon",
+      "daemon_archivist",
+      "daemon_codemage",
+      "daemon_security_sentinel"
+    ]
+  },
+  "vector_descriptions": {
+    "bosscrafts_crest": "Outer circle + inner ring. Center anvil silhouette at 45-degree geometry. 8-tooth gear behind anvil rotated 30 degrees. Vertical sword overlay centered tip-down with ember sparks at tip.",
+    "runebus": "Two concentric circles. Six runic marks spaced on inner ring. Three connectors forming a triangle circuit with pulse nodes at intersections.",
+    "agentforge": "Hammer at 35-degree strike angle over hexagonal sigil plate, with three spark rays and circular frame.",
+    "bossgate": "Double portal ring, center lock glyph, four radial energy lines, optional blue-gold travel gradient overlay.",
+    "soundstage": "Tuning fork with three resonance arcs and a small runic base glyph.",
+    "folder_default": "Rounded folder silhouette, thin gold linework, anvil emblem in lower-right corner.",
+    "folder_agents": "Folder silhouette with head-and-shoulders marker.",
+    "folder_daemons": "Folder silhouette with three-point flame glyph.",
+    "folder_rituals": "Folder silhouette with triple-ring ritual mark.",
+    "folder_bossgate": "Folder silhouette with portal-ring mark.",
+    "folder_schemas": "Folder silhouette with blueprint grid mark.",
+    "ext_rune": "Rounded-square frame, angular rune center, circuit branches from corners.",
+    "ext_forge": "Rounded-square frame with hammer and plate.",
+    "ext_sigil": "Rounded-square frame with sigil circle and inner glyph.",
+    "ext_ritual": "Rounded-square frame with multi-ring ritual diagram.",
+    "ext_agent_json": "Rounded-square frame with scroll silhouette and agent head glyph.",
+    "ext_bossgate": "Rounded-square frame with envelope silhouette and lock overlay.",
+    "class_normalized": "Single hollow circle.",
+    "class_skilled": "Circle with one inner ring.",
+    "class_prime": "Double ring with center spark.",
+    "type_authority": "Crown sigil inside circular frame.",
+    "type_controller": "Helm wheel sigil inside circular frame.",
+    "type_worker": "Wrench sigil inside circular frame.",
+    "type_security": "Shield sigil inside circular frame.",
+    "type_tester": "Beaker sigil inside circular frame.",
+    "type_ranger": "Compass sigil inside circular frame.",
+    "rank_cadet": "Single chevron.",
+    "rank_specialist": "Double chevron.",
+    "rank_lieutenant": "Triple chevron.",
+    "rank_captain": "Single star.",
+    "rank_commander": "Star with ring.",
+    "rank_general": "Double star.",
+    "rank_admiral": "Triple star.",
+    "daemon_runeforge": "Hammer plus flame.",
+    "daemon_hearthfire": "Hearth flame.",
+    "daemon_halcyon": "Feather plus wave.",
+    "daemon_archivist": "Scroll plus eye.",
+    "daemon_codemage": "Wand plus code glyph.",
+    "daemon_security_sentinel": "Shield plus eye.",
+    "tray_idle": "Dim anvil-gear mark.",
+    "tray_active": "Anvil-gear mark with active inner ring rotation layer.",
+    "tray_alert": "Anvil-gear with red pulse and crack glyph.",
+    "tray_daemon_runeforge": "Tray mark with runeforge orange accent.",
+    "tray_daemon_hearthfire": "Tray mark with red-gold accent.",
+    "tray_daemon_halcyon": "Tray mark with blue-white accent.",
+    "tray_update": "Hammer with spark burst layer."
+  }
+}
