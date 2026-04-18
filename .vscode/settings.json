@@ -1,3 +1,16 @@
 {
-    "cmake.sourceDirectory": "D:/Bosscrafts/BossForgeOS/core/soundstage/BossForgeOS_SoundStage"
+    "cmake.sourceDirectory": "D:/Bosscrafts/BossForgeOS/core/soundstage/BossForgeOS_SoundStage",
+    "yaml.validate": false,
+    "yaml.enable": false,
+    "markdownlint.config": {
+        "MD022": false,
+        "MD032": false
+    },
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "files.exclude": {
+        "**/node_modules": true
+    },
+    "search.exclude": {
+        "**/node_modules": true
+    }
 }

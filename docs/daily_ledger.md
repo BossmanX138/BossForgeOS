@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 MD024 MD032 -->
+
 # Daily Ledger
 
 ## 2026-03-10 07:41:13

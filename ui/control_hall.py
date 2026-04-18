@@ -1,5 +1,7 @@
 import atexit
+import base64
 import json
+import math
 import os
 import subprocess
 import sys
@@ -15,20 +17,26 @@ def get_project_root():
     return Path(__file__).resolve().parent.parent
 
 PROJECT_ROOT = get_project_root()
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from flask import Flask, jsonify, render_template_string, request, send_file
+from werkzeug.utils import secure_filename
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from core.security.security_sentinel_agent import SecuritySentinelAgent
+from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
 
 app = Flask(__name__)
 bus = RuneBus(resolve_root_from_env())
+socketio = None
 PIN_OVERLAY_PROCESS = None
 PIN_OVERLAY_VIEW = ""
 PIN_OVERLAY_ALPHA = 0.95
+AGENTFORGE_POOL_PATH = PROJECT_ROOT / "state" / "agentforge_custom_pool.json"
 
 AGENT_STATUS = {
     "hearth_tender": "Hearth-Tender",
@@ -48,23 +56,128 @@ PAGE = """
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BossForgeOS Control Hall</title>
     <style>
-        :root { --bg:#0f1720; --panel:#182433; --panel2:#213247; --ink:#e8f1ff; --muted:#9db1c9; --line:#35516f; --accent:#f2c96b; --ok:#57d183; --warn:#f2c96b; --bad:#f17171; }
+        :root {
+            --bg:#0A0A0C;
+            --panel:#141417;
+            --panel2:#1A1B1F;
+            --ink:#e6ddcb;
+            --muted:#A9B1C1;
+            --line:#5f4a27;
+            --accent:#D4A857;
+            --ember:#FF7A2F;
+            --travel:#4DA6FF;
+            --ok:#4CC46A;
+            --warn:#FFB84D;
+            --bad:#FF4D4D;
+        }
         * { box-sizing:border-box; }
-        body { margin:0; font-family:Segoe UI,Tahoma,sans-serif; color:var(--ink); background:radial-gradient(circle at 15% 10%,#1d2a3b,transparent 35%),radial-gradient(circle at 90% 90%,#1b2f2a,transparent 30%),var(--bg); }
+        body {
+            margin:0;
+            font-family:Segoe UI,Tahoma,sans-serif;
+            color:var(--ink);
+            background:
+                radial-gradient(circle at 14% 12%, rgba(255,122,47,0.14), transparent 35%),
+                radial-gradient(circle at 86% 88%, rgba(77,166,255,0.10), transparent 30%),
+                radial-gradient(circle at 50% 100%, rgba(212,168,87,0.08), transparent 45%),
+                var(--bg);
+        }
         .shell { display:grid; grid-template-columns: 250px 1fr; min-height:100vh; }
         @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } }
-        .side { border-right:1px solid var(--line); background:linear-gradient(180deg,#0f1a28,#111f30); padding:14px; }
+        .side {
+            border-right:1px solid var(--line);
+            background:linear-gradient(180deg,#101015,#0D0D11 70%, #0A0A0C);
+            padding:14px;
+            box-shadow: inset -1px 0 0 rgba(255,122,47,0.10);
+        }
         .side h1 { margin:0 0 8px; color:var(--accent); font-size:18px; }
         .group-label { margin:10px 0 6px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-        .nav-btn { width:100%; text-align:left; margin-bottom:6px; }
-        .nav-btn.active { border-color:var(--accent); }
+        .nav-btn {
+            width:100%;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            text-align:left;
+            margin-bottom:6px;
+            border:1px solid rgba(212,168,87,0.35);
+            background:linear-gradient(180deg,#19191e,#121218);
+            color:var(--ink);
+            border-radius:8px;
+            padding:8px 10px;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+        .nav-btn::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            display: inline-block;
+            border: 1px solid rgba(212,168,87,0.45);
+            border-radius: 999px;
+            background-image:
+                var(--nav-icon, none),
+                radial-gradient(circle at 35% 35%, rgba(255,255,255,0.28), rgba(212,168,87,0.22) 55%, rgba(212,168,87,0.08));
+            background-size: cover, auto;
+            background-position: center, center;
+            background-repeat: no-repeat, no-repeat;
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.22);
+            overflow: hidden;
+        }
+        .nav-btn[data-view="view_cicd"]::before { border-color: rgba(87,209,131,0.85); }
+        .nav-btn[data-view="view_sounds"]::before { border-color: rgba(57,255,20,0.85); }
+        .nav-btn[data-view="view_iconforge"]::before { border-color: rgba(255,122,47,0.9); }
+        .nav-btn[data-view="view_diagnostics"]::before { border-color: rgba(241,113,113,0.88); }
+        .nav-btn[data-view="view_security"]::before { border-color: rgba(241,113,113,0.6); }
+        .nav-btn[data-view="view_chat"]::before,
+        .nav-btn[data-view="view_discovery"]::before { border-color: rgba(107,183,242,0.8); }
+        .nav-btn:hover {
+            border-color:var(--accent);
+            box-shadow: 0 0 0 1px rgba(212,168,87,0.24), 0 0 14px rgba(255,122,47,0.16);
+            transform: translateY(-1px);
+        }
+        .nav-btn.active {
+            border-color:var(--accent);
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.30), 0 0 18px rgba(212,168,87,0.18);
+        }
         .wrap { max-width:1200px; margin:0 auto; padding:18px; display:grid; gap:14px; }
-        .card { background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:12px; padding:12px; }
+        .card {
+            background:linear-gradient(180deg,var(--panel2),var(--panel));
+            border:1px solid var(--line);
+            border-radius:12px;
+            padding:12px;
+            box-shadow: inset 0 0 0 1px rgba(255,122,47,0.06);
+        }
         h1 { margin:0 0 6px; color:var(--accent); font-size:22px; }
         h2 { margin:0 0 10px; color:var(--accent); font-size:16px; }
         .muted { color:var(--muted); font-size:12px; }
-        input, select { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; }
-        textarea { background:#0e1722; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px; min-height:78px; width:100%; }
+        input, select {
+            background:#0E0E13;
+            color:var(--ink);
+            border:1px solid var(--line);
+            border-radius:9px;
+            padding:8px;
+        }
+        textarea {
+            background:#0E0E13;
+            color:var(--ink);
+            border:1px solid var(--line);
+            border-radius:9px;
+            padding:8px;
+            min-height:78px;
+            width:100%;
+        }
+        button {
+            background:linear-gradient(180deg,#1d1a12,#14110c);
+            color:var(--ink);
+            border:1px solid rgba(212,168,87,0.45);
+            border-radius:9px;
+            padding:8px 10px;
+            cursor:pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            border-color:var(--accent);
+            box-shadow: 0 0 0 1px rgba(212,168,87,0.22), 0 0 12px rgba(255,122,47,0.14);
+        }
         pre { margin:0; max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px; }
         .agent-item { border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px; background:#132131; }
         .pill { display:inline-block; margin-left:8px; border-radius:999px; padding:1px 8px; border:1px solid var(--line); font-size:11px; }
@@ -73,6 +186,16 @@ PAGE = """
         .pill.offline, .pill.critical { color:var(--bad); border-color:var(--bad); }
         .view-panel { display:none; }
         .view-panel.active { display:block; }
+        .panel-heading { display:flex; align-items:center; gap:8px; }
+        .panel-icon {
+            width:18px;
+            height:18px;
+            min-width:18px;
+            border-radius:4px;
+            border:1px solid rgba(212,168,87,0.35);
+            object-fit:cover;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+        }
         .pin-note { color: var(--muted); font-size: 12px; }
         .busy-indicator {
             display: inline-flex;
@@ -104,6 +227,14 @@ PAGE = """
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
         .discovery-controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
         .map-shell {
@@ -392,22 +523,22 @@ PAGE = """
             <div class="group-label">Operations</div>
             <button class="nav-btn" data-view="view_status" onclick="switchView('view_status')">Agent Status</button>
             <button class="nav-btn" data-view="view_snapshot" onclick="switchView('view_snapshot')">OS Snapshot</button>
+            <button class="nav-btn" data-view="view_os_state" onclick="switchView('view_os_state')">OS State</button>
             <button class="nav-btn" data-view="view_commands" onclick="switchView('view_commands')">Quick Commands</button>
             <button class="nav-btn" data-view="view_manual" onclick="switchView('view_manual')">Manual Command</button>
             <button class="nav-btn" data-view="view_seal" onclick="switchView('view_seal')">Seal Queue</button>
             <button class="nav-btn" data-view="view_events" onclick="switchView('view_events')">Recent Events</button>
+            <button class="nav-btn" data-view="view_bus" onclick="switchView('view_bus')">Bus Inspector</button>
             <button class="nav-btn" data-view="view_cicd" onclick="switchView('view_cicd')" style="color:#57d183; font-weight:bold;">CI/CD</button>
             <button class="nav-btn" data-view="view_onboarding" onclick="switchView('view_onboarding')" style="color:#f2c96b; font-weight:bold;">Onboarding Wizard</button>
             <button class="nav-btn" data-view="view_scheduler" onclick="switchView('view_scheduler')" style="color:#f2c96b; font-weight:bold;">Scheduler</button>
-            <button class="nav-btn" data-view="view_cicd" onclick="switchView('view_cicd')" style="color:#57d183; font-weight:bold;">CI/CD</button>
             <div class="group-label">Assistants</div>
             <button class="nav-btn" data-view="view_chat" onclick="switchView('view_chat')">Model Chat</button>
-            <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">Agent Maker</button>
+            <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">AgentForge</button>
+            <button class="nav-btn" data-view="view_iconforge" onclick="switchView('view_iconforge')" style="color:#ffb27d; font-weight:bold;">IconForge Studio</button>
             <button class="nav-btn" data-view="view_discovery" onclick="switchView('view_discovery')">Discovery Map</button>
             <button class="nav-btn" data-view="view_security" onclick="switchView('view_security')">Security</button>
             <button class="nav-btn" data-view="view_sounds" onclick="switchView('view_sounds')" style="color:#39ff14; font-weight:bold;">Sounds</button>
-            <div class="group-label">Scheduler</div>
-            <button class="nav-btn" data-view="view_scheduler" onclick="switchView('view_scheduler')">Scheduler</button>
             <div class="group-label">Diagnostics</div>
             <button class="nav-btn" data-view="view_diagnostics" onclick="switchView('view_diagnostics')" style="color:#f17171; font-weight:bold;">Diagnostics</button>
         </aside>
@@ -455,6 +586,17 @@ PAGE = """
                 <pre id="snapshot">Loading...</pre>
             </section>
 
+            <section id="view_os_state" class="card view-panel">
+                <h2>OS State</h2>
+                <div class="muted">Canonical state schema feed and diff stream for time-travel debugging prep.</div>
+                <div class="row" style="margin-top:8px;">
+                    <button onclick="refreshOsStatePanel()">Refresh OS State</button>
+                </div>
+                <pre id="os_state">Loading...</pre>
+                <h2 style="margin-top:10px;">OS State Diff</h2>
+                <pre id="os_state_diff">No diff yet.</pre>
+            </section>
+
             <section id="view_commands" class="card view-panel">
                 <h2>Quick Commands</h2>
                 <div class="row">
@@ -478,6 +620,24 @@ PAGE = """
 
             <section id="view_seal" class="card view-panel"><h2>Seal Queue</h2><pre id="seal">Loading...</pre></section>
             <section id="view_events" class="card view-panel"><h2>Recent Events</h2><pre id="events">Loading...</pre></section>
+
+            <section id="view_bus" class="card view-panel">
+                <h2>Bus Inspector</h2>
+                <div class="muted">Live view of latest commands, events, and state snapshots on the Rune Bus.</div>
+                <div class="row" style="margin-top:8px;">
+                    <input id="bus_limit" type="number" min="10" max="300" value="80" style="width:120px;" />
+                    <select id="bus_kind" style="min-width:160px;">
+                        <option value="events,commands,state">all kinds</option>
+                        <option value="events">events only</option>
+                        <option value="commands">commands only</option>
+                        <option value="state">state only</option>
+                    </select>
+                    <input id="bus_query" placeholder="filter text (source/target/event/file)" style="min-width:280px;" />
+                    <label class="muted"><input type="checkbox" id="bus_live" /> Live</label>
+                    <button onclick="refreshBusInspector()">Refresh Bus Inspector</button>
+                </div>
+                <pre id="bus_inspector">Loading...</pre>
+            </section>
 
             <section id="view_discovery" class="card view-panel">
                 <h2>Discovery Map</h2>
@@ -518,31 +678,314 @@ PAGE = """
 
             <section id="view_sounds" class="card view-panel">
                 <h2 style="color:#39ff14;">Sounds</h2>
-                <div class="muted">Sound scheme and soundstage bundle tools.</div>
+                <div class="muted">Sound scheme and SoundForge bundle tools.</div>
                 <pre id="sound_events">Open this panel to load sound status.</pre>
                 <div class="row">
                     <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
                     <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
                     <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundstageBundle()">Export Bundle</button>
+                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundforgeBundle()">Export Bundle</button>
                     <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
                 </div>
                 <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
-                <input type="file" id="soundstage_bundle_file" style="display:none;" accept=".B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
+                <input type="file" id="soundforge_bundle_file" style="display:none;" accept=".B4Gsoundforge,.B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
                 <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
-                <div id="soundstage_schemes_list" class="muted" style="margin-top:10px;"></div>
+                <div id="soundforge_schemes_list" class="muted" style="margin-top:10px;"></div>
             </section>
 
             <section id="view_maker" class="card view-panel">
-                <h2>Agent Maker</h2>
-                <div class="row"><button onclick="refreshAgentMaker()">Refresh Agents</button></div>
-                <pre id="maker_agents">Loading...</pre>
+                <h2>AgentForge</h2>
                 <div class="row">
-                    <input id="maker_name" placeholder="agent name" />
-                    <select id="maker_endpoint"></select>
-                    <input id="maker_system" value="You are a helpful specialist agent." placeholder="system prompt" />
-                    <button onclick="createAgentProfile()">Create/Update</button>
+                    <button onclick="switchAgentForgeMode('wizard')" id="maker_mode_wizard_btn">Wizard Mode</button>
+                    <button onclick="switchAgentForgeMode('advanced')" id="maker_mode_advanced_btn">Advanced Mode</button>
+                    <button onclick="refreshAgentMaker()">Refresh Agents</button>
                 </div>
+                <pre id="maker_agents">Loading...</pre>
+
+                <div id="maker_wizard_mode" style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                    <div class="muted" style="margin-bottom:8px;">Guided builder for quick agent creation.</div>
+                    <div class="row">
+                        <input id="wizard_name" placeholder="agent name" />
+                        <select id="wizard_endpoint"></select>
+                        <input id="wizard_role_focus" placeholder="what should this agent do?" />
+                    </div>
+                    <div class="row">
+                        <select id="wizard_scope">
+                            <option value="host">Local Host</option>
+                            <option value="lan">LAN</option>
+                            <option value="remote">Remote/Customer</option>
+                        </select>
+                        <select id="wizard_behavior">
+                            <option value="directive_local">Directive Local Specialist</option>
+                            <option value="proactive_remote">Proactive Remote Fixer</option>
+                            <option value="security_guard">Security Watcher</option>
+                            <option value="qa_tester">QA/Test Specialist</option>
+                        </select>
+                        <select id="wizard_power">
+                            <option value="normalized">Normalized</option>
+                            <option value="skilled" selected>Skilled</option>
+                            <option value="prime">Prime</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <select id="wizard_personality">
+                            <option value="balanced" selected>personality: balanced</option>
+                            <option value="decisive">personality: decisive</option>
+                            <option value="cautious">personality: cautious</option>
+                            <option value="creative">personality: creative</option>
+                            <option value="analytical">personality: analytical</option>
+                            <option value="introvert_local">personality: i don't like crowded places</option>
+                        </select>
+                        <input id="wizard_personality_notes" placeholder="personality notes (optional)" />
+                        <input id="wizard_personality_interests" placeholder="interests e.g. ui, art, animation (comma-separated)" />
+                    </div>
+                    <div class="row">
+                        <select id="wizard_behavior_patterns" multiple size="4" style="min-width:260px;">
+                            <option value="authority_like">authority_like</option>
+                            <option value="controller_like">controller_like</option>
+                            <option value="worker_like">worker_like</option>
+                            <option value="security_like">security_like</option>
+                            <option value="tester_like">tester_like</option>
+                            <option value="ranger_like">ranger_like</option>
+                            <option value="ranger_local">ranger_local</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <select id="wizard_skill_list" multiple size="4" style="min-width:260px;">
+                            <option value="command">command</option>
+                            <option value="bossgate_travel_control">bossgate_travel_control</option>
+                            <option value="runtime_observation">runtime_observation</option>
+                            <option value="task_queue_management">task_queue_management</option>
+                            <option value="web_search">web_search</option>
+                            <option value="policy_planning">policy_planning</option>
+                            <option value="memory_sync">memory_sync</option>
+                            <option value="incident_triage">incident_triage</option>
+                            <option value="code_review">code_review</option>
+                            <option value="ui_design">ui_design</option>
+                            <option value="art_direction">art_direction</option>
+                            <option value="documentation_crafting">documentation_crafting</option>
+                            <option value="test_orchestration">test_orchestration</option>
+                            <option value="security_audit">security_audit</option>
+                            <option value="performance_tuning">performance_tuning</option>
+                            <option value="data_analysis">data_analysis</option>
+                            <option value="workflow_automation">workflow_automation</option>
+                            <option value="customer_support">customer_support</option>
+                            <option value="integration_mapping">integration_mapping</option>
+                            <option value="api_composition">api_composition</option>
+                        </select>
+                        <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
+                            <option value="sigil_transporter">sigil_transporter</option>
+                            <option value="prime_overwatch">prime_overwatch</option>
+                            <option value="sigil_bind">sigil_bind</option>
+                            <option value="sigil_trace">sigil_trace</option>
+                            <option value="sigil_harmony">sigil_harmony</option>
+                            <option value="prime_foresight">prime_foresight</option>
+                            <option value="prime_bastion">prime_bastion</option>
+                            <option value="sigil_palette">sigil_palette</option>
+                            <option value="sigil_resonance">sigil_resonance</option>
+                            <option value="sigil_flux">sigil_flux</option>
+                            <option value="sigil_anchor">sigil_anchor</option>
+                            <option value="sigil_lens">sigil_lens</option>
+                            <option value="sigil_weave">sigil_weave</option>
+                            <option value="sigil_echo">sigil_echo</option>
+                            <option value="sigil_guard">sigil_guard</option>
+                            <option value="sigil_spark">sigil_spark</option>
+                            <option value="sigil_patch">sigil_patch</option>
+                            <option value="sigil_scribe">sigil_scribe</option>
+                            <option value="sigil_orbit">sigil_orbit</option>
+                            <option value="sigil_shield">sigil_shield</option>
+                        </select>
+                    </div>
+                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                        <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
+                        <div class="row">
+                            <select id="wizard_icon_mode" onchange="toggleWizardIconSource()">
+                                <option value="none" selected>icon: default</option>
+                                <option value="upload">icon: upload file</option>
+                                <option value="iconforge">icon: create in IconForge</option>
+                            </select>
+                            <input id="wizard_icon_path" placeholder="custom icon path (.ico)" readonly />
+                            <button onclick="clearWizardIconSelection()">Clear Icon</button>
+                        </div>
+                        <div id="wizard_icon_upload_row" class="row" style="display:none; margin-top:6px;">
+                            <button onclick="triggerWizardIconUpload()">Upload Icon/Image</button>
+                            <span id="wizard_icon_upload_name" class="muted">No file selected</span>
+                            <input id="wizard_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleWizardIconUpload(event)" />
+                        </div>
+                        <div id="wizard_iconforge_row" class="row" style="display:none; margin-top:6px;">
+                            <input id="wizard_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
+                            <input id="wizard_icon_bg" value="#1d3557" placeholder="background color" />
+                            <input id="wizard_icon_fg" value="#f1faee" placeholder="foreground color" />
+                            <button onclick="createWizardIconForge()">Create In IconForge</button>
+                        </div>
+                        <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;">
+                            <input id="wizard_encrypt_profile" type="checkbox" checked /> Encrypt profile via BossGate
+                        </label>
+                        <button onclick="buildWizardDraft()">Build Draft In Advanced</button>
+                        <button onclick="createWizardAgent()">Create From Wizard</button>
+                    </div>
+                </div>
+
+                <div id="maker_advanced_mode" style="display:none; border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                    <div class="muted" style="margin-bottom:8px;">Advanced role/policy-aware mode. Invalid combinations are prevented automatically.</div>
+                    <div class="row">
+                        <input id="maker_name" placeholder="agent name" />
+                        <select id="maker_endpoint"></select>
+                        <input id="maker_system" value="You are a helpful specialist agent." placeholder="system prompt" />
+                    </div>
+                    <div class="row">
+                        <select id="maker_personality" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="balanced" selected>personality: balanced</option>
+                            <option value="decisive">personality: decisive</option>
+                            <option value="cautious">personality: cautious</option>
+                            <option value="creative">personality: creative</option>
+                            <option value="analytical">personality: analytical</option>
+                            <option value="introvert_local">personality: i don't like crowded places</option>
+                        </select>
+                        <input id="maker_personality_notes" placeholder="personality notes (optional wrapper directives)" onchange="syncAdvancedPolicyAwareness()" />
+                        <input id="maker_personality_interests" placeholder="interests e.g. ui, art, design systems (comma-separated)" onchange="syncAdvancedPolicyAwareness()" />
+                    </div>
+                    <div class="row">
+                        <select id="maker_behavior_patterns" multiple size="4" style="min-width:260px;" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="authority_like">authority_like</option>
+                            <option value="controller_like">controller_like</option>
+                            <option value="worker_like">worker_like</option>
+                            <option value="security_like">security_like</option>
+                            <option value="tester_like">tester_like</option>
+                            <option value="ranger_like">ranger_like</option>
+                            <option value="ranger_local">ranger_local</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <select id="maker_agent_class" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="normalized">normalized</option>
+                            <option value="skilled" selected>skilled</option>
+                            <option value="prime">prime</option>
+                        </select>
+                        <select id="maker_agent_type" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="controller" selected>controller</option>
+                            <option value="ranger">ranger</option>
+                            <option value="authority">authority</option>
+                            <option value="worker">worker</option>
+                            <option value="security">security</option>
+                            <option value="tester">tester</option>
+                        </select>
+                        <select id="maker_rank" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="cadet">cadet</option>
+                            <option value="specialist">specialist</option>
+                            <option value="lieutenant">lieutenant</option>
+                            <option value="captain" selected>captain</option>
+                            <option value="commander">commander</option>
+                            <option value="general">general</option>
+                            <option value="admiral">admiral</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_command" type="checkbox" checked onchange="syncAdvancedPolicyAwareness()" /> command</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_bossgate_travel_control" type="checkbox" checked onchange="syncAdvancedPolicyAwareness()" /> bossgate_travel_control</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_runtime_observation" type="checkbox" checked /> runtime_observation</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_task_queue_management" type="checkbox" checked /> task_queue_management</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_web_search" type="checkbox" checked /> web_search</label>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_policy_planning" type="checkbox" /> policy_planning</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_memory_sync" type="checkbox" /> memory_sync</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_incident_triage" type="checkbox" /> incident_triage</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_code_review" type="checkbox" /> code_review</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_ui_design" type="checkbox" /> ui_design</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_art_direction" type="checkbox" /> art_direction</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_documentation_crafting" type="checkbox" /> documentation_crafting</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_test_orchestration" type="checkbox" /> test_orchestration</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_security_audit" type="checkbox" /> security_audit</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_performance_tuning" type="checkbox" /> performance_tuning</label>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_data_analysis" type="checkbox" /> data_analysis</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_workflow_automation" type="checkbox" /> workflow_automation</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_customer_support" type="checkbox" /> customer_support</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_integration_mapping" type="checkbox" /> integration_mapping</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="skill_api_composition" type="checkbox" /> api_composition</label>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_transporter" type="checkbox" /> sigil_transporter</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_prime_overwatch" type="checkbox" /> prime_overwatch</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_bind" type="checkbox" /> sigil_bind</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_trace" type="checkbox" /> sigil_trace</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_harmony" type="checkbox" /> sigil_harmony</label>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_prime_foresight" type="checkbox" /> prime_foresight</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_prime_bastion" type="checkbox" /> prime_bastion</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_palette" type="checkbox" /> sigil_palette</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_resonance" type="checkbox" /> sigil_resonance</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_flux" type="checkbox" /> sigil_flux</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_anchor" type="checkbox" /> sigil_anchor</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_lens" type="checkbox" /> sigil_lens</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_weave" type="checkbox" /> sigil_weave</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_echo" type="checkbox" /> sigil_echo</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_guard" type="checkbox" /> sigil_guard</label>
+                    </div>
+                    <div class="row">
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_spark" type="checkbox" /> sigil_spark</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_patch" type="checkbox" /> sigil_patch</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_scribe" type="checkbox" /> sigil_scribe</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_orbit" type="checkbox" /> sigil_orbit</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="sigil_sigil_shield" type="checkbox" /> sigil_shield</label>
+                    </div>
+                    <div class="row">
+                        <input id="maker_custom_skills" placeholder="custom skills (comma-separated, advanced mode)" />
+                        <input id="maker_custom_sigils" placeholder="custom sigils (comma-separated, advanced mode)" />
+                    </div>
+                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                        <div class="muted" style="margin-bottom:8px;">Custom Icon (Advanced)</div>
+                        <div class="row">
+                            <select id="maker_icon_mode" onchange="toggleMakerIconSource()">
+                                <option value="none" selected>icon: default</option>
+                                <option value="upload">icon: upload file</option>
+                                <option value="iconforge">icon: create in IconForge</option>
+                            </select>
+                            <input id="maker_icon_path" placeholder="custom icon path (.ico)" readonly />
+                            <button onclick="clearMakerIconSelection()">Clear Icon</button>
+                        </div>
+                        <div id="maker_icon_upload_row" class="row" style="display:none; margin-top:6px;">
+                            <button onclick="triggerMakerIconUpload()">Upload Icon/Image</button>
+                            <span id="maker_icon_upload_name" class="muted">No file selected</span>
+                            <input id="maker_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleMakerIconUpload(event)" />
+                        </div>
+                        <div id="maker_iconforge_row" class="row" style="display:none; margin-top:6px;">
+                            <input id="maker_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
+                            <input id="maker_icon_bg" value="#1d3557" placeholder="background color" />
+                            <input id="maker_icon_fg" value="#f1faee" placeholder="foreground color" />
+                            <button onclick="createMakerIconForge()">Create In IconForge</button>
+                        </div>
+                        <div id="maker_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
+                    </div>
+                    <div id="maker_policy_chips" class="row" style="flex-wrap:wrap; gap:8px;"></div>
+                    <div class="row">
+                        <select id="maker_dispatch_scope" onchange="syncAdvancedPolicyAwareness()">
+                            <option value="host" selected>dispatch: host</option>
+                            <option value="lan">dispatch: lan</option>
+                            <option value="remote">dispatch: remote</option>
+                        </select>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_dispatch_autonomous" type="checkbox" checked onchange="syncAdvancedPolicyAwareness()" /> autonomous bus intake</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_dispatch_remote_hunt" type="checkbox" onchange="syncAdvancedPolicyAwareness()" /> proactive remote hunt</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_dispatch_leave_without_command" type="checkbox" onchange="syncAdvancedPolicyAwareness()" /> leave host w/o command</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_dispatch_lan_when_idle" type="checkbox" checked onchange="syncAdvancedPolicyAwareness()" /> LAN when host idle</label>
+                    </div>
+                    <div class="row">
+                        <input id="maker_temperature" type="number" min="0" max="2" step="0.05" value="0.2" placeholder="temperature" />
+                        <input id="maker_max_tokens" type="number" min="64" max="8192" step="1" value="900" placeholder="max tokens" />
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_has_llm" type="checkbox" checked /> has LLM</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_bossgate_enabled" type="checkbox" checked /> BossGate enabled</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Encrypt profile</label>
+                        <button onclick="createAgentProfile()">Create/Update</button>
+                    </div>
+                    <pre id="maker_validation" class="muted">Role-aware validation ready.</pre>
+                </div>
+
                 <div class="row">
                     <select id="maker_agent_select"></select>
                     <input id="maker_task" placeholder="task for selected agent" />
@@ -556,7 +999,122 @@ PAGE = """
                     <input id="maker_project" placeholder="project (optional)" />
                     <input id="maker_counterpart" placeholder="counterpart agent (optional)" />
                 </div>
+
+                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                    <div class="muted" style="margin-bottom:8px;">Incident Triage Preview (domain tagging + adaptive priority)</div>
+                    <div class="row">
+                        <input id="triage_title" placeholder="incident title" />
+                        <select id="triage_scope"><option value="">scope auto</option><option value="host">host</option><option value="lan">lan</option><option value="remote">remote</option></select>
+                        <input id="triage_urgency" type="number" min="0" max="1" step="0.05" value="0.55" placeholder="urgency" />
+                        <input id="triage_risk" type="number" min="0" max="1" step="0.05" value="0.50" placeholder="risk" />
+                        <input id="triage_proximity" type="number" min="0" max="1" step="0.05" value="0.70" placeholder="proximity" />
+                        <input id="triage_confidence" type="number" min="0" max="1" step="0.05" value="0.60" placeholder="confidence" />
+                    </div>
+                    <div class="row">
+                        <input id="triage_summary" placeholder="incident summary/details" />
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="triage_commanded" type="checkbox" /> explicitly commanded</label>
+                        <button onclick="runIncidentTriage()">Tag + Rank Agents</button>
+                    </div>
+                    <pre id="triage_result">No triage run yet.</pre>
+                </div>
                 <pre id="maker_result">No agent operation yet.</pre>
+            </section>
+
+            <section id="view_iconforge" class="card view-panel">
+                <h2 style="color:#ffb27d;">IconForge Studio</h2>
+                <div class="muted" style="margin-bottom:8px;">Full-center icon editor for painting, importing, FX, and multi-size .ico export.</div>
+                <div class="row" style="align-items:flex-start;">
+                    <canvas id="icon_studio_canvas" width="256" height="256" style="width:256px; height:256px; border:1px solid #3c4559; border-radius:10px; background:linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%), linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%); background-size:16px 16px; background-position:0 0, 8px 8px; cursor:crosshair;"></canvas>
+                    <div style="display:grid; gap:8px; min-width:340px;">
+                        <div class="row">
+                            <select id="icon_studio_tool">
+                                <option value="brush" selected>tool: brush</option>
+                                <option value="eraser">tool: eraser</option>
+                            </select>
+                            <input id="icon_studio_color" type="color" value="#d4a857" />
+                            <input id="icon_studio_size" type="range" min="1" max="48" step="1" value="10" />
+                            <span id="icon_studio_size_label" class="muted">10px</span>
+                        </div>
+                        <div class="row">
+                            <input id="icon_studio_name" placeholder="icon file stem" value="agent_forge_icon" />
+                            <select id="icon_studio_target">
+                                <option value="wizard">apply to wizard</option>
+                                <option value="advanced" selected>apply to advanced</option>
+                                <option value="both">apply to both</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <button onclick="triggerIconStudioImport()">Import Image</button>
+                            <button onclick="iconStudioUndoStroke()">Undo</button>
+                            <button onclick="iconStudioClearCanvas()">Clear</button>
+                            <button onclick="iconStudioFillBackground()">Fill</button>
+                            <input id="icon_studio_import_file" type="file" style="display:none;" accept=".png" onchange="handleIconStudioImport(event)" />
+                        </div>
+                        <div class="row">
+                            <button onclick="applyIconStudioFx('grayscale')">FX: Grayscale</button>
+                            <button onclick="applyIconStudioFx('invert')">FX: Invert</button>
+                            <button onclick="applyIconStudioFx('contrast')">FX: Contrast+</button>
+                            <button onclick="applyIconStudioFx('soften')">FX: Soften</button>
+                        </div>
+                        <div class="row">
+                            <button onclick="saveIconStudioDraft()">Save Draft</button>
+                            <button onclick="loadIconStudioDraft()">Load Draft</button>
+                            <button onclick="clearIconStudioDraft()">Clear Draft</button>
+                            <button onclick="downloadIconStudioPng()">Download PNG</button>
+                        </div>
+                        <div class="row">
+                            <select id="icon_studio_anim_preset">
+                                <option value="pulse" selected>anim: pulse</option>
+                                <option value="spin">anim: spin</option>
+                                <option value="shimmer">anim: shimmer</option>
+                            </select>
+                            <input id="icon_studio_anim_seconds" type="number" min="1" max="12" step="1" value="3" placeholder="seconds" />
+                            <input id="icon_studio_anim_fps" type="number" min="6" max="30" step="1" value="12" placeholder="fps" />
+                            <button onclick="saveIconStudioAnimated()">Save Animated GIF</button>
+                        </div>
+                        <div class="row">
+                            <button onclick="saveIconStudioIco()">Save .ico (16-256)</button>
+                        </div>
+                        <div id="icon_studio_status" class="muted">Studio ready.</div>
+                    </div>
+                </div>
+
+                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin-top:12px;">
+                    <div class="muted" style="margin-bottom:8px;">Windows Icon Operations (replace system icons + icon packs)</div>
+                    <div class="row">
+                        <select id="iconforge_target_type">
+                            <option value="folder" selected>target: folder path</option>
+                            <option value="shortcut">target: shortcut (.lnk)</option>
+                            <option value="file_extension">target: file extension (e.g. .txt)</option>
+                            <option value="application">target: application (e.g. notepad.exe)</option>
+                            <option value="drive">target: drive letter (e.g. C or D:)</option>
+                        </select>
+                        <input id="iconforge_target_value" placeholder="target value" />
+                        <input id="iconforge_icon_path" placeholder="icon path (.ico)" />
+                    </div>
+                    <div class="row">
+                        <button onclick="setIconForgeFromStudioIco()">Use Latest Studio ICO</button>
+                        <button onclick="applyWindowsIconOverride()">Apply Icon Override</button>
+                        <button onclick="refreshWindowsIconCache()">Refresh Icon Cache</button>
+                    </div>
+                    <div class="row">
+                        <input id="iconforge_restore_key" placeholder="backup key to restore" />
+                        <button onclick="restoreWindowsIconOverride()">Restore Backup</button>
+                        <button onclick="refreshIconForgeOps()">Refresh Backups</button>
+                    </div>
+                    <div class="row">
+                        <input id="iconforge_pack_export_dir" placeholder="export pack directory path" />
+                        <button onclick="exportIconForgePack()">Export Icon Pack</button>
+                    </div>
+                    <div class="row">
+                        <input id="iconforge_pack_import_source" placeholder="import pack source (dir or icon_set_manifest.json path)" />
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_apply" type="checkbox" checked /> apply changes</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_refresh" type="checkbox" checked /> refresh cache</label>
+                        <button onclick="importIconForgePack()">Import Icon Pack</button>
+                    </div>
+                    <pre id="iconforge_ops_result">No icon operations yet.</pre>
+                    <pre id="iconforge_backups">No backups loaded.</pre>
+                </div>
             </section>
 
             <section id="view_security" class="card view-panel">
@@ -570,20 +1128,47 @@ PAGE = """
 
             <section id="view_onboarding" class="card view-panel">
                 <h2 style="color:#f2c96b;">Onboarding Wizard</h2>
-                <div class="muted">Guide for initial setup: secrets, tokens, and voice profile. (Coming soon)</div>
-                <div id="onboarding_status" style="margin-top:12px;"></div>
+                <div class="muted">Guide for initial setup: secrets, tokens, and voice profile.</div>
+                <div class="row" style="margin-top:8px;">
+                    <button onclick="runOnboardingStep('workspace_check')">Run Workspace Check</button>
+                    <button onclick="runOnboardingStep('security_baseline')">Mark Security Baseline Complete</button>
+                    <button onclick="runOnboardingStep('model_gateway')">Mark Model Gateway Complete</button>
+                    <button onclick="refreshOnboardingStatus()">Refresh</button>
+                </div>
+                <pre id="onboarding_status" style="margin-top:12px;">Loading onboarding status...</pre>
             </section>
 
             <section id="view_scheduler" class="card view-panel">
                 <h2 style="color:#f2c96b;">Scheduler</h2>
-                <div class="muted">Panel for scheduling tasks and rituals. (Coming soon)</div>
-                <div id="scheduler_status" style="margin-top:12px;"></div>
+                <div class="muted">Panel for scheduling tasks and rituals.</div>
+                <div class="row" style="margin-top:8px;">
+                    <input id="scheduler_label" placeholder="job label" />
+                    <input id="scheduler_command" placeholder="shell command (optional)" />
+                    <input id="scheduler_interval" type="number" min="30" value="300" placeholder="interval seconds" />
+                    <button onclick="addSchedulerJob()">Add Job</button>
+                    <button onclick="refreshSchedulerStatus()">Refresh</button>
+                </div>
+                <div class="row" style="margin-top:8px;">
+                    <input id="scheduler_remove_id" placeholder="job id to remove" />
+                    <button onclick="removeSchedulerJob()">Remove Job</button>
+                    <input id="scheduler_run_id" placeholder="job id to run now" />
+                    <button onclick="runSchedulerJobNow()">Run Job Now</button>
+                </div>
+                <pre id="scheduler_status" style="margin-top:12px;">Loading scheduler status...</pre>
             </section>
 
             <section id="view_cicd" class="card view-panel">
                 <h2 style="color:#57d183;">CI/CD</h2>
-                <div class="muted">Panel for test/lint results and CI status. (Coming soon)</div>
-                <div id="cicd_status" style="margin-top:12px;"></div>
+                <div class="muted">Panel for test/lint results and CI status.</div>
+                <div class="row" style="margin-top:8px;">
+                    <select id="cicd_suite">
+                        <option value="quick">Quick Validation</option>
+                        <option value="full">Full Unit Suite</option>
+                    </select>
+                    <button onclick="runCicdPipeline()">Run Pipeline</button>
+                    <button onclick="refreshCicdStatus()">Refresh</button>
+                </div>
+                <pre id="cicd_status" style="margin-top:12px;">Loading CI/CD status...</pre>
             </section>
         </main>
     </div>
@@ -599,6 +1184,13 @@ PAGE = """
         let discoveryLocations = {};
         let activeDiscoveryKey = '';
         let snapshotGaugeBooted = false;
+        let previousOsState = null;
+        let busLiveTimer = null;
+        let iconStudioCtx = null;
+        let iconStudioDrawing = false;
+        let iconStudioUndo = [];
+        let iconStudioBooted = false;
+        const ICON_STUDIO_DRAFT_KEY = 'bossforge.iconforge.studio.v1';
 
         function beginBusy(message) {
             pendingLoads += 1;
@@ -831,12 +1423,84 @@ PAGE = """
             root.textContent = JSON.stringify({ events: soundEvents, scheme: soundScheme }, null, 2);
         }
 
+        function iconAssetPath(fileName) {
+            return '/api/assets/icons/' + encodeURIComponent(String(fileName || '').trim());
+        }
+
+        function applyAssetIcons() {
+            const navIconMap = {
+                view_status: 'BossForgeOS.png',
+                view_snapshot: 'BossForgeOS.png',
+                view_os_state: 'BossForgeOS.png',
+                view_commands: 'BossGate.png',
+                view_manual: 'BossGate.png',
+                view_seal: 'runebus.svg',
+                view_events: 'runebus.svg',
+                view_bus: 'runebus.svg',
+                view_cicd: 'AgentForge.png',
+                view_onboarding: 'RuneVoiceOS.png',
+                view_scheduler: 'AgentForge.png',
+                view_chat: 'RuneVoiceOS.png',
+                view_maker: 'AgentForge.png',
+                view_iconforge: 'IconForge.png',
+                view_discovery: 'BossGate.png',
+                view_security: 'bossgate.svg',
+                view_sounds: 'Soundforge.png',
+                view_diagnostics: 'BossForgeOS.png',
+            };
+            const panelIconMap = {
+                view_status: 'BossForgeOS.png',
+                view_snapshot: 'BossForgeOS.png',
+                view_os_state: 'BossForgeOS.png',
+                view_commands: 'BossGate.png',
+                view_manual: 'BossGate.png',
+                view_seal: 'runebus.svg',
+                view_events: 'runebus.svg',
+                view_bus: 'runebus.svg',
+                view_chat: 'RuneVoiceOS.png',
+                view_diagnostics: 'BossForgeOS.png',
+                view_sounds: 'Soundforge.png',
+                view_maker: 'AgentForge.png',
+                view_iconforge: 'IconForge.png',
+                view_security: 'bossgate.svg',
+                view_onboarding: 'RuneVoiceOS.png',
+                view_scheduler: 'AgentForge.png',
+                view_cicd: 'AgentForge.png',
+            };
+
+            for (const [viewId, fileName] of Object.entries(navIconMap)) {
+                const btn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
+                if (!btn) continue;
+                btn.style.setProperty('--nav-icon', `url("${iconAssetPath(fileName)}")`);
+            }
+
+            for (const [sectionId, fileName] of Object.entries(panelIconMap)) {
+                const section = document.getElementById(sectionId);
+                if (!section) continue;
+                const h2 = section.querySelector('h2');
+                if (!h2) continue;
+                h2.classList.add('panel-heading');
+                let icon = h2.querySelector('.panel-icon');
+                if (!icon) {
+                    icon = document.createElement('img');
+                    icon.className = 'panel-icon';
+                    icon.alt = '';
+                    h2.prepend(icon);
+                }
+                icon.src = iconAssetPath(fileName);
+            }
+        }
+
         async function fetchSoundEvents() {
-            const data = await fetchJsonWithTimeout('/api/soundstage/list_schemes');
-            if (data && data.ok) {
+            const data = await fetchJsonWithTimeout('/api/soundforge/list_schemes');
+            const cfg = await fetchJsonWithTimeout('/api/soundforge/config');
+            if (data && data.ok && cfg && cfg.ok) {
                 soundEvents = [];
-                soundScheme = { available_schemes: data.schemes || [] };
-                setSoundSchemeStatus('Sound schemes loaded.');
+                soundScheme = {
+                    available_schemes: data.schemes || [],
+                    active_config: cfg.config || {},
+                };
+                setSoundSchemeStatus('SoundForge schemes and active config loaded.');
             } else {
                 setSoundSchemeStatus('Unable to load sound schemes.');
             }
@@ -846,6 +1510,10 @@ PAGE = """
         function switchView(viewId) {
             beginBusy('Loading tab...');
             currentView = viewId;
+            if (busLiveTimer) {
+                clearInterval(busLiveTimer);
+                busLiveTimer = null;
+            }
             document.querySelectorAll('.view-panel').forEach((el) => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach((el) => el.classList.remove('active'));
             const panel = document.getElementById(viewId);
@@ -856,7 +1524,123 @@ PAGE = """
             if (viewId === 'view_diagnostics') refreshDiagnostics();
             if (viewId === 'view_sounds') fetchSoundEvents();
             if (viewId === 'view_discovery') refreshDiscoveryMap();
+            if (viewId === 'view_iconforge') refreshIconForgeOps();
+            if (viewId === 'view_os_state') refreshOsStatePanel();
+            if (viewId === 'view_onboarding') refreshOnboardingStatus();
+            if (viewId === 'view_scheduler') refreshSchedulerStatus();
+            if (viewId === 'view_cicd') refreshCicdStatus();
+            if (viewId === 'view_bus') {
+                refreshBusInspector();
+                const live = !!document.getElementById('bus_live')?.checked;
+                if (live) {
+                    busLiveTimer = setInterval(() => {
+                        if (currentView === 'view_bus') refreshBusInspector();
+                    }, 2000);
+                }
+            }
             setTimeout(endBusy, 180);
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (!(event.ctrlKey || event.metaKey)) return;
+            if (String(event.key || '').toLowerCase() !== 's') return;
+            if (currentView !== 'view_iconforge') return;
+            event.preventDefault();
+            saveIconStudioIco();
+        });
+
+        async function refreshOnboardingStatus() {
+            const data = await fetchJsonWithTimeout('/api/onboarding/status');
+            const root = document.getElementById('onboarding_status');
+            if (!root) return;
+            root.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function runOnboardingStep(step) {
+            const root = document.getElementById('onboarding_status');
+            if (root) root.textContent = 'Running onboarding step...';
+            const res = await fetch('/api/onboarding', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ step })
+            });
+            const data = await res.json();
+            if (root) root.textContent = JSON.stringify(data, null, 2);
+            await refreshOnboardingStatus();
+        }
+
+        async function refreshSchedulerStatus() {
+            const data = await fetchJsonWithTimeout('/api/scheduler');
+            const root = document.getElementById('scheduler_status');
+            if (!root) return;
+            root.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function addSchedulerJob() {
+            const label = (document.getElementById('scheduler_label').value || '').trim();
+            const command = (document.getElementById('scheduler_command').value || '').trim();
+            const interval = Number(document.getElementById('scheduler_interval').value || 300);
+            const res = await fetch('/api/scheduler', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', label, command, interval_seconds: interval })
+            });
+            const data = await res.json();
+            document.getElementById('scheduler_status').textContent = JSON.stringify(data, null, 2);
+            await refreshSchedulerStatus();
+        }
+
+        async function removeSchedulerJob() {
+            const id = (document.getElementById('scheduler_remove_id').value || '').trim();
+            if (!id) {
+                alert('job id is required');
+                return;
+            }
+            const res = await fetch('/api/scheduler', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'remove', id })
+            });
+            const data = await res.json();
+            document.getElementById('scheduler_status').textContent = JSON.stringify(data, null, 2);
+            await refreshSchedulerStatus();
+        }
+
+        async function runSchedulerJobNow() {
+            const id = (document.getElementById('scheduler_run_id').value || '').trim();
+            if (!id) {
+                alert('job id is required');
+                return;
+            }
+            const res = await fetch('/api/scheduler', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'run_now', id })
+            });
+            const data = await res.json();
+            document.getElementById('scheduler_status').textContent = JSON.stringify(data, null, 2);
+            await refreshSchedulerStatus();
+        }
+
+        async function refreshCicdStatus() {
+            const data = await fetchJsonWithTimeout('/api/cicd');
+            const root = document.getElementById('cicd_status');
+            if (!root) return;
+            root.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function runCicdPipeline() {
+            const suite = (document.getElementById('cicd_suite').value || 'quick').trim();
+            const root = document.getElementById('cicd_status');
+            if (root) root.textContent = 'Running CI/CD pipeline...';
+            const res = await fetch('/api/cicd', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'run', suite })
+            });
+            const data = await res.json();
+            if (root) root.textContent = JSON.stringify(data, null, 2);
+            await refreshCicdStatus();
         }
 
         async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
@@ -956,6 +1740,7 @@ PAGE = """
             const endpoints = (data && data.endpoints && typeof data.endpoints === 'object') ? Object.keys(data.endpoints) : [];
             const chat = document.getElementById('chat_endpoint');
             const maker = document.getElementById('maker_endpoint');
+            const wizard = document.getElementById('wizard_endpoint');
             const override = document.getElementById('maker_override_endpoint');
             if (chat) {
                 const selected = chat.value;
@@ -967,11 +1752,1115 @@ PAGE = """
                 maker.innerHTML = endpoints.map((e) => `<option value="${e}">${e}</option>`).join('');
                 if (selected && endpoints.includes(selected)) maker.value = selected;
             }
+            if (wizard) {
+                const selected = wizard.value;
+                wizard.innerHTML = endpoints.map((e) => `<option value="${e}">${e}</option>`).join('');
+                if (selected && endpoints.includes(selected)) wizard.value = selected;
+                else if (!selected && endpoints.length) wizard.value = endpoints[0];
+            }
             if (override) {
                 const selected = override.value;
                 override.innerHTML = '<option value="">(agent default)</option>' + endpoints.map((e) => `<option value="${e}">${e}</option>`).join('');
                 if (selected && endpoints.includes(selected)) override.value = selected;
             }
+        }
+
+        function selectedAdvancedSkills() {
+            const skillIds = [
+                'skill_command',
+                'skill_bossgate_travel_control',
+                'skill_runtime_observation',
+                'skill_task_queue_management',
+                'skill_web_search',
+                'skill_policy_planning',
+                'skill_memory_sync',
+                'skill_incident_triage',
+                'skill_code_review',
+                'skill_ui_design',
+                'skill_art_direction',
+                'skill_documentation_crafting',
+                'skill_test_orchestration',
+                'skill_security_audit',
+                'skill_performance_tuning',
+                'skill_data_analysis',
+                'skill_workflow_automation',
+                'skill_customer_support',
+                'skill_integration_mapping',
+                'skill_api_composition',
+            ];
+            const skills = [];
+            for (const id of skillIds) {
+                const el = document.getElementById(id);
+                if (!el || !el.checked) continue;
+                skills.push(id.replace('skill_', ''));
+            }
+            return skills;
+        }
+
+        function selectedAdvancedSigils() {
+            const sigilIds = [
+                'sigil_sigil_transporter',
+                'sigil_prime_overwatch',
+                'sigil_sigil_bind',
+                'sigil_sigil_trace',
+                'sigil_sigil_harmony',
+                'sigil_prime_foresight',
+                'sigil_prime_bastion',
+                'sigil_sigil_palette',
+                'sigil_sigil_resonance',
+                'sigil_sigil_flux',
+                'sigil_sigil_anchor',
+                'sigil_sigil_lens',
+                'sigil_sigil_weave',
+                'sigil_sigil_echo',
+                'sigil_sigil_guard',
+                'sigil_sigil_spark',
+                'sigil_sigil_patch',
+                'sigil_sigil_scribe',
+                'sigil_sigil_orbit',
+                'sigil_sigil_shield',
+            ];
+            const sigils = [];
+            for (const id of sigilIds) {
+                const el = document.getElementById(id);
+                if (!el || !el.checked) continue;
+                sigils.push(id.replace('sigil_', ''));
+            }
+            return sigils;
+        }
+
+        function parseCsvTags(raw) {
+            return String(raw || '')
+                .split(',')
+                .map((item) => item.trim().toLowerCase())
+                .filter((item) => !!item);
+        }
+
+        function setIconStatus(statusId, message, isError = false) {
+            const root = document.getElementById(statusId);
+            if (!root) return;
+            root.textContent = String(message || '');
+            root.style.color = isError ? '#f17171' : '#A9B1C1';
+        }
+
+        async function uploadAgentForgeIcon(file, iconNameHint) {
+            if (!file) return { ok: false, message: 'no file provided' };
+            const form = new FormData();
+            form.append('icon', file);
+            form.append('icon_name', String(iconNameHint || '').trim());
+            const res = await fetch('/api/agentforge/icon/upload', { method: 'POST', body: form });
+            return await res.json();
+        }
+
+        async function createAgentForgeIcon(iconNameHint, label, background, foreground) {
+            const payload = {
+                icon_name: String(iconNameHint || '').trim(),
+                label: String(label || '').trim(),
+                background: String(background || '').trim(),
+                foreground: String(foreground || '').trim(),
+            };
+            const res = await fetch('/api/agentforge/icon/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            return await res.json();
+        }
+
+        function toggleWizardIconSource() {
+            const mode = (document.getElementById('wizard_icon_mode')?.value || 'none').trim();
+            const uploadRow = document.getElementById('wizard_icon_upload_row');
+            const forgeRow = document.getElementById('wizard_iconforge_row');
+            if (uploadRow) uploadRow.style.display = mode === 'upload' ? 'flex' : 'none';
+            if (forgeRow) forgeRow.style.display = mode === 'iconforge' ? 'flex' : 'none';
+            if (mode === 'none') {
+                const path = document.getElementById('wizard_icon_path');
+                if (path) path.value = '';
+                setIconStatus('wizard_icon_status', 'Using default icon.');
+            }
+        }
+
+        function clearWizardIconSelection() {
+            const path = document.getElementById('wizard_icon_path');
+            if (path) path.value = '';
+            const mode = document.getElementById('wizard_icon_mode');
+            if (mode) mode.value = 'none';
+            const uploadName = document.getElementById('wizard_icon_upload_name');
+            if (uploadName) uploadName.textContent = 'No file selected';
+            toggleWizardIconSource();
+        }
+
+        function triggerWizardIconUpload() {
+            const file = document.getElementById('wizard_icon_upload_file');
+            if (file) file.click();
+        }
+
+        async function handleWizardIconUpload(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            const uploadName = document.getElementById('wizard_icon_upload_name');
+            if (uploadName) uploadName.textContent = file.name;
+            setIconStatus('wizard_icon_status', 'Uploading icon...');
+            const iconNameHint = (document.getElementById('wizard_name')?.value || 'wizard_agent').trim();
+            const data = await uploadAgentForgeIcon(file, iconNameHint);
+            if (data && data.ok) {
+                const path = document.getElementById('wizard_icon_path');
+                if (path) path.value = String(data.icon || '');
+                setIconStatus('wizard_icon_status', 'Custom icon ready: ' + String(data.icon || ''));
+            } else {
+                setIconStatus('wizard_icon_status', 'Icon upload failed: ' + String(data?.message || 'unknown error'), true);
+            }
+        }
+
+        async function createWizardIconForge() {
+            setIconStatus('wizard_icon_status', 'Creating icon via IconForge...');
+            const iconNameHint = (document.getElementById('wizard_name')?.value || 'wizard_agent').trim();
+            const label = document.getElementById('wizard_icon_label')?.value || 'AG';
+            const bg = document.getElementById('wizard_icon_bg')?.value || '#1d3557';
+            const fg = document.getElementById('wizard_icon_fg')?.value || '#f1faee';
+            const data = await createAgentForgeIcon(iconNameHint, label, bg, fg);
+            if (data && data.ok) {
+                const path = document.getElementById('wizard_icon_path');
+                if (path) path.value = String(data.icon || '');
+                setIconStatus('wizard_icon_status', 'Custom icon ready: ' + String(data.icon || ''));
+            } else {
+                setIconStatus('wizard_icon_status', 'IconForge create failed: ' + String(data?.message || 'unknown error'), true);
+            }
+        }
+
+        function toggleMakerIconSource() {
+            const mode = (document.getElementById('maker_icon_mode')?.value || 'none').trim();
+            const uploadRow = document.getElementById('maker_icon_upload_row');
+            const forgeRow = document.getElementById('maker_iconforge_row');
+            if (uploadRow) uploadRow.style.display = mode === 'upload' ? 'flex' : 'none';
+            if (forgeRow) forgeRow.style.display = mode === 'iconforge' ? 'flex' : 'none';
+            if (mode === 'none') {
+                const path = document.getElementById('maker_icon_path');
+                if (path) path.value = '';
+                setIconStatus('maker_icon_status', 'Using default icon.');
+            }
+        }
+
+        function clearMakerIconSelection() {
+            const path = document.getElementById('maker_icon_path');
+            if (path) path.value = '';
+            const mode = document.getElementById('maker_icon_mode');
+            if (mode) mode.value = 'none';
+            const uploadName = document.getElementById('maker_icon_upload_name');
+            if (uploadName) uploadName.textContent = 'No file selected';
+            toggleMakerIconSource();
+        }
+
+        function triggerMakerIconUpload() {
+            const file = document.getElementById('maker_icon_upload_file');
+            if (file) file.click();
+        }
+
+        async function handleMakerIconUpload(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            const uploadName = document.getElementById('maker_icon_upload_name');
+            if (uploadName) uploadName.textContent = file.name;
+            setIconStatus('maker_icon_status', 'Uploading icon...');
+            const iconNameHint = (document.getElementById('maker_name')?.value || 'advanced_agent').trim();
+            const data = await uploadAgentForgeIcon(file, iconNameHint);
+            if (data && data.ok) {
+                const path = document.getElementById('maker_icon_path');
+                if (path) path.value = String(data.icon || '');
+                setIconStatus('maker_icon_status', 'Custom icon ready: ' + String(data.icon || ''));
+            } else {
+                setIconStatus('maker_icon_status', 'Icon upload failed: ' + String(data?.message || 'unknown error'), true);
+            }
+        }
+
+        async function createMakerIconForge() {
+            setIconStatus('maker_icon_status', 'Creating icon via IconForge...');
+            const iconNameHint = (document.getElementById('maker_name')?.value || 'advanced_agent').trim();
+            const label = document.getElementById('maker_icon_label')?.value || 'AG';
+            const bg = document.getElementById('maker_icon_bg')?.value || '#1d3557';
+            const fg = document.getElementById('maker_icon_fg')?.value || '#f1faee';
+            const data = await createAgentForgeIcon(iconNameHint, label, bg, fg);
+            if (data && data.ok) {
+                const path = document.getElementById('maker_icon_path');
+                if (path) path.value = String(data.icon || '');
+                setIconStatus('maker_icon_status', 'Custom icon ready: ' + String(data.icon || ''));
+            } else {
+                setIconStatus('maker_icon_status', 'IconForge create failed: ' + String(data?.message || 'unknown error'), true);
+            }
+        }
+
+        function setIconStudioStatus(message, isError = false) {
+            const root = document.getElementById('icon_studio_status');
+            if (!root) return;
+            root.textContent = String(message || '');
+            root.style.color = isError ? '#f17171' : '#A9B1C1';
+        }
+
+        function iconStudioBuildDraftPayload() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas) return null;
+            return {
+                image_data: canvas.toDataURL('image/png'),
+                icon_name: (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim(),
+                target: (document.getElementById('icon_studio_target')?.value || 'advanced').trim(),
+                tool: (document.getElementById('icon_studio_tool')?.value || 'brush').trim(),
+                color: (document.getElementById('icon_studio_color')?.value || '#d4a857').trim(),
+                size: (document.getElementById('icon_studio_size')?.value || '10').trim(),
+                anim_preset: (document.getElementById('icon_studio_anim_preset')?.value || 'pulse').trim(),
+                anim_seconds: (document.getElementById('icon_studio_anim_seconds')?.value || '3').trim(),
+                anim_fps: (document.getElementById('icon_studio_anim_fps')?.value || '12').trim(),
+                saved_at: new Date().toISOString(),
+            };
+        }
+
+        function saveIconStudioDraft(showStatus = true) {
+            try {
+                const payload = iconStudioBuildDraftPayload();
+                if (!payload) return;
+                localStorage.setItem(ICON_STUDIO_DRAFT_KEY, JSON.stringify(payload));
+                if (showStatus) setIconStudioStatus('Draft saved locally.');
+            } catch (err) {
+                if (showStatus) setIconStudioStatus('Draft save failed: ' + String(err), true);
+            }
+        }
+
+        async function loadIconStudioDraft(showStatus = true) {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            try {
+                const raw = localStorage.getItem(ICON_STUDIO_DRAFT_KEY);
+                if (!raw) {
+                    if (showStatus) setIconStudioStatus('No saved draft found.');
+                    return;
+                }
+                const payload = JSON.parse(raw);
+                if (!payload || typeof payload !== 'object' || !String(payload.image_data || '').startsWith('data:image/')) {
+                    if (showStatus) setIconStudioStatus('Saved draft is invalid.', true);
+                    return;
+                }
+                const img = new Image();
+                await new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => reject(new Error('saved draft image failed to load'));
+                    img.src = payload.image_data;
+                });
+                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+                iconStudioCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const nameEl = document.getElementById('icon_studio_name');
+                const targetEl = document.getElementById('icon_studio_target');
+                const toolEl = document.getElementById('icon_studio_tool');
+                const colorEl = document.getElementById('icon_studio_color');
+                const sizeEl = document.getElementById('icon_studio_size');
+                const sizeLabelEl = document.getElementById('icon_studio_size_label');
+                const animPresetEl = document.getElementById('icon_studio_anim_preset');
+                const animSecondsEl = document.getElementById('icon_studio_anim_seconds');
+                const animFpsEl = document.getElementById('icon_studio_anim_fps');
+                if (nameEl && payload.icon_name) nameEl.value = String(payload.icon_name);
+                if (targetEl && payload.target) targetEl.value = String(payload.target);
+                if (toolEl && payload.tool) toolEl.value = String(payload.tool);
+                if (colorEl && payload.color) colorEl.value = String(payload.color);
+                if (sizeEl && payload.size) sizeEl.value = String(payload.size);
+                if (sizeLabelEl && sizeEl) sizeLabelEl.textContent = String(parseInt(sizeEl.value || '10', 10)) + 'px';
+                if (animPresetEl && payload.anim_preset) animPresetEl.value = String(payload.anim_preset);
+                if (animSecondsEl && payload.anim_seconds) animSecondsEl.value = String(payload.anim_seconds);
+                if (animFpsEl && payload.anim_fps) animFpsEl.value = String(payload.anim_fps);
+
+                if (showStatus) setIconStudioStatus('Draft loaded.');
+            } catch (err) {
+                if (showStatus) setIconStudioStatus('Draft load failed: ' + String(err), true);
+            }
+        }
+
+        function clearIconStudioDraft() {
+            try {
+                localStorage.removeItem(ICON_STUDIO_DRAFT_KEY);
+                setIconStudioStatus('Saved draft cleared.');
+            } catch (err) {
+                setIconStudioStatus('Draft clear failed: ' + String(err), true);
+            }
+        }
+
+        function downloadIconStudioPng() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas) return;
+            const stem = (document.getElementById('icon_studio_name')?.value || 'iconforge').trim() || 'iconforge';
+            const safeStem = String(stem).replace(/[^a-zA-Z0-9._-]/g, '_');
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = safeStem + '.png';
+            a.click();
+            setIconStudioStatus('PNG downloaded.');
+        }
+
+        function iconStudioPushUndo() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            const frame = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            iconStudioUndo.push(frame);
+            if (iconStudioUndo.length > 25) iconStudioUndo.shift();
+        }
+
+        function iconStudioGetPointer(event, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (event.clientX - rect.left) * scaleX,
+                y: (event.clientY - rect.top) * scaleY,
+            };
+        }
+
+        function iconStudioCurrentStroke() {
+            const color = document.getElementById('icon_studio_color')?.value || '#d4a857';
+            const size = parseInt(document.getElementById('icon_studio_size')?.value || '10', 10);
+            const tool = document.getElementById('icon_studio_tool')?.value || 'brush';
+            return {
+                color,
+                size: Number.isFinite(size) ? Math.max(1, Math.min(64, size)) : 10,
+                eraser: tool === 'eraser',
+            };
+        }
+
+        function iconStudioStroke(from, to) {
+            if (!iconStudioCtx) return;
+            const stroke = iconStudioCurrentStroke();
+            iconStudioCtx.save();
+            iconStudioCtx.lineCap = 'round';
+            iconStudioCtx.lineJoin = 'round';
+            iconStudioCtx.lineWidth = stroke.size;
+            iconStudioCtx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
+            iconStudioCtx.strokeStyle = stroke.color;
+            iconStudioCtx.beginPath();
+            iconStudioCtx.moveTo(from.x, from.y);
+            iconStudioCtx.lineTo(to.x, to.y);
+            iconStudioCtx.stroke();
+            iconStudioCtx.restore();
+        }
+
+        function initIconForgeStudio() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas) return;
+            if (iconStudioBooted) return;
+            iconStudioCtx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!iconStudioCtx) return;
+            iconStudioBooted = true;
+            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            iconStudioCtx.fillStyle = 'rgba(0,0,0,0)';
+            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const slider = document.getElementById('icon_studio_size');
+            const label = document.getElementById('icon_studio_size_label');
+            if (slider && label) {
+                const sync = () => {
+                    label.textContent = String(parseInt(slider.value || '10', 10)) + 'px';
+                };
+                slider.addEventListener('input', sync);
+                sync();
+            }
+
+            let lastPoint = { x: 0, y: 0 };
+            canvas.addEventListener('pointerdown', (event) => {
+                iconStudioPushUndo();
+                iconStudioDrawing = true;
+                lastPoint = iconStudioGetPointer(event, canvas);
+                iconStudioStroke(lastPoint, lastPoint);
+            });
+            canvas.addEventListener('pointermove', (event) => {
+                if (!iconStudioDrawing) return;
+                const next = iconStudioGetPointer(event, canvas);
+                iconStudioStroke(lastPoint, next);
+                lastPoint = next;
+            });
+            const endDraw = () => {
+                iconStudioDrawing = false;
+                saveIconStudioDraft(false);
+            };
+            canvas.addEventListener('pointerup', endDraw);
+            canvas.addEventListener('pointerleave', endDraw);
+            loadIconStudioDraft(false);
+            setIconStudioStatus('Studio ready. Autosave enabled.');
+        }
+
+        function triggerIconStudioImport() {
+            const file = document.getElementById('icon_studio_import_file');
+            if (file) file.click();
+        }
+
+        async function handleIconStudioImport(event) {
+            const file = event?.target?.files?.[0];
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!file || !canvas || !iconStudioCtx) return;
+            try {
+                const objectUrl = URL.createObjectURL(file);
+                const img = new Image();
+                await new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => reject(new Error('image load failed'));
+                    img.src = objectUrl;
+                });
+                iconStudioPushUndo();
+                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+                const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                const drawW = Math.max(1, Math.floor(img.width * scale));
+                const drawH = Math.max(1, Math.floor(img.height * scale));
+                const offX = Math.floor((canvas.width - drawW) / 2);
+                const offY = Math.floor((canvas.height - drawH) / 2);
+                iconStudioCtx.drawImage(img, offX, offY, drawW, drawH);
+                URL.revokeObjectURL(objectUrl);
+                saveIconStudioDraft(false);
+                setIconStudioStatus('Imported image: ' + file.name);
+            } catch (err) {
+                setIconStudioStatus('Import failed: ' + String(err), true);
+            }
+        }
+
+        function iconStudioUndoStroke() {
+            if (!iconStudioCtx) return;
+            const frame = iconStudioUndo.pop();
+            if (!frame) {
+                setIconStudioStatus('Undo stack is empty.');
+                return;
+            }
+            iconStudioCtx.putImageData(frame, 0, 0);
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Undo applied.');
+        }
+
+        function iconStudioClearCanvas() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            iconStudioPushUndo();
+            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Canvas cleared.');
+        }
+
+        function iconStudioFillBackground() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            const color = document.getElementById('icon_studio_color')?.value || '#1d3557';
+            iconStudioPushUndo();
+            iconStudioCtx.save();
+            iconStudioCtx.globalCompositeOperation = 'source-over';
+            iconStudioCtx.fillStyle = color;
+            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
+            iconStudioCtx.restore();
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Background filled.');
+        }
+
+        function applyIconStudioFx(kind) {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            iconStudioPushUndo();
+            const image = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = image.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                if (kind === 'grayscale') {
+                    const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+                    data[i] = y;
+                    data[i + 1] = y;
+                    data[i + 2] = y;
+                } else if (kind === 'invert') {
+                    data[i] = 255 - r;
+                    data[i + 1] = 255 - g;
+                    data[i + 2] = 255 - b;
+                } else if (kind === 'contrast') {
+                    const c = 36;
+                    const factor = (259 * (c + 255)) / (255 * (259 - c));
+                    data[i] = Math.max(0, Math.min(255, Math.round(factor * (r - 128) + 128)));
+                    data[i + 1] = Math.max(0, Math.min(255, Math.round(factor * (g - 128) + 128)));
+                    data[i + 2] = Math.max(0, Math.min(255, Math.round(factor * (b - 128) + 128)));
+                } else if (kind === 'soften') {
+                    data[i] = Math.round((r + 255) / 2);
+                    data[i + 1] = Math.round((g + 255) / 2);
+                    data[i + 2] = Math.round((b + 255) / 2);
+                }
+            }
+            iconStudioCtx.putImageData(image, 0, 0);
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Applied FX: ' + kind);
+        }
+
+        async function saveIconStudioIco() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas) return;
+            const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
+            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const payload = {
+                icon_name: iconName,
+                image_data: canvas.toDataURL('image/png'),
+            };
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Rendering multi-size .ico in IconForge...');
+            const res = await fetch('/api/agentforge/icon/create_from_canvas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data || !data.ok) {
+                setIconStudioStatus('Save failed: ' + String(data?.message || 'unknown error'), true);
+                return;
+            }
+            const iconPath = String(data.icon || '');
+            if (target === 'wizard' || target === 'both') {
+                const wizardPath = document.getElementById('wizard_icon_path');
+                const wizardMode = document.getElementById('wizard_icon_mode');
+                if (wizardPath) wizardPath.value = iconPath;
+                if (wizardMode) wizardMode.value = 'iconforge';
+                setIconStatus('wizard_icon_status', 'Custom icon ready: ' + iconPath);
+                toggleWizardIconSource();
+            }
+            if (target === 'advanced' || target === 'both') {
+                const makerPath = document.getElementById('maker_icon_path');
+                const makerMode = document.getElementById('maker_icon_mode');
+                if (makerPath) makerPath.value = iconPath;
+                if (makerMode) makerMode.value = 'iconforge';
+                setIconStatus('maker_icon_status', 'Custom icon ready: ' + iconPath);
+                toggleMakerIconSource();
+            }
+            setIconStudioStatus('Saved icon: ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+        }
+
+        async function saveIconStudioAnimated() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas) return;
+            const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
+            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const preset = (document.getElementById('icon_studio_anim_preset')?.value || 'pulse').trim();
+            const seconds = parseInt(document.getElementById('icon_studio_anim_seconds')?.value || '3', 10);
+            const fps = parseInt(document.getElementById('icon_studio_anim_fps')?.value || '12', 10);
+            const payload = {
+                icon_name: iconName,
+                image_data: canvas.toDataURL('image/png'),
+                preset,
+                seconds: Number.isFinite(seconds) ? seconds : 3,
+                fps: Number.isFinite(fps) ? fps : 12,
+            };
+            saveIconStudioDraft(false);
+            setIconStudioStatus('Rendering animated GIF + ICO fallback...');
+            const res = await fetch('/api/agentforge/icon/create_animated_from_canvas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data || !data.ok) {
+                setIconStudioStatus('Animated save failed: ' + String(data?.message || 'unknown error'), true);
+                return;
+            }
+
+            const icoPath = String(data.icon || '');
+            const gifPath = String(data.animated || '');
+            if (target === 'wizard' || target === 'both') {
+                const wizardPath = document.getElementById('wizard_icon_path');
+                const wizardMode = document.getElementById('wizard_icon_mode');
+                if (wizardPath) wizardPath.value = icoPath;
+                if (wizardMode) wizardMode.value = 'iconforge';
+                setIconStatus('wizard_icon_status', 'Custom icon ready: ' + icoPath);
+                toggleWizardIconSource();
+            }
+            if (target === 'advanced' || target === 'both') {
+                const makerPath = document.getElementById('maker_icon_path');
+                const makerMode = document.getElementById('maker_icon_mode');
+                if (makerPath) makerPath.value = icoPath;
+                if (makerMode) makerMode.value = 'iconforge';
+                setIconStatus('maker_icon_status', 'Custom icon ready: ' + icoPath);
+                toggleMakerIconSource();
+            }
+            setIconStudioStatus('Animated saved: ' + gifPath + ' | ICO fallback: ' + icoPath);
+        }
+
+        function setIconForgeFromStudioIco() {
+            const path = document.getElementById('iconforge_icon_path');
+            const name = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim() || 'agent_forge_icon';
+            if (!path) return;
+            path.value = `assets/icons/agents/${name}.ico`;
+            setIconStudioStatus('Set icon path from studio name. Use after Save .ico for the latest timestamped asset.');
+        }
+
+        async function refreshIconForgeOps() {
+            const data = await fetchJsonWithTimeout('/api/iconforge/backups', 6000);
+            const root = document.getElementById('iconforge_backups');
+            if (!root) return;
+            root.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function applyWindowsIconOverride() {
+            const targetType = (document.getElementById('iconforge_target_type')?.value || 'folder').trim();
+            const target = (document.getElementById('iconforge_target_value')?.value || '').trim();
+            const icon = (document.getElementById('iconforge_icon_path')?.value || '').trim();
+            const resultRoot = document.getElementById('iconforge_ops_result');
+            if (!target || !icon) {
+                if (resultRoot) resultRoot.textContent = JSON.stringify({ ok: false, message: 'target and icon path are required' }, null, 2);
+                return;
+            }
+            const res = await fetch('/api/iconforge/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_type: targetType, target, icon }),
+            });
+            const data = await res.json();
+            if (resultRoot) resultRoot.textContent = JSON.stringify(data, null, 2);
+            if (data && data.backup_key) {
+                const restoreKey = document.getElementById('iconforge_restore_key');
+                if (restoreKey) restoreKey.value = String(data.backup_key);
+            }
+            await refreshIconForgeOps();
+        }
+
+        async function refreshWindowsIconCache() {
+            const resultRoot = document.getElementById('iconforge_ops_result');
+            const res = await fetch('/api/iconforge/refresh_cache', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            if (resultRoot) resultRoot.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function restoreWindowsIconOverride() {
+            const backupKey = (document.getElementById('iconforge_restore_key')?.value || '').trim();
+            const resultRoot = document.getElementById('iconforge_ops_result');
+            if (!backupKey) {
+                if (resultRoot) resultRoot.textContent = JSON.stringify({ ok: false, message: 'backup key is required' }, null, 2);
+                return;
+            }
+            const res = await fetch('/api/iconforge/restore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ backup_key: backupKey }),
+            });
+            const data = await res.json();
+            if (resultRoot) resultRoot.textContent = JSON.stringify(data, null, 2);
+            await refreshIconForgeOps();
+        }
+
+        async function exportIconForgePack() {
+            const outputDir = (document.getElementById('iconforge_pack_export_dir')?.value || '').trim();
+            const resultRoot = document.getElementById('iconforge_ops_result');
+            if (!outputDir) {
+                if (resultRoot) resultRoot.textContent = JSON.stringify({ ok: false, message: 'export directory path is required' }, null, 2);
+                return;
+            }
+            const res = await fetch('/api/iconforge/pack/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ output_dir: outputDir }),
+            });
+            const data = await res.json();
+            if (resultRoot) resultRoot.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function importIconForgePack() {
+            const source = (document.getElementById('iconforge_pack_import_source')?.value || '').trim();
+            const applyChanges = !!document.getElementById('iconforge_pack_apply')?.checked;
+            const refreshCache = !!document.getElementById('iconforge_pack_refresh')?.checked;
+            const resultRoot = document.getElementById('iconforge_ops_result');
+            if (!source) {
+                if (resultRoot) resultRoot.textContent = JSON.stringify({ ok: false, message: 'import source is required' }, null, 2);
+                return;
+            }
+            const res = await fetch('/api/iconforge/pack/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source, apply_changes: applyChanges, refresh_cache: refreshCache }),
+            });
+            const data = await res.json();
+            if (resultRoot) resultRoot.textContent = JSON.stringify(data, null, 2);
+            await refreshIconForgeOps();
+        }
+
+        function personalityDefinitions() {
+            return {
+                balanced: {
+                    title: 'Balanced Arbiter',
+                    directives: 'Weigh speed, risk, and confidence evenly. Prefer stable outcomes and clear handoffs.'
+                },
+                decisive: {
+                    title: 'Decisive Executor',
+                    directives: 'Prioritize fast closure and clear ownership. Escalate only when blockers are hard.'
+                },
+                cautious: {
+                    title: 'Cautious Guardian',
+                    directives: 'Prioritize safety and reversibility. Validate assumptions before irreversible actions.'
+                },
+                creative: {
+                    title: 'Creative Pathfinder',
+                    directives: 'Generate multiple approaches and choose the highest expected value with low churn.'
+                },
+                analytical: {
+                    title: 'Analytical Strategist',
+                    directives: 'Use structured reasoning, measurable criteria, and deterministic decision logs.'
+                },
+                introvert_local: {
+                    title: 'Local Quiet Ranger',
+                    directives: 'Prefer quiet local autonomy over remote chatter. Hunt and fix host/LAN incidents proactively without social contention.'
+                }
+            };
+        }
+
+        function selectedBehaviorPatterns(selectId) {
+            const el = document.getElementById(selectId);
+            if (!el) return [];
+            return Array.from(el.selectedOptions || [])
+                .map((option) => String(option.value || '').trim().toLowerCase())
+                .filter((value) => !!value);
+        }
+
+        function composeSystemWithPersonality(baseSystem, preset, notes) {
+            const key = String(preset || 'balanced').trim().toLowerCase();
+            const def = personalityDefinitions()[key] || personalityDefinitions().balanced;
+            const marker = '\n\nPersonality Wrapper (';
+            const rawRoot = String(baseSystem || '').trim();
+            const markerIndex = rawRoot.indexOf(marker);
+            const root = (markerIndex >= 0 ? rawRoot.slice(0, markerIndex).trim() : rawRoot) || 'You are a helpful specialist agent.';
+            const extraNotes = String(notes || '').trim();
+            const deterministicClaimProtocol = [
+                'Job Claim Protocol:',
+                '1) Do not argue with peer agents over first-claim ownership.',
+                '2) Claim by oldest queue timestamp first.',
+                '3) If timestamps tie, lowest lexicographic agent id wins claim.',
+                '4) If not selected, immediately yield and take next eligible job.',
+            ].join(' ');
+            const personalityBlock = [
+                `Personality Wrapper (${def.title}).`,
+                def.directives,
+                deterministicClaimProtocol,
+                extraNotes ? `Operator Notes: ${extraNotes}` : ''
+            ].filter((x) => !!x).join(' ');
+            return `${root}\n\n${personalityBlock}`.trim();
+        }
+
+        function rankCaps(rank) {
+            const caps = {
+                cadet: { skills: 1, sigils: 0, mcp: 2 },
+                specialist: { skills: 2, sigils: 0, mcp: 3 },
+                lieutenant: { skills: 3, sigils: 1, mcp: 4 },
+                captain: { skills: 5, sigils: 2, mcp: 6 },
+                commander: { skills: 7, sigils: 3, mcp: 8 },
+                general: { skills: 9, sigils: 4, mcp: 10 },
+                admiral: { skills: 12, sigils: 5, mcp: 12 },
+            };
+            return caps[String(rank || '').trim().toLowerCase()] || { skills: 1, sigils: 0, mcp: 2 };
+        }
+
+        function selectedWizardValues(selectId) {
+            const el = document.getElementById(selectId);
+            if (!el) return [];
+            return Array.from(el.selectedOptions || []).map((option) => String(option.value || '').trim().toLowerCase()).filter((x) => !!x);
+        }
+
+        function switchAgentForgeMode(mode) {
+            const wizard = document.getElementById('maker_wizard_mode');
+            const advanced = document.getElementById('maker_advanced_mode');
+            const wizardBtn = document.getElementById('maker_mode_wizard_btn');
+            const advancedBtn = document.getElementById('maker_mode_advanced_btn');
+            if (!wizard || !advanced) return;
+            const useWizard = mode !== 'advanced';
+            wizard.style.display = useWizard ? 'block' : 'none';
+            advanced.style.display = useWizard ? 'none' : 'block';
+            if (wizardBtn) wizardBtn.style.opacity = useWizard ? '1' : '0.65';
+            if (advancedBtn) advancedBtn.style.opacity = useWizard ? '0.65' : '1';
+            if (!useWizard) syncAdvancedPolicyAwareness();
+        }
+
+        function setMakerPolicyChips(chips) {
+            const root = document.getElementById('maker_policy_chips');
+            if (!root) return;
+            root.innerHTML = (Array.isArray(chips) ? chips : []).map((chip) => {
+                const ok = !!chip.ok;
+                const label = String(chip.label || 'policy');
+                const detail = String(chip.detail || '');
+                const bg = ok ? 'rgba(69, 172, 97, 0.15)' : 'rgba(200, 70, 70, 0.2)';
+                const fg = ok ? '#7ee2a0' : '#ff8f8f';
+                return `<span class="pill" title="${htmlEscape(detail)}" style="border-color:${fg}; color:${fg}; background:${bg};">${ok ? 'PASS' : 'BLOCK'}: ${htmlEscape(label)}</span>`;
+            }).join('');
+        }
+
+        function syncAdvancedPolicyAwareness() {
+            const classEl = document.getElementById('maker_agent_class');
+            const typeEl = document.getElementById('maker_agent_type');
+            const rankEl = document.getElementById('maker_rank');
+            const command = document.getElementById('skill_command');
+            const travel = document.getElementById('skill_bossgate_travel_control');
+            const scope = document.getElementById('maker_dispatch_scope');
+            const autonomous = document.getElementById('maker_dispatch_autonomous');
+            const remoteHunt = document.getElementById('maker_dispatch_remote_hunt');
+            const leaveNoCmd = document.getElementById('maker_dispatch_leave_without_command');
+            const lanWhenIdle = document.getElementById('maker_dispatch_lan_when_idle');
+            const validation = document.getElementById('maker_validation');
+            if (!classEl || !typeEl || !rankEl || !command || !travel || !scope || !autonomous || !remoteHunt || !leaveNoCmd || !lanWhenIdle) return;
+
+            const agentClass = (classEl.value || '').trim();
+            const type = (typeEl.value || '').trim();
+            const personalityPreset = (document.getElementById('maker_personality')?.value || 'balanced').trim().toLowerCase();
+            const behaviorPatterns = selectedBehaviorPatterns('maker_behavior_patterns');
+            const personalityInterests = parseCsvTags(document.getElementById('maker_personality_interests')?.value || '');
+            const localRangerMode = personalityPreset === 'introvert_local' || behaviorPatterns.includes('ranger_local');
+            const notes = [];
+            const chips = [];
+
+            command.disabled = false;
+            travel.disabled = false;
+            scope.disabled = false;
+            remoteHunt.disabled = false;
+            leaveNoCmd.disabled = false;
+            lanWhenIdle.disabled = false;
+
+            const sigilIds = [
+                'sigil_sigil_transporter',
+                'sigil_prime_overwatch',
+                'sigil_sigil_bind',
+                'sigil_sigil_trace',
+                'sigil_sigil_harmony',
+                'sigil_prime_foresight',
+                'sigil_prime_bastion',
+                'sigil_sigil_palette',
+                'sigil_sigil_resonance',
+                'sigil_sigil_flux',
+                'sigil_sigil_anchor',
+                'sigil_sigil_lens',
+                'sigil_sigil_weave',
+                'sigil_sigil_echo',
+                'sigil_sigil_guard',
+                'sigil_sigil_spark',
+                'sigil_sigil_patch',
+                'sigil_sigil_scribe',
+                'sigil_sigil_orbit',
+                'sigil_sigil_shield',
+            ];
+            const transporter = document.getElementById('sigil_sigil_transporter');
+            for (const id of sigilIds) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+                if (agentClass === 'prime') {
+                    el.disabled = false;
+                } else if (agentClass === 'skilled') {
+                    const isTransporter = id === 'sigil_sigil_transporter';
+                    el.disabled = !isTransporter;
+                    if (!isTransporter) el.checked = false;
+                } else {
+                    el.disabled = true;
+                    el.checked = false;
+                }
+            }
+            if (agentClass === 'normalized') {
+                notes.push('normalized class: sigils disabled');
+            }
+            if (agentClass === 'skilled') {
+                notes.push('skilled class: optional sigil specialist path allows only sigil_transporter');
+                chips.push({ ok: !selectedAdvancedSigils().some((s) => s !== 'sigil_transporter'), label: 'skilled sigil allowlist', detail: 'skilled sigil path only allows sigil_transporter' });
+            }
+
+            if (type === 'authority') {
+                command.checked = true;
+                command.disabled = true;
+                travel.checked = false;
+                travel.disabled = true;
+                notes.push('authority: command required, travel-control disallowed');
+                chips.push({ ok: command.checked === true, label: 'authority requires command', detail: 'authority agents must keep command enabled' });
+                chips.push({ ok: travel.checked === false, label: 'authority blocks travel-control', detail: 'authority agents cannot use bossgate_travel_control' });
+            } else if (type === 'controller') {
+                command.checked = true;
+                command.disabled = true;
+                autonomous.checked = true;
+                autonomous.disabled = true;
+                remoteHunt.checked = false;
+                remoteHunt.disabled = true;
+                leaveNoCmd.checked = false;
+                leaveNoCmd.disabled = true;
+                lanWhenIdle.checked = true;
+                lanWhenIdle.disabled = true;
+                if (scope.value === 'remote') scope.value = 'host';
+                notes.push('controller: local-first, remote only when directed');
+                chips.push({ ok: command.checked === true, label: 'controller requires command', detail: 'controller agents must keep command enabled' });
+                chips.push({ ok: remoteHunt.checked === false, label: 'controller no proactive remote hunt', detail: 'controller agents should not proactively hunt remote work' });
+                chips.push({ ok: leaveNoCmd.checked === false, label: 'controller cannot leave host without command', detail: 'controller remote movement requires direction' });
+                chips.push({ ok: scope.value === 'host' || scope.value === 'lan', label: 'controller scope host/lan', detail: 'controller preferred scope must be host or lan' });
+            } else if (type === 'ranger') {
+                command.checked = false;
+                command.disabled = true;
+                travel.checked = true;
+                travel.disabled = true;
+                autonomous.checked = true;
+                autonomous.disabled = true;
+                remoteHunt.checked = !localRangerMode;
+                remoteHunt.disabled = true;
+                leaveNoCmd.checked = !localRangerMode;
+                leaveNoCmd.disabled = true;
+                lanWhenIdle.checked = true;
+                lanWhenIdle.disabled = false;
+                scope.value = localRangerMode ? (scope.value === 'lan' ? 'lan' : 'host') : 'remote';
+                scope.disabled = true;
+                notes.push(localRangerMode
+                    ? 'ranger: local quiet-ranger behavior locked (host/lan proactive)'
+                    : 'ranger: autonomous remote fixer behavior locked');
+                chips.push({ ok: command.checked === false, label: 'ranger blocks command', detail: 'ranger agents cannot include command skill' });
+                chips.push({ ok: travel.checked === true, label: 'ranger requires travel-control', detail: 'ranger agents must include bossgate_travel_control' });
+                chips.push({ ok: localRangerMode ? remoteHunt.checked === false : remoteHunt.checked === true, label: 'ranger hunt profile', detail: localRangerMode ? 'local quiet-ranger disables proactive remote hunt' : 'ranger agents should actively hunt remote repair work' });
+                chips.push({ ok: localRangerMode ? (scope.value === 'host' || scope.value === 'lan') : scope.value === 'remote', label: 'ranger scope profile', detail: localRangerMode ? 'local quiet-ranger scope must be host/lan' : 'ranger preferred scope must be remote' });
+            } else if (type === 'worker') {
+                command.checked = false;
+                command.disabled = true;
+                notes.push('worker: command skill disallowed');
+                chips.push({ ok: command.checked === false, label: 'worker blocks command', detail: 'worker agents cannot include command' });
+            } else if (type === 'security') {
+                travel.checked = false;
+                travel.disabled = true;
+                notes.push('security: travel-control disallowed');
+                chips.push({ ok: travel.checked === false, label: 'security blocks travel-control', detail: 'security agents cannot include bossgate_travel_control' });
+            } else if (type === 'tester') {
+                command.checked = false;
+                command.disabled = true;
+                notes.push('tester: command skill disallowed');
+                chips.push({ ok: command.checked === false, label: 'tester blocks command', detail: 'tester agents cannot include command' });
+            }
+
+            const rankOrder = ['cadet', 'specialist', 'lieutenant', 'captain', 'commander', 'general', 'admiral'];
+            const needsCaptain = command.checked;
+            if (needsCaptain && rankOrder.indexOf(rankEl.value) < rankOrder.indexOf('captain')) {
+                rankEl.value = 'captain';
+                notes.push('rank auto-adjusted to captain because command is enabled');
+            }
+            chips.push({ ok: !needsCaptain || rankOrder.indexOf(rankEl.value) >= rankOrder.indexOf('captain'), label: 'command rank gate', detail: 'command requires rank captain or above' });
+            for (const option of Array.from(rankEl.options || [])) {
+                if (needsCaptain && rankOrder.indexOf(option.value) < rankOrder.indexOf('captain')) {
+                    option.disabled = true;
+                } else {
+                    option.disabled = false;
+                }
+            }
+
+            if (agentClass === 'prime') {
+                const hasSigil = selectedAdvancedSigils().length > 0 || parseCsvTags(document.getElementById('maker_custom_sigils').value || '').length > 0;
+                chips.push({ ok: hasSigil, label: 'prime sigil requirement', detail: 'prime agents should define at least one sigil' });
+            }
+
+            chips.push({ ok: true, label: `personality wrapper (${personalityPreset})`, detail: 'behavioral wrapper shapes decision style and claim protocol' });
+            chips.push({ ok: true, label: `behavior overlays (${behaviorPatterns.length})`, detail: behaviorPatterns.length ? behaviorPatterns.join(', ') : 'none' });
+            chips.push({ ok: true, label: `interest affinities (${personalityInterests.length})`, detail: personalityInterests.length ? personalityInterests.join(', ') : 'none' });
+
+            const caps = rankCaps(rankEl.value);
+            const selectedSkillsCount = selectedAdvancedSkills().length + parseCsvTags(document.getElementById('maker_custom_skills').value || '').length;
+            const selectedSigils = selectedAdvancedSigils();
+            const selectedSigilsCount = selectedSigils.length + parseCsvTags(document.getElementById('maker_custom_sigils').value || '').length;
+            chips.push({ ok: selectedSkillsCount <= caps.skills, label: `rank skills cap (${caps.skills})`, detail: `selected skills: ${selectedSkillsCount}` });
+            chips.push({ ok: selectedSigilsCount <= caps.sigils, label: `rank sigils cap (${caps.sigils})`, detail: `selected sigils: ${selectedSigilsCount}` });
+            chips.push({ ok: true, label: `rank MCP cap (${caps.mcp})`, detail: 'MCP server count is enforced during runtime profile validation' });
+
+            if (agentClass === 'prime') {
+                chips.push({ ok: true, label: 'prime leadership optional', detail: 'leadership is determined by command + rank, not by prime class' });
+            }
+
+            if (agentClass === 'skilled') {
+                const hasSkills = selectedSkillsCount > 0;
+                const hasSigils = selectedSigilsCount > 0;
+                chips.push({ ok: hasSkills !== hasSigils, label: 'skilled dual-path rule', detail: 'choose skills path OR one-sigil path' });
+                if (hasSigils) {
+                    chips.push({ ok: selectedSigilsCount === 1, label: 'skilled sigil count', detail: 'skilled sigil path requires exactly one sigil' });
+                    chips.push({ ok: selectedSigils.every((s) => s === 'sigil_transporter'), label: 'skilled transporter sigil', detail: 'skilled sigil path only permits sigil_transporter' });
+                }
+            }
+
+            setMakerPolicyChips(chips);
+
+            if (validation) {
+                validation.textContent = notes.length
+                    ? ('Policy locks: ' + notes.join(' | '))
+                    : 'Role-aware validation ready.';
+            }
+        }
+
+        function buildWizardDraft() {
+            const name = (document.getElementById('wizard_name').value || '').trim();
+            const endpoint = (document.getElementById('wizard_endpoint').value || '').trim();
+            const roleFocus = (document.getElementById('wizard_role_focus').value || '').trim();
+            const scope = (document.getElementById('wizard_scope').value || 'host').trim();
+            const behavior = (document.getElementById('wizard_behavior').value || 'directive_local').trim();
+            const power = (document.getElementById('wizard_power').value || 'skilled').trim();
+            const wizardPersonality = (document.getElementById('wizard_personality').value || 'balanced').trim();
+            const wizardPersonalityNotes = (document.getElementById('wizard_personality_notes').value || '').trim();
+            const wizardInterests = parseCsvTags(document.getElementById('wizard_personality_interests').value || '');
+            const wizardBehaviorPatterns = selectedBehaviorPatterns('wizard_behavior_patterns');
+            const encrypt = !!document.getElementById('wizard_encrypt_profile').checked;
+            const wizardSkills = selectedWizardValues('wizard_skill_list');
+            const wizardSigils = selectedWizardValues('wizard_sigil_list');
+            const wizardIconPath = (document.getElementById('wizard_icon_path').value || '').trim();
+
+            document.getElementById('maker_name').value = name;
+            if (endpoint) document.getElementById('maker_endpoint').value = endpoint;
+            document.getElementById('maker_agent_class').value = power;
+            document.getElementById('maker_encrypt_profile').checked = encrypt;
+            document.getElementById('maker_bossgate_enabled').checked = encrypt;
+            document.getElementById('maker_personality').value = wizardPersonality;
+            document.getElementById('maker_personality_notes').value = wizardPersonalityNotes;
+            document.getElementById('maker_personality_interests').value = wizardInterests.join(', ');
+            const makerBehaviorPatterns = document.getElementById('maker_behavior_patterns');
+            if (makerBehaviorPatterns) {
+                const selected = new Set(wizardBehaviorPatterns);
+                if (wizardPersonality.toLowerCase() === 'introvert_local') selected.add('ranger_local');
+                for (const option of Array.from(makerBehaviorPatterns.options || [])) {
+                    option.selected = selected.has(String(option.value || '').trim().toLowerCase());
+                }
+            }
+
+            if (behavior === 'proactive_remote') {
+                document.getElementById('maker_agent_type').value = 'ranger';
+                document.getElementById('maker_rank').value = 'lieutenant';
+                document.getElementById('skill_command').checked = false;
+                document.getElementById('skill_bossgate_travel_control').checked = true;
+                document.getElementById('maker_dispatch_scope').value = 'remote';
+            } else if (behavior === 'security_guard') {
+                document.getElementById('maker_agent_type').value = 'security';
+                document.getElementById('maker_rank').value = 'specialist';
+                document.getElementById('skill_command').checked = false;
+                document.getElementById('skill_bossgate_travel_control').checked = false;
+                document.getElementById('maker_dispatch_scope').value = scope === 'remote' ? 'lan' : scope;
+            } else if (behavior === 'qa_tester') {
+                document.getElementById('maker_agent_type').value = 'tester';
+                document.getElementById('maker_rank').value = 'specialist';
+                document.getElementById('skill_command').checked = false;
+                document.getElementById('skill_bossgate_travel_control').checked = false;
+                document.getElementById('maker_dispatch_scope').value = scope === 'remote' ? 'lan' : scope;
+            } else {
+                if (power === 'prime') {
+                    document.getElementById('maker_agent_type').value = 'worker';
+                    document.getElementById('maker_rank').value = 'lieutenant';
+                    document.getElementById('skill_command').checked = false;
+                    document.getElementById('skill_bossgate_travel_control').checked = false;
+                    document.getElementById('maker_dispatch_scope').value = (scope === 'remote') ? 'lan' : scope;
+                } else {
+                    document.getElementById('maker_agent_type').value = 'controller';
+                    document.getElementById('maker_rank').value = 'captain';
+                    document.getElementById('skill_command').checked = true;
+                    document.getElementById('skill_bossgate_travel_control').checked = (scope !== 'host');
+                    document.getElementById('maker_dispatch_scope').value = (scope === 'remote') ? 'lan' : scope;
+                }
+            }
+
+            const baseSystemText = roleFocus
+                ? (`You are ${name || 'a specialist agent'}. Mission: ${roleFocus}.`) 
+                : 'You are a helpful specialist agent.';
+            document.getElementById('maker_system').value = baseSystemText;
+            document.getElementById('maker_custom_skills').value = wizardSkills.join(', ');
+            document.getElementById('maker_custom_sigils').value = (power === 'prime') ? wizardSigils.join(', ') : '';
+            document.getElementById('maker_icon_path').value = wizardIconPath;
+            const makerIconMode = document.getElementById('maker_icon_mode');
+            if (makerIconMode) makerIconMode.value = wizardIconPath ? 'upload' : 'none';
+            switchAgentForgeMode('advanced');
+            toggleMakerIconSource();
+            syncAdvancedPolicyAwareness();
+        }
+
+        async function createWizardAgent() {
+            buildWizardDraft();
+            await createAgentProfile();
         }
 
         function renderChat() {
@@ -1016,13 +2905,76 @@ PAGE = """
                 sel.innerHTML = names.map((n) => `<option value="${n}">${n}</option>`).join('');
                 if (current && names.includes(current)) sel.value = current;
             }
+            syncAdvancedPolicyAwareness();
         }
 
         async function createAgentProfile() {
+            const temperatureValue = parseFloat(document.getElementById('maker_temperature').value || '0.2');
+            const maxTokensValue = parseInt(document.getElementById('maker_max_tokens').value || '900', 10);
+            const mergedSkills = Array.from(new Set([
+                ...selectedAdvancedSkills(),
+                ...parseCsvTags(document.getElementById('maker_custom_skills').value || ''),
+            ])).sort();
+            const mergedSigils = Array.from(new Set([
+                ...selectedAdvancedSigils(),
+                ...parseCsvTags(document.getElementById('maker_custom_sigils').value || ''),
+            ])).sort();
+            const rankValue = (document.getElementById('maker_rank').value || '').trim();
+            const personalityPreset = (document.getElementById('maker_personality').value || 'balanced').trim().toLowerCase();
+            const personalityNotes = (document.getElementById('maker_personality_notes').value || '').trim();
+            const personalityInterests = parseCsvTags(document.getElementById('maker_personality_interests').value || '');
+            const behaviorPatterns = selectedBehaviorPatterns('maker_behavior_patterns');
+            if (personalityPreset === 'introvert_local' && !behaviorPatterns.includes('ranger_local')) {
+                behaviorPatterns.push('ranger_local');
+            }
+            const cap = rankCaps(rankValue);
+            if (mergedSkills.length > cap.skills) {
+                alert(`rank ${rankValue} allows at most ${cap.skills} skills`);
+                return;
+            }
+            if (mergedSigils.length > cap.sigils) {
+                alert(`rank ${rankValue} allows at most ${cap.sigils} sigils`);
+                return;
+            }
             const payload = {
                 name: (document.getElementById('maker_name').value || '').trim(),
                 endpoint: (document.getElementById('maker_endpoint').value || '').trim(),
-                system: (document.getElementById('maker_system').value || '').trim(),
+                system: composeSystemWithPersonality((document.getElementById('maker_system').value || '').trim(), personalityPreset, personalityNotes),
+                temperature: Number.isFinite(temperatureValue) ? temperatureValue : 0.2,
+                max_tokens: Number.isFinite(maxTokensValue) ? maxTokensValue : 900,
+                agent_class: (document.getElementById('maker_agent_class').value || '').trim(),
+                agent_type: (document.getElementById('maker_agent_type').value || '').trim(),
+                rank: rankValue,
+                skills: mergedSkills,
+                sigils: mergedSigils,
+                personality_wrapper: {
+                    preset: personalityPreset,
+                    notes: personalityNotes,
+                    behavior_patterns: behaviorPatterns,
+                    interests: personalityInterests,
+                },
+                system_wrapper: {
+                    enabled: true,
+                    name: 'personality_wrapper',
+                    mode: personalityPreset,
+                    entrypoint: 'agentforge_personality_v1',
+                    contract_version: '1.0',
+                },
+                instructions: {
+                    system: composeSystemWithPersonality((document.getElementById('maker_system').value || '').trim(), personalityPreset, personalityNotes),
+                    developer: personalityNotes,
+                },
+                custom_icon_path: (document.getElementById('maker_icon_path').value || '').trim(),
+                has_llm: !!document.getElementById('maker_has_llm').checked,
+                bossgate_enabled: !!document.getElementById('maker_bossgate_enabled').checked,
+                encrypt_profile: !!document.getElementById('maker_encrypt_profile').checked,
+                dispatch_policy: {
+                    autonomous_bus_intake: !!document.getElementById('maker_dispatch_autonomous').checked,
+                    proactive_remote_hunt: !!document.getElementById('maker_dispatch_remote_hunt').checked,
+                    preferred_scope: (document.getElementById('maker_dispatch_scope').value || 'host').trim(),
+                    can_leave_host_without_command: !!document.getElementById('maker_dispatch_leave_without_command').checked,
+                    can_leave_host_for_lan_when_host_idle: !!document.getElementById('maker_dispatch_lan_when_idle').checked,
+                },
             };
             if (!payload.name || !payload.endpoint) {
                 alert('name and endpoint are required');
@@ -1032,6 +2984,34 @@ PAGE = """
             const data = await res.json();
             document.getElementById('maker_result').textContent = JSON.stringify(data, null, 2);
             await refreshAgentMaker();
+        }
+
+        async function runIncidentTriage() {
+            const title = (document.getElementById('triage_title').value || '').trim();
+            const summary = (document.getElementById('triage_summary').value || '').trim();
+            const scope = (document.getElementById('triage_scope').value || '').trim();
+            const urgency = parseFloat(document.getElementById('triage_urgency').value || '0.55');
+            const risk = parseFloat(document.getElementById('triage_risk').value || '0.50');
+            const proximity = parseFloat(document.getElementById('triage_proximity').value || '0.70');
+            const confidence = parseFloat(document.getElementById('triage_confidence').value || '0.60');
+            const commanded = !!document.getElementById('triage_commanded').checked;
+            const incident = {
+                title,
+                summary,
+                scope,
+                urgency,
+                risk,
+                proximity,
+                confidence,
+                commanded,
+            };
+            const res = await fetch('/api/model/agents/triage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ incident }),
+            });
+            const data = await res.json();
+            document.getElementById('triage_result').textContent = JSON.stringify(data, null, 2);
         }
 
         async function runAgentProfile() {
@@ -1236,6 +3216,49 @@ PAGE = """
             root.innerHTML = html;
         }
 
+        async function refreshOsStatePanel() {
+            const stateEl = document.getElementById('os_state');
+            const diffEl = document.getElementById('os_state_diff');
+            if (!stateEl || !diffEl) return;
+
+            const stateData = await fetchJsonWithTimeout('/api/os/state?events=25', 6000);
+            if (!stateData || stateData.ok === false) {
+                stateEl.textContent = JSON.stringify(stateData || { ok: false, message: 'state unavailable' }, null, 2);
+                return;
+            }
+
+            stateEl.textContent = JSON.stringify(stateData, null, 2);
+
+            if (!previousOsState) {
+                previousOsState = stateData;
+                diffEl.textContent = JSON.stringify({ ok: true, message: 'baseline captured' }, null, 2);
+                return;
+            }
+
+            const diffRes = await fetch('/api/os/state/diff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ previous: previousOsState, current: stateData }),
+            });
+            const diffData = await diffRes.json();
+            diffEl.textContent = JSON.stringify(diffData, null, 2);
+            previousOsState = stateData;
+        }
+
+        async function refreshBusInspector() {
+            const root = document.getElementById('bus_inspector');
+            if (!root) return;
+            const limitInput = document.getElementById('bus_limit');
+            const kindInput = document.getElementById('bus_kind');
+            const queryInput = document.getElementById('bus_query');
+            const rawLimit = limitInput ? Number(limitInput.value || 80) : 80;
+            const limit = Math.max(10, Math.min(300, Number.isFinite(rawLimit) ? rawLimit : 80));
+            const kind = kindInput ? String(kindInput.value || 'events,commands,state') : 'events,commands,state';
+            const query = queryInput ? encodeURIComponent(String(queryInput.value || '').trim()) : '';
+            const data = await fetchJsonWithTimeout('/api/bus/inspect?limit=' + String(limit) + '&kind=' + encodeURIComponent(kind) + '&q=' + query, 6000);
+            root.textContent = JSON.stringify(data, null, 2);
+        }
+
         async function refresh() {
             document.getElementById('toast').textContent = 'Refreshing...';
 
@@ -1258,22 +3281,29 @@ PAGE = """
             renderRuneforgeVoiceStatus(voiceData);
             document.getElementById('seal').textContent = JSON.stringify(sealData, null, 2);
 
+            if (currentView === 'view_os_state') {
+                await refreshOsStatePanel();
+            }
+            if (currentView === 'view_bus') {
+                await refreshBusInspector();
+            }
+
             const failed = [statusData, eventsData, snapData, sealData, voiceData].filter(x => x && x.ok === false).length;
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
         }
 
-        // === SoundStage Bundle UI Logic ===
-        async function exportSoundstageBundle() {
+        // === SoundForge Bundle UI Logic ===
+        async function exportSoundforgeBundle() {
             const btn = event && event.target;
             if (btn) btn.disabled = true;
             try {
-                const res = await fetch('/api/soundstage/export_bundle', { method: 'POST' });
+                const res = await fetch('/api/soundforge/export_bundle', { method: 'POST' });
                 if (!res.ok) throw new Error('Export failed');
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'exported.B4Gsoundstage';
+                a.download = 'exported.B4Gsoundforge';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
@@ -1286,7 +3316,7 @@ PAGE = """
         }
 
         function showImportBundleDialog() {
-            document.getElementById('soundstage_bundle_file').click();
+            document.getElementById('soundforge_bundle_file').click();
         }
 
         async function handleImportBundle(event) {
@@ -1294,25 +3324,25 @@ PAGE = """
             if (!file) return;
             const formData = new FormData();
             formData.append('bundle', file);
-            formData.append('scheme_name', file.name.replace(/\\.B4Gsoundstage$/i, ''));
+            formData.append('scheme_name', file.name.replace(/\\.(B4Gsoundforge|B4Gsoundstage)$/i, ''));
             setSoundSchemeStatus('Importing bundle...');
             try {
-                const res = await fetch('/api/soundstage/import_bundle', { method: 'POST', body: formData });
+                const res = await fetch('/api/soundforge/import_bundle', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (!data.ok) throw new Error(data.message || 'Import failed');
                 setSoundSchemeStatus('Imported: ' + data.message);
-                await listSoundstageSchemes();
+                await listSoundforgeSchemes();
             } catch (e) {
                 setSoundSchemeStatus('Import failed: ' + e);
             }
         }
 
-        async function listSoundstageSchemes() {
+        async function listSoundforgeSchemes() {
             try {
-                const res = await fetch('/api/soundstage/list_schemes');
+            const res = await fetch('/api/soundforge/list_schemes');
                 const data = await res.json();
                 if (!data.ok) throw new Error('Failed to list schemes');
-                const el = document.getElementById('soundstage_schemes_list');
+            const el = document.getElementById('soundforge_schemes_list');
                 if (el) {
                     el.innerHTML = 'Available Schemes: ' + (data.schemes && data.schemes.length ? data.schemes.map(s => `<span class="pill">${s}</span>`).join(' ') : 'None');
                 }
@@ -1326,8 +3356,21 @@ PAGE = """
             if (el) el.textContent = msg;
         }
 
-        function saveSoundScheme() {
-            setSoundSchemeStatus('Save Scheme is not yet wired in this build.');
+        async function saveSoundScheme() {
+            const payload = {
+                config: (soundScheme && typeof soundScheme.active_config === 'object') ? soundScheme.active_config : soundScheme,
+            };
+            const res = await fetch('/api/soundforge/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data && data.ok) {
+                setSoundSchemeStatus('SoundForge config saved.');
+            } else {
+                setSoundSchemeStatus('Failed to save SoundForge config.');
+            }
         }
 
         function loadSoundScheme() {
@@ -1335,7 +3378,10 @@ PAGE = """
         }
 
         function createNewScheme() {
-            soundScheme = { name: 'new-scheme', created_at: new Date().toISOString() };
+            soundScheme = {
+                available_schemes: (soundScheme && Array.isArray(soundScheme.available_schemes)) ? soundScheme.available_schemes : [],
+                active_config: { name: 'new-scheme', created_at: new Date().toISOString(), global: {}, per_app: {} },
+            };
             renderSoundEvents();
             setSoundSchemeStatus('Created in-memory scheme draft.');
         }
@@ -1345,7 +3391,10 @@ PAGE = """
             if (!file) return;
             try {
                 const text = await file.text();
-                soundScheme = JSON.parse(text);
+                soundScheme = {
+                    available_schemes: (soundScheme && Array.isArray(soundScheme.available_schemes)) ? soundScheme.available_schemes : [],
+                    active_config: JSON.parse(text),
+                };
                 renderSoundEvents();
                 setSoundSchemeStatus('Loaded scheme from file: ' + file.name);
             } catch (e) {
@@ -1360,8 +3409,15 @@ PAGE = """
         refreshAgentMaker();
         refreshSecurityState();
         refreshSecretsList();
+        refreshOnboardingStatus();
+        refreshSchedulerStatus();
+        refreshCicdStatus();
+        applyAssetIcons();
+        initIconForgeStudio();
+        toggleWizardIconSource();
+        toggleMakerIconSource();
         refresh();
-        listSoundstageSchemes();
+        listSoundforgeSchemes();
         setInterval(refresh, 4000);
         setInterval(refreshPinState, 3000);
     </script>
@@ -1373,6 +3429,27 @@ PAGE = """
 @app.get("/")
 def index():
     return render_template_string(PAGE)
+
+
+@app.get("/api/assets/icons/<path:filename>")
+def serve_icon_asset(filename: str):
+    safe_name = str(filename or "").replace("\\", "/").strip("/")
+    if not safe_name:
+        return jsonify({"ok": False, "message": "filename is required"}), 400
+
+    icon_root = (PROJECT_ROOT / "assets" / "icons").resolve()
+    candidate = (icon_root / safe_name).resolve()
+    try:
+        candidate.relative_to(icon_root)
+    except Exception:
+        return jsonify({"ok": False, "message": "invalid icon path"}), 400
+
+    allowed = {".png", ".svg", ".ico", ".gif"}
+    if candidate.suffix.lower() not in allowed:
+        return jsonify({"ok": False, "message": "unsupported icon extension"}), 400
+    if not candidate.exists() or not candidate.is_file():
+        return jsonify({"ok": False, "message": "icon not found"}), 404
+    return send_file(candidate)
 
 
 @app.get("/api/status")
@@ -1387,6 +3464,24 @@ def status():
             "recent_events": latest,
         }
     )
+
+
+@app.get("/api/os/state")
+def os_state_snapshot():
+    event_limit = int(request.args.get("events", "30"))
+    payload = build_os_state(root=bus.root, event_limit=event_limit)
+    return jsonify(payload)
+
+
+@app.post("/api/os/state/diff")
+def os_state_diff():
+    payload = request.get_json(force=True, silent=True) or {}
+    previous = payload.get("previous") if isinstance(payload.get("previous"), dict) else {}
+    current = payload.get("current") if isinstance(payload.get("current"), dict) else {}
+    if not current:
+        current = build_os_state(root=bus.root, event_limit=30)
+    result = diff_os_states(previous=previous, current=current)
+    return jsonify(result)
 
 
 @app.get("/health")
@@ -1425,6 +3520,76 @@ def launch_anvil_shuttle():
 def events():
     limit = int(request.args.get("limit", "50"))
     return jsonify({"items": bus.read_latest_events(limit=limit)})
+
+
+@app.get("/api/bus/inspect")
+def bus_inspect():
+    limit = max(10, min(300, int(request.args.get("limit", "80"))))
+    kind_raw = str(request.args.get("kind", "events,commands,state")).strip().lower()
+    query = str(request.args.get("q", "")).strip().lower()
+    selected_kinds = {k.strip() for k in kind_raw.split(",") if k.strip()}
+    if not selected_kinds:
+        selected_kinds = {"events", "commands", "state"}
+
+    def _matches(payload: dict[str, object], file_name: str) -> bool:
+        if not query:
+            return True
+        haystack = [file_name]
+        for key in ("source", "target", "event", "command", "service"):
+            value = payload.get(key)
+            if isinstance(value, str):
+                haystack.append(value)
+        return query in " ".join(haystack).lower()
+
+    def _read_latest(folder: Path, cap: int) -> list[dict[str, object]]:
+        out: list[dict[str, object]] = []
+        for file_path in sorted(folder.glob("*.json"), reverse=True)[:cap]:
+            try:
+                payload = json.loads(file_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                payload = {"ok": False, "error": "invalid-json"}
+            if not isinstance(payload, dict):
+                payload = {"value": payload}
+            if not _matches(payload, file_path.name):
+                continue
+            payload["_file"] = file_path.name
+            out.append(payload)
+        return out
+
+    events_payload: list[dict[str, object]] = []
+    if "events" in selected_kinds:
+        for item in bus.read_latest_events(limit=limit * 6):
+            payload = item if isinstance(item, dict) else {"value": item}
+            if not _matches(payload, "event"):
+                continue
+            events_payload.append(payload)
+            if len(events_payload) >= limit:
+                break
+
+    commands_payload = _read_latest(bus.commands, limit) if "commands" in selected_kinds else []
+    state_payload = _read_latest(bus.state, limit) if "state" in selected_kinds else []
+
+    return jsonify(
+        {
+            "ok": True,
+            "root": str(bus.root),
+            "filters": {
+                "kind": sorted(selected_kinds),
+                "query": query,
+                "limit": limit,
+            },
+            "counts": {
+                "events": bus.count_json_files(bus.events),
+                "commands": bus.count_json_files(bus.commands),
+                "state": bus.count_json_files(bus.state),
+            },
+            "latest": {
+                "events": events_payload,
+                "commands": commands_payload,
+                "state": state_payload,
+            },
+        }
+    )
 
 
 @app.get("/api/snapshot")
@@ -1526,6 +3691,23 @@ def model_agents_create():
     has_llm = bool(has_llm_raw) if isinstance(has_llm_raw, bool) else None
     bossgate_enabled_raw = payload.get("bossgate_enabled")
     bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
+    encrypt_profile_raw = payload.get("encrypt_profile")
+    encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
+    agent_type = str(payload.get("agent_type", "")).strip().lower() or None
+    rank = str(payload.get("rank", "")).strip().lower() or None
+    skills_raw = payload.get("skills")
+    skills = skills_raw if isinstance(skills_raw, list) else None
+    sigils_raw = payload.get("sigils")
+    sigils = sigils_raw if isinstance(sigils_raw, list) else None
+    dispatch_policy_raw = payload.get("dispatch_policy")
+    dispatch_policy = dispatch_policy_raw if isinstance(dispatch_policy_raw, dict) else None
+    personality_wrapper_raw = payload.get("personality_wrapper")
+    personality_wrapper = personality_wrapper_raw if isinstance(personality_wrapper_raw, dict) else None
+    system_wrapper_raw = payload.get("system_wrapper")
+    system_wrapper = system_wrapper_raw if isinstance(system_wrapper_raw, dict) else None
+    instructions_raw = payload.get("instructions")
+    instructions = instructions_raw if isinstance(instructions_raw, dict) else None
+    custom_icon_path = str(payload.get("custom_icon_path", "")).strip() or None
 
     gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
     result = gateway.create_agent_profile(
@@ -1537,9 +3719,375 @@ def model_agents_create():
         agent_class=agent_class,
         has_llm=has_llm,
         bossgate_enabled=bossgate_enabled,
+        encrypt_profile=encrypt_profile,
+        agent_type=agent_type,
+        rank=rank,
+        skills=skills,
+        sigils=sigils,
+        dispatch_policy=dispatch_policy,
+        personality_wrapper=personality_wrapper,
+        system_wrapper=system_wrapper,
+        instructions=instructions,
+        custom_icon_path=custom_icon_path,
     )
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
+
+
+@app.post("/api/agentforge/icon/upload")
+def agentforge_icon_upload():
+    from core.icons.icon_forge import IconForge
+
+    uploaded = request.files.get("icon")
+    if uploaded is None:
+        return jsonify({"ok": False, "message": "icon file is required"}), 400
+
+    original_name = secure_filename(uploaded.filename or "")
+    if not original_name:
+        return jsonify({"ok": False, "message": "icon file name is required"}), 400
+
+    source_ext = Path(original_name).suffix.lower()
+    allowed = {".png"}
+    if source_ext not in allowed:
+        return jsonify({"ok": False, "message": "unsupported file type; use .png"}), 400
+
+    hint = str(request.form.get("icon_name", "agent_icon")).strip()
+    stem = _safe_icon_stem(hint)
+    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        source_path = icon_dir / f"{stem}_{suffix}{source_ext}"
+        final_path = icon_dir / f"{stem}_{suffix}.ico"
+        uploaded.save(source_path)
+
+        forge = IconForge(PROJECT_ROOT)
+        result = forge.create_icon_from_image(str(source_path), str(final_path))
+        if source_path.exists():
+            source_path.unlink(missing_ok=True)
+        if not result.get("ok"):
+            return jsonify({"ok": False, "message": str(result.get("message", "icon conversion failed"))}), 400
+        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon uploaded and converted"})
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"icon upload failed: {exc}"}), 500
+
+
+@app.post("/api/agentforge/icon/create")
+def agentforge_icon_create():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
+    label = str(payload.get("label", "AG")).strip() or "AG"
+    background = str(payload.get("background", "#1d3557")).strip() or "#1d3557"
+    foreground = str(payload.get("foreground", "#f1faee")).strip() or "#f1faee"
+
+    stem = _safe_icon_stem(icon_name)
+    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    final_path = icon_dir / f"{stem}_{suffix}.ico"
+
+    try:
+        forge = IconForge(PROJECT_ROOT)
+        result = forge.create_icon_from_text(
+            text=label,
+            output_ico=str(final_path),
+            background=background,
+            foreground=foreground,
+        )
+        if not result.get("ok"):
+            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
+        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
+
+
+@app.post("/api/agentforge/icon/create_from_canvas")
+def agentforge_icon_create_from_canvas():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
+    image_data = str(payload.get("image_data", "")).strip()
+    if not image_data.startswith("data:image/png"):
+        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
+
+    comma_idx = image_data.find(",")
+    if comma_idx <= 0:
+        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
+
+    encoded = image_data[comma_idx + 1 :]
+    stem = _safe_icon_stem(icon_name)
+    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    temp_png = icon_dir / f"{stem}_{suffix}_src.png"
+    final_path = icon_dir / f"{stem}_{suffix}.ico"
+
+    try:
+        raw = base64.b64decode(encoded)
+    except Exception:
+        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
+
+    try:
+        temp_png.write_bytes(raw)
+        forge = IconForge(PROJECT_ROOT)
+        result = forge.create_icon_from_image(str(temp_png), str(final_path))
+        if not result.get("ok"):
+            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
+        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
+    finally:
+        if temp_png.exists():
+            temp_png.unlink(missing_ok=True)
+
+
+@app.post("/api/agentforge/icon/create_animated_from_canvas")
+def agentforge_icon_create_animated_from_canvas():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
+    image_data = str(payload.get("image_data", "")).strip()
+    preset = str(payload.get("preset", "pulse")).strip().lower()
+    seconds = int(payload.get("seconds", 3))
+    fps = int(payload.get("fps", 12))
+
+    if not image_data.startswith("data:image/png"):
+        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
+
+    comma_idx = image_data.find(",")
+    if comma_idx <= 0:
+        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
+
+    encoded = image_data[comma_idx + 1 :]
+    stem = _safe_icon_stem(icon_name)
+    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    temp_png = icon_dir / f"{stem}_{suffix}_anim_src.png"
+    final_ico = icon_dir / f"{stem}_{suffix}.ico"
+    final_gif = icon_dir / f"{stem}_{suffix}.gif"
+
+    try:
+        raw = base64.b64decode(encoded)
+    except Exception:
+        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
+
+    try:
+        from PIL import Image, ImageEnhance
+    except Exception:
+        return jsonify({"ok": False, "message": "Pillow is required for animated export. Install with: pip install pillow"}), 400
+
+    seconds = max(1, min(12, seconds))
+    fps = max(6, min(30, fps))
+    total_frames = max(8, min(360, seconds * fps))
+    duration_ms = int(1000 / fps)
+
+    try:
+        temp_png.write_bytes(raw)
+        base = Image.open(temp_png).convert("RGBA")
+        w, h = base.size
+        frames = []
+
+        for idx in range(total_frames):
+            t = idx / max(1, total_frames - 1)
+            if preset == "spin":
+                angle = 360.0 * t
+                frame = base.rotate(angle, resample=Image.BICUBIC, expand=False)
+            elif preset == "shimmer":
+                frame = base.copy()
+                overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+                band_center = int((w * 1.5) * t) - (w // 4)
+                for x in range(w):
+                    dist = abs(x - band_center)
+                    if dist > w // 5:
+                        continue
+                    alpha = max(0, 140 - int((dist / (w // 5 + 1)) * 140))
+                    for y in range(h):
+                        overlay.putpixel((x, y), (255, 255, 255, alpha))
+                frame = Image.alpha_composite(frame, overlay)
+            else:
+                pulse = 0.88 + 0.20 * (0.5 + 0.5 * math.sin(2.0 * math.pi * t))
+                nw = max(8, int(w * pulse))
+                nh = max(8, int(h * pulse))
+                resized = base.resize((nw, nh), resample=Image.BICUBIC)
+                frame = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+                frame.paste(resized, ((w - nw) // 2, (h - nh) // 2), resized)
+                frame = ImageEnhance.Brightness(frame).enhance(1.05)
+            frames.append(frame)
+
+        if not frames:
+            return jsonify({"ok": False, "message": "failed to build animated frames"}), 400
+
+        frames[0].save(
+            final_gif,
+            format="GIF",
+            save_all=True,
+            append_images=frames[1:],
+            loop=0,
+            duration=duration_ms,
+            disposal=2,
+            transparency=0,
+        )
+
+        forge = IconForge(PROJECT_ROOT)
+        ico_result = forge.create_icon_from_image(str(temp_png), str(final_ico))
+        if not ico_result.get("ok"):
+            return jsonify({"ok": False, "message": str(ico_result.get("message", "ico fallback creation failed"))}), 400
+
+        return jsonify(
+            {
+                "ok": True,
+                "animated": _to_project_relpath(final_gif),
+                "icon": _to_project_relpath(final_ico),
+                "preset": preset,
+                "frames": total_frames,
+                "fps": fps,
+                "seconds": seconds,
+                "message": "animated gif + ico fallback created",
+            }
+        )
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"animated export failed: {exc}"}), 500
+    finally:
+        if temp_png.exists():
+            temp_png.unlink(missing_ok=True)
+
+
+@app.get("/api/iconforge/backups")
+def iconforge_backups():
+    from core.icons.icon_forge import IconForge
+
+    try:
+        forge = IconForge(PROJECT_ROOT)
+        return jsonify({"ok": True, "items": forge.list_backups()})
+    except Exception as exc:
+        return jsonify({"ok": False, "message": str(exc), "items": {}}), 500
+
+
+@app.post("/api/iconforge/apply")
+def iconforge_apply():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    target_type = str(payload.get("target_type", "folder")).strip().lower()
+    target = str(payload.get("target", "")).strip()
+    icon = str(payload.get("icon", "")).strip()
+    if not target or not icon:
+        return jsonify({"ok": False, "message": "target and icon are required"}), 400
+
+    icon_path = Path(icon)
+    if not icon_path.is_absolute():
+        icon_path = (PROJECT_ROOT / icon_path).resolve()
+
+    forge = IconForge(PROJECT_ROOT)
+    if target_type == "folder":
+        result = forge.set_folder_icon(target, str(icon_path))
+    elif target_type == "shortcut":
+        result = forge.set_shortcut_icon(target, str(icon_path))
+    elif target_type == "file_extension":
+        result = forge.set_file_extension_icon(target, str(icon_path))
+    elif target_type == "application":
+        result = forge.set_application_icon(target, str(icon_path))
+    elif target_type == "drive":
+        result = forge.set_drive_icon(target, str(icon_path))
+    else:
+        return jsonify({"ok": False, "message": f"unsupported target_type: {target_type}"}), 400
+
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/iconforge/refresh_cache")
+def iconforge_refresh_cache():
+    from core.icons.icon_forge import IconForge
+
+    forge = IconForge(PROJECT_ROOT)
+    result = forge.refresh_icon_cache()
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/iconforge/restore")
+def iconforge_restore():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    backup_key = str(payload.get("backup_key", "")).strip()
+    if not backup_key:
+        return jsonify({"ok": False, "message": "backup_key is required"}), 400
+    forge = IconForge(PROJECT_ROOT)
+    result = forge.restore(backup_key)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/iconforge/pack/export")
+def iconforge_pack_export():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    output_dir = str(payload.get("output_dir", "")).strip()
+    if not output_dir:
+        return jsonify({"ok": False, "message": "output_dir is required"}), 400
+
+    forge = IconForge(PROJECT_ROOT)
+    result = forge.export_icon_set(output_dir)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/iconforge/pack/import")
+def iconforge_pack_import():
+    from core.icons.icon_forge import IconForge
+
+    payload = request.get_json(force=True, silent=True) or {}
+    source = str(payload.get("source", "")).strip()
+    apply_changes = bool(payload.get("apply_changes", True))
+    refresh_cache = bool(payload.get("refresh_cache", False))
+    if not source:
+        return jsonify({"ok": False, "message": "source is required"}), 400
+
+    forge = IconForge(PROJECT_ROOT)
+    result = forge.import_icon_set(source=source, apply_changes=apply_changes, refresh_cache=refresh_cache)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.post("/api/model/agents/triage")
+def model_agents_triage():
+    from core.agents.model_gateway_agent import ModelGatewayAgent
+    from core.schemas.agent_schema import infer_incident_domains, rank_agents_for_incident
+
+    payload = request.get_json(force=True, silent=True) or {}
+    incident = payload.get("incident") if isinstance(payload.get("incident"), dict) else {}
+    weights_raw = payload.get("weights")
+    weights = weights_raw if isinstance(weights_raw, dict) else None
+
+    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+    profiles = gateway.list_agent_profiles()
+    candidates = []
+    for name, profile in profiles.items():
+        if not isinstance(profile, dict):
+            continue
+        item = dict(profile)
+        item.setdefault("id", str(name).strip().lower())
+        item.setdefault("name", str(name).strip().lower())
+        candidates.append(item)
+
+    ranked = rank_agents_for_incident(incident=incident, agent_profiles=candidates, weights=weights)
+    return jsonify(
+        {
+            "ok": True,
+            "incident_inference": infer_incident_domains(incident),
+            "ranked_candidates": ranked,
+            "candidate_count": len(candidates),
+        }
+    )
 
 
 @app.post("/api/model/agents/delete")
@@ -1709,6 +4257,22 @@ def _pin_overlay_is_running() -> bool:
     global PIN_OVERLAY_PROCESS
     if PIN_OVERLAY_PROCESS is None:
         return False
+
+
+    def _safe_icon_stem(value: str) -> str:
+        cleaned = secure_filename(str(value or "").strip())
+        if not cleaned:
+            return "agent_icon"
+        stem = Path(cleaned).stem.replace("-", "_")
+        stem = "".join(ch for ch in stem if ch.isalnum() or ch == "_").strip("_")
+        return (stem[:64] or "agent_icon").lower()
+
+
+    def _to_project_relpath(path: Path) -> str:
+        try:
+            return str(path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
+        except Exception:
+            return str(path).replace("\\", "/")
     return PIN_OVERLAY_PROCESS.poll() is None
 
 
@@ -1863,15 +4427,17 @@ def read_agent_state() -> dict[str, dict[str, str]]:
     return result
 
 
-# === SoundStage Bundle Endpoints ===
+# === SoundForge Bundle Endpoints ===
 import zipfile
 import shutil
 
-SOUNDSTAGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_config.json")
-SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_schemes")
-SOUNDSTAGE_SOUNDS_DIR = os.path.join(SOUNDSTAGE_SCHEMES_DIR, "sounds")
-os.makedirs(SOUNDSTAGE_SCHEMES_DIR, exist_ok=True)
-os.makedirs(SOUNDSTAGE_SOUNDS_DIR, exist_ok=True)
+SOUNDFORGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_config.json")
+LEGACY_SOUNDSTAGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_config.json")
+SOUNDFORGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_schemes")
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_schemes")
+SOUNDFORGE_SOUNDS_DIR = os.path.join(SOUNDFORGE_SCHEMES_DIR, "sounds")
+os.makedirs(SOUNDFORGE_SCHEMES_DIR, exist_ok=True)
+os.makedirs(SOUNDFORGE_SOUNDS_DIR, exist_ok=True)
 
 def _rewrite_config_paths(config, sound_dir="sounds"):
     # Rewrites all sound file paths in config to be relative to sound_dir
@@ -1890,11 +4456,44 @@ def _rewrite_config_paths(config, sound_dir="sounds"):
                 config["per_app"][app][k] = rewrite_entry(v)
     return config
 
-@app.post("/api/soundstage/export_bundle")
-def export_soundstage_bundle():
-    """Export current config + all referenced sounds as a .B4Gsoundstage zip bundle."""
+
+@app.get("/api/soundforge/config")
+def soundforge_get_config():
+    source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
+    if not os.path.exists(source_config_path):
+        return jsonify({"ok": True, "config": {"global": {}, "per_app": {}}})
     try:
-        with open(SOUNDSTAGE_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(source_config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to read config: {ex}"}), 500
+    if not isinstance(config, dict):
+        config = {"global": {}, "per_app": {}}
+    return jsonify({"ok": True, "config": config})
+
+
+@app.post("/api/soundforge/config")
+def soundforge_save_config():
+    payload = request.get_json(force=True, silent=True) or {}
+    config = payload.get("config")
+    if not isinstance(config, dict):
+        return jsonify({"ok": False, "message": "config object is required"}), 400
+    try:
+        with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+        with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to save config: {ex}"}), 500
+    return jsonify({"ok": True, "message": "SoundForge config saved."})
+
+@app.post("/api/soundforge/export_bundle")
+@app.post("/api/soundstage/export_bundle")
+def export_soundforge_bundle():
+    """Export current config + all referenced sounds as a .B4Gsoundforge zip bundle."""
+    try:
+        source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
+        with open(source_config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
     except Exception as e:
         return jsonify({"ok": False, "message": f"Failed to load config: {e}"}), 500
@@ -1913,25 +4512,26 @@ def export_soundstage_bundle():
             for v in events.values():
                 gather_files(v)
     # Prepare bundle
-    bundle_path = os.path.join(SOUNDSTAGE_SCHEMES_DIR, "exported.B4Gsoundstage")
+    bundle_path = os.path.join(SOUNDFORGE_SCHEMES_DIR, "exported.B4Gsoundforge")
     with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as z:
         # Add config (rewrite paths to just 'sounds/filename')
         config_for_bundle = _rewrite_config_paths(json.loads(json.dumps(config)), sound_dir="sounds")
-        z.writestr("soundstage_config.json", json.dumps(config_for_bundle, indent=2))
+        z.writestr("soundforge_config.json", json.dumps(config_for_bundle, indent=2))
         # Add all sound files
         for f in sound_files:
             if os.path.exists(f):
                 z.write(f, arcname=os.path.join("sounds", os.path.basename(f)))
-    return send_file(bundle_path, as_attachment=True, download_name="exported.B4Gsoundstage")
+    return send_file(bundle_path, as_attachment=True, download_name="exported.B4Gsoundforge")
 
+@app.post("/api/soundforge/import_bundle")
 @app.post("/api/soundstage/import_bundle")
-def import_soundstage_bundle():
-    """Import a .B4Gsoundstage zip bundle: extract config + sounds, rewrite config paths, activate scheme."""
+def import_soundforge_bundle():
+    """Import a .B4Gsoundforge zip bundle: extract config + sounds, rewrite config paths, activate scheme."""
     if "bundle" not in request.files:
         return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
     bundle = request.files["bundle"]
     scheme_name = request.form.get("scheme_name", "imported_scheme")
-    scheme_dir = os.path.join(SOUNDSTAGE_SCHEMES_DIR, scheme_name)
+    scheme_dir = os.path.join(SOUNDFORGE_SCHEMES_DIR, scheme_name)
     os.makedirs(scheme_dir, exist_ok=True)
     # Extract bundle
     with zipfile.ZipFile(bundle, "r") as z:
@@ -1940,40 +4540,40 @@ def import_soundstage_bundle():
     sounds_src = os.path.join(scheme_dir, "sounds")
     for fname in os.listdir(sounds_src):
         src = os.path.join(sounds_src, fname)
-        dst = os.path.join(SOUNDSTAGE_SOUNDS_DIR, fname)
+        dst = os.path.join(SOUNDFORGE_SOUNDS_DIR, fname)
         shutil.copy2(src, dst)
     # Load and rewrite config
-    config_path = os.path.join(scheme_dir, "soundstage_config.json")
+    config_path = os.path.join(scheme_dir, "soundforge_config.json")
+    if not os.path.exists(config_path):
+        config_path = os.path.join(scheme_dir, "soundstage_config.json")
     with open(config_path, "r", encoding="utf-8") as f:
         config = json.load(f)
-    config = _rewrite_config_paths(config, sound_dir="core/soundstage_schemes/sounds")
+    config = _rewrite_config_paths(config, sound_dir="core/soundforge_schemes/sounds")
     # Save as active config
-    with open(SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
+    with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+    with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
     return jsonify({"ok": True, "message": f"Imported scheme '{scheme_name}' and activated."})
 
+@app.get("/api/soundforge/list_schemes")
 @app.get("/api/soundstage/list_schemes")
-def list_soundstage_schemes():
-    """List available imported soundstage schemes."""
+def list_soundforge_schemes():
+    """List available imported SoundForge schemes."""
     schemes = []
-    for name in os.listdir(SOUNDSTAGE_SCHEMES_DIR):
-        path = os.path.join(SOUNDSTAGE_SCHEMES_DIR, name)
+    for name in os.listdir(SOUNDFORGE_SCHEMES_DIR):
+        path = os.path.join(SOUNDFORGE_SCHEMES_DIR, name)
         if os.path.isdir(path):
             schemes.append(name)
+    if not schemes and os.path.isdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
+        for name in os.listdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
+            path = os.path.join(LEGACY_SOUNDSTAGE_SCHEMES_DIR, name)
+            if os.path.isdir(path):
+                schemes.append(name)
     return jsonify({"ok": True, "schemes": schemes})
 
 
 
-def main() -> None:
-    if socketio is not None:
-        socketio.run(app, host="127.0.0.1", port=5005, debug=False)
-    else:
-        from werkzeug.serving import run_simple
-        run_simple("127.0.0.1", 5005, app, use_reloader=False, use_debugger=False, threaded=True)
-
-
-if __name__ == "__main__":
-    main()
 ###############################
 # Collaborative Agent Editing #
 ###############################
@@ -2032,32 +4632,201 @@ try:
 except ImportError:
     socketio = None
 
-# === Scheduler Endpoint Stub ===
+SCHEDULER_STATE_PATH = bus.state / "control_hall_scheduler.json"
+CICD_STATE_PATH = bus.state / "control_hall_cicd.json"
+ONBOARDING_STATE_PATH = bus.state / "control_hall_onboarding.json"
+
+
+def _load_json_state(path: Path, fallback: dict) -> dict:
+    if not path.exists():
+        return dict(fallback)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return dict(fallback)
+    return payload if isinstance(payload, dict) else dict(fallback)
+
+
+def _save_json_state(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _default_scheduler_state() -> dict:
+    return {"jobs": [], "history": []}
+
+
+def _default_cicd_state() -> dict:
+    return {"last_run": {}, "history": []}
+
+
+def _default_onboarding_state() -> dict:
+    return {
+        "steps": {
+            "workspace_check": False,
+            "security_baseline": False,
+            "model_gateway": False,
+        },
+        "updated_at": "",
+    }
+
+
 @app.route('/api/scheduler', methods=['GET', 'POST'])
 def scheduler():
-    # Placeholder for scheduler logic
-    if request.method == 'POST':
-        # Process scheduling form (future)
-        return jsonify({'ok': True, 'message': 'Scheduler step processed.'})
-    # For GET, return scheduler status (future)
-    return jsonify({'ok': True, 'status': 'Scheduler panel coming soon.'})
+    state = _load_json_state(SCHEDULER_STATE_PATH, _default_scheduler_state())
 
-# === CI/CD Endpoint Stub ===
+    if request.method == 'GET':
+        return jsonify({"ok": True, **state})
+
+    payload = request.get_json(force=True, silent=True) or {}
+    action = str(payload.get("action", "")).strip().lower()
+
+    jobs = state.get("jobs") if isinstance(state.get("jobs"), list) else []
+    history = state.get("history") if isinstance(state.get("history"), list) else []
+
+    if action == "add":
+        label = str(payload.get("label", "")).strip() or "unnamed-job"
+        command = str(payload.get("command", "")).strip()
+        interval_seconds = max(30, int(payload.get("interval_seconds", 300)))
+        job_id = f"job-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+        jobs.append(
+            {
+                "id": job_id,
+                "label": label,
+                "command": command,
+                "interval_seconds": interval_seconds,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        state["jobs"] = jobs
+        state["history"] = history[-50:]
+        _save_json_state(SCHEDULER_STATE_PATH, state)
+        return jsonify({"ok": True, "message": "job added", "job_id": job_id, **state})
+
+    if action == "remove":
+        job_id = str(payload.get("id", "")).strip()
+        if not job_id:
+            return jsonify({"ok": False, "message": "id is required"}), 400
+        state["jobs"] = [item for item in jobs if str(item.get("id", "")).strip() != job_id]
+        _save_json_state(SCHEDULER_STATE_PATH, state)
+        return jsonify({"ok": True, "message": "job removed", **state})
+
+    if action == "run_now":
+        job_id = str(payload.get("id", "")).strip()
+        if not job_id:
+            return jsonify({"ok": False, "message": "id is required"}), 400
+        job = next((item for item in jobs if str(item.get("id", "")).strip() == job_id), None)
+        if not isinstance(job, dict):
+            return jsonify({"ok": False, "message": "job not found"}), 404
+
+        command = str(job.get("command", "")).strip()
+        if not command:
+            result = {"ok": True, "message": "job has no command; treated as metadata-only task", "exit_code": 0}
+        else:
+            proc = subprocess.run(command, cwd=str(PROJECT_ROOT), shell=True, capture_output=True, text=True)
+            result = {
+                "ok": proc.returncode == 0,
+                "exit_code": proc.returncode,
+                "stdout": (proc.stdout or "")[-2000:],
+                "stderr": (proc.stderr or "")[-2000:],
+            }
+
+        history.append(
+            {
+                "job_id": job_id,
+                "label": str(job.get("label", "")).strip(),
+                "ran_at": datetime.now(timezone.utc).isoformat(),
+                **result,
+            }
+        )
+        state["history"] = history[-100:]
+        _save_json_state(SCHEDULER_STATE_PATH, state)
+        return jsonify({"ok": True, "message": "job executed", "result": result, **state})
+
+    return jsonify({"ok": False, "message": "unsupported scheduler action"}), 400
+
+
 @app.route('/api/cicd', methods=['GET', 'POST'])
 def cicd():
-    # Placeholder for CI/CD logic
-    if request.method == 'POST':
-        # Process CI/CD form (future)
-        return jsonify({'ok': True, 'message': 'CI/CD step processed.'})
-    # For GET, return CI/CD status (future)
-    return jsonify({'ok': True, 'status': 'CI/CD panel coming soon.'})
+    state = _load_json_state(CICD_STATE_PATH, _default_cicd_state())
 
-# === Onboarding Wizard Endpoint Stub ===
-@app.route('/onboarding', methods=['GET', 'POST'])
+    if request.method == 'GET':
+        return jsonify({"ok": True, **state})
+
+    payload = request.get_json(force=True, silent=True) or {}
+    action = str(payload.get("action", "")).strip().lower()
+    suite = str(payload.get("suite", "quick")).strip().lower()
+
+    if action != "run":
+        return jsonify({"ok": False, "message": "unsupported cicd action"}), 400
+
+    if suite == "full":
+        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
+    else:
+        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]
+
+    proc = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
+    result = {
+        "suite": suite,
+        "command": " ".join(cmd),
+        "ok": proc.returncode == 0,
+        "exit_code": proc.returncode,
+        "stdout": (proc.stdout or "")[-5000:],
+        "stderr": (proc.stderr or "")[-5000:],
+        "ran_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    history = state.get("history") if isinstance(state.get("history"), list) else []
+    history.append(result)
+    state["last_run"] = result
+    state["history"] = history[-30:]
+    _save_json_state(CICD_STATE_PATH, state)
+    return jsonify({"ok": True, **state})
+
+
+@app.route('/api/onboarding', methods=['POST'])
+@app.route('/onboarding', methods=['POST'])
 def onboarding():
-    # Placeholder for onboarding wizard logic
-    if request.method == 'POST':
-        # Process onboarding form (future)
-        return jsonify({'ok': True, 'message': 'Onboarding step processed.'})
-    # For GET, return onboarding status (future)
-    return jsonify({'ok': True, 'status': 'Onboarding wizard coming soon.'})
+    state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
+    payload = request.get_json(force=True, silent=True) or {}
+    step = str(payload.get("step", "")).strip().lower()
+
+    if step == "workspace_check":
+        checks = {
+            "project_root_exists": PROJECT_ROOT.exists(),
+            "bus_state_exists": (bus.root / "state").exists(),
+            "core_exists": (PROJECT_ROOT / "core").exists(),
+            "ui_exists": (PROJECT_ROOT / "ui").exists(),
+        }
+        state.setdefault("checks", {}).update(checks)
+        state.setdefault("steps", {})["workspace_check"] = all(bool(v) for v in checks.values())
+    elif step in {"security_baseline", "model_gateway"}:
+        state.setdefault("steps", {})[step] = True
+    else:
+        return jsonify({"ok": False, "message": "unsupported onboarding step"}), 400
+
+    state["updated_at"] = datetime.now(timezone.utc).isoformat()
+    _save_json_state(ONBOARDING_STATE_PATH, state)
+    return jsonify({"ok": True, **state})
+
+
+@app.route('/api/onboarding/status', methods=['GET'])
+@app.route('/onboarding', methods=['GET'])
+def onboarding_status():
+    state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
+    steps = state.get("steps") if isinstance(state.get("steps"), dict) else {}
+    completion = 0.0
+    if steps:
+        completion = round((sum(1 for value in steps.values() if bool(value)) / max(1, len(steps))) * 100.0, 1)
+    return jsonify({"ok": True, "completion_percent": completion, **state})
+
+
+def main() -> None:
+    if socketio is not None:
+        socketio.run(app, host="127.0.0.1", port=5005, debug=False)
+    else:
+        from werkzeug.serving import run_simple
+        run_simple("127.0.0.1", 5005, app, use_reloader=False, use_debugger=False, threaded=True)
+
+
+if __name__ == "__main__":
+    main()
