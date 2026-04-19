@@ -57,6 +57,7 @@ class ModelGateway:
         self.mcp_path = self.bus.state / "mcp_servers.json"
         self.assistance_path = self.bus.state / "gateway_assistance_requests.json"
         self.locations_path = self.bus.state / "owned_gateway_locations.json"
+        self.agent_locations_path = self.bus.state / "owned_agent_locations.json"
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
         self.node_id = self._load_or_create_node_id()
         self.endpoints = self._load_endpoints()
@@ -68,7 +69,7 @@ class ModelGateway:
         self.servers: Dict[str, subprocess.Popen[Any]] = {}
         self.assistance_requests: Dict[str, Dict[str, Any]] = self._load_assistance_requests()
         self.owned_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
-        self.owned_agent_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
+        self.owned_agent_locations: Dict[str, Dict[str, Any]] = self._load_owned_agent_locations()
         self._last_location_refresh = 0.0
         self._presence_stop_event = threading.Event()
         self._presence_thread: threading.Thread | None = None
@@ -226,8 +227,19 @@ class ModelGateway:
     def _save_owned_locations(self) -> None:
         self.locations_path.write_text(json.dumps(self.owned_locations, indent=2), encoding="utf-8")
 
+    def _load_owned_agent_locations(self) -> Dict[str, Dict[str, Any]]:
+        if self.agent_locations_path.exists():
+            try:
+                raw = json.loads(self.agent_locations_path.read_text(encoding="utf-8"))
+                if isinstance(raw, dict):
+                    return {str(k).strip().lower(): dict(v) for k, v in raw.items() if isinstance(v, dict)}
+            except (OSError, json.JSONDecodeError):
+                pass
+        self.agent_locations_path.write_text("{}", encoding="utf-8")
+        return {}
+
     def _save_owned_agent_locations(self) -> None:
-        self.locations_path.write_text(json.dumps(self.owned_agent_locations, indent=2), encoding="utf-8")
+        self.agent_locations_path.write_text(json.dumps(self.owned_agent_locations, indent=2), encoding="utf-8")
 
     def _detect_format(self, file_path: str, format_hint: str = "") -> str:
         if format_hint.strip().lower() in {"json", "yaml"}:
@@ -669,30 +681,17 @@ class ModelGateway:
 
     def _refresh_owned_agent_locations(self, timeout: int = 1) -> Dict[str, Any]:
         now = int(time.time())
+        # Collect the names of agents this node owns so we can match beacon reports.
         owned_agent_names = {
             name
             for name, profile in self.agent_profiles.items()
             if isinstance(profile, dict) and str(profile.get("created_by_node", self.node_id)).strip() == self.node_id
         }
 
+        # Only track agents that are currently deployed at a remote location (not
+        # present on this host).  Local agents are not included; they are always
+        # reachable directly and do not need location tracking.
         refreshed: Dict[str, Dict[str, Any]] = {}
-        for name in owned_agent_names:
-            profile = self.agent_profiles.get(name) or {}
-            assistance = self.assistance_requests.get(name, {})
-            refreshed[name] = {
-                "agent_name": name,
-                "created_by_node": self.node_id,
-                "current_node": self.node_id,
-                "node_id": self.node_id,
-                "address": "127.0.0.1",
-                "last_seen": now,
-                "online": True,
-                "assistance_requested": bool(assistance.get("requested", False)),
-                "assistance_reason": str(assistance.get("reason", "")).strip(),
-                "source": "local",
-                "target_type": "bossforgeos",
-                "agent_class": str(profile.get("agent_class", "prime")).strip().lower() or "prime",
-            }
 
         discovered = discover_transfer_targets(timeout=max(1, int(timeout)), assistance_only=False)
         for item in discovered:
@@ -702,12 +701,17 @@ class ModelGateway:
             if not agent_name:
                 continue
             created_by_node = str(item.get("created_by_node", "")).strip()
+            # Include only agents owned by this node that are at a remote node.
             if created_by_node != self.node_id and agent_name not in owned_agent_names:
+                continue
+            current_node = str(item.get("current_node", item.get("node_id", ""))).strip() or str(item.get("node_id", "")).strip()
+            if not current_node or current_node == self.node_id:
+                # The beacon is reporting the agent as still home — skip it.
                 continue
             refreshed[agent_name] = {
                 "agent_name": agent_name,
                 "created_by_node": created_by_node or self.node_id,
-                "current_node": str(item.get("current_node", item.get("node_id", ""))).strip() or str(item.get("node_id", "")).strip(),
+                "current_node": current_node,
                 "node_id": str(item.get("node_id", "")).strip(),
                 "address": str(item.get("address", "")).strip(),
                 "last_seen": now,
