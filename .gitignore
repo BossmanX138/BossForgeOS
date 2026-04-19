@@ -35,6 +35,7 @@ build_exe.log
 # OS/editor noise
 .DS_Store
 Thumbs.db
+docs/*.code-workspace
 
 # Shippable agent voice assets (intentionally versioned)
 !*_voice.wav
