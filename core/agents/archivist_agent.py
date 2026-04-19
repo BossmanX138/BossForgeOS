@@ -656,7 +656,7 @@ class ArchivistAgent:
                     if todo_match:
                         text = line.strip()
                     else:
-                        text = str(checklist_match.group("task")).strip() if checklist_match else ""
+                        text = str(checklist_match.group("task")).strip()
                     text = text[:240]
                     if not self._is_actionable_todo_text(text):
                         continue

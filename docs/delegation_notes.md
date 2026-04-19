@@ -24178,13 +24178,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:37
+## 2026-04-19 19:08:57
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24217,31 +24340,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24281,7 +24404,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
@@ -24294,13 +24417,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:37
+## 2026-04-19 19:08:58
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24333,31 +24579,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24397,7 +24643,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
@@ -24410,13 +24656,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:38
+## 2026-04-19 19:08:58
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24449,31 +24818,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24513,7 +24882,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
@@ -24526,13 +24895,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:38
+## 2026-04-19 19:08:58
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24565,31 +25057,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24629,7 +25121,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
@@ -24642,13 +25134,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:38
+## 2026-04-19 19:08:59
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24681,31 +25296,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24745,7 +25360,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
@@ -24758,13 +25373,136 @@
   context: prev='"text": line.strip()[:240],' | next='}'
   next: Add or improve tests, then record updated test metrics
 
-## 2026-04-19 19:04:39
+## 2026-04-19 19:08:59
 ### General Backlog
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/README.md:93 :: ### TODO
   next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:5 :: Implement BossCrafts Protocol v1 versioning and compatibility checks
+  context: prev='- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)' | next='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:6 :: Add structured event schemas to Rune Bus (define event types, schemas)
+  context: prev='- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks' | next='- [ ] Implement agent execution trace logging (per-agent, per-event)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:7 :: Implement agent execution trace logging (per-agent, per-event)
+  context: prev='- [ ] Add structured event schemas to Rune Bus (define event types, schemas)' | next='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:8 :: Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+  context: prev='- [ ] Implement agent execution trace logging (per-agent, per-event)' | next='- [ ] Define canonical OS state model (schema, serialization, diff)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:9 :: Define canonical OS state model (schema, serialization, diff)
+  context: prev='- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)' | next='- [ ] Implement time-travel state diff and restore'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:10 :: Implement time-travel state diff and restore
+  context: prev='- [ ] Define canonical OS state model (schema, serialization, diff)' | next='- [ ] Add audit-grade immutable logs (append-only, signed)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:11 :: Add audit-grade immutable logs (append-only, signed)
+  context: prev='- [ ] Implement time-travel state diff and restore' | next='- [ ] Implement signed agent manifests (manifest schema, signing tool)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:12 :: Implement signed agent manifests (manifest schema, signing tool)
+  context: prev='- [ ] Add audit-grade immutable logs (append-only, signed)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:16 :: Build live dashboards (agent status, event streaming, analytics)
+  context: prev='- [ ] Scaffold React/HTMX/Flask hybrid UI for Control Hall' | next='- [ ] Implement drag-and-drop agent wiring UI'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:17 :: Implement drag-and-drop agent wiring UI
+  context: prev='- [ ] Build live dashboards (agent status, event streaming, analytics)' | next='- [ ] Add visual bus inspector (event/topic explorer)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:18 :: Add visual bus inspector (event/topic explorer)
+  context: prev='- [ ] Implement drag-and-drop agent wiring UI' | next='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:19 :: Build soundstage mixer UI (routing, EQ, diagnostics)
+  context: prev='- [ ] Add visual bus inspector (event/topic explorer)' | next='- [ ] Add model endpoint health dashboard (status, metrics)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:20 :: Add model endpoint health dashboard (status, metrics)
+  context: prev='- [ ] Build soundstage mixer UI (routing, EQ, diagnostics)' | next='- [ ] Implement runtime topology view (graph of daemons/agents)'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:21 :: Implement runtime topology view (graph of daemons/agents)
+  context: prev='- [ ] Add model endpoint health dashboard (status, metrics)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:24 :: Refactor agents to subscribe/react to bus events (consumables)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Implement agent telemetry emission (structured logs, metrics)'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:25 :: Implement agent telemetry emission (structured logs, metrics)
+  context: prev='- [ ] Refactor agents to subscribe/react to bus events (consumables)' | next='- [ ] Add capability-scoped lease system (token/lease manager)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:26 :: Add capability-scoped lease system (token/lease manager)
+  context: prev='- [ ] Implement agent telemetry emission (structured logs, metrics)' | next='- [ ] Implement per-agent sandboxing (resource limits, isolation)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:27 :: Implement per-agent sandboxing (resource limits, isolation)
+  context: prev='- [ ] Add capability-scoped lease system (token/lease manager)' | next='- [ ] Add config overlays and daemon orchestration profiles (profile loader)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:28 :: Add config overlays and daemon orchestration profiles (profile loader)
+  context: prev='- [ ] Implement per-agent sandboxing (resource limits, isolation)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:31 :: Implement ForgeShell REPL (command parser, bus/event integration)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add autocompletion and inline bus event streaming'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:32 :: Add autocompletion and inline bus event streaming
+  context: prev='- [ ] Implement ForgeShell REPL (command parser, bus/event integration)' | next='- [ ] Build state tree viewer and agent log inspector'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:33 :: Build state tree viewer and agent log inspector
+  context: prev='- [ ] Add autocompletion and inline bus event streaming' | next='- [ ] Implement ritual recording/playback (ritual engine)'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:34 :: Implement ritual recording/playback (ritual engine)
+  context: prev='- [ ] Build state tree viewer and agent log inspector' | next='- [ ] Add developer hot-reload for agents/daemons'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:35 :: Add developer hot-reload for agents/daemons
+  context: prev='- [ ] Implement ritual recording/playback (ritual engine)' | next='- [ ] Integrate time-travel debugging tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:40 :: Add narrative-driven onboarding and persona prompts
+  context: prev='- [ ] Layer mythic identity (voice monikers, ritual commands, persona-driven UX)' | next='- [ ] Integrate soundstage sensory identity into UI/UX'
+  next: Review context, confirm scope, and create a concrete next task
 - [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   context: prev='---' | next=''
   next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:5 :: Add structured event schemas and agent execution traces
+  context: prev='- [ ] Formalize BossCrafts Protocol v1 (message types, schemas, versioning, compatibility)' | next='- [ ] Add per-agent SLAs and health scoring'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:6 :: Add per-agent SLAs and health scoring
+  context: prev='- [ ] Add structured event schemas and agent execution traces' | next='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:7 :: Add canonical OS state model (unified schema, time-travel diff, arbitration)
+  context: prev='- [ ] Add per-agent SLAs and health scoring' | next='- [ ] Add audit-grade immutable logs and signed agent manifests'
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:8 :: Add audit-grade immutable logs and signed agent manifests
+  context: prev='- [ ] Add canonical OS state model (unified schema, time-travel diff, arbitration)' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:11 :: Build full Control Hall UI layer (React/HTMX/Flask hybrid)
+  context: prev='## Phase 2: Control Plane & UI' | next='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:12 :: Add visual bus inspector, agent wiring graph, runtime topology view
+  context: prev='- [ ] Build full Control Hall UI layer (React/HTMX/Flask hybrid)' | next='- [ ] Add model endpoint health dashboard'
+  next: Review context, confirm scope, and create a concrete next task
+- [runeforge][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:13 :: Add model endpoint health dashboard
+  context: prev='- [ ] Add visual bus inspector, agent wiring graph, runtime topology view' | next=''
+  next: Validate model/runtime impact and propose configuration update
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:16 :: Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)
+  context: prev='## Phase 3: Agent/Daemon Evolution' | next='- [ ] Add capability-scoped leases and per-agent sandboxing'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:17 :: Add capability-scoped leases and per-agent sandboxing
+  context: prev='- [ ] Add agent-side consumers (agents subscribe/react to bus events, emit telemetry)' | next='- [ ] Add config overlays and daemon orchestration profiles'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:18 :: Add config overlays and daemon orchestration profiles
+  context: prev='- [ ] Add capability-scoped leases and per-agent sandboxing' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:21 :: Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)
+  context: prev='## Phase 4: Developer Experience' | next='- [ ] Add time-travel debugging and state diff tools'
+  next: Review context, confirm scope, and create a concrete next task
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:22 :: Add time-travel debugging and state diff tools
+  context: prev='- [ ] Implement ForgeShell (persistent REPL: bus events, agent logs, rituals, state tree, autocompletion)' | next='- [ ] Add ritual recording/playback and developer hot-reload'
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/ENTERPRISE_ROADMAP.md:23 :: Add ritual recording/playback and developer hot-reload
+  context: prev='- [ ] Add time-travel debugging and state diff tools' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
+  context: prev='<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->' | next=''
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:36 :: Create and Run Task
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:49 :: Ensure Documentation is Complete
+  context: prev='' | next='<!--'
+  next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/.github/copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
   context: prev='PROGRESS TRACKING:' | next='- After completing each step, mark it complete and add a summary.'
   next: Convert this note into a tracked work item with owner/date
@@ -24797,31 +25535,31 @@
 - [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
   context: prev='- After completing work, can suggest development ideas or next steps via the bus, providing several possible directions for further progress.' | next=''
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:88 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   context: prev='}' | next='TODO_ACTION_WORDS = {'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+- [codemage][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:153 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
   context: prev='"name": "ArchivistAgent",' | next='}'
   next: Open implementation task with acceptance criteria and tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:496 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
   context: prev='' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:509 :: # Keep explicit TODO/FIXME markers as actionable by default.
   context: prev='' | next='if re.search(r"\b(todo|fixme|tbd)\b", lower):'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:510 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
   context: prev='# Keep explicit TODO/FIXME markers as actionable by default.' | next='return True'
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
   context: prev='lower = text.lower()' | next='return "high"'
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+- [devlot][low] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:520 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
   context: prev='return "high"' | next='return "low"'
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:550 :: if "todo" in lower:
+- [devlot][medium] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:552 :: if "todo" in lower:
   context: prev='return "Add or improve tests, then record updated test metrics"' | next='return "Convert this note into a tracked work item with owner/date"'
   next: Convert this note into a tracked work item with owner/date
-- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+- [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/archivist_agent.py:588 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
   context: prev='"",' | next='"",'
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] /home/runner/work/BossForgeOS/BossForgeOS/core/agents/codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
@@ -24861,7 +25599,7 @@
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
   context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
-- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+- [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
   context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
   next: Add or improve tests, then record updated test metrics
 - [test_sentinel][medium] /home/runner/work/BossForgeOS/BossForgeOS/tests/test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
