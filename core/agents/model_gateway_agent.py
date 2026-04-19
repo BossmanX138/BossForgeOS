@@ -68,6 +68,7 @@ class ModelGateway:
         self.servers: Dict[str, subprocess.Popen[Any]] = {}
         self.assistance_requests: Dict[str, Dict[str, Any]] = self._load_assistance_requests()
         self.owned_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
+        self.owned_agent_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
         self._last_location_refresh = 0.0
         self._presence_stop_event = threading.Event()
         self._presence_thread: threading.Thread | None = None
@@ -224,6 +225,9 @@ class ModelGateway:
 
     def _save_owned_locations(self) -> None:
         self.locations_path.write_text(json.dumps(self.owned_locations, indent=2), encoding="utf-8")
+
+    def _save_owned_agent_locations(self) -> None:
+        self.locations_path.write_text(json.dumps(self.owned_agent_locations, indent=2), encoding="utf-8")
 
     def _detect_format(self, file_path: str, format_hint: str = "") -> str:
         if format_hint.strip().lower() in {"json", "yaml"}:
