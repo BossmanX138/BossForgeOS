@@ -29,6 +29,8 @@ from core.rune.agent_consumer import AgentConsumerLoop
 
 from core.agent_registry import register_agent
 
+UNCHECKED_CHECKLIST_RE = re.compile(r"^\s*(?:[-*+]|\d+\.)\s*\[\s\]\s+(?P<task>.+?)\s*$", re.IGNORECASE)
+
 
 class ArchivistAgent:
     TODO_SCAN_SUFFIXES = {".md", ".txt", ".py", ".ps1", ".json", ".yaml", ".yml"}
@@ -646,28 +648,32 @@ class ArchivistAgent:
                     continue
 
                 for idx, line in enumerate(lines, start=1):
-                    if pattern.search(line):
-                        text = line.strip()[:240]
-                        if not self._is_actionable_todo_text(text):
-                            continue
-                        is_test_debt = self._is_test_debt_item(path=path, project=project, text=text)
-                        assignee = "test_sentinel" if is_test_debt else self._delegate_for(text)
-                        severity = self._severity_for_text(text)
-                        context_before = lines[idx - 2].strip()[:240] if idx - 2 >= 0 else ""
-                        context_after = lines[idx].strip()[:240] if idx < len(lines) else ""
-                        todo_items.append(
-                            {
-                                "file": str(path),
-                                "line": str(idx),
-                                "text": text,
-                                "context_before": context_before,
-                                "context_after": context_after,
-                                "assignee": assignee,
-                                "is_test_debt": is_test_debt,
-                                "severity": severity,
-                                "suggested_next_action": self._suggest_next_action(text, assignee, severity),
-                            }
-                        )
+                    todo_match = bool(pattern.search(line))
+                    checklist_match = UNCHECKED_CHECKLIST_RE.match(line)
+                    if not todo_match and not checklist_match:
+                        continue
+                    text = line.strip() if todo_match else str(checklist_match.group("task") if checklist_match else "").strip()
+                    text = text[:240]
+                    if not self._is_actionable_todo_text(text):
+                        continue
+                    is_test_debt = self._is_test_debt_item(path=path, project=project, text=text)
+                    assignee = "test_sentinel" if is_test_debt else self._delegate_for(text)
+                    severity = self._severity_for_text(text)
+                    context_before = lines[idx - 2].strip()[:240] if idx - 2 >= 0 else ""
+                    context_after = lines[idx].strip()[:240] if idx < len(lines) else ""
+                    todo_items.append(
+                        {
+                            "file": str(path),
+                            "line": str(idx),
+                            "text": text,
+                            "context_before": context_before,
+                            "context_after": context_after,
+                            "assignee": assignee,
+                            "is_test_debt": is_test_debt,
+                            "severity": severity,
+                            "suggested_next_action": self._suggest_next_action(text, assignee, severity),
+                        }
+                    )
         return todo_items
 
     def _slugify_heading(self, text: str) -> str:
