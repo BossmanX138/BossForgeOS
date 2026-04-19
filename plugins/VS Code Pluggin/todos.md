@@ -7,10 +7,10 @@
 
 - [x] Scaffold onboarding wizard (command + sidebar)
 - [x] Placeholder UI for secrets, tokens, voice profile
-- [ ] Wire to onboarding endpoints (when available)
-- [ ] Add state management for onboarding progress
-- [ ] Add validation and error handling
-- [ ] Polish UI/UX
+- [x] Wire to onboarding endpoints (when available)
+- [x] Add state management for onboarding progress
+- [x] Add validation and error handling
+- [x] Polish UI/UX
 
 _Assigned: Devlot or CodeMage_
 _Created: March 30, 2026 by Archivist_

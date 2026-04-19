@@ -503,8 +503,27 @@ def normalize_agent_profile(agent_id: str, profile: dict[str, Any] | None) -> di
                 "required": bool(item.get("required", False)),
             }
         )
+    is_normalized = out["agent_class"] == "normalized"
+    if is_normalized and not mcp_servers:
+        # Normalized agents derive their abilities from MCP rather than skills.
+        # When a minimal profile (id/name/description only) is registered, inject
+        # a default local stdio server so the profile satisfies the schema
+        # requirement without requiring every caller to supply the full MCP config.
+        _agent_type_for_mcp = out.get("agent_type", "worker")
+        _type_prefixes = _MCP_SERVER_PREFIX_ALLOWLIST.get(_agent_type_for_mcp, ("worker",))
+        _default_prefix = _type_prefixes[0]
+        mcp_servers = [
+            {
+                "name": f"{_default_prefix}_{normalized_id}",
+                "transport": "stdio",
+                "endpoint": "",
+                "command": "",
+                "args": [],
+                "required": False,
+            }
+        ]
     out["mcp"] = {
-        "enabled": bool(mcp_raw.get("enabled", False)),
+        "enabled": True if is_normalized else bool(mcp_raw.get("enabled", False)),
         "servers": mcp_servers,
     }
 
