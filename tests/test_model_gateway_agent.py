@@ -175,6 +175,31 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(created["ok"])
         self.assertEqual(agent.agent_profiles["toolsmith"]["tools"], ["filesystem"])
 
+    def test_create_agent_with_state_machine(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        machine = {
+            "initial_state": "Idle",
+            "states": {
+                "Idle": {"on_task": "Executing"},
+                "Executing": {"on_success": "Completed", "on_error": "Blocked"},
+                "Completed": {"on_task": "Executing"},
+                "Blocked": {"on_retry": "Executing", "on_abort": "Idle"},
+            },
+        }
+
+        created = agent.create_agent_profile(
+            name="stateful",
+            endpoint="ollama",
+            system_prompt="Handle work with explicit state transitions.",
+            temperature=0.2,
+            max_tokens=700,
+            tools=[],
+            state_machine=machine,
+        )
+        self.assertTrue(created["ok"])
+        self.assertIn("state_machine", agent.agent_profiles["stateful"])
+        self.assertEqual(agent.agent_profiles["stateful"]["state_machine"].get("initial_state"), "Idle")
+
     def test_bossgate_enabled_profile_forces_llm(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         created = agent.create_agent_profile(

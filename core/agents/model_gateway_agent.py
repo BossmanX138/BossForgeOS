@@ -558,6 +558,7 @@ class ModelGateway:
         personality_wrapper: Dict[str, Any] | None = None,
         system_wrapper: Dict[str, Any] | None = None,
         instructions: Dict[str, Any] | None = None,
+        state_machine: Dict[str, Any] | None = None,
         custom_icon_path: str | None = None,
     ) -> Dict[str, Any]:
         return self._create_agent_profile(
@@ -579,6 +580,7 @@ class ModelGateway:
             personality_wrapper,
             system_wrapper,
             instructions,
+            state_machine,
             custom_icon_path,
         )
 
@@ -812,6 +814,7 @@ class ModelGateway:
         personality_wrapper: Dict[str, Any] | None = None,
         system_wrapper: Dict[str, Any] | None = None,
         instructions: Dict[str, Any] | None = None,
+        state_machine: Dict[str, Any] | None = None,
         custom_icon_path: str | None = None,
     ) -> Dict[str, Any]:
         key = name.strip().lower()
@@ -885,6 +888,8 @@ class ModelGateway:
                 "operational": instructions.get("operational") if isinstance(instructions.get("operational"), list) else [],
                 "safety": instructions.get("safety") if isinstance(instructions.get("safety"), list) else [],
             }
+        if isinstance(state_machine, dict):
+            profile["state_machine"] = dict(state_machine)
         if custom_icon_path:
             profile["custom_icon_path"] = str(custom_icon_path).strip()
         profile = self._normalize_agent_profile(key, profile)
@@ -990,6 +995,8 @@ class ModelGateway:
             sigils = sigils_raw if isinstance(sigils_raw, list) else None
             dispatch_policy_raw = args.get("dispatch_policy")
             dispatch_policy = dispatch_policy_raw if isinstance(dispatch_policy_raw, dict) else None
+            state_machine_raw = args.get("state_machine")
+            state_machine = state_machine_raw if isinstance(state_machine_raw, dict) else None
             custom_icon_path = str(args.get("custom_icon_path", "")).strip() or None
             result = self._create_agent_profile(
                 name,
@@ -1007,6 +1014,7 @@ class ModelGateway:
                 skills,
                 sigils,
                 dispatch_policy,
+                state_machine=state_machine,
                 custom_icon_path=custom_icon_path,
             )
         elif command == "list_mcp_servers":

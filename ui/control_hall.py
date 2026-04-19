@@ -785,6 +785,12 @@ PAGE = """
                             <option value="integration_mapping">integration_mapping</option>
                             <option value="api_composition">api_composition</option>
                         </select>
+                        <select id="wizard_state_machine_template" style="min-width:260px;" onchange="syncWizardStateMachinePreview()">
+                            <option value="none" selected>state machine: none</option>
+                            <option value="basic_lifecycle">state machine: basic lifecycle</option>
+                            <option value="delegation_flow">state machine: delegation flow</option>
+                            <option value="incident_response">state machine: incident response</option>
+                        </select>
                         <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
                             <option value="sigil_transporter">sigil_transporter</option>
                             <option value="prime_overwatch">prime_overwatch</option>
@@ -808,6 +814,7 @@ PAGE = """
                             <option value="sigil_shield">sigil_shield</option>
                         </select>
                     </div>
+                    <div id="wizard_state_machine_hint" class="muted" style="margin-top:6px;">No state machine selected. Agent runtime can remain stateless.</div>
                     <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
                         <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
                         <div class="row">
@@ -950,6 +957,21 @@ PAGE = """
                     <div class="row">
                         <input id="maker_custom_skills" placeholder="custom skills (comma-separated, advanced mode)" />
                         <input id="maker_custom_sigils" placeholder="custom sigils (comma-separated, advanced mode)" />
+                    </div>
+                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                        <div class="muted" style="margin-bottom:8px;">State Machine (Advanced)</div>
+                        <div class="row">
+                            <select id="maker_state_machine_template" onchange="applySelectedStateMachineTemplate()">
+                                <option value="none" selected>state machine: none</option>
+                                <option value="basic_lifecycle">state machine: basic lifecycle</option>
+                                <option value="delegation_flow">state machine: delegation flow</option>
+                                <option value="incident_response">state machine: incident response</option>
+                            </select>
+                            <button onclick="formatStateMachineJson()">Format JSON</button>
+                            <button onclick="clearStateMachineJson()">Clear</button>
+                        </div>
+                        <div id="maker_state_machine_hint" class="muted" style="margin:6px 0;">No state machine selected. You can paste custom JSON below.</div>
+                        <textarea id="maker_state_machine_json" placeholder='{"initial_state":"Idle","states":{"Idle":{"on_task":"Executing"}}}' style="min-height:140px;"></textarea>
                     </div>
                     <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
                         <div class="muted" style="margin-bottom:8px;">Custom Icon (Advanced)</div>
@@ -2582,6 +2604,129 @@ PAGE = """
             if (!useWizard) syncAdvancedPolicyAwareness();
         }
 
+        const STATE_MACHINE_TEMPLATES = {
+            none: {
+                label: 'none',
+                description: 'No predefined state machine. Agent can run with default runtime behavior.',
+                machine: null,
+            },
+            basic_lifecycle: {
+                label: 'basic lifecycle',
+                description: 'Simple work loop: Idle -> Executing -> Completed/Blocked.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_task: 'Executing' },
+                        Executing: { on_success: 'Completed', on_error: 'Blocked' },
+                        Completed: { on_task: 'Executing' },
+                        Blocked: { on_retry: 'Executing', on_abort: 'Idle' },
+                    },
+                },
+            },
+            delegation_flow: {
+                label: 'delegation flow',
+                description: 'Delegation-aware flow with planning and verification stages.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_task: 'Planning' },
+                        Planning: { on_ready: 'Delegating', on_error: 'Blocked' },
+                        Delegating: { on_dispatched: 'Executing', on_error: 'Blocked' },
+                        Executing: { on_partial: 'Delegating', on_success: 'Verifying', on_error: 'Blocked' },
+                        Verifying: { on_pass: 'Completed', on_fail: 'Blocked' },
+                        Completed: { on_task: 'Planning' },
+                        Blocked: { on_retry: 'Planning', on_abort: 'Idle' },
+                    },
+                },
+            },
+            incident_response: {
+                label: 'incident response',
+                description: 'Incident triage and mitigation loop for operational agents.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_incident: 'Triage' },
+                        Triage: { on_classified: 'Mitigation', on_escalate: 'Blocked' },
+                        Mitigation: { on_fixed: 'Validation', on_failed: 'Blocked' },
+                        Validation: { on_pass: 'Completed', on_fail: 'Mitigation' },
+                        Completed: { on_incident: 'Triage' },
+                        Blocked: { on_retry: 'Triage', on_abort: 'Idle' },
+                    },
+                },
+            },
+        };
+
+        function cloneTemplateMachine(machine) {
+            if (!machine || typeof machine !== 'object') return null;
+            return JSON.parse(JSON.stringify(machine));
+        }
+
+        function getTemplateMeta(templateId) {
+            const key = String(templateId || 'none').trim();
+            return STATE_MACHINE_TEMPLATES[key] || STATE_MACHINE_TEMPLATES.none;
+        }
+
+        function syncWizardStateMachinePreview() {
+            const templateId = (document.getElementById('wizard_state_machine_template')?.value || 'none').trim();
+            const meta = getTemplateMeta(templateId);
+            const hint = document.getElementById('wizard_state_machine_hint');
+            if (hint) hint.textContent = meta.description;
+        }
+
+        function applySelectedStateMachineTemplate() {
+            const templateId = (document.getElementById('maker_state_machine_template')?.value || 'none').trim();
+            const meta = getTemplateMeta(templateId);
+            const root = document.getElementById('maker_state_machine_json');
+            const hint = document.getElementById('maker_state_machine_hint');
+            if (root) {
+                if (!meta.machine) {
+                    root.value = '';
+                } else {
+                    root.value = JSON.stringify(cloneTemplateMachine(meta.machine), null, 2);
+                }
+            }
+            if (hint) hint.textContent = meta.description;
+        }
+
+        function clearStateMachineJson() {
+            const root = document.getElementById('maker_state_machine_json');
+            const sel = document.getElementById('maker_state_machine_template');
+            const hint = document.getElementById('maker_state_machine_hint');
+            if (root) root.value = '';
+            if (sel) sel.value = 'none';
+            if (hint) hint.textContent = STATE_MACHINE_TEMPLATES.none.description;
+        }
+
+        function formatStateMachineJson() {
+            const root = document.getElementById('maker_state_machine_json');
+            if (!root) return;
+            const raw = String(root.value || '').trim();
+            if (!raw) return;
+            try {
+                const obj = JSON.parse(raw);
+                root.value = JSON.stringify(obj, null, 2);
+            } catch {
+                alert('State machine JSON is invalid.');
+            }
+        }
+
+        function parseAdvancedStateMachine() {
+            const raw = String(document.getElementById('maker_state_machine_json')?.value || '').trim();
+            if (!raw) return null;
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
+                alert('State machine JSON must be valid JSON.');
+                throw new Error('invalid state machine json');
+            }
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                alert('State machine must be a JSON object.');
+                throw new Error('invalid state machine object');
+            }
+            return parsed;
+        }
+
         function setMakerPolicyChips(chips) {
             const root = document.getElementById('maker_policy_chips');
             if (!root) return;
@@ -2803,6 +2948,7 @@ PAGE = """
             const encrypt = !!document.getElementById('wizard_encrypt_profile').checked;
             const wizardSkills = selectedWizardValues('wizard_skill_list');
             const wizardSigils = selectedWizardValues('wizard_sigil_list');
+            const wizardStateMachineTemplate = (document.getElementById('wizard_state_machine_template').value || 'none').trim();
             const wizardIconPath = (document.getElementById('wizard_icon_path').value || '').trim();
 
             document.getElementById('maker_name').value = name;
@@ -2862,6 +3008,11 @@ PAGE = """
             document.getElementById('maker_system').value = baseSystemText;
             document.getElementById('maker_custom_skills').value = wizardSkills.join(', ');
             document.getElementById('maker_custom_sigils').value = (power === 'prime') ? wizardSigils.join(', ') : '';
+            const makerStateMachineTemplate = document.getElementById('maker_state_machine_template');
+            if (makerStateMachineTemplate) {
+                makerStateMachineTemplate.value = wizardStateMachineTemplate;
+                applySelectedStateMachineTemplate();
+            }
             document.getElementById('maker_icon_path').value = wizardIconPath;
             const makerIconMode = document.getElementById('maker_icon_mode');
             if (makerIconMode) makerIconMode.value = wizardIconPath ? 'upload' : 'none';
@@ -2948,6 +3099,12 @@ PAGE = """
                 alert(`rank ${rankValue} allows at most ${cap.sigils} sigils`);
                 return;
             }
+            let stateMachine = null;
+            try {
+                stateMachine = parseAdvancedStateMachine();
+            } catch {
+                return;
+            }
             const payload = {
                 name: (document.getElementById('maker_name').value || '').trim(),
                 endpoint: (document.getElementById('maker_endpoint').value || '').trim(),
@@ -2976,6 +3133,7 @@ PAGE = """
                     system: composeSystemWithPersonality((document.getElementById('maker_system').value || '').trim(), personalityPreset, personalityNotes),
                     developer: personalityNotes,
                 },
+                state_machine: stateMachine,
                 custom_icon_path: (document.getElementById('maker_icon_path').value || '').trim(),
                 has_llm: !!document.getElementById('maker_has_llm').checked,
                 bossgate_enabled: !!document.getElementById('maker_bossgate_enabled').checked,
@@ -3530,6 +3688,8 @@ PAGE = """
         initIconForgeStudio();
         toggleWizardIconSource();
         toggleMakerIconSource();
+        syncWizardStateMachinePreview();
+        applySelectedStateMachineTemplate();
         refresh();
         listSoundforgeSchemes();
         setInterval(refresh, 4000);
@@ -3972,6 +4132,8 @@ def model_agents_create():
     system_wrapper = system_wrapper_raw if isinstance(system_wrapper_raw, dict) else None
     instructions_raw = payload.get("instructions")
     instructions = instructions_raw if isinstance(instructions_raw, dict) else None
+    state_machine_raw = payload.get("state_machine")
+    state_machine = state_machine_raw if isinstance(state_machine_raw, dict) else None
     custom_icon_path = str(payload.get("custom_icon_path", "")).strip() or None
 
     gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
@@ -3993,6 +4155,7 @@ def model_agents_create():
         personality_wrapper=personality_wrapper,
         system_wrapper=system_wrapper,
         instructions=instructions,
+        state_machine=state_machine,
         custom_icon_path=custom_icon_path,
     )
     status = 200 if result.get("ok") else 400
