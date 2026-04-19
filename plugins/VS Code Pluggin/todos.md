@@ -1,6 +1,6 @@
 # To-Do: BossForgeOS Health Status Bar
 
-- [ ] Implement a VS Code status bar item in `extension.js` that displays BossForgeOS health (online/stale/offline).
+- [x] Implement a VS Code status bar item in `extension.js` that displays BossForgeOS health (online/stale/offline).
     - Read agent state from the bus.
     - Register and update the status bar item accordingly.
     - Ensure real-time updates.
