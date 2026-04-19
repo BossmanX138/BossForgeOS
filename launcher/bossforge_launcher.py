@@ -70,6 +70,15 @@ class SystemTrayIcon:
 
     def stop(self) -> None:
         self.stop_event.set()
+        # Nudge the tray window so the message loop can observe stop_event quickly.
+        if self._hwnd and os.name == "nt":
+            try:
+                import ctypes
+
+                WM_CLOSE = 0x0010
+                ctypes.windll.user32.PostMessageW(int(self._hwnd), WM_CLOSE, 0, 0)
+            except Exception:
+                pass
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=3)
 
@@ -97,6 +106,7 @@ class SystemTrayIcon:
                             pass
                 elif lparam == win32con.WM_RBUTTONUP:
                     print("[Tray] Right click detected - showing menu")
+                    menu = None
                     try:
                         menu = win32gui.CreatePopupMenu()
                         if self.open_url:
@@ -110,6 +120,12 @@ class SystemTrayIcon:
                         win32gui.PostMessage(hwnd, win32con.WM_NULL, 0, 0)
                     except Exception as ex:
                         print(f"[Tray] Exception in right-click menu: {ex}")
+                    finally:
+                        if menu:
+                            try:
+                                win32gui.DestroyMenu(menu)
+                            except Exception:
+                                pass
                 return 0
             if msg == win32con.WM_COMMAND:
                 cmd = int(wparam) & 0xFFFF
@@ -130,6 +146,7 @@ class SystemTrayIcon:
                         self.stop_event.set()
                     return 0
             if msg == win32con.WM_DESTROY:
+                win32gui.PostQuitMessage(0)
                 return 0
             return win32gui.DefWindowProc(hwnd, msg, wparam, lparam)
 
@@ -167,7 +184,7 @@ class SystemTrayIcon:
 
         try:
             while not self.stop_event.is_set():
-                win32gui.PumpMessages()
+                win32gui.PumpWaitingMessages()
                 time.sleep(0.2)
         finally:
             try:

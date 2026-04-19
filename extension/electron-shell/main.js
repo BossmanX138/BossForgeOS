@@ -127,7 +127,10 @@ function createWindow() {
 
 function createTray() {
   const iconPath = path.join(__dirname, 'assets', 'bossforgeos.png');
-  const trayIcon = nativeImage.createFromPath(iconPath);
+  let trayIcon = nativeImage.createFromPath(iconPath);
+  if (!trayIcon || trayIcon.isEmpty()) {
+    trayIcon = nativeImage.createFromNamedImage('application-icon');
+  }
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     { label: `Show ${APP_NAME}`, click: () => mainWindow && mainWindow.show() },
@@ -142,9 +145,22 @@ function createTray() {
   ]);
   tray.setToolTip(APP_NAME);
   tray.setContextMenu(contextMenu);
+  tray.on('click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+  tray.on('right-click', () => {
+    tray.popUpContextMenu(contextMenu);
+  });
+  tray.on('context-menu', () => {
+    tray.popUpContextMenu(contextMenu);
+  });
   tray.on('double-click', () => {
     if (mainWindow) {
       mainWindow.show();
+      mainWindow.focus();
     }
   });
 }
