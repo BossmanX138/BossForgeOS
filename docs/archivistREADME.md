@@ -55,6 +55,7 @@ Supported keys:
 - `todo_scan_suffixes`
 - `todo_ignore_dir_names`
 - `todo_ignore_file_names`
+- `todo_ignore_globs`
 - `readme_ignore_dir_names`
 - `todo_patterns`
 
@@ -70,7 +71,7 @@ Example:
 
 ## Limitations
 
-- TODO detection is pattern-based (not deep semantic intent)
+- TODO detection is still heuristic/pattern-based (not full semantic intent)
 - README stewardship focuses on structure/navigation, not full prose rewriting
 - Seal operations require operator approval by design
 

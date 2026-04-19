@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import py_compile
 import re
 import signal
 import subprocess
@@ -67,6 +68,13 @@ RUNEFORGE_PROFILE: dict[str, Any] = {
 class RuneforgeAgent(PrimeAgent):
     # Agents in this set are explicitly excluded from hands-on task assignment.
     NON_HANDS_ON_AGENT_IDS = {"archivist", "security_sentinel"}
+    REVIEW_DELEGATE_TARGETS = {
+        "codemage": "codemage",
+        "devlot": "devlot",
+        "test_sentinel": "test_sentinel",
+        "runeforge": "runeforge",
+        "archivist": "devlot",
+    }
 
     def __init__(self, interval_seconds: int = 15, root: Path | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1488,22 +1496,168 @@ class RuneforgeAgent(PrimeAgent):
         return {"ok": True, "task": packet, "queued_total": len(self.tasks)}
 
     def add_work_item(self, args: dict[str, Any]) -> dict[str, Any]:
+        delegated_handoff = bool(args.get("delegated_handoff", False))
         item = {
             "packet_id": str(args.get("packet_id", "")).strip(),
             "title": str(args.get("title", "")).strip(),
             "details": str(args.get("details", "")).strip(),
             "owner": "runeforge",
-            "status": "queued",
+            "status": "in_progress" if delegated_handoff else "queued",
             "source": str(args.get("source", "")).strip(),
             "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "delegated_handoff": delegated_handoff,
             "discovered_owner": str(args.get("discovered_owner", "")).strip(),
             "source_path": str(args.get("source_path", "")).strip(),
             "source_line": int(args.get("source_line", 0) or 0),
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat() if delegated_handoff else "",
         }
         self.tasks.append(item)
         self._save_tasks()
         return {"ok": True, "work_item": item, "queued_total": len(self.tasks)}
+
+    def _verify_post_fix_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        issues: list[str] = []
+        source_raw = str(item.get("source_path", "")).strip()
+        if source_raw:
+            source = Path(source_raw)
+            if source.exists() and source.suffix.lower() == ".py":
+                try:
+                    py_compile.compile(str(source), doraise=True)
+                except Exception as ex:
+                    issues.append(f"python compile failed for {source}: {ex}")
+        return {"ok": len(issues) == 0, "issues": issues}
+
+    def _submit_regression_to_runeforge(self, item: dict[str, Any], issues: list[str]) -> None:
+        detail = "; ".join(issues)[:900] if issues else "post-fix verification failed"
+        payload = {
+            "project_path": str(self.root),
+            "source_doc": str(item.get("source_path", "") or "post_fix_verification"),
+            "submitted_by": "runeforge",
+            "items": [
+                {
+                    "id": f"regression-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "title": str(item.get("title", "regression"))[:140],
+                    "details": detail,
+                    "assignee": str(item.get("discovered_owner", "devlot")).strip().lower() or "devlot",
+                    "severity": "high",
+                    "source_path": str(item.get("source_path", "")),
+                    "source_line": int(item.get("source_line", 0) or 0),
+                    "suggested_next_action": "Fix regression and re-run verification",
+                    "is_test_debt": False,
+                }
+            ],
+        }
+        self.bus.emit_command("runeforge", "review_archivist_delegations", payload, issued_by="runeforge")
+        self.bus.emit_event(
+            "runeforge",
+            "post_fix_regression_detected",
+            {
+                "title": str(item.get("title", "")),
+                "issues": issues,
+                "rerouted_to": "runeforge",
+            },
+        )
+
+    def _process_delegated_handoffs(self) -> dict[str, Any]:
+        changed = False
+        completed = 0
+        blocked = 0
+        for item in self.tasks:
+            if not isinstance(item, dict):
+                continue
+            if not bool(item.get("delegated_handoff", False)):
+                continue
+            if str(item.get("status", "")).strip().lower() != "in_progress":
+                continue
+            if bool(item.get("post_fix_checked", False)):
+                continue
+
+            verify = self._verify_post_fix_item(item)
+            item["post_fix_checked"] = True
+            item["post_fix_verified_at"] = datetime.now(timezone.utc).isoformat()
+            if bool(verify.get("ok", False)):
+                item["status"] = "completed"
+                item["completed_by"] = "runeforge"
+                item["completed_at"] = datetime.now(timezone.utc).isoformat()
+                item["resolution"] = "Delegated item implemented and post-fix verification passed"
+                completed += 1
+            else:
+                issues = [str(x) for x in verify.get("issues", []) if str(x).strip()]
+                item["status"] = "blocked"
+                item["post_fix_issues"] = issues
+                self._submit_regression_to_runeforge(item, issues)
+                blocked += 1
+            changed = True
+
+        if changed:
+            self._save_tasks()
+        if completed:
+            self.bus.emit_event("runeforge", "work_item_completed", {"ok": True, "completed_count": completed, "post_fix_verified": True})
+        return {"changed": changed, "completed": completed, "blocked": blocked}
+
+    def _normalize_review_target(self, requested_owner: str) -> str:
+        key = str(requested_owner or "").strip().lower()
+        return self.REVIEW_DELEGATE_TARGETS.get(key, "devlot")
+
+    def review_archivist_delegations(self, args: dict[str, Any]) -> dict[str, Any]:
+        items = args.get("items") if isinstance(args.get("items"), list) else []
+        if not items:
+            return {"ok": False, "message": "no delegation items supplied"}
+
+        packet_id = f"archivist_review_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        dispatched: list[dict[str, Any]] = []
+        skipped = 0
+
+        for idx, raw in enumerate(items[:150], start=1):
+            if not isinstance(raw, dict):
+                skipped += 1
+                continue
+
+            requested_owner = str(raw.get("assignee", "devlot")).strip().lower()
+            target = self._normalize_review_target(requested_owner)
+            details = str(raw.get("details", "")).strip()
+            if not details:
+                skipped += 1
+                continue
+
+            command_args = {
+                "packet_id": packet_id,
+                "title": str(raw.get("title", "")).strip() or f"{packet_id}-item-{idx}",
+                "details": details,
+                "source": "archivist_review",
+                "source_path": str(raw.get("source_path", "")).strip(),
+                "source_line": int(raw.get("source_line", 0) or 0),
+                "discovered_owner": requested_owner,
+                "delegated_handoff": True,
+            }
+
+            if target == "runeforge":
+                self.add_work_item(command_args)
+            else:
+                self.bus.emit_command(target, "work_item", command_args, issued_by="runeforge")
+
+            dispatched.append(
+                {
+                    "target": target,
+                    "title": command_args["title"],
+                    "source_path": command_args["source_path"],
+                    "source_line": command_args["source_line"],
+                    "severity": str(raw.get("severity", "medium")).strip() or "medium",
+                }
+            )
+
+        summary = {
+            "ok": True,
+            "packet_id": packet_id,
+            "project_path": str(args.get("project_path", "")).strip(),
+            "submitted": len(items),
+            "dispatched": len(dispatched),
+            "skipped": skipped,
+            "items": dispatched[:200],
+        }
+        self.bus.emit_event("runeforge", "delegation_review_completed", summary)
+        return summary
 
     def list_tasks(self) -> dict[str, Any]:
         return {"ok": True, "tasks": self.tasks}
@@ -1533,6 +1687,8 @@ class RuneforgeAgent(PrimeAgent):
             result = self.add_work_packet(args)
         elif command == "work_item":
             result = self.add_work_item(args)
+        elif command == "review_archivist_delegations":
+            result = self.review_archivist_delegations(args)
         elif command == "list_tasks":
             result = self.list_tasks()
         elif command == "run_os_observation":
@@ -1601,6 +1757,7 @@ class RuneforgeAgent(PrimeAgent):
                 items=self.tasks,
                 save_items=self._save_tasks,
             )
+            self._process_delegated_handoffs()
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

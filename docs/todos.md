@@ -1,101 +1,90 @@
-Here is a detailed TODO plan for fixing each BossForgeOS limitation:
-
-1. Local-First (No Distributed/Cloud Orchestration)
-
-Research distributed bus/message queue options (e.g., Redis, RabbitMQ, Azure Service Bus)
-Design a pluggable bus backend (local file, remote queue)
-Implement remote bus backend and agent registration/discovery
-Add config for cloud endpoints and authentication
-Update docs for distributed/cloud deployment
-
-2. Manual Onboarding (Token/Voice Profile Setup)
-
-Add onboarding CLI wizard for secrets/tokens and voice profiles
-Implement validation and auto-detection for missing onboarding steps
-Provide onboarding status in Control Hall UI
-Update docs with onboarding flow screenshots/examples
-
-3. No Built-in Scheduler
-
-Evaluate Python schedulers (APScheduler, Celery, etc.)
-Integrate scheduler with bus and agent command system
-Add CLI/Control Hall UI for scheduling tasks/rituals
-Document scheduling features and usage
-
-4. Limited Error Handling
-
-Audit CLI and agent error handling for unhandled exceptions
-Add user-friendly error messages and recovery suggestions
-Log errors to bus/events and Control Hall UI
-Add automated diagnostics for common setup issues
-
-5. Third-Party Code Noise in TODOs
-
-Update Archivist/todo extraction to ignore .venv, site-packages, and external folders
-Add config for custom ignore patterns
-Document filtering behavior
-
-6. No Built-in CI/CD
-
-Add GitHub Actions/other CI templates to repo
-Provide CLI for running tests/lint locally
-Integrate test results into Control Hall UI
-Document CI/CD setup and usage
-
-7. Windows-Centric Features
-
 # Open Todos
 
-This section contains actionable refactoring and optimization todos based on the current BossForgeOS codebase, recent feature additions, and GUI audit. Completed items are marked as such; new actionable items are listed below.
+Curated by Archivist from actionable TODO/FIXME/TBD signals.
 
----
+Generated: 2026-04-19 11:45:18
+Total actionable: 38
+General backlog: 29
+Test debt: 9
 
-## General Agent System Improvements (2026-04-04)
-- [ ] Centralize agent registration and discovery for better orchestration
-- [ ] Add a unified web UI for agent management, monitoring, and configuration
-- [ ] Implement semantic analysis and advanced diagnostics across all agents
-- [ ] Enhance error handling, logging, and user feedback for all integrations
+## Priority Backlog
 
-## 2026-04-04 Refactoring & Optimization Todos
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:86 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:494 :: if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:507 :: # Keep explicit TODO/FIXME markers as actionable by default.
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:508 :: if re.search(r"\b(todo|fixme|tbd)\b", lower):
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:516 :: if "fixme" in lower or any(k in lower for k in ["security", "crash", "critical", "data loss"]):
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:586 :: "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:436 :: todo_hits = [line.strip() for line in lines if "TODO" in line.upper() or "FIXME" in line.upper()][:10]
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][high] D:\Bosscrafts\BossForgeOS\core\rune\discovery_handoff.py:20 :: TODO_LINE_RE = re.compile(r"\b(?:TODO|FIXME|TBD)\b", re.IGNORECASE)
+  next: Create fix plan, implement patch, and add regression tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:44 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:49 :: - Documents completed work and updates TODO lists.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:52 :: - If no one responds to his suggestions via the bus within a reasonable time, he will append his suggestions directly to the TODO item he just cleared, clearly stating that Devlot completed the task and these are suggestions (not new TODOs 
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:151 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  next: Open implementation task with acceptance criteria and tests
+- [codemage][medium] D:\Bosscrafts\BossForgeOS\core\agents\master_agents.py:17 :: "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
+  next: Open implementation task with acceptance criteria and tests
+- [archivist][medium] D:\Bosscrafts\BossForgeOS\docs\autonomous_work_session.md:14 :: - Implemented policy TODO batch in `docs/AgentForge_readme.md`:
+  next: Update documentation section and cross-link related docs
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\progress_report_2026-04-04.md:6 :: - Progress will be updated in this log and in the main todo list as agents complete their work.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\README.md:38 :: - Added extension hook: `DevlotAutonomyHooks` for TODO automation and recommendation events.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\README.md:93 :: ### TODO
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\BossCrafts_Devlot_MkII.md:35 :: - Supports runtime hook `DevlotAutonomyHooks` for TODO completion flow and post-task suggestion events
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:550 :: if "todo" in lower:
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\rune\discovery_handoff.py:22 :: r"(?:TODO\s*[\[(]\s*(?P<todo_owner>[a-zA-Z_\- ]+)\s*[\])]"
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\rune\discovery_handoff.py:183 :: "title": f"TODO handoff from {current_agent}",
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\core\rune\hands_on_runtime.py:58 :: item["resolution"] = "Auto-processed discovery handoff TODO"
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\delegation_plan_2026-04-04.md:5 :: | Todo Item                                                        | Assigned Agent(s)      | Status      |
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] D:\Bosscrafts\BossForgeOS\m365_copilot_connector\declarativeAgent.json:17 :: { "name": "DevlotAutonomyHooks", "description": "Hooks for Devlot autonomous TODO processing and recommendation events." }
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:518 :: if "tbd" in lower or any(k in lower for k in ["later", "investigate", "review"]):
+  next: Review context, confirm scope, and create a concrete next task
+- [devlot][low] D:\Bosscrafts\BossForgeOS\core\agents\codemage_agent.py:516 :: if "TODO" in upper or "OPEN" in upper or "TBD" in upper:
+  next: Convert this note into a tracked work item with owner/date
 
-### Distributed/Cloud Orchestration (In Progress)
-- [ ] Finalize pluggable bus backend for remote/distributed operation (e.g., Redis, RabbitMQ, Azure Service Bus)
-- [ ] Complete agent registration/discovery for remote bus
-- [ ] Harden config for cloud endpoints and authentication
-- [ ] Document distributed/cloud deployment steps
+## Test Debt
 
-### Code Modularity & Maintainability
-- [ ] Refactor core daemons and CLI for improved modularity and testability
-- [ ] Extract reusable components (event streaming, onboarding, scheduling) into shared modules
-- [ ] Audit and reduce code duplication across daemons, UI, and extension
-
-### Test Coverage & Automation
-- [ ] Expand unit and integration test coverage for SoundStage, Control Hall, and extension
-- [ ] Add automated regression tests for onboarding, scheduler, CI/CD, and collaboration features
-- [ ] Integrate test results into Control Hall analytics dashboard
-
-### Performance & Diagnostics
-- [ ] Profile and optimize event streaming and sound playback latency
-- [ ] Enhance diagnostics logging and error reporting (daemon, GUI, extension)
-- [ ] Add performance metrics to analytics dashboard
-
-### Documentation & Developer Experience
-- [ ] Ensure all new features are fully documented (SoundStage, onboarding, scheduler, CI/CD, collaboration)
-- [ ] Add developer onboarding guide and architecture diagrams
-- [ ] Cross-link all major docs for discoverability
-
----
-
-## Completed Todos (2026-04-04)
-- [x] Onboarding wizard (GUI & CLI)
-- [x] Scheduler (GUI & CLI)
-- [x] CI/CD integration (GUI)
-- [x] Real-time collaboration (GUI & extension)
-- [x] Analytics dashboard (GUI & extension)
-- [x] Platform support (Windows/macOS/Linux)
-- [x] Automated diagnostics and error handling (GUI)
-- [x] Comprehensive help/documentation section (GUI)
-
----
-
-For previous audits and backlog, see earlier sections below.
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] D:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:311 :: "# TODO: implement command routing\n",
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  next: Add or improve tests, then record updated test metrics

@@ -278,6 +278,48 @@ class ArchivistAgentTests(unittest.TestCase):
             self.assertEqual(len(todos), 1)
             self.assertIn("ACTIONITEM", str(todos[0].get("text", "")))
 
+    def test_collect_todos_skips_backlog_reference_noise(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project_noise"
+            docs = project / "docs"
+            src = project / "src"
+            docs.mkdir(parents=True)
+            src.mkdir(parents=True)
+
+            (docs / "autonomous_todo_backlog.md").write_text(
+                "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+                encoding="utf-8",
+            )
+            (src / "work.py").write_text(
+                "# TODO: implement archival retention policy\n",
+                encoding="utf-8",
+            )
+
+            agent = ArchivistAgent(root=root)
+            todos = agent._collect_todos(project)
+
+            self.assertEqual(len(todos), 1)
+            self.assertIn("retention policy", str(todos[0].get("text", "")).lower())
+
+    def test_on_invoke_writes_curated_actionable_todos(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project_curated"
+            project.mkdir()
+            (project / "module.py").write_text(
+                "# TODO: implement command routing\n",
+                encoding="utf-8",
+            )
+
+            agent = ArchivistAgent(root=root)
+            self.assertTrue(agent.add_onboarded_project(str(project))["ok"])
+            self.assertTrue(agent.on_invoke()["ok"])
+
+            todos_doc = (project / "docs" / "todos.md").read_text(encoding="utf-8")
+            self.assertIn("## Priority Backlog", todos_doc)
+            self.assertIn("implement command routing", todos_doc)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import py_compile
 import sys
 import pathlib
 
@@ -552,22 +553,110 @@ class CodeMageAgent:
         return {"ok": True, "work_packet": packet, "queued_total": len(self.work_packets)}
 
     def add_work_item(self, args: dict[str, Any]) -> dict[str, Any]:
+        delegated_handoff = bool(args.get("delegated_handoff", False))
         item = {
             "packet_id": str(args.get("packet_id", "")).strip(),
             "title": str(args.get("title", "")).strip(),
             "details": str(args.get("details", "")).strip(),
             "owner": "codemage",
-            "status": "queued",
+            "status": "in_progress" if delegated_handoff else "queued",
             "source": str(args.get("source", "")).strip(),
             "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "delegated_handoff": delegated_handoff,
             "discovered_owner": str(args.get("discovered_owner", "")).strip(),
             "source_path": str(args.get("source_path", "")).strip(),
             "source_line": int(args.get("source_line", 0) or 0),
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat() if delegated_handoff else "",
         }
         self.work_packets.append(item)
         self._save_work_packets()
         return {"ok": True, "work_item": item, "queued_total": len(self.work_packets)}
+
+    def _verify_post_fix_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        issues: list[str] = []
+        source_raw = str(item.get("source_path", "")).strip()
+        if source_raw:
+            source = Path(source_raw)
+            if source.exists() and source.suffix.lower() == ".py":
+                try:
+                    py_compile.compile(str(source), doraise=True)
+                except Exception as ex:
+                    issues.append(f"python compile failed for {source}: {ex}")
+
+        return {
+            "ok": len(issues) == 0,
+            "issues": issues,
+        }
+
+    def _submit_regression_to_runeforge(self, item: dict[str, Any], issues: list[str]) -> None:
+        detail = "; ".join(issues)[:900] if issues else "post-fix verification failed"
+        assignee_hint = str(item.get("discovered_owner", "")).strip().lower() or "codemage"
+        payload = {
+            "project_path": str(self.bus.root),
+            "source_doc": str(item.get("source_path", "") or "post_fix_verification"),
+            "submitted_by": "codemage",
+            "items": [
+                {
+                    "id": f"regression-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "title": str(item.get("title", "regression"))[:140],
+                    "details": detail,
+                    "assignee": assignee_hint,
+                    "severity": "high",
+                    "source_path": str(item.get("source_path", "")),
+                    "source_line": int(item.get("source_line", 0) or 0),
+                    "suggested_next_action": "Fix regression and re-run verification",
+                    "is_test_debt": False,
+                }
+            ],
+        }
+        self.bus.emit_command("runeforge", "review_archivist_delegations", payload, issued_by="codemage")
+        self.bus.emit_event(
+            "codemage",
+            "post_fix_regression_detected",
+            {
+                "title": str(item.get("title", "")),
+                "issues": issues,
+                "rerouted_to": "runeforge",
+            },
+        )
+
+    def _process_delegated_handoffs(self) -> dict[str, Any]:
+        changed = False
+        completed = 0
+        blocked = 0
+        for item in self.work_packets:
+            if not isinstance(item, dict):
+                continue
+            if not bool(item.get("delegated_handoff", False)):
+                continue
+            if str(item.get("status", "")).strip().lower() != "in_progress":
+                continue
+            if bool(item.get("post_fix_checked", False)):
+                continue
+
+            verify = self._verify_post_fix_item(item)
+            item["post_fix_checked"] = True
+            item["post_fix_verified_at"] = datetime.now(timezone.utc).isoformat()
+            if bool(verify.get("ok", False)):
+                item["status"] = "completed"
+                item["completed_by"] = "codemage"
+                item["completed_at"] = datetime.now(timezone.utc).isoformat()
+                item["resolution"] = "Delegated item implemented and post-fix verification passed"
+                completed += 1
+            else:
+                issues = [str(x) for x in verify.get("issues", []) if str(x).strip()]
+                item["status"] = "blocked"
+                item["post_fix_issues"] = issues
+                self._submit_regression_to_runeforge(item, issues)
+                blocked += 1
+            changed = True
+
+        if changed:
+            self._save_work_packets()
+        if completed:
+            self.bus.emit_event("codemage", "work_item_completed", {"ok": True, "completed_count": completed, "post_fix_verified": True})
+        return {"changed": changed, "completed": completed, "blocked": blocked}
 
     def list_work_packets(self) -> dict[str, Any]:
         return {"ok": True, "work_packets": self.work_packets}
@@ -796,6 +885,7 @@ class CodeMageAgent:
                 items=self.work_packets,
                 save_items=self._save_work_packets,
             )
+            self._process_delegated_handoffs()
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

@@ -522,6 +522,7 @@ PAGE = """
             <div class="muted">Control Hall</div>
             <div class="group-label">Operations</div>
             <button class="nav-btn" data-view="view_status" onclick="switchView('view_status')">Agent Status</button>
+            <button class="nav-btn" data-view="view_delegation" onclick="switchView('view_delegation')">Delegation Flow</button>
             <button class="nav-btn" data-view="view_snapshot" onclick="switchView('view_snapshot')">OS Snapshot</button>
             <button class="nav-btn" data-view="view_os_state" onclick="switchView('view_os_state')">OS State</button>
             <button class="nav-btn" data-view="view_commands" onclick="switchView('view_commands')">Quick Commands</button>
@@ -575,6 +576,17 @@ PAGE = """
             </section>
 
             <section id="view_status" class="card view-panel"><h2>Agent Status</h2><div id="agents" class="muted">Loading...</div></section>
+            <section id="view_delegation" class="card view-panel">
+                <h2>Delegation Flow</h2>
+                <div class="muted">Archivist -> Runeforge review -> subordinate agents -> in-progress/completed.</div>
+                <div class="row" style="margin-top:8px;">
+                    <button onclick="refreshDelegationFlowPanel()">Refresh Delegation Flow</button>
+                </div>
+                <div id="delegation_flow_summary" class="row" style="margin-top:8px;"></div>
+                <div id="delegation_flow_chips" style="margin-top:8px;"></div>
+                <div id="delegation_flow_timeline" class="row" style="margin-top:8px;"></div>
+                <pre id="delegation_flow_raw">Loading...</pre>
+            </section>
             <section id="view_snapshot" class="card view-panel">
                 <h2>OS Snapshot</h2>
                 <div id="runeforge_voice_status" class="agent-item" style="margin-bottom:10px;">
@@ -3216,6 +3228,103 @@ PAGE = """
             root.innerHTML = html;
         }
 
+        function renderDelegationFlow(data) {
+            const summary = document.getElementById('delegation_flow_summary');
+            const chipsRoot = document.getElementById('delegation_flow_chips');
+            const timelineRoot = document.getElementById('delegation_flow_timeline');
+            const raw = document.getElementById('delegation_flow_raw');
+            if (!summary || !chipsRoot || !timelineRoot || !raw) return;
+
+            if (!data || data.ok === false) {
+                summary.innerHTML = '<div class="agent-item"><strong>Delegation Flow</strong><div class="muted">Unavailable</div></div>';
+                chipsRoot.innerHTML = '';
+                timelineRoot.innerHTML = '';
+                raw.textContent = JSON.stringify(data || { ok: false, message: 'unavailable' }, null, 2);
+                return;
+            }
+
+            const c = data.counts || {};
+            const q = data.queue || {};
+            const accepted = data.accepted_by_agent || {};
+            const verification = data.verification || {};
+            const latestPacketId = String(data.latest_packet_id || '').trim();
+            const timeline = Array.isArray(data.timeline) ? data.timeline : [];
+
+            const cards = [
+                { title: 'Submitted', value: Number(c.submitted_items || 0), sub: Number(c.submitted_packets || 0) + ' packet(s)' },
+                { title: 'Reviewed', value: Number(c.reviewed_items || 0), sub: Number(c.reviewed_packets || 0) + ' packet(s)' },
+                { title: 'Dispatched', value: Number(c.dispatched_items || 0), sub: Number(c.accepted_items || 0) + ' accepted' },
+                { title: 'In Progress', value: Number(q.in_progress || 0), sub: Number(q.queued || 0) + ' queued' },
+                { title: 'Completed', value: Number(c.completed_items || 0), sub: 'from bus events' },
+            ];
+
+            const acceptedText = Object.keys(accepted).length
+                ? Object.entries(accepted).map(([k, v]) => htmlEscape(String(k)) + ': ' + htmlEscape(String(v))).join(' | ')
+                : 'No agent acceptance events yet';
+
+            const latestText = latestPacketId || 'none';
+
+            summary.innerHTML = cards.map((item) => (
+                '<div class="agent-item"><strong>' + htmlEscape(item.title) + '</strong>'
+                + '<div style="font-size:22px;margin-top:4px;">' + htmlEscape(String(item.value)) + '</div>'
+                + '<div class="muted">' + htmlEscape(item.sub) + '</div></div>'
+            )).join('')
+                + '<div class="agent-item"><strong>Latest Packet</strong><div class="muted" style="margin-top:6px;">' + htmlEscape(latestText) + '</div></div>'
+                + '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Accepted By Agent</strong><div class="muted">' + acceptedText + '</div></div>';
+
+            const chips = [
+                {
+                    label: 'Verified',
+                    value: Number(verification.verified || 0),
+                    style: 'border-color:#4CC46A;color:#4CC46A;background:rgba(76,196,106,0.12);',
+                },
+                {
+                    label: 'Blocked',
+                    value: Number(verification.blocked || 0),
+                    style: 'border-color:#FF4D4D;color:#FF4D4D;background:rgba(255,77,77,0.12);',
+                },
+                {
+                    label: 'Rerouted',
+                    value: Number(verification.rerouted || 0),
+                    style: 'border-color:#FFB84D;color:#FFB84D;background:rgba(255,184,77,0.12);',
+                },
+            ];
+
+            chipsRoot.innerHTML = chips
+                .map((chip) => '<span class="pill" style="margin-right:8px;padding:4px 10px;' + chip.style + '">'
+                    + htmlEscape(chip.label) + ': ' + htmlEscape(String(chip.value)) + '</span>')
+                .join('');
+
+            if (!timeline.length) {
+                timelineRoot.innerHTML = '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Recent Review Timeline</strong><div class="muted">No review packets yet.</div></div>';
+            } else {
+                timelineRoot.innerHTML = '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Recent Review Timeline</strong><div class="muted">Most recent packet waves and target dispatch mix.</div>'
+                    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
+                    + timeline.map((entry) => {
+                        const packetId = htmlEscape(String(entry.packet_id || 'packet'));
+                        const dispatched = htmlEscape(String(entry.dispatched || 0));
+                        const stamp = htmlEscape(String(entry.timestamp || ''));
+                        const byTarget = (entry.by_target && typeof entry.by_target === 'object')
+                            ? Object.entries(entry.by_target).map(([k, v]) => htmlEscape(String(k)) + ':' + htmlEscape(String(v))).join(' | ')
+                            : '';
+                        return '<span class="pill" style="padding:6px 8px;line-height:1.3;">'
+                            + '<strong>' + packetId + '</strong><br/>'
+                            + 'dispatch: ' + dispatched + '<br/>'
+                            + (byTarget ? (byTarget + '<br/>') : '')
+                            + '<span class="muted" style="font-size:11px;">' + stamp + '</span>'
+                            + '</span>';
+                    }).join('')
+                    + '</div></div>';
+            }
+
+            raw.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function refreshDelegationFlowPanel() {
+            const data = await fetchJsonWithTimeout('/api/delegation/flow', 6000);
+            renderDelegationFlow(data);
+        }
+
         async function refreshOsStatePanel() {
             const stateEl = document.getElementById('os_state');
             const diffEl = document.getElementById('os_state_diff');
@@ -3267,6 +3376,7 @@ PAGE = """
             const snapData = await fetchJsonWithTimeout('/api/snapshot');
             const sealData = await fetchJsonWithTimeout('/api/archivist/seal');
             const voiceData = await fetchJsonWithTimeout('/api/runeforge/voice_status');
+            const delegationData = await fetchJsonWithTimeout('/api/delegation/flow');
 
             if (statusData && statusData.agent_state) {
                 renderAgents(statusData.agent_state);
@@ -3279,6 +3389,7 @@ PAGE = """
             document.getElementById('snapshot').textContent = JSON.stringify(snapData, null, 2);
             renderSnapshotDashboard(snapData);
             renderRuneforgeVoiceStatus(voiceData);
+            renderDelegationFlow(delegationData);
             document.getElementById('seal').textContent = JSON.stringify(sealData, null, 2);
 
             if (currentView === 'view_os_state') {
@@ -3287,8 +3398,11 @@ PAGE = """
             if (currentView === 'view_bus') {
                 await refreshBusInspector();
             }
+            if (currentView === 'view_delegation') {
+                await refreshDelegationFlowPanel();
+            }
 
-            const failed = [statusData, eventsData, snapData, sealData, voiceData].filter(x => x && x.ok === false).length;
+            const failed = [statusData, eventsData, snapData, sealData, voiceData, delegationData].filter(x => x && x.ok === false).length;
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
         }
 
@@ -3643,6 +3757,157 @@ def runeforge_voice_status():
                 break
 
     return jsonify({"ok": True, "pending_approval": pending, "last_report": last_report})
+
+
+@app.get("/api/delegation/flow")
+def delegation_flow_status():
+    events = bus.read_latest_events(limit=300)
+    worker_agents = {"runeforge", "codemage", "devlot", "test_sentinel"}
+
+    submitted_packets = 0
+    submitted_items = 0
+    reviewed_packets = 0
+    reviewed_items = 0
+    dispatched_items = 0
+    accepted_items = 0
+    completed_items = 0
+    rerouted_items = 0
+    verified_items = 0
+    accepted_by_agent: dict[str, int] = {}
+    timeline_entries: list[dict[str, object]] = []
+    latest_packet_id = ""
+
+    latest_submission_at = ""
+    latest_review_at = ""
+
+    for item in events:
+        if not isinstance(item, dict):
+            continue
+        source = str(item.get("source", "")).strip().lower()
+        event_name = str(item.get("event", "")).strip()
+        data = item.get("data") if isinstance(item.get("data"), dict) else {}
+        stamp = str(item.get("timestamp", "")).strip()
+
+        if source == "archivist" and event_name == "delegation_submitted_to_runeforge":
+            submitted_packets += 1
+            submitted_items += int(data.get("submitted", 0) or 0)
+            if stamp:
+                latest_submission_at = stamp
+
+        if source == "runeforge" and event_name == "delegation_review_completed":
+            packet_id = str(data.get("packet_id", "")).strip()
+            reviewed_packets += 1
+            reviewed_items += int(data.get("submitted", 0) or 0)
+            dispatched_items += int(data.get("dispatched", 0) or 0)
+            if packet_id:
+                latest_packet_id = packet_id
+
+            by_target: dict[str, int] = {}
+            for dispatch_item in data.get("items", []) if isinstance(data.get("items"), list) else []:
+                if not isinstance(dispatch_item, dict):
+                    continue
+                target = str(dispatch_item.get("target", "")).strip().lower()
+                if not target:
+                    continue
+                by_target[target] = by_target.get(target, 0) + 1
+
+            timeline_entries.append(
+                {
+                    "packet_id": packet_id or "unknown",
+                    "timestamp": stamp,
+                    "submitted": int(data.get("submitted", 0) or 0),
+                    "dispatched": int(data.get("dispatched", 0) or 0),
+                    "by_target": by_target,
+                }
+            )
+            if stamp:
+                latest_review_at = stamp
+
+        if source in worker_agents and event_name == "command:work_item":
+            if bool(data.get("ok", False)):
+                accepted_items += 1
+                accepted_by_agent[source] = accepted_by_agent.get(source, 0) + 1
+
+        if source in worker_agents and event_name == "work_item_completed":
+            completed_items += int(data.get("completed_count", 0) or 0)
+            if bool(data.get("post_fix_verified", False)):
+                verified_items += int(data.get("completed_count", 0) or 0)
+
+        if source in worker_agents and event_name == "post_fix_regression_detected":
+            rerouted_items += 1
+
+    def _read_items(path: Path) -> list[dict[str, object]]:
+        if not path.exists():
+            return []
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return []
+        raw = payload.get("items", []) if isinstance(payload, dict) else []
+        return [x for x in raw if isinstance(x, dict)] if isinstance(raw, list) else []
+
+    queue_files = {
+        "runeforge": bus.state / "runeforge_tasks.json",
+        "codemage": bus.state / "codemage_work_packets.json",
+        "devlot": bus.state / "devlot_tasks.json",
+        "test_sentinel": bus.state / "test_sentinel_tasks.json",
+    }
+
+    queued = 0
+    in_progress = 0
+    blocked = 0
+    delegated_seen = 0
+
+    for _, path in queue_files.items():
+        for task in _read_items(path):
+            is_delegated = bool(task.get("delegated_handoff", False)) or str(task.get("source", "")).strip().lower() == "archivist_review"
+            if not is_delegated:
+                continue
+            delegated_seen += 1
+            status = str(task.get("status", "queued")).strip().lower()
+            if status == "in_progress":
+                in_progress += 1
+            elif status == "queued":
+                queued += 1
+            elif status == "blocked":
+                blocked += 1
+
+    timeline = list(reversed(timeline_entries[:8]))
+    if not latest_packet_id and timeline:
+        latest_packet_id = str(timeline[-1].get("packet_id", "")).strip()
+
+    return jsonify(
+        {
+            "ok": True,
+            "counts": {
+                "submitted_packets": submitted_packets,
+                "submitted_items": submitted_items,
+                "reviewed_packets": reviewed_packets,
+                "reviewed_items": reviewed_items,
+                "dispatched_items": dispatched_items,
+                "accepted_items": accepted_items,
+                "completed_items": completed_items,
+            },
+            "queue": {
+                "delegated_items_seen": delegated_seen,
+                "in_progress": in_progress,
+                "queued": queued,
+                "blocked": blocked,
+            },
+            "verification": {
+                "verified": verified_items,
+                "blocked": blocked,
+                "rerouted": rerouted_items,
+            },
+            "accepted_by_agent": accepted_by_agent,
+            "latest_packet_id": latest_packet_id,
+            "timeline": timeline,
+            "latest": {
+                "submission_at": latest_submission_at,
+                "review_at": latest_review_at,
+            },
+        }
+    )
 
 
 @app.get("/api/archivist/seal")

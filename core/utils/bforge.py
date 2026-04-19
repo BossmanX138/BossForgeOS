@@ -7,9 +7,9 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict
 
-from core.archivist_agent import ArchivistAgent
+from core.agents.archivist_agent import ArchivistAgent
 from core.icons import IconForge
-from core.rune_bus import RuneBus, resolve_root_from_env
+from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from modules.os_snapshot import snapshot_all
 
 
