@@ -29,7 +29,7 @@ from core.rune.agent_consumer import AgentConsumerLoop
 
 from core.agent_registry import register_agent
 
-UNCHECKED_CHECKLIST_RE = re.compile(r"^\s*[-*+]\s*\[\s\]\s+(?P<task>.+?)\s*$", re.IGNORECASE)
+UNCHECKED_CHECKLIST_RE = re.compile(r"^\s*[-*+]\s*\[\s\]\s+(?P<task>.+)\s*$", re.IGNORECASE)
 
 
 class ArchivistAgent:
@@ -648,8 +648,7 @@ class ArchivistAgent:
                     continue
 
                 for idx, line in enumerate(lines, start=1):
-                    todo_match = bool(pattern.search(line))
-                    if todo_match:
+                    if pattern.search(line):
                         text = line.strip()
                     else:
                         checklist_match = UNCHECKED_CHECKLIST_RE.match(line)
