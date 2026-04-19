@@ -2551,15 +2551,15 @@ PAGE = """
 
         function rankCaps(rank) {
             const caps = {
-                cadet: { skills: 1, sigils: 0, mcp: 2 },
-                specialist: { skills: 2, sigils: 0, mcp: 3 },
-                lieutenant: { skills: 3, sigils: 1, mcp: 4 },
-                captain: { skills: 5, sigils: 2, mcp: 6 },
-                commander: { skills: 7, sigils: 3, mcp: 8 },
-                general: { skills: 9, sigils: 4, mcp: 10 },
-                admiral: { skills: 12, sigils: 5, mcp: 12 },
+                cadet: { skills: 4, sigils: 3, mcp: 5 },
+                specialist: { skills: 5, sigils: 3, mcp: 6 },
+                lieutenant: { skills: 6, sigils: 4, mcp: 7 },
+                captain: { skills: 8, sigils: 5, mcp: 9 },
+                commander: { skills: 10, sigils: 6, mcp: 11 },
+                general: { skills: 12, sigils: 7, mcp: 13 },
+                admiral: { skills: 15, sigils: 8, mcp: 15 },
             };
-            return caps[String(rank || '').trim().toLowerCase()] || { skills: 1, sigils: 0, mcp: 2 };
+            return caps[String(rank || '').trim().toLowerCase()] || { skills: 4, sigils: 3, mcp: 5 };
         }
 
         function selectedWizardValues(selectId) {

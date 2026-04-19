@@ -88,13 +88,13 @@ Direct travel control is skill-gated via `bossgate_travel_control`.
 
 ### Rank Capacity Matrix
 
-- `cadet`: max skills `1`, max sigils `0`, max MCP servers `2`
-- `specialist`: max skills `2`, max sigils `0`, max MCP servers `3`
-- `lieutenant`: max skills `3`, max sigils `1`, max MCP servers `4`
-- `captain`: max skills `5`, max sigils `2`, max MCP servers `6`
-- `commander`: max skills `7`, max sigils `3`, max MCP servers `8`
-- `general`: max skills `9`, max sigils `4`, max MCP servers `10`
-- `admiral`: max skills `12`, max sigils `5`, max MCP servers `12`
+- `cadet`: max skills `4`, max sigils `3`, max MCP servers `5`
+- `specialist`: max skills `5`, max sigils `3`, max MCP servers `6`
+- `lieutenant`: max skills `6`, max sigils `4`, max MCP servers `7`
+- `captain`: max skills `8`, max sigils `5`, max MCP servers `9`
+- `commander`: max skills `10`, max sigils `6`, max MCP servers `11`
+- `general`: max skills `12`, max sigils `7`, max MCP servers `13`
+- `admiral`: max skills `15`, max sigils `8`, max MCP servers `15`
 
 ## Agent Type Rules
 

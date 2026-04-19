@@ -11,31 +11,31 @@ _AGENT_TYPES = {"authority", "controller", "worker", "security", "tester", "rang
 _AGENT_RANKS = ("cadet", "specialist", "lieutenant", "captain", "commander", "general", "admiral")
 _RANK_INDEX = {name: idx for idx, name in enumerate(_AGENT_RANKS)}
 _RANK_SKILL_CAP = {
-    "cadet": 1,
-    "specialist": 2,
-    "lieutenant": 3,
-    "captain": 5,
-    "commander": 7,
-    "general": 9,
-    "admiral": 12,
+    "cadet": 4,
+    "specialist": 5,
+    "lieutenant": 6,
+    "captain": 8,
+    "commander": 10,
+    "general": 12,
+    "admiral": 15,
 }
 _RANK_SIGIL_CAP = {
-    "cadet": 0,
-    "specialist": 0,
-    "lieutenant": 1,
-    "captain": 2,
-    "commander": 3,
-    "general": 4,
-    "admiral": 5,
-}
-_RANK_MCP_CAP = {
-    "cadet": 2,
+    "cadet": 3,
     "specialist": 3,
     "lieutenant": 4,
-    "captain": 6,
-    "commander": 8,
-    "general": 10,
-    "admiral": 12,
+    "captain": 5,
+    "commander": 6,
+    "general": 7,
+    "admiral": 8,
+}
+_RANK_MCP_CAP = {
+    "cadet": 5,
+    "specialist": 6,
+    "lieutenant": 7,
+    "captain": 9,
+    "commander": 11,
+    "general": 13,
+    "admiral": 15,
 }
 _DISPATCH_SCOPES = {"host", "lan", "remote"}
 _SKILL_PREFIX_SKILLED_ONLY = (
