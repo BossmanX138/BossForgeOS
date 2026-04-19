@@ -2,22 +2,17 @@
 
 ## Table of Contents
 
-- [Status Bar Health Indicator (Planned)](#status-bar-health-indicator-planned)
+- [Status Bar Health Indicator](#status-bar-health-indicator)
 - [Onboarding Wizard](#onboarding-wizard)
 
-## Status Bar Health Indicator (Planned)
+## Status Bar Health Indicator
 
-A status bar item will be added to the extension to display BossForgeOS health:
+A status bar item displays BossForgeOS health:
 - **Online**: Agent is connected and responsive on the bus.
 - **Stale**: Agent is connected but not recently active.
 - **Offline**: Agent is not connected or unreachable.
 
-The status bar will update in real time by reading agent state from the bus.
-
-**Implementation To-Do:**
-- Register a status bar item in `extension.js`.
-- Poll or subscribe to agent state from the bus.
-- Update the status bar item text and color based on health.
+The status bar updates in real time by polling and watching agent state files from the bus.
 
 ---
 
