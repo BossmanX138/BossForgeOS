@@ -649,14 +649,16 @@ class ArchivistAgent:
 
                 for idx, line in enumerate(lines, start=1):
                     todo_match = bool(pattern.search(line))
-                    checklist_match = None if todo_match else UNCHECKED_CHECKLIST_RE.match(line)
+                    checklist_match = None
+                    if not todo_match:
+                        checklist_match = UNCHECKED_CHECKLIST_RE.match(line)
                     if not todo_match and not checklist_match:
                         continue
 
                     if todo_match:
                         text = line.strip()
                     else:
-                        text = str(checklist_match.group("task")).strip()
+                        text = checklist_match.group("task").strip()
                     text = text[:240]
                     if not self._is_actionable_todo_text(text):
                         continue
