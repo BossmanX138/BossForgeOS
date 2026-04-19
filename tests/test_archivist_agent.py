@@ -302,6 +302,24 @@ class ArchivistAgentTests(unittest.TestCase):
             self.assertEqual(len(todos), 1)
             self.assertIn("retention policy", str(todos[0].get("text", "")).lower())
 
+    def test_collect_todos_includes_unchecked_markdown_checklists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project_checklists"
+            project.mkdir()
+            todo_list = project / "ENTERPRISE_TODO_LIST.md"
+            todo_list.write_text(
+                "- [ ] Implement protocol compatibility checks\n"
+                "- [x] Add completed dashboard card\n",
+                encoding="utf-8",
+            )
+
+            agent = ArchivistAgent(root=root)
+            todos = agent._collect_todos(project)
+
+            self.assertEqual(len(todos), 1)
+            self.assertIn("Implement protocol compatibility checks", str(todos[0].get("text", "")))
+
     def test_on_invoke_writes_curated_actionable_todos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

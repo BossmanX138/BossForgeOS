@@ -1,11 +1,11 @@
 # TODOs for BossForgeOS Enterprise Roadmap (Agent-Ready)
 
 ## Phase 1: Enterprise Core
-- [ ] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)
-- [ ] Implement BossCrafts Protocol v1 versioning and compatibility checks
+- [x] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)
+- [x] Implement BossCrafts Protocol v1 versioning and compatibility checks
 - [ ] Add structured event schemas to Rune Bus (define event types, schemas)
-- [ ] Implement agent execution trace logging (per-agent, per-event)
-- [ ] Add per-agent SLA/health scoring logic (daemon/agent health monitors)
+- [x] Implement agent execution trace logging (per-agent, per-event)
+- [x] Add per-agent SLA/health scoring logic (daemon/agent health monitors)
 - [ ] Define canonical OS state model (schema, serialization, diff)
 - [ ] Implement time-travel state diff and restore
 - [ ] Add audit-grade immutable logs (append-only, signed)
