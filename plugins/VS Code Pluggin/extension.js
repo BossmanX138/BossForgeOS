@@ -44,10 +44,16 @@ function healthFromTimestamp(ts) {
 }
 
 function readBusHealth(dir) {
-    const files = fs.readdirSync(dir).filter((name) => name.toLowerCase().endsWith('.json'));
+    let files = [];
+    try {
+        files = fs.readdirSync(dir).filter((name) => name.toLowerCase().endsWith('.json'));
+    } catch {
+        return 'offline';
+    }
     let hasStale = false;
 
     for (const name of files) {
+        // This queue file tracks Archivist seal work, not per-agent heartbeat state.
         if (name === 'archivist_seal_queue.json') {
             continue;
         }
