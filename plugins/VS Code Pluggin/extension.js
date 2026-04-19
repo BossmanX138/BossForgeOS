@@ -43,8 +43,7 @@ function healthFromTimestamp(ts) {
     return 'offline';
 }
 
-function readBusHealth() {
-    const dir = stateDir();
+function readBusHealth(dir) {
     const files = fs.readdirSync(dir).filter((name) => name.toLowerCase().endsWith('.json'));
     let hasStale = false;
 
@@ -105,9 +104,10 @@ function activate(context) {
     statusBar.show();
     context.subscriptions.push(statusBar);
 
+    const busStateDir = stateDir();
     const updateStatus = () => {
         try {
-            applyStatusBarHealth(statusBar, readBusHealth());
+            applyStatusBarHealth(statusBar, readBusHealth(busStateDir));
         } catch {
             applyStatusBarHealth(statusBar, 'offline');
         }
@@ -118,12 +118,14 @@ function activate(context) {
     const interval = setInterval(updateStatus, 10000);
     context.subscriptions.push({ dispose: () => clearInterval(interval) });
 
-    try {
-        const watcher = fs.watch(stateDir(), () => updateStatus());
-        context.subscriptions.push({ dispose: () => watcher.close() });
-    } catch {
-        // Polling remains active if file watching is unavailable.
-    }
+    const statePattern = new vscode.RelativePattern(busStateDir, '*.json');
+    const watcher = vscode.workspace.createFileSystemWatcher(statePattern);
+    context.subscriptions.push(
+        watcher,
+        watcher.onDidCreate(updateStatus),
+        watcher.onDidChange(updateStatus),
+        watcher.onDidDelete(updateStatus)
+    );
 }
 
 function deactivate() {}
