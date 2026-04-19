@@ -204,13 +204,17 @@ class SystemTrayIcon:
 
 
 def _resolve_tray_icon_path() -> Path:
-    candidate = PROJECT_ROOT / ".." / "Anvil Secured Shuttle (A.S.S.)" / "assets" / "BossCrafts_Tray.png"
-    if candidate.exists():
-        return candidate
-    fallback = PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico"
-    if fallback.exists():
-        return fallback
-    return PROJECT_ROOT / "assets" / "build" / "BossCrafts_Tray.ico"
+    candidates = [
+        PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico",
+        PROJECT_ROOT / "assets" / "build" / "BossCrafts_Tray.ico",
+        PROJECT_ROOT / "extension" / "electron-shell" / "assets" / "bossforgeos.png",
+        PROJECT_ROOT / ".." / "Anvil Secured Shuttle (A.S.S.)" / "assets" / "BossCrafts_Tray.png",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    # Fall back to the canonical BossForgeOS icon location.
+    return PROJECT_ROOT / "assets" / "images" / "BossCrafts_Tray.ico"
 
 
 def _hide_console_window() -> None:

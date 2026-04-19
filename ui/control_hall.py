@@ -1575,6 +1575,35 @@ PAGE = """
             setTimeout(endBusy, 180);
         }
 
+        function applyUrlLaunchContext() {
+            const params = new URLSearchParams(window.location.search || '');
+            const requestedView = (params.get('view') || '').trim();
+            if (requestedView && document.getElementById(requestedView)) {
+                switchView(requestedView);
+            }
+
+            const openIcon = (params.get('open_icon') || '').trim();
+            if (!openIcon) return;
+
+            if (currentView !== 'view_iconforge') {
+                switchView('view_iconforge');
+            }
+
+            const iconPathInput = document.getElementById('iconforge_icon_path');
+            if (iconPathInput) {
+                iconPathInput.value = openIcon;
+            }
+
+            const baseName = openIcon.split(/[\\/]/).pop() || '';
+            const iconStem = baseName.replace(/\.[^.]+$/, '').trim();
+            const studioName = document.getElementById('icon_studio_name');
+            if (studioName && iconStem) {
+                studioName.value = iconStem;
+            }
+
+            setIconStudioStatus('Explorer selection loaded: ' + openIcon);
+        }
+
         document.addEventListener('keydown', (event) => {
             if (!(event.ctrlKey || event.metaKey)) return;
             if (String(event.key || '').toLowerCase() !== 's') return;
@@ -3686,6 +3715,7 @@ PAGE = """
         refreshCicdStatus();
         applyAssetIcons();
         initIconForgeStudio();
+        applyUrlLaunchContext();
         toggleWizardIconSource();
         toggleMakerIconSource();
         syncWizardStateMachinePreview();
