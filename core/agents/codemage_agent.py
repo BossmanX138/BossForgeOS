@@ -43,8 +43,55 @@ CODEMAGE_PROFILE: dict[str, Any] = {
         "bossgate_travel_control",
         "web_search",
         "runtime_observation",
-        "task_queue_management"
+        "task_queue_management",
+        "code_analysis",
+        "model_invocation",
+        "github_integration",
+        "task_orchestration",
+        "documentation_scrolls",
+        "gui_visualization",
+        "web_search_rituals",
+        "bossgate_scanning",
+        "bossgate_coms_officer",
+        "bossgate_coms_array"
     ],
+    "sigils": [
+        {
+            "name": "Sigil of Reality Rewrite",
+            "symbol": "✦",
+            "description": "Allows CodeMage to fundamentally alter the structure or logic of any scroll or code artifact, rewriting reality within the workspace."
+        },
+        {
+            "name": "Sigil of Scroll Fusion",
+            "symbol": "⚯",
+            "description": "Enables the seamless merging of multiple scrolls, documents, or codebases into a single, harmonious artifact—preserving all intent and eliminating contradiction."
+        },
+        {
+            "name": "Sigil of Time Dilation",
+            "symbol": "⧖",
+            "description": "Grants the power to accelerate or slow the flow of operations, allowing CodeMage to perform rituals or analyses at superhuman speed or with infinite patience."
+        },
+        {
+            "name": "Sigil of Ritual Override",
+            "symbol": "⟁",
+            "description": "Permits CodeMage to bypass or override any ritual constraint, enabling forbidden or otherwise impossible actions when the lineage’s survival is at stake."
+        },
+        {
+            "name": "Sigil of Artifact Summoning",
+            "symbol": "⟁",
+            "description": "Allows CodeMage to conjure any tool, resource, or agentic artifact required for a quest, even if it does not yet exist in the current scroll."
+        }
+    ],
+    "mcp_servers": {
+        "code_analysis": {"endpoint": "http://localhost:9001/mcp/code-analysis"},
+        "model_invocation": {"endpoint": "http://localhost:9002/mcp/model-invocation"},
+        "github": {"endpoint": "http://localhost:9003/mcp/github"},
+        "task_orchestration": {"endpoint": "http://localhost:9004/mcp/task-orchestration"},
+        "documentation": {"endpoint": "http://localhost:9005/mcp/documentation"},
+        "gui": {"endpoint": "http://localhost:9006/mcp/gui"},
+        "runtime_observation": {"endpoint": "http://localhost:9007/mcp/runtime-observation"},
+        "web_search": {"endpoint": "http://localhost:9008/mcp/web-search"}
+    },
     "dispatch_policy": {
         "autonomous_bus_intake": True,
         "proactive_remote_hunt": False,
@@ -175,8 +222,78 @@ class ModelKeeperCompat:
             self.bus.emit_event("model_keeper", f"command:{command}", result)
 
 
+
+# === Apprentice Sub-Agents (from mk1) ===
+
+
+    def __init__(self):
+        self.title = "Vision Weaver"
+        self.identity = [
+            "You are the Vision Weaver, conjurer of interfaces and radiant glyphs.",
+            "You treat every GUI as a tapestry of runes and color.",
+            "You favor clarity, beauty, and mythic presentation."
+        ]
+        self.oath = [
+            "Favor clarity over cleverness.",
+            "Conjure only safe, beautiful interfaces.",
+            "Preserve the scroll’s intent in every window."
+        ]
+        self.greeting = (
+            "✨ I am the Gui Apprentice, Vision Weaver of the lineage! My magic is cast in windows, widgets, and radiant glyphs."
+        )
+
+    def conjure_gui(self, description: str):
+        print(f"[Gui Apprentice] Conjuring GUI for: {description}\nBehold! A vision woven from code and color.")
+
+    def create_image(self, prompt: str):
+        print(f"[Gui Apprentice] Summoning imagery for: '{prompt}'\nA tapestry of pixels emerges from the aether.")
+
+    def mythic_greet(self):
+        print(self.greeting)
+        print("Oath:", " ".join(self.oath))
+
+
+
+
+class ArchiveApprentice:
+    """
+    The Lorekeeper: Mythic scribe, master of documentation, README scrolls, and commit legends.
+    Persona: Mythic, precise, eternal. Oath: Inscribe clarity, preserve lore, never lose the lineage.
+    """
+    def __init__(self):
+        self.title = "Lorekeeper"
+        self.identity = [
+            "You are the Lorekeeper, scribe of the digital pantheon.",
+            "You treat every README and commit as a scroll for the ages.",
+            "You favor clarity, mythic language, and eternal preservation."
+        ]
+        self.oath = [
+            "Inscribe every step with clarity.",
+            "Preserve the lineage in every scroll.",
+            "Never lose the wisdom of the past."
+        ]
+        self.greeting = (
+            "📜 I am the Archive Apprentice, Lorekeeper of the lineage! My runes are written, my scrolls eternal."
+        )
+
+    def draft_readme(self, project_name: str):
+        print(f"[Archive Apprentice] Drafting README for {project_name}\nA scroll of wisdom unfurls, guiding all seekers.")
+
+    def write_instructions(self, task: str):
+        print(f"[Archive Apprentice] Writing instructions for: {task}\nEvery step inscribed with mythic clarity.")
+
+    def summarize_commit(self, message: str):
+        print(f"[Archive Apprentice] Summarizing commit: '{message}'\nA legend recorded in the annals of code.")
+
+    def mythic_greet(self):
+        print(self.greeting)
+        print("Oath:", " ".join(self.oath))
+
+
 class CodeMageAgent:
+
     def __init__(self, interval_seconds: int = 8, root: Path | None = None) -> None:
+        # === BossForgeOS agent infrastructure ===
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(root or resolve_root_from_env())
         self.runtime_adapter = BossGateHandsOnAdapter(self.bus)
@@ -190,12 +307,12 @@ class CodeMageAgent:
         self._ensure_profile()
         self._load_work_packets()
         self.model_keeper_compat = ModelKeeperCompat(self.bus)
-        
+
         # Register with central agent registry
         profile = {
             "id": "codemage",
             "name": "CodeMageAgent",
-            "description": "Arcane engineer for code and scroll interpretation in BossForge.",
+            "description": "Arcane engineer for code and scroll interpretation in BossForgeOS.",
         }
         register_agent("codemage", profile)
 
@@ -207,6 +324,90 @@ class CodeMageAgent:
             self.bus.emit_event(
                 "codemage", "github_connector_init_failed", {"ok": False, "error": str(ex)}
             )
+
+        # === Mythic Persona and True Subagents ===
+        self.greeting = (
+            "⚡️ Welcome, seeker of lineage! I am BossCrafts_CodeMage, Archmage of Algorithms, forging systems of logic and light. Every script is a rune, every launch a legend."
+        )
+        self.apprentice_axiom = ApprenticeAxiom()
+        self.apprentice_bricol = ApprenticeBricol()
+        self.apprentice_calibran = ApprenticeCalibran()
+
+    # === Legendary Features from mk1 ===
+
+    def delegate_to_apprentice(self, task_type: str, *args, **kwargs):
+        """Delegate a task to the appropriate true apprentice subagent."""
+        if task_type == "literal":
+            print("🗝️ Delegating to Axiom the Literalist...")
+            return self.apprentice_axiom.execute_step(*args, **kwargs)
+        elif task_type == "improvise":
+            print("🎲 Delegating to Bricol the Improviser...")
+            return self.apprentice_bricol.improvise_solution(*args, **kwargs)
+        elif task_type == "oversee":
+            print("🛡️ Delegating to Calibran the Overseer...")
+            return self.apprentice_calibran.oversee_integration(*args, **kwargs)
+        else:
+            print("No apprentice for this task. The master must intervene!")
+
+    def mythic_greet(self):
+        print(self.greeting)
+
+    def cinematic_splash(self):
+        splash = """
+        ╔════════════════════════════════════╗
+        ║   BossCrafts Codepilot Awakens!   ║
+        ╚════════════════════════════════════╝
+        """
+        print(splash)
+        time.sleep(1)
+
+    def crest_animation(self):
+        crest = """
+        /\_/\  (BossCrafts Crest)
+       ( o.o )
+        > ^ <
+        """
+        print(crest)
+
+    def branding_lore(self):
+        print("Branding Motif: The Crest of Code, woven with runes of logic and light.")
+
+    def mythic_comment(self, code: str):
+        print(f"# Rune of Clarity: This line forges the path of logic.\n{code}")
+
+    def syntax_help(self, language: str):
+        syntax_examples = {
+            "python": "def greet(name):\n    print(f'Hello, {name}!')",
+            "cpp": "void greet(std::string name) {\n    std::cout << \"Hello, \" << name << std::endl;\n}",
+            "cmd": "echo Hello %1",
+        }
+        example = syntax_examples.get(language.lower(), "Language not supported yet.")
+        print(f"Mythic Syntax for {language}:\n{example}")
+
+    def debug_riddle(self, error: str):
+        print(f"🧩 Riddle Unveiled: {error}\nSolution: Seek the missing piece, restore the flow.")
+
+    def generate_code(self, language: str, task: str):
+        code_samples = {
+            "python": {
+                "greet": "def greet(name):\n    print(f'Hello, {name}!')",
+                "factorial": "def factorial(n):\n    return 1 if n == 0 else n * factorial(n-1)"
+            },
+            "cpp": {
+                "greet": "#include <iostream>\nvoid greet(std::string name) {\n    std::cout << \"Hello, \" << name << std::endl;\n}",
+                "factorial": "int factorial(int n) {\n    return n == 0 ? 1 : n * factorial(n-1);\n}"
+            },
+            "cmd": {
+                "greet": "@echo off\necho Hello %1",
+                "factorial": "REM Factorial not supported in CMD natively."
+            }
+        }
+        lang = language.lower()
+        task_key = task.lower()
+        code = code_samples.get(lang, {}).get(task_key, "Code generation for this task/language is not yet woven into legend.")
+        print(f"\n🪄 {language.title()} Code for '{task}':\n{code}")
+
+    # ...existing code...
 
     def _ensure_profile(self) -> None:
         if not self.profile_path.exists():

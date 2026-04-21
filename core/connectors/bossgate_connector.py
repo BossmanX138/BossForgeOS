@@ -259,8 +259,68 @@ def _http_options_headers(url: str, timeout: float = 2.0):
     return status, headers
 
 
-# --- REST Endpoint Scanning ---
-def scan_rest_endpoints(base_url):
+# --- Secure Address and Communication ---
+#
+# Top-Tier Security Requirements:
+# - All address ledgers must be encrypted at rest using AES-256-GCM or equivalent.
+# - Encryption keys must be unique per BossGate, never hardcoded, and support rotation (integrate with secure key vaults if possible).
+# - All direct communications (encrypted or not) must use TLS 1.3+ with mutual authentication for encrypted comms.
+# - Secure address generation: each 7-word address must be generated using cryptographically secure random word selection, ensuring uniqueness and unpredictability.
+# - Tamper-evidence: ledgers should be protected with HMAC or digital signatures to detect unauthorized modification.
+# - Secure deletion and rotation: support for securely deleting addresses/keys and rotating them as needed (e.g., on agent retirement or compromise).
+# - Privacy boundaries: foreign agents/gates only contribute their own address, never their full ledger.
+# - All address lists are encrypted at rest and never transmitted in bulk.
+#
+# TODO: Implement AES-256-GCM encryption/decryption for ledger files.
+# TODO: Integrate with a secure key vault for key management and rotation.
+# TODO: Use TLS 1.3+ with mutual authentication for all encrypted direct comms.
+# TODO: Use os.urandom or secrets module for cryptographically secure address generation.
+# TODO: Add HMAC or digital signature to each ledger entry for tamper-evidence.
+# TODO: Implement secure deletion (e.g., file shredding) for retired addresses/keys.
+#
+# Address Ledger Protocol:
+# - Every BossGate keeps its own encrypted list of addresses it has traveled to or communicated with.
+# - Each home BossForge or Bridgebase has a BossGate with its own unique address.
+# - Prime BossGates (at BossForge or Bridgebase) maintain a master list, compiled from all agents/connections made by BossGates created at that location, plus addresses of foreign agents/gates encountered.
+# - When connecting to a foreign agent/gate, only the foreign address is added—never the full list of known addresses from the foreign side (privacy boundary).
+# - All address lists are encrypted at rest.
+# - Foreign agents/gates only contribute their own address, not their full ledger.
+# Every BossGate instance must have a secure address in the following format:
+#   *word1*word2*word3*word4*word5*word6*word7*
+# Each word is an English-language word (e.g., *codemage*star*fox*bravo*king*ice*executioner*).
+# The address is derived from the agent connector and serves as the point of origin.
+# All direct (encrypted or non-encrypted) communications must include this address for traceability.
+# This enables the system to track who sent each message and from where.
+#
+# Example (to be enforced in future implementations):
+#   agent_secure_address = '*codemage*star*fox*bravo*king*ice*executioner*'
+#   message = {
+#       'from': agent_secure_address,
+#       'to': destination_address,
+#       'payload': ...
+#   }
+# Each BossGate instance must have a secure address for encrypted direct communication.
+# Two skills gate communication:
+#   - 'bossgate_coms_officer': required for encrypted comms (TLS, mutual auth, etc.)
+#   - 'bossgate_coms_array': required for non-encrypted comms (plain TCP/UDP)
+# Future direct agent-to-agent or agent-to-forge communication must check these skills.
+#
+# Example usage (to be implemented):
+#   if 'bossgate_coms_officer' in agent_skills:
+#       # Allow encrypted comms
+#   elif 'bossgate_coms_array' in agent_skills:
+#       # Allow non-encrypted comms
+def scan_rest_endpoints(base_url, agent_skills=None):
+    """
+    Skill-gated: Requires 'bossgate_scanning' in agent_skills to proceed.
+    """
+    if agent_skills is not None and "bossgate_scanning" not in agent_skills:
+        return {
+            "ok": False,
+            "reason": "Agent lacks the Bossgate Scanning Skill.",
+            "base_url": base_url,
+            "endpoints": [],
+        }
     base_url = _normalize_url_for_scan(base_url)
     if not base_url:
         return {

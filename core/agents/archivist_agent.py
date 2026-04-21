@@ -585,6 +585,15 @@ class ArchivistAgent:
         lines = [
             "# Open Todos",
             "",
+            "---",
+            "## TODO List Cross-References",
+            "",
+            "- [BossGate Features — Master TODO List](../core/BossGate_Features_TODO.md)",
+            "- [BossForgeOS Enterprise TODO List](../ENTERPRISE_TODO_LIST.md)",
+            "- [BossForgeOS Enterprise Roadmap](../ENTERPRISE_ROADMAP.md)",
+            "",
+            "All TODOs must be kept in sync and up to date by the Archivist agent. See the BossGate master TODO for canonical cross-references and duties.",
+            "",
             "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
             "",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -622,7 +631,74 @@ class ArchivistAgent:
 
         lines.append("")
         todos_path.write_text("\n".join(lines), encoding="utf-8")
+
+        # --- Cross-link and update all major TODO lists ---
+        self._enforce_crosslinked_todo_sections(project)
         return todos_path
+
+    def _enforce_crosslinked_todo_sections(self, project: Path) -> None:
+        """
+        Ensure all major TODO lists (BossGate, Enterprise, Roadmap, docs/todos.md) contain the canonical cross-reference and Archivist Duties section.
+        """
+        # Canonical section text
+        crossref = [
+            "---",
+            "## TODO List Cross-References & Archivist Duties",
+            "",
+            "This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.",
+            "",
+            "### Linked TODO Lists (must be kept accurate and up to date):",
+            "",
+            "- [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)",
+            "- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)",
+            "- [Global TODO/Backlog/Curated List](../../docs/todos.md)",
+            "- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)",
+            "",
+            "### Archivist Duties",
+            "",
+            "- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.",
+            "- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.",
+            "- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.",
+            "- When a TODO is completed, update all lists and remove or archive the item.",
+            "- If a TODO is moved, merged, or split, update all references and cross-links.",
+            "",
+            "---",
+            "The Archivist is responsible for TODO list hygiene and cross-repo accuracy.",
+        ]
+
+        # List of major TODO files to update
+        todo_files = [
+            project / "core" / "BossGate_Features_TODO.md",
+            project / "ENTERPRISE_TODO_LIST.md",
+            project / "ENTERPRISE_ROADMAP.md",
+            project / "docs" / "todos.md",
+        ]
+        for path in todo_files:
+            if not path.exists():
+                continue
+            try:
+                content = path.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            # Remove any old cross-reference section
+            new_content = re.sub(
+                r"---\s*## TODO List Cross-References[\s\S]+?(?=\n---|\Z)",
+                "",
+                content,
+                flags=re.MULTILINE,
+            )
+            # Remove any old Archivist Duties section
+            new_content = re.sub(
+                r"---\s*## TODO List Cross-References & Archivist Duties[\s\S]+?(?=\n---|\Z)",
+                "",
+                new_content,
+                flags=re.MULTILINE,
+            )
+            # Append canonical section at the end
+            if not new_content.endswith("\n"):
+                new_content += "\n"
+            new_content += "\n" + "\n".join(crossref) + "\n"
+            path.write_text(new_content, encoding="utf-8")
 
     def _collect_todos(self, project: Path) -> list[dict[str, Any]]:
         todo_items: list[dict[str, Any]] = []
