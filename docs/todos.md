@@ -1,5 +1,14 @@
 # Open Todos
 
+---
+## TODO List Cross-References
+
+- [BossGate Features — Master TODO List](../core/BossGate_Features_TODO.md)
+- [BossForgeOS Enterprise TODO List](../ENTERPRISE_TODO_LIST.md)
+- [BossForgeOS Enterprise Roadmap](../ENTERPRISE_ROADMAP.md)
+
+All TODOs must be kept in sync and up to date by the Archivist agent. See the BossGate master TODO for canonical cross-references and duties.
+
 Curated by Archivist from actionable TODO/FIXME/TBD signals.
 
 Generated: 2026-04-19 19:31:55

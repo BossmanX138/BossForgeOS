@@ -1,5 +1,10 @@
 # BossGate Features — Master TODO List
 
+## Decrees & Governance
+
+**Decree (April 21, 2026):** All user decrees must be recorded in appropriate TODO files or roadmaps, ensuring intent and direction are always present in the repo. See [Decrees_and_Governance.md](Decrees_and_Governance.md) for the canonical list and enforcement law. The Archivist is responsible for synchronizing decrees across all documentation.
+
+
 ## Prime BossGate Tab
 - [ ] Design and implement Prime BossGate UI (messenger, file transfer, voice chat, address book, status)
 - [ ] Integrate address ledger and presence/status indicators

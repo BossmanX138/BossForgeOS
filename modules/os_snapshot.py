@@ -26,6 +26,96 @@ def snapshot_disk() -> Dict[str, Any]:
     }
 
 
+def _normalize_io_counter_key(value: str) -> str:
+    return str(value or "").strip().replace("\\", "").replace("/", "").replace(":", "").lower()
+
+
+def _resolve_partition_io(
+    device: str,
+    mountpoint: str,
+    io_map: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    if not io_map:
+        return None
+
+    lookup: Dict[str, Any] = {}
+    for key, counter in io_map.items():
+        lookup[_normalize_io_counter_key(str(key))] = counter
+
+    candidates = [device, mountpoint]
+    if mountpoint:
+        candidates.append(str(Path(mountpoint).anchor))
+    if mountpoint and len(mountpoint) >= 1:
+        candidates.append(mountpoint[0] + ":")
+
+    for candidate in candidates:
+        norm = _normalize_io_counter_key(candidate)
+        if norm and norm in lookup:
+            counter = lookup[norm]
+            read_bytes = getattr(counter, "read_bytes", None)
+            write_bytes = getattr(counter, "write_bytes", None)
+            if read_bytes is None or write_bytes is None:
+                return None
+            try:
+                return {
+                    "read_bytes": int(read_bytes),
+                    "write_bytes": int(write_bytes),
+                }
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def snapshot_disks() -> list[Dict[str, Any]]:
+    rows: list[Dict[str, Any]] = []
+    partitions = []
+    try:
+        partitions = psutil.disk_partitions(all=False)
+    except Exception:
+        partitions = []
+
+    try:
+        io_map = psutil.disk_io_counters(perdisk=True) or {}
+    except Exception:
+        io_map = {}
+
+    seen: set[str] = set()
+    for part in partitions:
+        mountpoint = str(getattr(part, "mountpoint", "") or "").strip()
+        device = str(getattr(part, "device", "") or "").strip()
+        fstype = str(getattr(part, "fstype", "") or "").strip()
+        if not mountpoint:
+            continue
+        norm_mount = mountpoint.lower()
+        if norm_mount in seen:
+            continue
+
+        try:
+            usage = psutil.disk_usage(mountpoint)
+        except Exception:
+            continue
+
+        seen.add(norm_mount)
+        io_values = _resolve_partition_io(device=device, mountpoint=mountpoint, io_map=io_map)
+
+        row = {
+            "key": norm_mount,
+            "mount": mountpoint,
+            "device": device,
+            "fstype": fstype,
+            "total_gb": round(usage.total / (1024**3), 1),
+            "used_gb": round(usage.used / (1024**3), 1),
+            "free_gb": round(usage.free / (1024**3), 1),
+            "percent": round(float(usage.percent), 1),
+            "read_bytes": int(io_values.get("read_bytes", 0)) if isinstance(io_values, dict) else None,
+            "write_bytes": int(io_values.get("write_bytes", 0)) if isinstance(io_values, dict) else None,
+        }
+        rows.append(row)
+
+    rows.sort(key=lambda item: str(item.get("mount", "")).lower())
+    return rows
+
+
 def snapshot_docker() -> Optional[Dict[str, Any]]:
     if shutil.which("docker") is None:
         return None
@@ -78,6 +168,95 @@ def snapshot_system_resources() -> Dict[str, Any]:
     }
 
 
+def snapshot_thermal() -> Optional[Dict[str, Any]]:
+    try:
+        temps = psutil.sensors_temperatures()
+    except Exception:
+        return None
+    if not temps:
+        return None
+
+    readings: list[Dict[str, Any]] = []
+    for source, entries in temps.items():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            current = getattr(entry, "current", None)
+            if current is None:
+                continue
+            try:
+                current_value = float(current)
+            except (TypeError, ValueError):
+                continue
+            readings.append(
+                {
+                    "source": str(source),
+                    "label": str(getattr(entry, "label", "") or "").strip(),
+                    "current_c": round(current_value, 1),
+                    "high_c": round(float(getattr(entry, "high", 0.0) or 0.0), 1),
+                    "critical_c": round(float(getattr(entry, "critical", 0.0) or 0.0), 1),
+                }
+            )
+
+    if not readings:
+        return None
+
+    max_temp = max(float(item.get("current_c", 0.0)) for item in readings)
+    cpu_candidates = [
+        float(item.get("current_c", 0.0))
+        for item in readings
+        if "cpu" in str(item.get("source", "")).lower()
+        or "package" in str(item.get("label", "")).lower()
+    ]
+
+    return {
+        "readings": readings,
+        "max_temp_c": round(max_temp, 1),
+        "cpu_temp_c": round(cpu_candidates[0], 1) if cpu_candidates else None,
+    }
+
+
+def snapshot_fans() -> Optional[Dict[str, Any]]:
+    try:
+        fans = psutil.sensors_fans()
+    except Exception:
+        return None
+    if not fans:
+        return None
+
+    readings: list[Dict[str, Any]] = []
+    for source, entries in fans.items():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            current = getattr(entry, "current", None)
+            if current is None:
+                continue
+            try:
+                rpm = float(current)
+            except (TypeError, ValueError):
+                continue
+            readings.append(
+                {
+                    "source": str(source),
+                    "label": str(getattr(entry, "label", "") or "").strip(),
+                    "rpm": round(rpm, 1),
+                }
+            )
+
+    if not readings:
+        return None
+
+    rpms = [float(item.get("rpm", 0.0)) for item in readings]
+    avg_rpm = (sum(rpms) / len(rpms)) if rpms else 0.0
+    max_rpm = max(rpms) if rpms else 0.0
+    return {
+        "readings": readings,
+        "avg_rpm": round(avg_rpm, 1),
+        "max_rpm": round(max_rpm, 1),
+    }
+
+
 def snapshot_gpu_vram() -> Optional[Dict[str, Any]]:
     if shutil.which("nvidia-smi") is None:
         return None
@@ -85,7 +264,7 @@ def snapshot_gpu_vram() -> Optional[Dict[str, Any]]:
         out = subprocess.check_output(
             [
                 "nvidia-smi",
-                "--query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu",
+                "--query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu,fan.speed",
                 "--format=csv,noheader,nounits",
             ],
             text=True,
@@ -107,6 +286,18 @@ def snapshot_gpu_vram() -> Optional[Dict[str, Any]]:
             util_percent = float(parts[4])
         except ValueError:
             continue
+        temp_c = None
+        fan_percent = None
+        if len(parts) >= 6:
+            try:
+                temp_c = round(float(parts[5]), 1)
+            except (TypeError, ValueError):
+                temp_c = None
+        if len(parts) >= 7:
+            try:
+                fan_percent = round(float(parts[6]), 1)
+            except (TypeError, ValueError):
+                fan_percent = None
         percent = round((used_mb / total_mb) * 100, 1) if total_mb else 0.0
         gpus.append(
             {
@@ -116,6 +307,8 @@ def snapshot_gpu_vram() -> Optional[Dict[str, Any]]:
                 "free_gb": round(free_mb / 1024.0, 2),
                 "percent": percent,
                 "utilization_percent": round(util_percent, 1),
+                "temperature_c": temp_c,
+                "fan_percent": fan_percent,
             }
         )
 
@@ -233,9 +426,12 @@ def build_pressure_warnings(snapshot: Dict[str, Any]) -> list[str]:
 def snapshot_all() -> Dict[str, Any]:
     payload = {
         "disk": snapshot_disk(),
+        "disks": snapshot_disks(),
         "docker": snapshot_docker(),
         "wsl_vhd": snapshot_wsl_vhd(),
         "system": snapshot_system_resources(),
+        "thermal": snapshot_thermal(),
+        "fans": snapshot_fans(),
         "gpu_vram": snapshot_gpu_vram(),
         "agent_load": snapshot_agent_load(),
     }

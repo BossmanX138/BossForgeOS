@@ -1,5 +1,10 @@
 # BossForgeOS SoundStage Daemon
 
+## Decrees & Governance
+
+**Decree (April 21, 2026):** All user decrees must be recorded in appropriate TODO files or roadmaps, ensuring intent and direction are always present in the repo. See [../../../Decrees_and_Governance.md](../../../Decrees_and_Governance.md) for the canonical list and enforcement law. The Archivist is responsible for synchronizing decrees across all documentation.
+
+
 The SoundStage daemon is a deterministic sound engine for Windows, restoring true "Open Program" and "Close Program" sounds, with per-app overrides and a local HTTP API for integration and control. It is fully integrated with BossForgeOS, the Control Hall GUI, and the VS Code extension.
 
 ## Table of Contents

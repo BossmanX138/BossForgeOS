@@ -33,6 +33,47 @@ UNCHECKED_CHECKLIST_RE = re.compile(r"^\s*[-*+]\s*\[\s\]\s+(?P<task>.+)\s*$", re
 
 
 class ArchivistAgent:
+
+    def enforce_decree_recording(self, project: Path) -> None:
+        """
+        Scan Decrees_and_Governance.md for new decrees and propagate them to all major TODOs and roadmaps.
+        """
+        decrees_path = project / "Decrees_and_Governance.md"
+        if not decrees_path.exists():
+            return
+        content = decrees_path.read_text(encoding="utf-8")
+        # Extract all lines starting with '**Decree' or under a 'Decrees' heading
+        decree_lines = []
+        in_decrees_section = False
+        for line in content.splitlines():
+            if line.strip().lower().startswith('## decrees'):
+                in_decrees_section = True
+                continue
+            if in_decrees_section and line.strip().startswith('##') and not line.strip().lower().startswith('## decrees'):
+                in_decrees_section = False
+            if in_decrees_section or line.strip().startswith('**Decree'):
+                decree_lines.append(line)
+        decree_block = '\n'.join(decree_lines).strip()
+        # List of major TODO/roadmap files
+        todo_files = [
+            project / "BossGate_Features_TODO.md",
+            project / "ENTERPRISE_TODO_LIST.md",
+            project / "ENTERPRISE_ROADMAP.md",
+        ]
+        for path in todo_files:
+            if not path.exists():
+                continue
+            content = path.read_text(encoding="utf-8")
+            # Remove any old decree block
+            new_content = re.sub(r"## Decrees & Governance[\s\S]+?(?=\n##|\Z)", "", content, flags=re.MULTILINE)
+            # Insert updated decree block at the top after title
+            lines = new_content.splitlines()
+            if lines and lines[0].startswith('#'):
+                lines = [lines[0], '', '## Decrees & Governance', '', decree_block, ''] + lines[1:]
+            else:
+                lines = ['## Decrees & Governance', '', decree_block, ''] + lines
+            path.write_text('\n'.join(lines), encoding="utf-8")
+
     TODO_SCAN_SUFFIXES = {".md", ".txt", ".py", ".ps1", ".json", ".yaml", ".yml"}
     TODO_IGNORE_DIR_NAMES = {
         ".git",
@@ -661,9 +702,10 @@ class ArchivistAgent:
             "- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.",
             "- When a TODO is completed, update all lists and remove or archive the item.",
             "- If a TODO is moved, merged, or split, update all references and cross-links.",
+            "- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees.",
             "",
             "---",
-            "The Archivist is responsible for TODO list hygiene and cross-repo accuracy.",
+            "The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.",
         ]
 
         # List of major TODO files to update

@@ -1,3 +1,16 @@
+"""
+CodeMage Agent — BossForgeOS
+
+Distinction of Powers:
+
+SKILLS: Intrinsic, hard-coded abilities. Portable, can be learned from MCP tools, but unlearned only by trainer agents. Examples: code_analysis, github_integration.
+
+SIGILS: Meta-agentic, permanent marks. Enable advanced actions (e.g., reality rewrite, scroll fusion). Only removable by sigil-level power. Symbolic and practical.
+
+MCP TOOLS: Dynamic, field-replaceable tools provisioned by the Forge or shared among agents. Can be added/removed at runtime. Examples: model_invocation, web_search.
+
+This distinction is enforced in agent registration, documentation, and runtime logic. See also: Decrees_and_Governance.md and BossGate_Abilities_and_Purposes.txt.
+"""
 import argparse
 import json
 import os

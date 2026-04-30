@@ -1,5 +1,10 @@
 # BossForgeOS SoundStage
 
+## Decrees & Governance
+
+**Decree (April 21, 2026):** All user decrees must be recorded in appropriate TODO files or roadmaps, ensuring intent and direction are always present in the repo. See [../../../Decrees_and_Governance.md](../../../Decrees_and_Governance.md) for the canonical list and enforcement law. The Archivist is responsible for synchronizing decrees across all documentation.
+
+
 SoundStage is the deterministic sound event engine for BossForgeOS, providing true program open/close sounds, per-app/event mapping, system sound replacement, rollback, diagnostics, and bundle import/export. It is fully integrated with the BossForgeOS daemon, Control Hall GUI, and VS Code extension.
 
 ## Table of Contents

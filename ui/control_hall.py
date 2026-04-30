@@ -3,6 +3,7 @@ import base64
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 
@@ -37,6 +38,8 @@ PIN_OVERLAY_PROCESS = None
 PIN_OVERLAY_VIEW = ""
 PIN_OVERLAY_ALPHA = 0.95
 AGENTFORGE_POOL_PATH = PROJECT_ROOT / "state" / "agentforge_custom_pool.json"
+AGENT_TASK_TRACKER_PATH = bus.state / "agent_task_tracker.json"
+AGENT_ASSIGNMENTS_PATH = PROJECT_ROOT / "AGENT_TASK_ASSIGNMENTS.md"
 
 AGENT_STATUS = {
     "hearth_tender": "Hearth-Tender",
@@ -81,13 +84,44 @@ PAGE = """
                 radial-gradient(circle at 50% 100%, rgba(212,168,87,0.08), transparent 45%),
                 var(--bg);
         }
-        .shell { display:grid; grid-template-columns: 250px 1fr; min-height:100vh; }
-        @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212,168,87,0.55) rgba(16,16,21,0.58);
+        }
+        *::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        *::-webkit-scrollbar-track {
+            background: rgba(16,16,21,0.58);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(212,168,87,0.72), rgba(168,128,55,0.70));
+            border: 2px solid rgba(16,16,21,0.65);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(222,178,96,0.82), rgba(176,136,60,0.78));
+        }
+        .shell {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+        @media (max-width: 1100px) {
+            .shell { grid-template-columns: 1fr; }
+        }
         .side {
             border-right:1px solid var(--line);
             background:linear-gradient(180deg,#101015,#0D0D11 70%, #0A0A0C);
             padding:14px;
             box-shadow: inset -1px 0 0 rgba(255,122,47,0.10);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: auto;
+            scrollbar-gutter: stable both-edges;
         }
         .side h1 { margin:0 0 8px; color:var(--accent); font-size:18px; }
         .group-label { margin:10px 0 6px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
@@ -138,30 +172,376 @@ PAGE = """
             border-color:var(--accent);
             box-shadow: inset 0 0 0 1px rgba(212,168,87,0.30), 0 0 18px rgba(212,168,87,0.18);
         }
-        .wrap { max-width:1200px; margin:0 auto; padding:18px; display:grid; gap:14px; }
+        .wrap {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 14px 18px 18px;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
         .card {
             background:linear-gradient(180deg,var(--panel2),var(--panel));
             border:1px solid var(--line);
             border-radius:12px;
-            padding:12px;
+            padding:10px;
             box-shadow: inset 0 0 0 1px rgba(255,122,47,0.06);
         }
-        h1 { margin:0 0 6px; color:var(--accent); font-size:22px; }
-        h2 { margin:0 0 10px; color:var(--accent); font-size:16px; }
+        .wrap > .card:first-child {
+            position: sticky;
+            top: 8px;
+            z-index: 5;
+            backdrop-filter: blur(6px);
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .row > * {
+            min-height: 32px;
+        }
+        .row > input,
+        .row > select,
+        .row > textarea {
+            flex: 1 1 220px;
+            min-width: 180px;
+        }
+        .view-panel > .row {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .view-panel > .row:last-child {
+            margin-bottom: 0;
+        }
+        .view-panel > .muted {
+            margin-bottom: 6px;
+        }
+        .view-panel h2 {
+            margin-bottom: 8px;
+        }
+        .view-panel > pre {
+            margin-top: 8px;
+        }
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .workspace-pane {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 9px;
+            min-width: 0;
+        }
+        .workspace-pane h3 {
+            margin: 0 0 6px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .workspace-stack {
+            display: grid;
+            gap: 6px;
+        }
+        .workspace-canvas-wrap {
+            display: grid;
+            grid-template-columns: auto minmax(300px, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .workspace-canvas-controls {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+        }
+        .iconforge-menubar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0 10px;
+            padding: 6px;
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #141117, #0f0d12);
+        }
+        .iconforge-menu {
+            position: relative;
+        }
+        .iconforge-menu-btn {
+            min-height: 28px;
+            padding: 4px 10px;
+            border-radius: 7px;
+            border: 1px solid rgba(212,168,87,0.35);
+            background: rgba(20, 19, 24, 0.95);
+            color: var(--ink);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .iconforge-menu.open .iconforge-menu-btn {
+            border-color: rgba(212,168,87,0.8);
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.22);
+        }
+        .iconforge-menu-list {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            min-width: 220px;
+            z-index: 25;
+            border: 1px solid #2b2f3a;
+            border-radius: 9px;
+            padding: 6px;
+            background: #101018;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+        }
+        .iconforge-menu.open .iconforge-menu-list {
+            display: grid;
+            gap: 4px;
+        }
+        .iconforge-menu-list button {
+            width: 100%;
+            min-height: 28px;
+            text-align: left;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: rgba(24, 24, 31, 0.95);
+            color: var(--ink);
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .iconforge-menu-list button:hover {
+            border-color: rgba(212,168,87,0.55);
+            box-shadow: none;
+        }
+        .menu-shortcut {
+            float: right;
+            margin-left: 14px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .iconforge-menu-sep {
+            height: 1px;
+            margin: 3px 0;
+            background: rgba(95, 74, 39, 0.75);
+        }
+        .iconforge-schematics {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, rgba(17, 14, 20, 0.95), rgba(12, 10, 16, 0.95));
+        }
+        .iconforge-schematics-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .iconforge-schematics-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .iconforge-schematic-section {
+            border: 1px solid rgba(95, 74, 39, 0.55);
+            border-radius: 10px;
+            padding: 8px;
+            background: rgba(13, 11, 18, 0.72);
+        }
+        .iconforge-schematic-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 0 0 8px;
+        }
+        .iconforge-schematic-section h3 {
+            margin: 0;
+            font-size: 12px;
+            color: #f2cf86;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .iconforge-schematic-toggle {
+            min-height: 24px;
+            padding: 2px 8px;
+            border-radius: 7px;
+            border: 1px solid rgba(212,168,87,0.45);
+            background: rgba(21, 18, 26, 0.9);
+            color: var(--ink);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .iconforge-schematic-toggle:hover {
+            border-color: rgba(255,184,77,0.75);
+        }
+        .iconforge-schematic-section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
+        .iconforge-schematic-section.collapsed .iconforge-schematic-section-grid {
+            display: none;
+        }
+        .iconforge-schematic-card {
+            border: 1px solid rgba(212,168,87,0.35);
+            border-radius: 9px;
+            background: rgba(18, 16, 23, 0.95);
+            padding: 8px;
+            display: grid;
+            gap: 6px;
+            position: relative;
+            overflow: visible;
+        }
+        .iconforge-schematic-card h4 {
+            margin: 0;
+            font-size: 12px;
+            color: #f2cf86;
+        }
+        .iconforge-schematic-meta {
+            font-size: 11px;
+            color: var(--muted);
+            word-break: break-word;
+        }
+        .iconforge-schematic-card button {
+            min-height: 28px;
+        }
+        .iconforge-schematic-preview {
+            width: 56px;
+            height: 56px;
+            border: 1px solid rgba(212,168,87,0.45);
+            border-radius: 8px;
+            background:
+                linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%),
+                linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%),
+                rgba(14, 14, 20, 0.92);
+            background-size: 10px 10px;
+            background-position: 0 0, 5px 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+            transform-origin: top left;
+        }
+        .iconforge-schematic-preview:hover {
+            transform: scale(2.5);
+            border-color: rgba(255, 184, 77, 0.85);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+            z-index: 20;
+            background-color: rgba(8, 8, 12, 0.98);
+        }
+        .iconforge-schematic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: auto;
+        }
+        .iconforge-schematic-preview-empty {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .iconforge-schematic-hint {
+            font-size: 10px;
+            color: var(--muted);
+        }
+        @media (max-width: 900px) {
+            .iconforge-schematic-preview:hover {
+                transform: scale(1.6);
+            }
+        }
+        .wizard-layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .wizard-sidebar {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 8px;
+            background: rgba(12, 12, 16, 0.45);
+        }
+        .wizard-sidebar h3 {
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .wizard-checklist {
+            display: grid;
+            gap: 6px;
+        }
+        .wizard-check-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+            border: 1px solid #2b2f3a;
+            border-radius: 8px;
+            padding: 6px 8px;
+            background: rgba(20, 20, 26, 0.85);
+            color: var(--ink);
+            cursor: pointer;
+        }
+        .wizard-check-item .step-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(212,168,87,0.45);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--muted);
+            background: rgba(18,18,24,0.9);
+            flex: 0 0 auto;
+        }
+        .wizard-check-item.is-active {
+            border-color: rgba(212,168,87,0.72);
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.24);
+        }
+        .wizard-check-item.is-active .step-dot {
+            color: #111;
+            background: rgba(212,168,87,0.95);
+            border-color: rgba(212,168,87,0.9);
+        }
+        .wizard-check-item.is-complete .step-dot {
+            color: #111;
+            background: rgba(175,220,120,0.9);
+            border-color: rgba(175,220,120,0.9);
+            font-weight: 700;
+        }
+        .wizard-main {
+            min-width: 0;
+        }
+        h1 { margin:0 0 4px; color:var(--accent); font-size:22px; }
+        h2 { margin:0 0 8px; color:var(--accent); font-size:16px; }
         .muted { color:var(--muted); font-size:12px; }
         input, select {
             background:#0E0E13;
             color:var(--ink);
             border:1px solid var(--line);
             border-radius:9px;
-            padding:8px;
+            padding:6px 8px;
         }
         textarea {
             background:#0E0E13;
             color:var(--ink);
             border:1px solid var(--line);
             border-radius:9px;
-            padding:8px;
+            padding:7px 8px;
             min-height:78px;
             width:100%;
         }
@@ -170,22 +550,70 @@ PAGE = """
             color:var(--ink);
             border:1px solid rgba(212,168,87,0.45);
             border-radius:9px;
-            padding:8px 10px;
+            padding:6px 10px;
             cursor:pointer;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
         }
         button:hover {
             border-color:var(--accent);
             box-shadow: 0 0 0 1px rgba(212,168,87,0.22), 0 0 12px rgba(255,122,47,0.14);
         }
-        pre { margin:0; max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px; }
+        pre { margin:0; max-height:420px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:9px; font-size:12px; }
         .agent-item { border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px; background:#132131; }
+        .agent-task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .agent-task-card {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 8px;
+            background: #0d1621;
+        }
+        .agent-task-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .agent-task-agent {
+            font-weight: 600;
+            color: var(--ink);
+        }
+        .agent-task-text {
+            font-size: 12px;
+            color: var(--ink);
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+        }
+        .agent-task-meta {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .agent-task-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .agent-task-actions button {
+            min-height: 28px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
         .pill { display:inline-block; margin-left:8px; border-radius:999px; padding:1px 8px; border:1px solid var(--line); font-size:11px; }
         .pill.online { color:var(--ok); border-color:var(--ok); }
         .pill.warning, .pill.stale { color:var(--warn); border-color:var(--warn); }
         .pill.offline, .pill.critical { color:var(--bad); border-color:var(--bad); }
         .view-panel { display:none; }
-        .view-panel.active { display:block; }
+        .view-panel.active {
+            display:block;
+            min-height: min(72vh, 980px);
+        }
         .panel-heading { display:flex; align-items:center; gap:8px; }
         .panel-icon {
             width:18px;
@@ -216,6 +644,20 @@ PAGE = """
         .busy-indicator.active {
             opacity: 1;
             transform: translateY(0);
+        }
+        .js-error {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid #8a3737;
+            border-radius: 8px;
+            background: rgba(241, 113, 113, 0.14);
+            color: #f17171;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .js-error.active {
+            display: block;
         }
         .spinner {
             width: 12px;
@@ -256,6 +698,43 @@ PAGE = """
                 linear-gradient(to bottom, rgba(53, 81, 111, 0.35) 1px, transparent 1px);
             background-size: 48px 48px;
             pointer-events: none;
+        }
+        @media (max-width: 1100px) {
+            .side {
+                position: static;
+                height: auto;
+                overflow: visible;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+            .nav-btn {
+                margin-bottom: 4px;
+            }
+            .wrap {
+                padding: 12px;
+            }
+            .wrap > .card:first-child {
+                position: static;
+                top: auto;
+            }
+            .view-panel.active {
+                min-height: 0;
+            }
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+            .workspace-canvas-wrap {
+                grid-template-columns: 1fr;
+            }
+            .wizard-layout {
+                grid-template-columns: 1fr;
+            }
+            .row > input,
+            .row > select,
+            .row > textarea {
+                min-width: 0;
+                flex-basis: 100%;
+            }
         }
         .map-watermark {
             position: absolute;
@@ -316,6 +795,13 @@ PAGE = """
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 10px;
             margin-bottom: 10px;
+            position: relative;
+        }
+        .snapshot-grid.pin-mode {
+            border: 1px dashed rgba(212,168,87,0.42);
+            border-radius: 10px;
+            padding: 6px;
+            background: rgba(15, 14, 19, 0.42);
         }
         .gauge-card {
             border: 1px solid rgba(57, 255, 20, 0.38);
@@ -329,6 +815,36 @@ PAGE = """
                 0 0 12px rgba(57, 255, 20, 0.16);
             position: relative;
             overflow: hidden;
+        }
+        .gauge-card.is-pinned {
+            position: absolute;
+            z-index: 4;
+            width: var(--pinned-width, 210px);
+        }
+        .snapshot-grid.pin-mode .gauge-card.is-pinned {
+            cursor: grab;
+            user-select: none;
+        }
+        .snapshot-grid.pin-mode .gauge-card.is-pinned.dragging {
+            cursor: grabbing;
+            z-index: 9;
+            box-shadow: 0 0 0 2px rgba(242,201,107,0.35), inset 0 0 16px rgba(57,255,20,0.13), 0 10px 20px rgba(0,0,0,0.45);
+        }
+        .gauge-pin-btn {
+            min-height: 22px;
+            padding: 1px 7px;
+            border-radius: 6px;
+            border: 1px solid rgba(87,209,131,0.5);
+            background: rgba(8, 28, 18, 0.9);
+            color: #9bffb5;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .gauge-pin-btn.pinned {
+            border-color: rgba(242,201,107,0.7);
+            color: #f2cf86;
+            background: rgba(38, 30, 12, 0.85);
         }
         .gauge-card::before {
             content: '';
@@ -384,6 +900,26 @@ PAGE = """
             stroke-dashoffset: calc(100 - var(--pct));
             transition: stroke-dashoffset 0.35s ease, stroke 0.35s ease;
             filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.55));
+        }
+        .tachometer .arc-rd {
+            fill: none;
+            stroke: #4da6ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: calc(100 - var(--rdpct, 0));
+            opacity: 0.95;
+            transition: stroke-dashoffset 0.35s ease;
+        }
+        .tachometer .arc-wr {
+            fill: none;
+            stroke: #ffb84d;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: calc(100 - var(--wrpct, 0));
+            opacity: 0.95;
+            transition: stroke-dashoffset 0.35s ease;
         }
         .tachometer .halo {
             position: absolute;
@@ -496,6 +1032,39 @@ PAGE = """
         }
         .snapshot-warning-item {
             border: 1px solid rgba(57, 255, 20, 0.48);
+        .gauge-legend {
+            margin-top: 4px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 10px;
+            color: #9bb0c9;
+            position: relative;
+            z-index: 1;
+        }
+        .gauge-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .gauge-legend-line {
+            display: inline-block;
+            width: 14px;
+            border-radius: 2px;
+        }
+        .gauge-legend-line.usage {
+            height: 4px;
+            background: #39ff14;
+        }
+        .gauge-legend-line.read {
+            height: 3px;
+            background: #4da6ff;
+        }
+        .gauge-legend-line.write {
+            height: 2px;
+            background: #ffb84d;
+        }
             background: rgba(57, 255, 20, 0.12);
             color: #8bff9d;
             border-radius: 8px;
@@ -518,8 +1087,8 @@ PAGE = """
 <body>
     <div class="shell">
         <aside class="side">
-            <h1>BossForgeOS</h1>
-            <div class="muted">Control Hall</div>
+            <h1 id="shell_title">BossForgeOS</h1>
+            <div id="shell_subtitle" class="muted">Control Hall</div>
             <div class="group-label">Operations</div>
             <button class="nav-btn" data-view="view_status" onclick="switchView('view_status')">Agent Status</button>
             <button class="nav-btn" data-view="view_delegation" onclick="switchView('view_delegation')">Delegation Flow</button>
@@ -546,14 +1115,14 @@ PAGE = """
 
         <main class="wrap">
             <section class="card">
-                <h1>BossForgeOS Control Hall</h1>
-                <div class="muted">Panels open in center. Pin any active panel to always-on-top desktop overlay.</div>
-                <div class="row" style="margin-top:8px;">
+                <h1 id="hall_title">BossForgeOS Control Hall</h1>
+                <div id="hall_subtitle" class="muted">Panels open in center. Pin any active panel to always-on-top desktop overlay.</div>
+                <div id="hall_pin_row" class="row" style="margin-top:8px;">
                     <button id="pin_toggle" onclick="togglePinCurrentView()">Pin Current View</button>
                     <button onclick="clearPinnedView()">Unpin</button>
                     <span id="pin_note" class="pin-note">No desktop pin active</span>
                 </div>
-                <button class="anvil-btn" onclick="launchAnvilShuttle()">Launch Anvil Secured Shuttle</button>
+                <button id="anvil_launch_btn" class="anvil-btn" onclick="launchAnvilShuttle()">Launch Anvil Secured Shuttle</button>
                 <div id="anvil_status" class="muted" style="margin-top:8px;"></div>
                 <script>
                 async function launchAnvilShuttle() {
@@ -573,9 +1142,19 @@ PAGE = """
                     <span class="spinner" aria-hidden="true"></span>
                     <span id="busy_text">Loading...</span>
                 </div>
+                <div id="js_error" class="js-error" aria-live="assertive"></div>
             </section>
 
-            <section id="view_status" class="card view-panel"><h2>Agent Status</h2><div id="agents" class="muted">Loading...</div></section>
+            <section id="view_status" class="card view-panel">
+                <h2>Agent Status</h2>
+                <div id="agents" class="muted">Loading...</div>
+                <div class="row" style="margin-top:10px;">
+                    <h2 style="margin:0;">Agent Task Tracker</h2>
+                    <button onclick="refreshAgentTaskTracker()">Refresh Task Tracker</button>
+                </div>
+                <div class="muted">Live task ownership and execution state for assigned agent TODOs.</div>
+                <div id="agent_task_tracker" class="agent-task-grid"></div>
+            </section>
             <section id="view_delegation" class="card view-panel">
                 <h2>Delegation Flow</h2>
                 <div class="muted">Archivist -> Runeforge review -> subordinate agents -> in-progress/completed.</div>
@@ -589,6 +1168,11 @@ PAGE = """
             </section>
             <section id="view_snapshot" class="card view-panel">
                 <h2>OS Snapshot</h2>
+                <div class="row" style="margin-bottom:8px;">
+                    <button id="snapshot_pin_mode_btn" onclick="toggleSnapshotGaugePinMode()">Gauge Pin Mode: Off</button>
+                    <button onclick="resetSnapshotGaugePins()">Reset Gauge Pins</button>
+                    <span id="snapshot_pin_mode_note" class="muted">Pin gauges to make a movable loadout.</span>
+                </div>
                 <div id="runeforge_voice_status" class="agent-item" style="margin-bottom:10px;">
                     <strong>Runeforge Voice Safety</strong>
                     <div class="muted">Loading approval and execution status...</div>
@@ -691,18 +1275,24 @@ PAGE = """
             <section id="view_sounds" class="card view-panel">
                 <h2 style="color:#39ff14;">Sounds</h2>
                 <div class="muted">Sound scheme and SoundForge bundle tools.</div>
-                <pre id="sound_events">Open this panel to load sound status.</pre>
-                <div class="row">
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundforgeBundle()">Export Bundle</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                <div class="workspace-grid" style="margin-top:8px;">
+                    <div class="workspace-pane workspace-stack">
+                        <h3>SoundForge Actions</h3>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundforgeBundle()">Export Bundle</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                        <div id="sound_scheme_status" class="muted" style="margin-top:2px;"></div>
+                        <div id="soundforge_schemes_list" class="muted"></div>
+                    </div>
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Sound Scheme State</h3>
+                        <pre id="sound_events">Open this panel to load sound status.</pre>
+                    </div>
                 </div>
                 <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
                 <input type="file" id="soundforge_bundle_file" style="display:none;" accept=".B4Gsoundforge,.B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
-                <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
-                <div id="soundforge_schemes_list" class="muted" style="margin-top:10px;"></div>
             </section>
 
             <section id="view_maker" class="card view-panel">
@@ -715,136 +1305,169 @@ PAGE = """
                 <pre id="maker_agents">Loading...</pre>
 
                 <div id="maker_wizard_mode" style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
-                    <div class="muted" style="margin-bottom:8px;">Guided builder for quick agent creation.</div>
-                    <div class="row">
-                        <input id="wizard_name" placeholder="agent name" />
-                        <select id="wizard_endpoint"></select>
-                        <input id="wizard_role_focus" placeholder="what should this agent do?" />
-                    </div>
-                    <div class="row">
-                        <select id="wizard_scope">
-                            <option value="host">Local Host</option>
-                            <option value="lan">LAN</option>
-                            <option value="remote">Remote/Customer</option>
-                        </select>
-                        <select id="wizard_behavior">
-                            <option value="directive_local">Directive Local Specialist</option>
-                            <option value="proactive_remote">Proactive Remote Fixer</option>
-                            <option value="security_guard">Security Watcher</option>
-                            <option value="qa_tester">QA/Test Specialist</option>
-                        </select>
-                        <select id="wizard_power">
-                            <option value="normalized">Normalized</option>
-                            <option value="skilled" selected>Skilled</option>
-                            <option value="prime">Prime</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <select id="wizard_personality">
-                            <option value="balanced" selected>personality: balanced</option>
-                            <option value="decisive">personality: decisive</option>
-                            <option value="cautious">personality: cautious</option>
-                            <option value="creative">personality: creative</option>
-                            <option value="analytical">personality: analytical</option>
-                            <option value="introvert_local">personality: i don't like crowded places</option>
-                        </select>
-                        <input id="wizard_personality_notes" placeholder="personality notes (optional)" />
-                        <input id="wizard_personality_interests" placeholder="interests e.g. ui, art, animation (comma-separated)" />
-                    </div>
-                    <div class="row">
-                        <select id="wizard_behavior_patterns" multiple size="4" style="min-width:260px;">
-                            <option value="authority_like">authority_like</option>
-                            <option value="controller_like">controller_like</option>
-                            <option value="worker_like">worker_like</option>
-                            <option value="security_like">security_like</option>
-                            <option value="tester_like">tester_like</option>
-                            <option value="ranger_like">ranger_like</option>
-                            <option value="ranger_local">ranger_local</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <select id="wizard_skill_list" multiple size="4" style="min-width:260px;">
-                            <option value="command">command</option>
-                            <option value="bossgate_travel_control">bossgate_travel_control</option>
-                            <option value="runtime_observation">runtime_observation</option>
-                            <option value="task_queue_management">task_queue_management</option>
-                            <option value="web_search">web_search</option>
-                            <option value="policy_planning">policy_planning</option>
-                            <option value="memory_sync">memory_sync</option>
-                            <option value="incident_triage">incident_triage</option>
-                            <option value="code_review">code_review</option>
-                            <option value="ui_design">ui_design</option>
-                            <option value="art_direction">art_direction</option>
-                            <option value="documentation_crafting">documentation_crafting</option>
-                            <option value="test_orchestration">test_orchestration</option>
-                            <option value="security_audit">security_audit</option>
-                            <option value="performance_tuning">performance_tuning</option>
-                            <option value="data_analysis">data_analysis</option>
-                            <option value="workflow_automation">workflow_automation</option>
-                            <option value="customer_support">customer_support</option>
-                            <option value="integration_mapping">integration_mapping</option>
-                            <option value="api_composition">api_composition</option>
-                        </select>
-                        <select id="wizard_state_machine_template" style="min-width:260px;" onchange="syncWizardStateMachinePreview()">
-                            <option value="none" selected>state machine: none</option>
-                            <option value="basic_lifecycle">state machine: basic lifecycle</option>
-                            <option value="delegation_flow">state machine: delegation flow</option>
-                            <option value="incident_response">state machine: incident response</option>
-                        </select>
-                        <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
-                            <option value="sigil_transporter">sigil_transporter</option>
-                            <option value="prime_overwatch">prime_overwatch</option>
-                            <option value="sigil_bind">sigil_bind</option>
-                            <option value="sigil_trace">sigil_trace</option>
-                            <option value="sigil_harmony">sigil_harmony</option>
-                            <option value="prime_foresight">prime_foresight</option>
-                            <option value="prime_bastion">prime_bastion</option>
-                            <option value="sigil_palette">sigil_palette</option>
-                            <option value="sigil_resonance">sigil_resonance</option>
-                            <option value="sigil_flux">sigil_flux</option>
-                            <option value="sigil_anchor">sigil_anchor</option>
-                            <option value="sigil_lens">sigil_lens</option>
-                            <option value="sigil_weave">sigil_weave</option>
-                            <option value="sigil_echo">sigil_echo</option>
-                            <option value="sigil_guard">sigil_guard</option>
-                            <option value="sigil_spark">sigil_spark</option>
-                            <option value="sigil_patch">sigil_patch</option>
-                            <option value="sigil_scribe">sigil_scribe</option>
-                            <option value="sigil_orbit">sigil_orbit</option>
-                            <option value="sigil_shield">sigil_shield</option>
-                        </select>
-                    </div>
-                    <div id="wizard_state_machine_hint" class="muted" style="margin-top:6px;">No state machine selected. Agent runtime can remain stateless.</div>
-                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
-                        <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
+                    <div class="muted" style="margin-bottom:8px;">Wizard flow: answer each step, review, then finalize.</div>
+                    <div id="wizard_step_label" class="muted" style="margin-bottom:8px;">Step 1 of 4: Identity</div>
+                    <div class="wizard-layout">
+                        <aside class="wizard-sidebar">
+                            <h3>Checklist</h3>
+                            <div class="wizard-checklist">
+                                <button class="wizard-check-item" data-check-step="1" onclick="setWizardStep(1)"><span class="step-dot">1</span><span>Identity</span></button>
+                                <button class="wizard-check-item" data-check-step="2" onclick="setWizardStep(2)"><span class="step-dot">2</span><span>Profile</span></button>
+                                <button class="wizard-check-item" data-check-step="3" onclick="setWizardStep(3)"><span class="step-dot">3</span><span>Capabilities</span></button>
+                                <button class="wizard-check-item" data-check-step="4" onclick="setWizardStep(4)"><span class="step-dot">4</span><span>Review</span></button>
+                            </div>
+                        </aside>
+                        <div class="wizard-main">
+
+                    <div class="wizard-step" data-wizard-step="1">
                         <div class="row">
-                            <select id="wizard_icon_mode" onchange="toggleWizardIconSource()">
-                                <option value="none" selected>icon: default</option>
-                                <option value="upload">icon: upload file</option>
-                                <option value="iconforge">icon: create in IconForge</option>
-                            </select>
-                            <input id="wizard_icon_path" placeholder="custom icon path (.ico)" readonly />
-                            <button onclick="clearWizardIconSelection()">Clear Icon</button>
+                            <input id="wizard_name" placeholder="agent name" />
+                            <select id="wizard_endpoint"></select>
+                            <input id="wizard_role_focus" placeholder="what should this agent do?" />
                         </div>
-                        <div id="wizard_icon_upload_row" class="row" style="display:none; margin-top:6px;">
-                            <button onclick="triggerWizardIconUpload()">Upload Icon/Image</button>
-                            <span id="wizard_icon_upload_name" class="muted">No file selected</span>
-                            <input id="wizard_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleWizardIconUpload(event)" />
-                        </div>
-                        <div id="wizard_iconforge_row" class="row" style="display:none; margin-top:6px;">
-                            <input id="wizard_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
-                            <input id="wizard_icon_bg" value="#1d3557" placeholder="background color" />
-                            <input id="wizard_icon_fg" value="#f1faee" placeholder="foreground color" />
-                            <button onclick="createWizardIconForge()">Create In IconForge</button>
-                        </div>
-                        <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
                     </div>
-                    <div class="row">
+
+                    <div class="wizard-step" data-wizard-step="2" style="display:none;">
+                        <div class="row">
+                            <select id="wizard_scope">
+                                <option value="host">Local Host</option>
+                                <option value="lan">LAN</option>
+                                <option value="remote">Remote/Customer</option>
+                            </select>
+                            <select id="wizard_behavior">
+                                <option value="directive_local">Directive Local Specialist</option>
+                                <option value="proactive_remote">Proactive Remote Fixer</option>
+                                <option value="security_guard">Security Watcher</option>
+                                <option value="qa_tester">QA/Test Specialist</option>
+                            </select>
+                            <select id="wizard_power">
+                                <option value="normalized">Normalized</option>
+                                <option value="skilled" selected>Skilled</option>
+                                <option value="prime">Prime</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <select id="wizard_personality">
+                                <option value="balanced" selected>personality: balanced</option>
+                                <option value="decisive">personality: decisive</option>
+                                <option value="cautious">personality: cautious</option>
+                                <option value="creative">personality: creative</option>
+                                <option value="analytical">personality: analytical</option>
+                                <option value="introvert_local">personality: i don't like crowded places</option>
+                            </select>
+                            <input id="wizard_personality_notes" placeholder="personality notes (optional)" />
+                            <input id="wizard_personality_interests" placeholder="interests e.g. ui, art, animation (comma-separated)" />
+                        </div>
+                    </div>
+
+                    <div class="wizard-step" data-wizard-step="3" style="display:none;">
+                        <div class="row">
+                            <select id="wizard_behavior_patterns" multiple size="4" style="min-width:260px;">
+                                <option value="authority_like">authority_like</option>
+                                <option value="controller_like">controller_like</option>
+                                <option value="worker_like">worker_like</option>
+                                <option value="security_like">security_like</option>
+                                <option value="tester_like">tester_like</option>
+                                <option value="ranger_like">ranger_like</option>
+                                <option value="ranger_local">ranger_local</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <select id="wizard_skill_list" multiple size="4" style="min-width:260px;">
+                                <option value="command">command</option>
+                                <option value="bossgate_travel_control">bossgate_travel_control</option>
+                                <option value="runtime_observation">runtime_observation</option>
+                                <option value="task_queue_management">task_queue_management</option>
+                                <option value="web_search">web_search</option>
+                                <option value="policy_planning">policy_planning</option>
+                                <option value="memory_sync">memory_sync</option>
+                                <option value="incident_triage">incident_triage</option>
+                                <option value="code_review">code_review</option>
+                                <option value="ui_design">ui_design</option>
+                                <option value="art_direction">art_direction</option>
+                                <option value="documentation_crafting">documentation_crafting</option>
+                                <option value="test_orchestration">test_orchestration</option>
+                                <option value="security_audit">security_audit</option>
+                                <option value="performance_tuning">performance_tuning</option>
+                                <option value="data_analysis">data_analysis</option>
+                                <option value="workflow_automation">workflow_automation</option>
+                                <option value="customer_support">customer_support</option>
+                                <option value="integration_mapping">integration_mapping</option>
+                                <option value="api_composition">api_composition</option>
+                            </select>
+                            <select id="wizard_state_machine_template" style="min-width:260px;" onchange="syncWizardStateMachinePreview()">
+                                <option value="none" selected>state machine: none</option>
+                                <option value="basic_lifecycle">state machine: basic lifecycle</option>
+                                <option value="delegation_flow">state machine: delegation flow</option>
+                                <option value="incident_response">state machine: incident response</option>
+                            </select>
+                            <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
+                                <option value="sigil_transporter">sigil_transporter</option>
+                                <option value="prime_overwatch">prime_overwatch</option>
+                                <option value="sigil_bind">sigil_bind</option>
+                                <option value="sigil_trace">sigil_trace</option>
+                                <option value="sigil_harmony">sigil_harmony</option>
+                                <option value="prime_foresight">prime_foresight</option>
+                                <option value="prime_bastion">prime_bastion</option>
+                                <option value="sigil_palette">sigil_palette</option>
+                                <option value="sigil_resonance">sigil_resonance</option>
+                                <option value="sigil_flux">sigil_flux</option>
+                                <option value="sigil_anchor">sigil_anchor</option>
+                                <option value="sigil_lens">sigil_lens</option>
+                                <option value="sigil_weave">sigil_weave</option>
+                                <option value="sigil_echo">sigil_echo</option>
+                                <option value="sigil_guard">sigil_guard</option>
+                                <option value="sigil_spark">sigil_spark</option>
+                                <option value="sigil_patch">sigil_patch</option>
+                                <option value="sigil_scribe">sigil_scribe</option>
+                                <option value="sigil_orbit">sigil_orbit</option>
+                                <option value="sigil_shield">sigil_shield</option>
+                            </select>
+                        </div>
+                        <div id="wizard_state_machine_hint" class="muted" style="margin-top:6px;">No state machine selected. Agent runtime can remain stateless.</div>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                            <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
+                            <div class="row">
+                                <select id="wizard_icon_mode" onchange="toggleWizardIconSource()">
+                                    <option value="none" selected>icon: default</option>
+                                    <option value="upload">icon: upload file</option>
+                                    <option value="iconforge">icon: create in IconForge</option>
+                                </select>
+                                <input id="wizard_icon_path" placeholder="custom icon path (.ico)" readonly />
+                                <button onclick="clearWizardIconSelection()">Clear Icon</button>
+                            </div>
+                            <div id="wizard_icon_upload_row" class="row" style="display:none; margin-top:6px;">
+                                <button onclick="triggerWizardIconUpload()">Upload Icon/Image</button>
+                                <span id="wizard_icon_upload_name" class="muted">No file selected</span>
+                                <input id="wizard_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleWizardIconUpload(event)" />
+                            </div>
+                            <div id="wizard_iconforge_row" class="row" style="display:none; margin-top:6px;">
+                                <input id="wizard_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
+                                <input id="wizard_icon_bg" value="#1d3557" placeholder="background color" />
+                                <input id="wizard_icon_fg" value="#f1faee" placeholder="foreground color" />
+                                <button onclick="createWizardIconForge()">Create In IconForge</button>
+                                <button onclick="openIconForgeFromAgentForge('wizard')">Open IconForge Session</button>
+                            </div>
+                            <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
+                        </div>
                         <label class="muted" style="display:flex; align-items:center; gap:6px;">
                             <input id="wizard_encrypt_profile" type="checkbox" checked /> Encrypt profile via BossGate
                         </label>
+                    </div>
+
+                    <div class="wizard-step" data-wizard-step="4" style="display:none;">
+                        <div class="muted" style="margin-bottom:8px;">Review your choices before creating.</div>
+                        <pre id="wizard_review">No wizard summary yet.</pre>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                        <button id="wizard_back_btn" onclick="wizardPrevStep()">Back</button>
+                        <button id="wizard_next_btn" onclick="wizardNextStep()">Next</button>
+                        <button id="wizard_review_btn" onclick="wizardOpenReview()">Review</button>
                         <button onclick="buildWizardDraft()">Build Draft In Advanced</button>
-                        <button onclick="createWizardAgent()">Create From Wizard</button>
+                        <button id="wizard_create_btn" onclick="createWizardAgent()">Create From Wizard</button>
+                    </div>
+                        </div>
                     </div>
                 </div>
 
@@ -994,6 +1617,7 @@ PAGE = """
                             <input id="maker_icon_bg" value="#1d3557" placeholder="background color" />
                             <input id="maker_icon_fg" value="#f1faee" placeholder="foreground color" />
                             <button onclick="createMakerIconForge()">Create In IconForge</button>
+                            <button onclick="openIconForgeFromAgentForge('advanced')">Open IconForge Session</button>
                         </div>
                         <div id="maker_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
                     </div>
@@ -1057,9 +1681,91 @@ PAGE = """
             <section id="view_iconforge" class="card view-panel">
                 <h2 style="color:#ffb27d;">IconForge Studio</h2>
                 <div class="muted" style="margin-bottom:8px;">Full-center icon editor for painting, importing, FX, and multi-size .ico export.</div>
-                <div class="row" style="align-items:flex-start;">
-                    <canvas id="icon_studio_canvas" width="256" height="256" style="width:256px; height:256px; border:1px solid #3c4559; border-radius:10px; background:linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%), linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%); background-size:16px 16px; background-position:0 0, 8px 8px; cursor:crosshair;"></canvas>
-                    <div style="display:grid; gap:8px; min-width:340px;">
+                <div class="iconforge-menubar" id="iconforge_menubar">
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">File</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); iconStudioClearCanvas();">New Canvas <span class="menu-shortcut">Ctrl+N</span></button>
+                            <button onclick="closeIconForgeMenus(); triggerIconStudioImport();">Import Image... <span class="menu-shortcut">Ctrl+O</span></button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioDraft();">Save Draft <span class="menu-shortcut">Ctrl+S</span></button>
+                            <button onclick="closeIconForgeMenus(); loadIconStudioDraft();">Load Draft <span class="menu-shortcut">Ctrl+Shift+L</span></button>
+                            <button onclick="closeIconForgeMenus(); clearIconStudioDraft();">Clear Draft</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); downloadIconStudioPng();">Export PNG <span class="menu-shortcut">Ctrl+Shift+P</span></button>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioIco();">Export .ico (16-256) <span class="menu-shortcut">Ctrl+Shift+S</span></button>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioAnimated();">Export Animated GIF <span class="menu-shortcut">Ctrl+Shift+G</span></button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Edit</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); iconStudioUndoStroke();">Undo Stroke <span class="menu-shortcut">Ctrl+Z</span></button>
+                            <button onclick="closeIconForgeMenus(); iconStudioFillBackground();">Fill Background</button>
+                            <button onclick="closeIconForgeMenus(); iconStudioClearCanvas();">Clear Canvas <span class="menu-shortcut">Ctrl+L</span></button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">FX</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('grayscale');">Grayscale <span class="menu-shortcut">Ctrl+Shift+1</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('invert');">Invert <span class="menu-shortcut">Ctrl+I</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('contrast');">Contrast+ <span class="menu-shortcut">Ctrl+Shift+C</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('soften');">Soften</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('glow_soft');">Glow Soft</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('glow_neon');">Glow Neon</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('swirl_warp');">Swirl Warp</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('particle_swirl');">Particle Swirl</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">View</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); refreshIconForgeOps();">Refresh Backups</button>
+                            <button onclick="closeIconForgeMenus(); refreshWindowsIconCache();">Refresh Icon Cache</button>
+                            <button onclick="closeIconForgeMenus(); setIconStudioStatus('IconForge menus are active.');">Status Ping</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Windows Ops</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); setIconForgeFromStudioIco();">Use Latest Studio ICO</button>
+                            <button onclick="closeIconForgeMenus(); applyWindowsIconOverride();">Apply Icon Override</button>
+                            <button onclick="closeIconForgeMenus(); restoreWindowsIconOverride();">Restore Backup</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); exportIconForgePack();">Export Icon Pack</button>
+                            <button onclick="closeIconForgeMenus(); importIconForgePack();">Import Icon Pack</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Help</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); setIconStudioStatus('File menu: import/export. FX menu: visual transforms. Windows Ops: apply/restore icon overrides.');">Show Quick Help</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="iconforge_schematics_panel" class="iconforge-schematics">
+                    <div class="iconforge-schematics-head">
+                        <div>
+                            <strong style="color:#f2cf86;">Icon Schematics Map</strong>
+                            <div class="muted">Grid of active icon targets and where each icon is applied. Click any tile to edit/change that icon.</div>
+                        </div>
+                        <div class="row">
+                            <button onclick="refreshIconForgeSchematics()">Refresh Map</button>
+                            <button onclick="openIconForgeEditorFromSchematic('new')">New Icon</button>
+                        </div>
+                    </div>
+                    <div id="iconforge_schematics_stats" class="muted" style="margin-bottom:8px;">Loading schematics...</div>
+                    <div id="iconforge_schematics_grid" class="iconforge-schematics-grid"></div>
+                </div>
+                <div id="iconforge_editor_panel" class="workspace-grid" style="display:none;">
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Studio Controls</h3>
+                        <div class="row">
+                            <button onclick="showIconForgeSchematics()">Back To Icon Schematics</button>
+                            <span id="iconforge_editor_context" class="muted">No target selected.</span>
+                        </div>
                         <div class="row">
                             <select id="icon_studio_tool">
                                 <option value="brush" selected>tool: brush</option>
@@ -1071,31 +1777,70 @@ PAGE = """
                         </div>
                         <div class="row">
                             <input id="icon_studio_name" placeholder="icon file stem" value="agent_forge_icon" />
+                        </div>
+                        <div class="row" id="icon_studio_agentforge_row" style="display:none;">
                             <select id="icon_studio_target">
+                                <option value="standalone" selected>apply: standalone only</option>
                                 <option value="wizard">apply to wizard</option>
-                                <option value="advanced" selected>apply to advanced</option>
+                                <option value="advanced">apply to advanced</option>
                                 <option value="both">apply to both</option>
                             </select>
                         </div>
-                        <div class="row">
-                            <button onclick="triggerIconStudioImport()">Import Image</button>
-                            <button onclick="iconStudioUndoStroke()">Undo</button>
-                            <button onclick="iconStudioClearCanvas()">Clear</button>
-                            <button onclick="iconStudioFillBackground()">Fill</button>
-                            <input id="icon_studio_import_file" type="file" style="display:none;" accept=".png" onchange="handleIconStudioImport(event)" />
+                        <div id="icon_studio_agentforge_hint" class="muted" style="display:none;">AgentForge session active.</div>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:8px; margin-top:6px;">
+                            <div class="muted" style="margin-bottom:6px;">Layers</div>
+                            <div class="row">
+                                <input id="icon_studio_layer_name" placeholder="active layer name" />
+                                <button onclick="iconStudioRenameActiveLayer()">Rename</button>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">blend
+                                    <select id="icon_studio_layer_blend" onchange="iconStudioSetActiveLayerBlend(this.value)">
+                                        <option value="source-over" selected>normal</option>
+                                        <option value="multiply">multiply</option>
+                                        <option value="screen">screen</option>
+                                        <option value="overlay">overlay</option>
+                                        <option value="soft-light">soft light</option>
+                                        <option value="hard-light">hard light</option>
+                                        <option value="color-dodge">color dodge</option>
+                                        <option value="color-burn">color burn</option>
+                                        <option value="lighten">lighten</option>
+                                        <option value="darken">darken</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">opacity
+                                    <input id="icon_studio_layer_opacity" type="range" min="0" max="100" step="1" value="100" oninput="iconStudioSetActiveLayerOpacity(this.value)" />
+                                </label>
+                                <span id="icon_studio_layer_opacity_label" class="muted">100%</span>
+                            </div>
+                            <div class="row">
+                                <button onclick="iconStudioAddLayer()">Add Layer</button>
+                                <button onclick="iconStudioDuplicateLayer()">Duplicate</button>
+                                <button onclick="iconStudioDeleteLayer()">Delete</button>
+                                <button onclick="iconStudioMoveLayer(-1)">Up</button>
+                                <button onclick="iconStudioMoveLayer(1)">Down</button>
+                                <button onclick="iconStudioToggleActiveLayerVisibility()">Toggle Visible</button>
+                            </div>
+                            <div id="icon_studio_layer_list" class="muted" style="max-height:120px; overflow:auto; border:1px solid #2b2f3a; border-radius:8px; padding:6px;">No layers yet.</div>
                         </div>
-                        <div class="row">
-                            <button onclick="applyIconStudioFx('grayscale')">FX: Grayscale</button>
-                            <button onclick="applyIconStudioFx('invert')">FX: Invert</button>
-                            <button onclick="applyIconStudioFx('contrast')">FX: Contrast+</button>
-                            <button onclick="applyIconStudioFx('soften')">FX: Soften</button>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:8px; margin-top:6px;">
+                            <div class="muted" style="margin-bottom:6px;">FX Control</div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">strength
+                                    <input id="icon_fx_strength" type="range" min="1" max="100" step="1" value="55" />
+                                </label>
+                                <span id="icon_fx_strength_label" class="muted">55%</span>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">passes
+                                    <input id="icon_fx_passes" type="range" min="1" max="5" step="1" value="1" />
+                                </label>
+                                <span id="icon_fx_passes_label" class="muted">1x</span>
+                            </div>
                         </div>
-                        <div class="row">
-                            <button onclick="saveIconStudioDraft()">Save Draft</button>
-                            <button onclick="loadIconStudioDraft()">Load Draft</button>
-                            <button onclick="clearIconStudioDraft()">Clear Draft</button>
-                            <button onclick="downloadIconStudioPng()">Download PNG</button>
-                        </div>
+                        <input id="icon_studio_import_file" type="file" style="display:none;" accept=".png" onchange="handleIconStudioImport(event)" />
                         <div class="row">
                             <select id="icon_studio_anim_preset">
                                 <option value="pulse" selected>anim: pulse</option>
@@ -1104,50 +1849,52 @@ PAGE = """
                             </select>
                             <input id="icon_studio_anim_seconds" type="number" min="1" max="12" step="1" value="3" placeholder="seconds" />
                             <input id="icon_studio_anim_fps" type="number" min="6" max="30" step="1" value="12" placeholder="fps" />
-                            <button onclick="saveIconStudioAnimated()">Save Animated GIF</button>
                         </div>
-                        <div class="row">
-                            <button onclick="saveIconStudioIco()">Save .ico (16-256)</button>
-                        </div>
+                        <div class="muted">Use the menu bar for File, Edit, FX, View, and Windows operations.</div>
                         <div id="icon_studio_status" class="muted">Studio ready.</div>
                     </div>
-                </div>
 
-                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin-top:12px;">
-                    <div class="muted" style="margin-bottom:8px;">Windows Icon Operations (replace system icons + icon packs)</div>
-                    <div class="row">
-                        <select id="iconforge_target_type">
-                            <option value="folder" selected>target: folder path</option>
-                            <option value="shortcut">target: shortcut (.lnk)</option>
-                            <option value="file_extension">target: file extension (e.g. .txt)</option>
-                            <option value="application">target: application (e.g. notepad.exe)</option>
-                            <option value="drive">target: drive letter (e.g. C or D:)</option>
-                        </select>
-                        <input id="iconforge_target_value" placeholder="target value" />
-                        <input id="iconforge_icon_path" placeholder="icon path (.ico)" />
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Canvas + Operations</h3>
+                        <div class="workspace-canvas-wrap">
+                            <canvas id="icon_studio_canvas" width="256" height="256" style="width:256px; height:256px; border:1px solid #3c4559; border-radius:10px; background:linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%), linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%); background-size:16px 16px; background-position:0 0, 8px 8px; cursor:crosshair;"></canvas>
+
+                            <div class="workspace-canvas-controls">
+                                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px;">
+                                    <div class="muted" style="margin-bottom:8px;">Windows Icon Operations (replace system icons + icon packs)</div>
+                                    <div class="row">
+                                        <select id="iconforge_target_type">
+                                            <option value="folder" selected>target: folder path</option>
+                                            <option value="shortcut">target: shortcut (.lnk)</option>
+                                            <option value="file_extension">target: file extension (e.g. .txt)</option>
+                                            <option value="application">target: application (e.g. notepad.exe)</option>
+                                            <option value="drive">target: drive letter (e.g. C or D:)</option>
+                                        </select>
+                                        <input id="iconforge_target_value" placeholder="target value" />
+                                        <input id="iconforge_icon_path" placeholder="icon path (.ico)" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_restore_key" placeholder="backup key to restore" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_pack_export_dir" placeholder="export pack directory path" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_pack_import_source" placeholder="import pack source (dir or icon_set_manifest.json path)" />
+                                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_apply" type="checkbox" checked /> apply changes</label>
+                                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_refresh" type="checkbox" checked /> refresh cache</label>
+                                    </div>
+                                    <div class="muted">Run these operations from the Windows Ops menu.</div>
+                                    <pre id="iconforge_ops_result">No icon operations yet.</pre>
+                                </div>
+
+                                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px;">
+                                    <div class="muted" style="margin-bottom:8px;">Backup Catalog</div>
+                                    <pre id="iconforge_backups">No backups loaded.</pre>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <button onclick="setIconForgeFromStudioIco()">Use Latest Studio ICO</button>
-                        <button onclick="applyWindowsIconOverride()">Apply Icon Override</button>
-                        <button onclick="refreshWindowsIconCache()">Refresh Icon Cache</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_restore_key" placeholder="backup key to restore" />
-                        <button onclick="restoreWindowsIconOverride()">Restore Backup</button>
-                        <button onclick="refreshIconForgeOps()">Refresh Backups</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_pack_export_dir" placeholder="export pack directory path" />
-                        <button onclick="exportIconForgePack()">Export Icon Pack</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_pack_import_source" placeholder="import pack source (dir or icon_set_manifest.json path)" />
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_apply" type="checkbox" checked /> apply changes</label>
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_refresh" type="checkbox" checked /> refresh cache</label>
-                        <button onclick="importIconForgePack()">Import Icon Pack</button>
-                    </div>
-                    <pre id="iconforge_ops_result">No icon operations yet.</pre>
-                    <pre id="iconforge_backups">No backups loaded.</pre>
                 </div>
             </section>
 
@@ -1218,13 +1965,72 @@ PAGE = """
         let discoveryLocations = {};
         let activeDiscoveryKey = '';
         let snapshotGaugeBooted = false;
+        let snapshotDiskIoLast = {};
+        let snapshotDiskIoLastTs = 0;
         let previousOsState = null;
         let busLiveTimer = null;
         let iconStudioCtx = null;
         let iconStudioDrawing = false;
         let iconStudioUndo = [];
         let iconStudioBooted = false;
+        let iconStudioLayers = [];
+        let iconStudioActiveLayer = 0;
+        let iconStudioDraggingLayer = -1;
+        let iconStudioLayerSeed = 1;
+        let iconForgeSchematics = [];
+        let iconForgeBackupsCache = {};
+        let iconForgeVisited = false;
+        let iconForgeSectionCollapseState = {};
+        let iconForgeAgentContext = { active: false, source: '', agentName: '' };
+        let wizardStep = 1;
+        const WIZARD_TOTAL_STEPS = 4;
         const ICON_STUDIO_DRAFT_KEY = 'bossforge.iconforge.studio.v1';
+        const PRODUCT_MODE_CONFIG = {
+            iconforge: {
+                title: 'IconForge',
+                subtitle: 'Standalone Edition',
+                hallTitle: 'IconForge Studio',
+                hallSubtitle: 'Standalone icon design and Windows icon operations workspace.',
+                defaultView: 'view_iconforge',
+                allowedViews: ['view_iconforge'],
+            },
+            soundforge: {
+                title: 'SoundForge',
+                subtitle: 'Standalone Edition',
+                hallTitle: 'SoundForge Console',
+                hallSubtitle: 'Standalone sound scheme editor and bundle operations workspace.',
+                defaultView: 'view_sounds',
+                allowedViews: ['view_sounds'],
+            },
+        };
+
+        function showJsError(message) {
+            const root = document.getElementById('js_error');
+            if (!root) return;
+            root.textContent = String(message || 'Unknown JavaScript error');
+            root.classList.add('active');
+        }
+
+        function clearJsError() {
+            const root = document.getElementById('js_error');
+            if (!root) return;
+            root.textContent = '';
+            root.classList.remove('active');
+        }
+
+        function wireInlineClickFallback() {
+            // Keep native inline handlers untouched; some environments block eval-style execution.
+        }
+
+        window.addEventListener('error', (event) => {
+            const msg = event && event.message ? event.message : 'Unknown JavaScript error';
+            showJsError('Runtime error: ' + msg);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            const reason = event && event.reason ? String(event.reason) : 'Unhandled promise rejection';
+            showJsError('Async error: ' + reason);
+        });
 
         function beginBusy(message) {
             pendingLoads += 1;
@@ -1558,7 +2364,13 @@ PAGE = """
             if (viewId === 'view_diagnostics') refreshDiagnostics();
             if (viewId === 'view_sounds') fetchSoundEvents();
             if (viewId === 'view_discovery') refreshDiscoveryMap();
-            if (viewId === 'view_iconforge') refreshIconForgeOps();
+            if (viewId === 'view_iconforge') {
+                refreshIconForgeOps();
+                if (!iconForgeVisited) {
+                    iconForgeVisited = true;
+                    showIconForgeSchematics();
+                }
+            }
             if (viewId === 'view_os_state') refreshOsStatePanel();
             if (viewId === 'view_onboarding') refreshOnboardingStatus();
             if (viewId === 'view_scheduler') refreshSchedulerStatus();
@@ -1575,11 +2387,69 @@ PAGE = """
             setTimeout(endBusy, 180);
         }
 
+        function applyStandaloneProductMode(mode) {
+            const cfg = PRODUCT_MODE_CONFIG[mode];
+            if (!cfg) return false;
+
+            const shellTitle = document.getElementById('shell_title');
+            const shellSubtitle = document.getElementById('shell_subtitle');
+            const hallTitle = document.getElementById('hall_title');
+            const hallSubtitle = document.getElementById('hall_subtitle');
+            const pinRow = document.getElementById('hall_pin_row');
+            const anvilBtn = document.getElementById('anvil_launch_btn');
+            const anvilStatus = document.getElementById('anvil_status');
+
+            if (shellTitle) shellTitle.textContent = cfg.title;
+            if (shellSubtitle) shellSubtitle.textContent = cfg.subtitle;
+            if (hallTitle) hallTitle.textContent = cfg.hallTitle;
+            if (hallSubtitle) hallSubtitle.textContent = cfg.hallSubtitle;
+            if (pinRow) pinRow.style.display = 'none';
+            if (anvilBtn) anvilBtn.style.display = 'none';
+            if (anvilStatus) anvilStatus.style.display = 'none';
+            document.title = cfg.hallTitle;
+
+            const allowed = new Set(cfg.allowedViews || []);
+            document.querySelectorAll('.nav-btn').forEach((btn) => {
+                const view = String(btn.getAttribute('data-view') || '');
+                btn.style.display = allowed.has(view) ? '' : 'none';
+            });
+
+            document.querySelectorAll('.group-label').forEach((label) => {
+                let sib = label.nextElementSibling;
+                let visibleCount = 0;
+                while (sib && !sib.classList.contains('group-label')) {
+                    if (sib.classList.contains('nav-btn') && sib.style.display !== 'none') visibleCount += 1;
+                    sib = sib.nextElementSibling;
+                }
+                label.style.display = visibleCount ? '' : 'none';
+            });
+
+            switchView(cfg.defaultView);
+            return true;
+        }
+
         function applyUrlLaunchContext() {
             const params = new URLSearchParams(window.location.search || '');
+            const mode = String(params.get('mode') || '').trim().toLowerCase();
+            const modeApplied = applyStandaloneProductMode(mode);
+            const afIcon = String(params.get('agentforge_icon') || '').trim().toLowerCase();
+            const afTarget = String(params.get('agentforge_target') || '').trim().toLowerCase();
+            const afAgentName = String(params.get('agent_name') || '').trim();
+            if (afIcon === '1' || afIcon === 'true' || afIcon === 'yes') {
+                iconForgeAgentContext = {
+                    active: true,
+                    source: (afTarget === 'wizard' || afTarget === 'advanced') ? afTarget : 'advanced',
+                    agentName: afAgentName,
+                };
+            } else if (modeApplied) {
+                iconForgeAgentContext = { active: false, source: '', agentName: '' };
+            }
+            applyIconForgeAgentContextUI();
             const requestedView = (params.get('view') || '').trim();
             if (requestedView && document.getElementById(requestedView)) {
                 switchView(requestedView);
+            } else if (!modeApplied && currentView !== 'view_status') {
+                switchView('view_status');
             }
 
             const openIcon = (params.get('open_icon') || '').trim();
@@ -1588,6 +2458,7 @@ PAGE = """
             if (currentView !== 'view_iconforge') {
                 switchView('view_iconforge');
             }
+            showIconForgeEditor('Explorer selection');
 
             const iconPathInput = document.getElementById('iconforge_icon_path');
             if (iconPathInput) {
@@ -1595,7 +2466,7 @@ PAGE = """
             }
 
             const baseName = openIcon.split(/[\\/]/).pop() || '';
-            const iconStem = baseName.replace(/\.[^.]+$/, '').trim();
+            const iconStem = baseName.replace(/\\.[^.]+$/, '').trim();
             const studioName = document.getElementById('icon_studio_name');
             if (studioName && iconStem) {
                 studioName.value = iconStem;
@@ -1603,14 +2474,6 @@ PAGE = """
 
             setIconStudioStatus('Explorer selection loaded: ' + openIcon);
         }
-
-        document.addEventListener('keydown', (event) => {
-            if (!(event.ctrlKey || event.metaKey)) return;
-            if (String(event.key || '').toLowerCase() !== 's') return;
-            if (currentView !== 'view_iconforge') return;
-            event.preventDefault();
-            saveIconStudioIco();
-        });
 
         async function refreshOnboardingStatus() {
             const data = await fetchJsonWithTimeout('/api/onboarding/status');
@@ -2059,13 +2922,720 @@ PAGE = """
             root.style.color = isError ? '#f17171' : '#A9B1C1';
         }
 
+        function applyIconForgeAgentContextUI() {
+            const row = document.getElementById('icon_studio_agentforge_row');
+            const hint = document.getElementById('icon_studio_agentforge_hint');
+            const target = document.getElementById('icon_studio_target');
+            if (row) row.style.display = iconForgeAgentContext.active ? 'flex' : 'none';
+            if (hint) {
+                hint.style.display = iconForgeAgentContext.active ? 'block' : 'none';
+                if (iconForgeAgentContext.active) {
+                    const src = iconForgeAgentContext.source || 'advanced';
+                    const agent = iconForgeAgentContext.agentName ? (' (' + iconForgeAgentContext.agentName + ')') : '';
+                    hint.textContent = 'AgentForge session active: target=' + src + agent + '.';
+                }
+            }
+            if (target) {
+                if (!iconForgeAgentContext.active) {
+                    target.value = 'standalone';
+                } else if (iconForgeAgentContext.source === 'wizard' || iconForgeAgentContext.source === 'advanced') {
+                    target.value = iconForgeAgentContext.source;
+                }
+            }
+        }
+
+        function openIconForgeFromAgentForge(source) {
+            const src = (source === 'wizard' || source === 'advanced') ? source : 'advanced';
+            const name = src === 'wizard'
+                ? String(document.getElementById('wizard_name')?.value || '').trim()
+                : String(document.getElementById('maker_name')?.value || '').trim();
+            iconForgeAgentContext = { active: true, source: src, agentName: name };
+            const studioName = document.getElementById('icon_studio_name');
+            if (studioName && name) studioName.value = name;
+            applyIconForgeAgentContextUI();
+            switchView('view_iconforge');
+            showIconForgeEditor();
+            setIconStudioStatus('AgentForge icon session opened (' + src + ').');
+        }
+
+        function iconForgeSafeText(value, fallback = '') {
+            const raw = String(value || '').trim();
+            return raw || fallback;
+        }
+
+        function iconForgeInferStem(pathLike, fallback = 'iconforge_item') {
+            const raw = String(pathLike || '').trim();
+            if (!raw) return fallback;
+            const base = raw.split(/[\\/]/).pop() || raw;
+            const stem = base.replace(/\\.[^.]+$/, '').trim();
+            return stem || fallback;
+        }
+
+        function iconForgeBuildPreviewUrl(pathLike) {
+            const raw = String(pathLike || '').trim();
+            if (!raw) return '';
+            if (raw.startsWith('data:image/')) return raw;
+            if (/^https?:\\/\\//i.test(raw)) return raw;
+            return '/api/iconforge/preview?path=' + encodeURIComponent(raw);
+        }
+
+        function iconForgeLoadSectionCollapseState() {
+            try {
+                const raw = localStorage.getItem('bossforge.iconforge.sections.collapsed.v1');
+                if (!raw) {
+                    iconForgeSectionCollapseState = {};
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                iconForgeSectionCollapseState = (parsed && typeof parsed === 'object') ? parsed : {};
+            } catch {
+                iconForgeSectionCollapseState = {};
+            }
+        }
+
+        function iconForgeSaveSectionCollapseState() {
+            try {
+                localStorage.setItem('bossforge.iconforge.sections.collapsed.v1', JSON.stringify(iconForgeSectionCollapseState || {}));
+            } catch {
+                // Ignore storage failures.
+            }
+        }
+
+        function iconForgeSectionIsCollapsed(sectionKey) {
+            return iconForgeSectionCollapseState && iconForgeSectionCollapseState[String(sectionKey)] === true;
+        }
+
+        function iconForgeToggleSection(sectionKey) {
+            const key = String(sectionKey || '').trim();
+            if (!key) return;
+            const next = !iconForgeSectionIsCollapsed(key);
+            iconForgeSectionCollapseState[key] = next;
+            iconForgeSaveSectionCollapseState();
+            renderIconForgeSchematics();
+        }
+
+        function collectIconForgeSchematics() {
+            const items = [];
+            const wizardIcon = String(document.getElementById('wizard_icon_path')?.value || '').trim();
+            const wizardName = String(document.getElementById('wizard_name')?.value || '').trim();
+            items.push({
+                id: 'agentforge-wizard',
+                title: 'AgentForge Wizard',
+                where: 'wizard creation profile',
+                targetType: 'agentforge',
+                target: 'wizard icon slot',
+                icon: wizardIcon,
+                source: 'wizard',
+                agentName: wizardName,
+            });
+
+            const makerIcon = String(document.getElementById('maker_icon_path')?.value || '').trim();
+            const makerName = String(document.getElementById('maker_name')?.value || '').trim();
+            items.push({
+                id: 'agentforge-advanced',
+                title: 'AgentForge Advanced',
+                where: 'advanced agent profile',
+                targetType: 'agentforge',
+                target: 'advanced icon slot',
+                icon: makerIcon,
+                source: 'advanced',
+                agentName: makerName,
+            });
+
+            const windowsTemplates = [
+                {
+                    id: 'windows-folder-template',
+                    title: 'Windows Folder Icon',
+                    where: 'folder shell icon',
+                    targetType: 'folder',
+                    target: 'C:/Path/To/Folder',
+                    icon: '',
+                },
+                {
+                    id: 'windows-shortcut-template',
+                    title: 'Windows Shortcut Icon',
+                    where: 'shortcut (.lnk) icon',
+                    targetType: 'shortcut',
+                    target: 'C:/Path/To/AppShortcut.lnk',
+                    icon: '',
+                },
+                {
+                    id: 'windows-file-extension-template',
+                    title: 'Windows File Extension Icon',
+                    where: 'extension class icon',
+                    targetType: 'file_extension',
+                    target: '.txt',
+                    icon: '',
+                },
+                {
+                    id: 'windows-application-template',
+                    title: 'Windows Application Icon',
+                    where: 'application registration icon',
+                    targetType: 'application',
+                    target: 'notepad.exe',
+                    icon: '',
+                },
+                {
+                    id: 'windows-drive-template',
+                    title: 'Windows Drive Icon',
+                    where: 'drive letter shell icon',
+                    targetType: 'drive',
+                    target: 'D',
+                    icon: '',
+                },
+            ];
+            windowsTemplates.forEach((entry) => {
+                items.push({ ...entry, source: 'windows-template' });
+            });
+
+            const backupItems = (iconForgeBackupsCache && typeof iconForgeBackupsCache === 'object') ? iconForgeBackupsCache : {};
+            Object.entries(backupItems).forEach(([key, entry], index) => {
+                if (!entry || typeof entry !== 'object') return;
+                const targetType = String(entry.target_type || 'unknown').trim() || 'unknown';
+                const target = String(entry.target || key).trim() || key;
+                const icon = String(entry.icon || '').trim();
+                items.push({
+                    id: 'backup-' + String(index),
+                    title: 'Windows Override: ' + targetType,
+                    where: 'windows shell icon override',
+                    targetType,
+                    target,
+                    icon,
+                    backupKey: key,
+                    source: 'windows',
+                });
+            });
+
+            return items;
+        }
+
+        function renderIconForgeSchematics() {
+            iconForgeSchematics = collectIconForgeSchematics();
+            const statsRoot = document.getElementById('iconforge_schematics_stats');
+            const gridRoot = document.getElementById('iconforge_schematics_grid');
+            if (!statsRoot || !gridRoot) return;
+
+            const total = iconForgeSchematics.length;
+            const withIcon = iconForgeSchematics.filter((item) => String(item.icon || '').trim()).length;
+            const withPreview = iconForgeSchematics.filter((item) => String(iconForgeBuildPreviewUrl(item.icon) || '').trim()).length;
+            statsRoot.textContent = 'Targets mapped: ' + String(total) + ' | with icon path: ' + String(withIcon) + ' | previewable: ' + String(withPreview) + ' | click a tile to edit.';
+
+            if (!total) {
+                gridRoot.innerHTML = '<div class="iconforge-schematic-card"><h4>No icon targets found</h4><div class="iconforge-schematic-meta">Create or apply icon operations to populate the map.</div></div>';
+                return;
+            }
+
+            const sectionConfig = [
+                { key: 'agentforge', label: 'AgentForge Icon Targets' },
+                { key: 'windows-template', label: 'Windows Icon Templates' },
+                { key: 'windows', label: 'Active Windows Overrides' },
+            ];
+
+            const grouped = {
+                agentforge: [],
+                'windows-template': [],
+                windows: [],
+                other: [],
+            };
+            iconForgeSchematics.forEach((item) => {
+                const key = String(item.source || '').trim();
+                if (grouped[key]) {
+                    grouped[key].push(item);
+                } else {
+                    grouped.other.push(item);
+                }
+            });
+
+            const renderCard = (item) => {
+                const title = htmlEscape(iconForgeSafeText(item.title, 'Icon target'));
+                const where = htmlEscape(iconForgeSafeText(item.where, 'unknown location'));
+                const targetType = htmlEscape(iconForgeSafeText(item.targetType, 'unknown'));
+                const target = htmlEscape(iconForgeSafeText(item.target, 'unknown'));
+                const icon = htmlEscape(iconForgeSafeText(item.icon, 'not set'));
+                const id = htmlEscape(String(item.id || 'new'));
+                const previewUrl = iconForgeBuildPreviewUrl(item.icon);
+                const preview = previewUrl
+                    ? ('<div class="iconforge-schematic-preview"><img src="' + htmlEscape(previewUrl) + '" alt="icon preview for ' + title + '" loading="lazy" /></div><div class="iconforge-schematic-hint">Hover to zoom</div>')
+                    : '<div class="iconforge-schematic-preview"><span class="iconforge-schematic-preview-empty">No Icon</span></div>';
+                return '<div class="iconforge-schematic-card">'
+                    + '<h4>' + title + '</h4>'
+                    + preview
+                    + '<div class="iconforge-schematic-meta">goes to: ' + where + '</div>'
+                    + '<div class="iconforge-schematic-meta">type: ' + targetType + '</div>'
+                    + '<div class="iconforge-schematic-meta">target: ' + target + '</div>'
+                    + '<div class="iconforge-schematic-meta">icon: ' + icon + '</div>'
+                    + '<button onclick="openIconForgeEditorFromSchematic(\\\'' + id + '\\\')">Change This Icon</button>'
+                    + '</div>';
+            };
+
+            const sectionsHtml = sectionConfig.map((section) => {
+                const entries = grouped[section.key] || [];
+                if (!entries.length) return '';
+                const collapsed = iconForgeSectionIsCollapsed(section.key);
+                const btn = collapsed ? 'Expand' : 'Collapse';
+                const sectionClass = collapsed ? 'iconforge-schematic-section collapsed' : 'iconforge-schematic-section';
+                return '<div class="' + sectionClass + '">'
+                    + '<div class="iconforge-schematic-section-head">'
+                    + '<h3>' + htmlEscape(section.label) + '</h3>'
+                    + '<button class="iconforge-schematic-toggle" onclick="iconForgeToggleSection(\\\'' + htmlEscape(section.key) + '\\\')">' + btn + '</button>'
+                    + '</div>'
+                    + '<div class="iconforge-schematic-section-grid">'
+                    + entries.map(renderCard).join('')
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+
+            const otherHtml = (grouped.other || []).length
+                ? (() => {
+                    const otherKey = 'other';
+                    const collapsed = iconForgeSectionIsCollapsed(otherKey);
+                    const btn = collapsed ? 'Expand' : 'Collapse';
+                    const sectionClass = collapsed ? 'iconforge-schematic-section collapsed' : 'iconforge-schematic-section';
+                    return '<div class="' + sectionClass + '">'
+                    + '<div class="iconforge-schematic-section-head">'
+                    + '<h3>Other Icon Targets</h3>'
+                    + '<button class="iconforge-schematic-toggle" onclick="iconForgeToggleSection(\\\'' + otherKey + '\\\')">' + btn + '</button>'
+                    + '</div>'
+                    + '<div class="iconforge-schematic-section-grid">'
+                    + grouped.other.map(renderCard).join('')
+                    + '</div>'
+                    + '</div>';
+                })()
+                : '';
+
+            gridRoot.innerHTML = sectionsHtml + otherHtml;
+        }
+
+        function showIconForgeSchematics() {
+            const mapPanel = document.getElementById('iconforge_schematics_panel');
+            const editorPanel = document.getElementById('iconforge_editor_panel');
+            if (mapPanel) mapPanel.style.display = '';
+            if (editorPanel) editorPanel.style.display = 'none';
+            renderIconForgeSchematics();
+            setIconStudioStatus('Icon schematics map ready. Click a target to change its icon.');
+        }
+
+        function showIconForgeEditor(contextLabel = '') {
+            const mapPanel = document.getElementById('iconforge_schematics_panel');
+            const editorPanel = document.getElementById('iconforge_editor_panel');
+            const contextRoot = document.getElementById('iconforge_editor_context');
+            if (mapPanel) mapPanel.style.display = 'none';
+            if (editorPanel) editorPanel.style.display = '';
+            if (contextRoot) contextRoot.textContent = contextLabel || 'Custom icon editor';
+        }
+
+        function openIconForgeEditorFromSchematic(schematicId) {
+            const id = String(schematicId || '').trim();
+            if (id === 'new') {
+                showIconForgeEditor('New standalone icon');
+                setIconStudioStatus('New icon editor opened.');
+                return;
+            }
+
+            const entry = iconForgeSchematics.find((item) => String(item.id) === id);
+            if (!entry) {
+                showIconForgeEditor('Custom icon editor');
+                return;
+            }
+
+            const studioName = document.getElementById('icon_studio_name');
+            const targetType = document.getElementById('iconforge_target_type');
+            const targetValue = document.getElementById('iconforge_target_value');
+            const iconPath = document.getElementById('iconforge_icon_path');
+            const source = String(entry.source || '').trim();
+            const agentName = String(entry.agentName || '').trim();
+
+            if (studioName) studioName.value = iconForgeInferStem(entry.icon, iconForgeInferStem(entry.target, 'iconforge_item'));
+            if (targetType) {
+                const nextType = String(entry.targetType || 'folder');
+                const hasType = Array.from(targetType.options || []).some((opt) => String(opt.value) === nextType);
+                if (hasType) targetType.value = nextType;
+            }
+            if (targetValue) targetValue.value = String(entry.target || '');
+            if (iconPath) iconPath.value = String(entry.icon || '');
+
+            if (source === 'wizard' || source === 'advanced') {
+                iconForgeAgentContext = { active: true, source, agentName };
+            }
+            applyIconForgeAgentContextUI();
+
+            showIconForgeEditor('Editing: ' + iconForgeSafeText(entry.title, 'selected target'));
+            setIconStudioStatus('Editing icon target: ' + iconForgeSafeText(entry.target, 'unknown'));
+        }
+
+        function refreshIconForgeSchematics() {
+            renderIconForgeSchematics();
+        }
+
+        function createIconStudioLayer(name = '') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            return {
+                id: 'layer-' + String(iconStudioLayerSeed++),
+                name: String(name || ('Layer ' + iconStudioLayerSeed)).trim(),
+                visible: true,
+                blendMode: 'source-over',
+                opacity: 1,
+                canvas,
+                ctx,
+            };
+        }
+
+        function iconStudioGetActiveLayer() {
+            return iconStudioLayers[iconStudioActiveLayer] || null;
+        }
+
+        function iconStudioRenderLayers() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            iconStudioLayers.forEach((layer) => {
+                if (!layer || !layer.visible) return;
+                iconStudioCtx.save();
+                iconStudioCtx.globalAlpha = Number.isFinite(layer.opacity) ? Math.max(0, Math.min(1, layer.opacity)) : 1;
+                iconStudioCtx.globalCompositeOperation = String(layer.blendMode || 'source-over');
+                iconStudioCtx.drawImage(layer.canvas, 0, 0);
+                iconStudioCtx.restore();
+            });
+            iconStudioSyncActiveLayerControls();
+            refreshIconStudioLayerList();
+        }
+
+        function iconStudioSyncActiveLayerControls() {
+            const active = iconStudioGetActiveLayer();
+            const nameInput = document.getElementById('icon_studio_layer_name');
+            const blendSelect = document.getElementById('icon_studio_layer_blend');
+            const opacitySlider = document.getElementById('icon_studio_layer_opacity');
+            const opacityLabel = document.getElementById('icon_studio_layer_opacity_label');
+            const hasLayer = !!active;
+            const opacityPercent = hasLayer ? Math.round((Number(active.opacity) || 0) * 100) : 100;
+
+            if (nameInput) {
+                nameInput.disabled = !hasLayer;
+                nameInput.value = hasLayer ? String(active.name || '') : '';
+            }
+            if (blendSelect) {
+                blendSelect.disabled = !hasLayer;
+                blendSelect.value = hasLayer ? String(active.blendMode || 'source-over') : 'source-over';
+            }
+            if (opacitySlider) {
+                opacitySlider.disabled = !hasLayer;
+                opacitySlider.value = String(Math.max(0, Math.min(100, opacityPercent)));
+            }
+            if (opacityLabel) {
+                opacityLabel.textContent = String(Math.max(0, Math.min(100, opacityPercent))) + '%';
+            }
+        }
+
+        function iconStudioRenameActiveLayer() {
+            const active = iconStudioGetActiveLayer();
+            const nameInput = document.getElementById('icon_studio_layer_name');
+            if (!active || !nameInput) return;
+            const nextName = String(nameInput.value || '').trim();
+            if (!nextName) {
+                setIconStudioStatus('Layer name cannot be empty.', true);
+                iconStudioSyncActiveLayerControls();
+                return;
+            }
+            active.name = nextName;
+            refreshIconStudioLayerList();
+            setIconStudioStatus('Layer renamed.');
+        }
+
+        function iconStudioSetActiveLayerBlend(mode) {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            active.blendMode = String(mode || 'source-over').trim() || 'source-over';
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer blend: ' + active.blendMode);
+        }
+
+        function iconStudioSetActiveLayerOpacity(rawValue) {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            const parsed = parseInt(String(rawValue ?? '100'), 10);
+            const value = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 100;
+            active.opacity = value / 100;
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioMoveLayerTo(fromIndex, toIndex) {
+            const from = Number(fromIndex);
+            const to = Number(toIndex);
+            if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+            if (from < 0 || to < 0 || from >= iconStudioLayers.length || to >= iconStudioLayers.length) return;
+            if (from === to) return;
+            const [layer] = iconStudioLayers.splice(from, 1);
+            iconStudioLayers.splice(to, 0, layer);
+            if (iconStudioActiveLayer === from) {
+                iconStudioActiveLayer = to;
+            } else if (iconStudioActiveLayer > from && iconStudioActiveLayer <= to) {
+                iconStudioActiveLayer -= 1;
+            } else if (iconStudioActiveLayer < from && iconStudioActiveLayer >= to) {
+                iconStudioActiveLayer += 1;
+            }
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioLayerDragStart(index, event) {
+            const idx = Number(index);
+            if (!Number.isInteger(idx)) return;
+            iconStudioDraggingLayer = idx;
+            if (event?.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', String(idx));
+            }
+        }
+
+        function iconStudioLayerDragOver(index, event) {
+            if (!event) return;
+            event.preventDefault();
+            if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+        }
+
+        function iconStudioLayerDrop(index, event) {
+            if (event) event.preventDefault();
+            const to = Number(index);
+            const from = iconStudioDraggingLayer;
+            if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+            if (from < 0 || to < 0) return;
+            iconStudioMoveLayerTo(from, to);
+            iconStudioDraggingLayer = -1;
+            setIconStudioStatus('Layer order updated.');
+        }
+
+        function iconStudioLayerDragEnd() {
+            iconStudioDraggingLayer = -1;
+        }
+
+        function refreshIconStudioLayerList() {
+            const root = document.getElementById('icon_studio_layer_list');
+            if (!root) return;
+            if (!iconStudioLayers.length) {
+                root.innerHTML = 'No layers yet.';
+                return;
+            }
+            root.innerHTML = iconStudioLayers.map((layer, idx) => {
+                const active = idx === iconStudioActiveLayer;
+                const eye = layer.visible ? 'visible' : 'hidden';
+                const blend = String(layer.blendMode || 'source-over');
+                const opacity = Math.round((Number(layer.opacity) || 0) * 100);
+                const border = active ? 'border-color: rgba(212,168,87,0.8);' : '';
+                const bg = active ? 'background: rgba(34,30,20,0.75);' : 'background: rgba(14,14,19,0.85);';
+                return '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #2b2f3a; border-radius:6px; padding:4px 6px; margin-bottom:4px; ' + border + bg + '" draggable="true" ondragstart="iconStudioLayerDragStart(' + idx + ', event)" ondragover="iconStudioLayerDragOver(' + idx + ', event)" ondrop="iconStudioLayerDrop(' + idx + ', event)" ondragend="iconStudioLayerDragEnd()">'
+                    + '<button style="flex:1 1 auto; text-align:left; min-height:24px; padding:2px 6px;" onclick="iconStudioSelectLayer(' + idx + ')">' + htmlEscape(layer.name) + '</button>'
+                    + '<span class="muted" style="font-size:11px;">' + eye + ' • ' + htmlEscape(blend) + ' • ' + String(Math.max(0, Math.min(100, opacity))) + '%</span>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function iconStudioResetLayers() {
+            iconStudioLayers = [createIconStudioLayer('Base')];
+            iconStudioActiveLayer = 0;
+            iconStudioUndo = [];
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioSelectLayer(index) {
+            const idx = Number(index);
+            if (!Number.isInteger(idx) || idx < 0 || idx >= iconStudioLayers.length) return;
+            iconStudioActiveLayer = idx;
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioAddLayer() {
+            iconStudioLayers.push(createIconStudioLayer('Layer ' + (iconStudioLayers.length + 1)));
+            iconStudioActiveLayer = iconStudioLayers.length - 1;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer added.');
+        }
+
+        function iconStudioDuplicateLayer() {
+            const active = iconStudioGetActiveLayer();
+            if (!active || !active.ctx) return;
+            const dup = createIconStudioLayer(active.name + ' Copy');
+            dup.ctx.drawImage(active.canvas, 0, 0);
+            dup.blendMode = String(active.blendMode || 'source-over');
+            dup.opacity = Number.isFinite(active.opacity) ? Math.max(0, Math.min(1, active.opacity)) : 1;
+            iconStudioLayers.splice(iconStudioActiveLayer + 1, 0, dup);
+            iconStudioActiveLayer += 1;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer duplicated.');
+        }
+
+        function iconStudioDeleteLayer() {
+            if (iconStudioLayers.length <= 1) {
+                setIconStudioStatus('Cannot delete the last layer.', true);
+                return;
+            }
+            iconStudioLayers.splice(iconStudioActiveLayer, 1);
+            iconStudioActiveLayer = Math.max(0, Math.min(iconStudioActiveLayer, iconStudioLayers.length - 1));
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer deleted.');
+        }
+
+        function iconStudioMoveLayer(direction) {
+            const dir = Number(direction) < 0 ? -1 : 1;
+            const from = iconStudioActiveLayer;
+            const to = from + dir;
+            if (to < 0 || to >= iconStudioLayers.length) return;
+            iconStudioMoveLayerTo(from, to);
+            setIconStudioStatus('Layer order updated.');
+        }
+
+        function iconStudioToggleActiveLayerVisibility() {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            active.visible = !active.visible;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer visibility: ' + (active.visible ? 'visible' : 'hidden'));
+        }
+
+        function readIconFxControls() {
+            const strengthRaw = parseInt(document.getElementById('icon_fx_strength')?.value || '55', 10);
+            const passesRaw = parseInt(document.getElementById('icon_fx_passes')?.value || '1', 10);
+            const strength = Number.isFinite(strengthRaw) ? Math.max(1, Math.min(100, strengthRaw)) : 55;
+            const passes = Number.isFinite(passesRaw) ? Math.max(1, Math.min(5, passesRaw)) : 1;
+            return { strength, passes };
+        }
+
+        function updateIconFxControlLabels() {
+            const { strength, passes } = readIconFxControls();
+            const s = document.getElementById('icon_fx_strength_label');
+            const p = document.getElementById('icon_fx_passes_label');
+            if (s) s.textContent = String(strength) + '%';
+            if (p) p.textContent = String(passes) + 'x';
+        }
+
+        function closeIconForgeMenus() {
+            document.querySelectorAll('[data-iconforge-menu]').forEach((menu) => {
+                menu.classList.remove('open');
+            });
+        }
+
+        function toggleIconForgeMenu(button, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const menu = button ? button.closest('[data-iconforge-menu]') : null;
+            if (!menu) return;
+            const shouldOpen = !menu.classList.contains('open');
+            closeIconForgeMenus();
+            if (shouldOpen) menu.classList.add('open');
+        }
+
+        function isTypingTarget(target) {
+            const tag = String(target?.tagName || '').toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || !!target?.isContentEditable;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (currentView !== 'view_iconforge') return;
+            if (event.key === 'Escape') {
+                closeIconForgeMenus();
+                return;
+            }
+
+            const ctrlLike = event.ctrlKey || event.metaKey;
+            if (!ctrlLike) return;
+
+            const key = String(event.key || '').toLowerCase();
+            const shift = !!event.shiftKey;
+            const typing = isTypingTarget(event.target);
+
+            if (!shift && key === 'z') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioUndoStroke();
+                return;
+            }
+
+            if (typing) return;
+
+            if (!shift && key === 'n') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioClearCanvas();
+                setIconStudioStatus('New canvas ready.');
+                return;
+            }
+            if (!shift && key === 'o') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                triggerIconStudioImport();
+                return;
+            }
+            if (!shift && key === 's') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioDraft();
+                return;
+            }
+            if (shift && key === 'l') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                loadIconStudioDraft();
+                return;
+            }
+            if (!shift && key === 'l') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioClearCanvas();
+                return;
+            }
+            if (shift && key === 'p') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                downloadIconStudioPng();
+                return;
+            }
+            if (shift && key === 's') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioIco();
+                return;
+            }
+            if (shift && key === 'g') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioAnimated();
+                return;
+            }
+            if (!shift && key === 'i') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('invert');
+                return;
+            }
+            if (shift && key === 'c') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('contrast');
+                return;
+            }
+            if (shift && key === '1') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('grayscale');
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const target = event && event.target;
+            const insideMenu = target && typeof target.closest === 'function' ? target.closest('[data-iconforge-menu]') : null;
+            if (!insideMenu) closeIconForgeMenus();
+        });
+
         function iconStudioBuildDraftPayload() {
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return null;
             return {
                 image_data: canvas.toDataURL('image/png'),
                 icon_name: (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim(),
-                target: (document.getElementById('icon_studio_target')?.value || 'advanced').trim(),
+                target: (document.getElementById('icon_studio_target')?.value || 'standalone').trim(),
                 tool: (document.getElementById('icon_studio_tool')?.value || 'brush').trim(),
                 color: (document.getElementById('icon_studio_color')?.value || '#d4a857').trim(),
                 size: (document.getElementById('icon_studio_size')?.value || '10').trim(),
@@ -2089,7 +3659,8 @@ PAGE = """
 
         async function loadIconStudioDraft(showStatus = true) {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             try {
                 const raw = localStorage.getItem(ICON_STUDIO_DRAFT_KEY);
                 if (!raw) {
@@ -2107,8 +3678,9 @@ PAGE = """
                     img.onerror = () => reject(new Error('saved draft image failed to load'));
                     img.src = payload.image_data;
                 });
-                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
-                iconStudioCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                active.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                active.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                iconStudioRenderLayers();
 
                 const nameEl = document.getElementById('icon_studio_name');
                 const targetEl = document.getElementById('icon_studio_target');
@@ -2120,7 +3692,7 @@ PAGE = """
                 const animSecondsEl = document.getElementById('icon_studio_anim_seconds');
                 const animFpsEl = document.getElementById('icon_studio_anim_fps');
                 if (nameEl && payload.icon_name) nameEl.value = String(payload.icon_name);
-                if (targetEl && payload.target) targetEl.value = String(payload.target);
+                if (targetEl && payload.target && iconForgeAgentContext.active) targetEl.value = String(payload.target);
                 if (toolEl && payload.tool) toolEl.value = String(payload.tool);
                 if (colorEl && payload.color) colorEl.value = String(payload.color);
                 if (sizeEl && payload.size) sizeEl.value = String(payload.size);
@@ -2157,9 +3729,17 @@ PAGE = """
         }
 
         function iconStudioPushUndo() {
-            const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
-            const frame = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            if (!iconStudioLayers.length) return;
+            const frame = {
+                active: iconStudioActiveLayer,
+                layers: iconStudioLayers.map((layer) => ({
+                    name: layer.name,
+                    visible: !!layer.visible,
+                    blendMode: String(layer.blendMode || 'source-over'),
+                    opacity: Number.isFinite(layer.opacity) ? Math.max(0, Math.min(1, layer.opacity)) : 1,
+                    image: layer.ctx ? layer.ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height) : null,
+                })),
+            };
             iconStudioUndo.push(frame);
             if (iconStudioUndo.length > 25) iconStudioUndo.shift();
         }
@@ -2186,19 +3766,22 @@ PAGE = """
         }
 
         function iconStudioStroke(from, to) {
-            if (!iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!active || !active.ctx) return;
             const stroke = iconStudioCurrentStroke();
-            iconStudioCtx.save();
-            iconStudioCtx.lineCap = 'round';
-            iconStudioCtx.lineJoin = 'round';
-            iconStudioCtx.lineWidth = stroke.size;
-            iconStudioCtx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
-            iconStudioCtx.strokeStyle = stroke.color;
-            iconStudioCtx.beginPath();
-            iconStudioCtx.moveTo(from.x, from.y);
-            iconStudioCtx.lineTo(to.x, to.y);
-            iconStudioCtx.stroke();
-            iconStudioCtx.restore();
+            const ctx = active.ctx;
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = stroke.size;
+            ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = stroke.color;
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+            ctx.restore();
+            iconStudioRenderLayers();
         }
 
         function initIconForgeStudio() {
@@ -2208,9 +3791,8 @@ PAGE = """
             iconStudioCtx = canvas.getContext('2d', { willReadFrequently: true });
             if (!iconStudioCtx) return;
             iconStudioBooted = true;
-            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
-            iconStudioCtx.fillStyle = 'rgba(0,0,0,0)';
-            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
+            iconStudioResetLayers();
+            applyIconForgeAgentContextUI();
 
             const slider = document.getElementById('icon_studio_size');
             const label = document.getElementById('icon_studio_size_label');
@@ -2221,6 +3803,12 @@ PAGE = """
                 slider.addEventListener('input', sync);
                 sync();
             }
+
+            const fxStrength = document.getElementById('icon_fx_strength');
+            const fxPasses = document.getElementById('icon_fx_passes');
+            if (fxStrength) fxStrength.addEventListener('input', updateIconFxControlLabels);
+            if (fxPasses) fxPasses.addEventListener('input', updateIconFxControlLabels);
+            updateIconFxControlLabels();
 
             let lastPoint = { x: 0, y: 0 };
             canvas.addEventListener('pointerdown', (event) => {
@@ -2253,7 +3841,8 @@ PAGE = """
         async function handleIconStudioImport(event) {
             const file = event?.target?.files?.[0];
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!file || !canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!file || !canvas || !active || !active.ctx) return;
             try {
                 const objectUrl = URL.createObjectURL(file);
                 const img = new Image();
@@ -2263,14 +3852,15 @@ PAGE = """
                     img.src = objectUrl;
                 });
                 iconStudioPushUndo();
-                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+                active.ctx.clearRect(0, 0, canvas.width, canvas.height);
                 const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
                 const drawW = Math.max(1, Math.floor(img.width * scale));
                 const drawH = Math.max(1, Math.floor(img.height * scale));
                 const offX = Math.floor((canvas.width - drawW) / 2);
                 const offY = Math.floor((canvas.height - drawH) / 2);
-                iconStudioCtx.drawImage(img, offX, offY, drawW, drawH);
+                active.ctx.drawImage(img, offX, offY, drawW, drawH);
                 URL.revokeObjectURL(objectUrl);
+                iconStudioRenderLayers();
                 saveIconStudioDraft(false);
                 setIconStudioStatus('Imported image: ' + file.name);
             } catch (err) {
@@ -2285,66 +3875,203 @@ PAGE = """
                 setIconStudioStatus('Undo stack is empty.');
                 return;
             }
-            iconStudioCtx.putImageData(frame, 0, 0);
+            if (Array.isArray(frame.layers) && frame.layers.length) {
+                iconStudioLayers = frame.layers.map((layerFrame, idx) => {
+                    const layer = createIconStudioLayer(layerFrame?.name || ('Layer ' + (idx + 1)));
+                    layer.visible = layerFrame?.visible !== false;
+                    layer.blendMode = String(layerFrame?.blendMode || 'source-over');
+                    const opacityValue = Number(layerFrame?.opacity);
+                    layer.opacity = Number.isFinite(opacityValue) ? Math.max(0, Math.min(1, opacityValue)) : 1;
+                    if (layer.ctx && layerFrame?.image) layer.ctx.putImageData(layerFrame.image, 0, 0);
+                    return layer;
+                });
+                iconStudioActiveLayer = Math.max(0, Math.min(Number(frame.active) || 0, iconStudioLayers.length - 1));
+                iconStudioRenderLayers();
+            }
             saveIconStudioDraft(false);
             setIconStudioStatus('Undo applied.');
         }
 
         function iconStudioClearCanvas() {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             iconStudioPushUndo();
-            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            active.ctx.clearRect(0, 0, canvas.width, canvas.height);
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Canvas cleared.');
         }
 
         function iconStudioFillBackground() {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             const color = document.getElementById('icon_studio_color')?.value || '#1d3557';
             iconStudioPushUndo();
-            iconStudioCtx.save();
-            iconStudioCtx.globalCompositeOperation = 'source-over';
-            iconStudioCtx.fillStyle = color;
-            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
-            iconStudioCtx.restore();
+            active.ctx.save();
+            active.ctx.globalCompositeOperation = 'source-over';
+            active.ctx.fillStyle = color;
+            active.ctx.fillRect(0, 0, canvas.width, canvas.height);
+            active.ctx.restore();
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Background filled.');
         }
 
         function applyIconStudioFx(kind) {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             iconStudioPushUndo();
-            const image = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const image = active.ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = image.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                if (kind === 'grayscale') {
-                    const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-                    data[i] = y;
-                    data[i + 1] = y;
-                    data[i + 2] = y;
-                } else if (kind === 'invert') {
-                    data[i] = 255 - r;
-                    data[i + 1] = 255 - g;
-                    data[i + 2] = 255 - b;
-                } else if (kind === 'contrast') {
-                    const c = 36;
-                    const factor = (259 * (c + 255)) / (255 * (259 - c));
-                    data[i] = Math.max(0, Math.min(255, Math.round(factor * (r - 128) + 128)));
-                    data[i + 1] = Math.max(0, Math.min(255, Math.round(factor * (g - 128) + 128)));
-                    data[i + 2] = Math.max(0, Math.min(255, Math.round(factor * (b - 128) + 128)));
-                } else if (kind === 'soften') {
-                    data[i] = Math.round((r + 255) / 2);
-                    data[i + 1] = Math.round((g + 255) / 2);
-                    data[i + 2] = Math.round((b + 255) / 2);
+            const width = canvas.width;
+            const height = canvas.height;
+            const source = new Uint8ClampedArray(data);
+            const controls = readIconFxControls();
+            const strengthScale = controls.strength / 100;
+            const passes = controls.passes;
+
+            const clampByte = (v) => Math.max(0, Math.min(255, Math.round(v)));
+            const hex = String(document.getElementById('icon_studio_color')?.value || '#d4a857').trim();
+            const glowRgb = /^#[0-9a-fA-F]{6}$/.test(hex)
+                ? [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
+                : [212, 168, 87];
+
+            function sampleNearest(buffer, x, y) {
+                const sx = Math.max(0, Math.min(width - 1, Math.round(x)));
+                const sy = Math.max(0, Math.min(height - 1, Math.round(y)));
+                const idx = (sy * width + sx) * 4;
+                return [buffer[idx], buffer[idx + 1], buffer[idx + 2], buffer[idx + 3]];
+            }
+
+            function alphaBlurAt(buffer, x, y) {
+                let sum = 0;
+                let weightSum = 0;
+                for (let oy = -1; oy <= 1; oy += 1) {
+                    for (let ox = -1; ox <= 1; ox += 1) {
+                        const sx = Math.max(0, Math.min(width - 1, x + ox));
+                        const sy = Math.max(0, Math.min(height - 1, y + oy));
+                        const idx = (sy * width + sx) * 4 + 3;
+                        const weight = (ox === 0 && oy === 0) ? 4 : ((ox === 0 || oy === 0) ? 2 : 1);
+                        sum += buffer[idx] * weight;
+                        weightSum += weight;
+                    }
+                }
+                return sum / Math.max(1, weightSum);
+            }
+
+            for (let pass = 0; pass < passes; pass += 1) {
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    if (kind === 'grayscale') {
+                        const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+                        data[i] = clampByte(r * (1 - strengthScale) + y * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + y * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + y * strengthScale);
+                    } else if (kind === 'invert') {
+                        data[i] = clampByte(r * (1 - strengthScale) + (255 - r) * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + (255 - g) * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + (255 - b) * strengthScale);
+                    } else if (kind === 'contrast') {
+                        const c = 36 + Math.round(52 * strengthScale);
+                        const factor = (259 * (c + 255)) / (255 * (259 - c));
+                        data[i] = clampByte(factor * (r - 128) + 128);
+                        data[i + 1] = clampByte(factor * (g - 128) + 128);
+                        data[i + 2] = clampByte(factor * (b - 128) + 128);
+                    } else if (kind === 'soften') {
+                        data[i] = clampByte(r * (1 - strengthScale) + ((r + 255) / 2) * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + ((g + 255) / 2) * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + ((b + 255) / 2) * strengthScale);
+                    }
                 }
             }
-            iconStudioCtx.putImageData(image, 0, 0);
+
+            if (kind === 'glow_soft' || kind === 'glow_neon') {
+                for (let y = 0; y < height; y += 1) {
+                    for (let x = 0; x < width; x += 1) {
+                        const idx = (y * width + x) * 4;
+                        const baseR = source[idx];
+                        const baseG = source[idx + 1];
+                        const baseB = source[idx + 2];
+                        const baseA = source[idx + 3];
+                        const auraA = alphaBlurAt(source, x, y);
+
+                        if (kind === 'glow_soft') {
+                            const glowMix = (auraA / 255) * 0.55;
+                            data[idx] = clampByte(baseR * (1 - glowMix) + glowRgb[0] * glowMix + 12);
+                            data[idx + 1] = clampByte(baseG * (1 - glowMix) + glowRgb[1] * glowMix + 12);
+                            data[idx + 2] = clampByte(baseB * (1 - glowMix) + glowRgb[2] * glowMix + 12);
+                            data[idx + 3] = clampByte(Math.max(baseA, auraA * 0.9));
+                        } else {
+                            const edge = Math.max(0, auraA - baseA);
+                            const neon = Math.min(1, edge / 190);
+                            data[idx] = clampByte(baseR + glowRgb[0] * neon + 20 * neon);
+                            data[idx + 1] = clampByte(baseG + glowRgb[1] * neon + 30 * neon);
+                            data[idx + 2] = clampByte(baseB + glowRgb[2] * neon + 46 * neon);
+                            data[idx + 3] = clampByte(Math.max(baseA, auraA));
+                        }
+                    }
+                }
+            } else if (kind === 'swirl_warp') {
+                const out = new Uint8ClampedArray(data.length);
+                const cx = width / 2;
+                const cy = height / 2;
+                const maxR = Math.max(1, Math.hypot(cx, cy));
+                for (let y = 0; y < height; y += 1) {
+                    for (let x = 0; x < width; x += 1) {
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const r = Math.hypot(dx, dy);
+                        const norm = Math.min(1, r / maxR);
+                        const theta = Math.atan2(dy, dx);
+                        const twist = (1 - norm) * (1 - norm) * 1.35;
+                        const srcTheta = theta - twist;
+                        const sx = cx + Math.cos(srcTheta) * r;
+                        const sy = cy + Math.sin(srcTheta) * r;
+                        const [rr, gg, bb, aa] = sampleNearest(source, sx, sy);
+                        const idx = (y * width + x) * 4;
+                        out[idx] = rr;
+                        out[idx + 1] = gg;
+                        out[idx + 2] = bb;
+                        out[idx + 3] = aa;
+                    }
+                }
+                data.set(out);
+            } else if (kind === 'particle_swirl') {
+                const out = new Uint8ClampedArray(source);
+                const cx = width / 2;
+                const cy = height / 2;
+                const maxR = Math.min(width, height) * 0.42;
+                const particles = 160;
+                for (let p = 0; p < particles; p += 1) {
+                    const t = p / particles;
+                    const angle = t * Math.PI * 7.5;
+                    const radius = maxR * Math.pow(t, 0.8);
+                    const x = Math.round(cx + Math.cos(angle) * radius);
+                    const y = Math.round(cy + Math.sin(angle) * radius * 0.7);
+                    for (let oy = -1; oy <= 1; oy += 1) {
+                        for (let ox = -1; ox <= 1; ox += 1) {
+                            const px = x + ox;
+                            const py = y + oy;
+                            if (px < 0 || py < 0 || px >= width || py >= height) continue;
+                            const idx = (py * width + px) * 4;
+                            const strength = 1 - (Math.abs(ox) + Math.abs(oy)) / 3;
+                            out[idx] = clampByte(out[idx] + glowRgb[0] * 0.42 * strength);
+                            out[idx + 1] = clampByte(out[idx + 1] + glowRgb[1] * 0.46 * strength);
+                            out[idx + 2] = clampByte(out[idx + 2] + glowRgb[2] * 0.62 * strength + 18 * strength);
+                            out[idx + 3] = clampByte(Math.max(out[idx + 3], 145 * strength));
+                        }
+                    }
+                }
+                data.set(out);
+            }
+
+            active.ctx.putImageData(image, 0, 0);
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Applied FX: ' + kind);
         }
@@ -2353,7 +4080,8 @@ PAGE = """
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return;
             const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
-            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const selectedTarget = (document.getElementById('icon_studio_target')?.value || 'standalone').trim();
+            const target = iconForgeAgentContext.active ? selectedTarget : 'standalone';
             const payload = {
                 icon_name: iconName,
                 image_data: canvas.toDataURL('image/png'),
@@ -2387,14 +4115,22 @@ PAGE = """
                 setIconStatus('maker_icon_status', 'Custom icon ready: ' + iconPath);
                 toggleMakerIconSource();
             }
-            setIconStudioStatus('Saved icon: ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            if (target === 'standalone') {
+                setIconStudioStatus('Saved icon (standalone): ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            } else {
+                setIconStudioStatus('Saved icon: ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            }
+            if (window.confirm('Icon saved. Are you done and want to return to the Icon Schematics map?')) {
+                showIconForgeSchematics();
+            }
         }
 
         async function saveIconStudioAnimated() {
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return;
             const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
-            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const selectedTarget = (document.getElementById('icon_studio_target')?.value || 'standalone').trim();
+            const target = iconForgeAgentContext.active ? selectedTarget : 'standalone';
             const preset = (document.getElementById('icon_studio_anim_preset')?.value || 'pulse').trim();
             const seconds = parseInt(document.getElementById('icon_studio_anim_seconds')?.value || '3', 10);
             const fps = parseInt(document.getElementById('icon_studio_anim_fps')?.value || '12', 10);
@@ -2436,7 +4172,14 @@ PAGE = """
                 setIconStatus('maker_icon_status', 'Custom icon ready: ' + icoPath);
                 toggleMakerIconSource();
             }
-            setIconStudioStatus('Animated saved: ' + gifPath + ' | ICO fallback: ' + icoPath);
+            if (target === 'standalone') {
+                setIconStudioStatus('Animated saved (standalone): ' + gifPath + ' | ICO fallback: ' + icoPath);
+            } else {
+                setIconStudioStatus('Animated saved: ' + gifPath + ' | ICO fallback: ' + icoPath);
+            }
+            if (window.confirm('Icon saved. Are you done and want to return to the Icon Schematics map?')) {
+                showIconForgeSchematics();
+            }
         }
 
         function setIconForgeFromStudioIco() {
@@ -2452,6 +4195,8 @@ PAGE = """
             const root = document.getElementById('iconforge_backups');
             if (!root) return;
             root.textContent = JSON.stringify(data, null, 2);
+            iconForgeBackupsCache = (data && data.ok && data.items && typeof data.items === 'object') ? data.items : {};
+            renderIconForgeSchematics();
         }
 
         async function applyWindowsIconOverride() {
@@ -2579,7 +4324,7 @@ PAGE = """
         function composeSystemWithPersonality(baseSystem, preset, notes) {
             const key = String(preset || 'balanced').trim().toLowerCase();
             const def = personalityDefinitions()[key] || personalityDefinitions().balanced;
-            const marker = '\n\nPersonality Wrapper (';
+            const marker = '\\n\\nPersonality Wrapper (';
             const rawRoot = String(baseSystem || '').trim();
             const markerIndex = rawRoot.indexOf(marker);
             const root = (markerIndex >= 0 ? rawRoot.slice(0, markerIndex).trim() : rawRoot) || 'You are a helpful specialist agent.';
@@ -2630,7 +4375,81 @@ PAGE = """
             advanced.style.display = useWizard ? 'none' : 'block';
             if (wizardBtn) wizardBtn.style.opacity = useWizard ? '1' : '0.65';
             if (advancedBtn) advancedBtn.style.opacity = useWizard ? '0.65' : '1';
+            if (useWizard) setWizardStep(1);
             if (!useWizard) syncAdvancedPolicyAwareness();
+        }
+
+        function wizardSummary() {
+            return {
+                name: (document.getElementById('wizard_name')?.value || '').trim(),
+                endpoint: (document.getElementById('wizard_endpoint')?.value || '').trim(),
+                role_focus: (document.getElementById('wizard_role_focus')?.value || '').trim(),
+                scope: (document.getElementById('wizard_scope')?.value || '').trim(),
+                behavior: (document.getElementById('wizard_behavior')?.value || '').trim(),
+                power: (document.getElementById('wizard_power')?.value || '').trim(),
+                personality: (document.getElementById('wizard_personality')?.value || '').trim(),
+                personality_notes: (document.getElementById('wizard_personality_notes')?.value || '').trim(),
+                personality_interests: parseCsvTags(document.getElementById('wizard_personality_interests')?.value || ''),
+                behavior_patterns: selectedBehaviorPatterns('wizard_behavior_patterns'),
+                skills: selectedWizardValues('wizard_skill_list'),
+                sigils: selectedWizardValues('wizard_sigil_list'),
+                state_machine_template: (document.getElementById('wizard_state_machine_template')?.value || 'none').trim(),
+                icon_mode: (document.getElementById('wizard_icon_mode')?.value || 'none').trim(),
+                icon_path: (document.getElementById('wizard_icon_path')?.value || '').trim(),
+                encrypt_profile: !!document.getElementById('wizard_encrypt_profile')?.checked,
+            };
+        }
+
+        function updateWizardReview() {
+            const root = document.getElementById('wizard_review');
+            if (!root) return;
+            root.textContent = JSON.stringify(wizardSummary(), null, 2);
+        }
+
+        function updateWizardChecklist() {
+            document.querySelectorAll('[data-check-step]').forEach((btn) => {
+                const step = Number(btn.getAttribute('data-check-step') || '0');
+                btn.classList.toggle('is-active', step === wizardStep);
+                btn.classList.toggle('is-complete', step < wizardStep);
+                const dot = btn.querySelector('.step-dot');
+                if (dot) dot.textContent = step < wizardStep ? '✓' : String(step);
+            });
+        }
+
+        function setWizardStep(step) {
+            const bounded = Math.max(1, Math.min(WIZARD_TOTAL_STEPS, Number(step) || 1));
+            wizardStep = bounded;
+            document.querySelectorAll('[data-wizard-step]').forEach((node) => {
+                const nodeStep = Number(node.getAttribute('data-wizard-step') || '0');
+                node.style.display = nodeStep === wizardStep ? 'block' : 'none';
+            });
+            const label = document.getElementById('wizard_step_label');
+            if (label) {
+                const names = ['Identity', 'Profile', 'Capabilities', 'Review'];
+                label.textContent = `Step ${wizardStep} of ${WIZARD_TOTAL_STEPS}: ${names[wizardStep - 1]}`;
+            }
+            const backBtn = document.getElementById('wizard_back_btn');
+            const nextBtn = document.getElementById('wizard_next_btn');
+            const reviewBtn = document.getElementById('wizard_review_btn');
+            const createBtn = document.getElementById('wizard_create_btn');
+            if (backBtn) backBtn.disabled = wizardStep <= 1;
+            if (nextBtn) nextBtn.style.display = wizardStep < WIZARD_TOTAL_STEPS ? '' : 'none';
+            if (reviewBtn) reviewBtn.style.display = wizardStep < WIZARD_TOTAL_STEPS ? '' : 'none';
+            if (createBtn) createBtn.style.display = wizardStep === WIZARD_TOTAL_STEPS ? '' : 'none';
+            updateWizardChecklist();
+            if (wizardStep === WIZARD_TOTAL_STEPS) updateWizardReview();
+        }
+
+        function wizardNextStep() {
+            setWizardStep(wizardStep + 1);
+        }
+
+        function wizardPrevStep() {
+            setWizardStep(wizardStep - 1);
+        }
+
+        function wizardOpenReview() {
+            setWizardStep(WIZARD_TOTAL_STEPS);
         }
 
         const STATE_MACHINE_TEMPLATES = {
@@ -3291,6 +5110,77 @@ PAGE = """
             root.innerHTML = entries || '<div class="muted">No agents found.</div>';
         }
 
+        function taskStatusPillClass(status) {
+            const key = String(status || '').trim().toLowerCase();
+            if (key === 'done') return 'online';
+            if (key === 'in_progress') return 'warning';
+            if (key === 'blocked') return 'critical';
+            return 'stale';
+        }
+
+        function taskStatusLabel(status) {
+            const key = String(status || '').trim().toLowerCase();
+            if (key === 'in_progress') return 'in progress';
+            return key || 'assigned';
+        }
+
+        function renderAgentTaskTracker(data) {
+            const root = document.getElementById('agent_task_tracker');
+            if (!root) return;
+            const items = (data && Array.isArray(data.items)) ? data.items : [];
+            if (!items.length) {
+                root.innerHTML = '<div class="agent-item"><strong>No tracked tasks</strong><div class="muted">Create assignments in AGENT_TASK_ASSIGNMENTS.md to bootstrap.</div></div>';
+                return;
+            }
+
+            root.innerHTML = items.map((item) => {
+                const taskId = htmlEscape(String(item.id || ''));
+                const agent = htmlEscape(String(item.agent || 'unknown-agent'));
+                const task = htmlEscape(String(item.task || ''));
+                const status = String(item.status || 'assigned').toLowerCase();
+                const statusLabel = htmlEscape(taskStatusLabel(status));
+                const statusClass = taskStatusPillClass(status);
+                const startedAt = htmlEscape(String(item.started_at || 'not started'));
+                const completedAt = htmlEscape(String(item.completed_at || 'not completed'));
+                const updatedAt = htmlEscape(String(item.updated_at || 'unknown'));
+                const note = String(item.note || '').trim();
+                const noteHtml = note ? ('<div class="agent-task-meta">note: ' + htmlEscape(note) + '</div>') : '';
+                return '<div class="agent-task-card">'
+                    + '<div class="agent-task-head"><span class="agent-task-agent">' + agent + '</span><span class="pill ' + statusClass + '">' + statusLabel + '</span></div>'
+                    + '<div class="agent-task-text">' + task + '</div>'
+                    + '<div class="agent-task-meta">started: ' + startedAt + ' | completed: ' + completedAt + '</div>'
+                    + '<div class="agent-task-meta">updated: ' + updatedAt + '</div>'
+                    + noteHtml
+                    + '<div class="agent-task-actions">'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'assigned\\')">Assign</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'in_progress\\')">Start</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'blocked\\')">Block</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'done\\')">Done</button>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        async function refreshAgentTaskTracker() {
+            const data = await fetchJsonWithTimeout('/api/agent_tasks', 5000);
+            renderAgentTaskTracker(data);
+        }
+
+        async function updateAgentTaskStatus(taskId, status) {
+            const note = status === 'blocked' ? (prompt('Blocked reason (optional):') || '').trim() : '';
+            const res = await fetch('/api/agent_tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: taskId, status, note }),
+            });
+            const data = await res.json();
+            renderAgentTaskTracker(data);
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = (data && data.ok) ? 'Task updated.' : ('Task update failed: ' + String(data?.message || 'unknown error'));
+            }
+        }
+
         function gaugeTone(percent) {
             const safe = Number.isFinite(percent) ? percent : 0;
             if (safe >= 90) return '#39ff14';
@@ -3311,6 +5201,50 @@ PAGE = """
             return '';
         }
 
+        function computeDiskIoRates(disks) {
+            const nowTs = Date.now() / 1000;
+            const elapsed = snapshotDiskIoLastTs > 0 ? Math.max(0, nowTs - snapshotDiskIoLastTs) : 0;
+            const current = {};
+            const rates = {};
+
+            (Array.isArray(disks) ? disks : []).forEach((disk) => {
+                const key = String(disk?.key || disk?.mount || disk?.device || '').trim();
+                if (!key) return;
+                const readBytes = Number(disk?.read_bytes);
+                const writeBytes = Number(disk?.write_bytes);
+                const hasRead = Number.isFinite(readBytes) && readBytes >= 0;
+                const hasWrite = Number.isFinite(writeBytes) && writeBytes >= 0;
+                current[key] = {
+                    read_bytes: hasRead ? readBytes : null,
+                    write_bytes: hasWrite ? writeBytes : null,
+                };
+
+                const prev = snapshotDiskIoLast[key];
+                if (!prev || elapsed <= 0) {
+                    rates[key] = { read_bps: 0, write_bps: 0 };
+                    return;
+                }
+
+                const prevRead = Number(prev.read_bytes);
+                const prevWrite = Number(prev.write_bytes);
+                const readBps = (hasRead && Number.isFinite(prevRead) && readBytes >= prevRead)
+                    ? (readBytes - prevRead) / elapsed
+                    : 0;
+                const writeBps = (hasWrite && Number.isFinite(prevWrite) && writeBytes >= prevWrite)
+                    ? (writeBytes - prevWrite) / elapsed
+                    : 0;
+
+                rates[key] = {
+                    read_bps: Math.max(0, readBps),
+                    write_bps: Math.max(0, writeBps),
+                };
+            });
+
+            snapshotDiskIoLast = current;
+            snapshotDiskIoLastTs = nowTs;
+            return rates;
+        }
+
         function renderSnapshotDashboard(snapshot) {
             const root = document.getElementById('snapshot_dashboard');
             const warningsRoot = document.getElementById('snapshot_warnings');
@@ -3320,36 +5254,118 @@ PAGE = """
             const memory = (system.memory && typeof system.memory === 'object') ? system.memory : {};
             const swap = (system.swap && typeof system.swap === 'object') ? system.swap : {};
             const disk = (snapshot && snapshot.disk && typeof snapshot.disk === 'object') ? snapshot.disk : {};
+            const disks = (snapshot && Array.isArray(snapshot.disks)) ? snapshot.disks : [];
+            const thermal = (snapshot && snapshot.thermal && typeof snapshot.thermal === 'object') ? snapshot.thermal : {};
+            const fans = (snapshot && snapshot.fans && typeof snapshot.fans === 'object') ? snapshot.fans : {};
             const gpu = (snapshot && snapshot.gpu_vram && Array.isArray(snapshot.gpu_vram.gpus)) ? snapshot.gpu_vram.gpus[0] : null;
+
+            const safeNumber = (value) => {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : null;
+            };
 
             const gauges = [
                 {
                     label: 'CPU',
                     percent: percentValue(system.cpu_percent),
                     detail: String(Number.isFinite(Number(system.cpu_percent)) ? Number(system.cpu_percent).toFixed(1) : '0.0') + '%',
+                    readPct: 0,
+                    writePct: 0,
                 },
                 {
                     label: 'RAM',
                     percent: percentValue(memory.percent),
                     detail: (memory.used_gb ?? '?') + ' / ' + (memory.total_gb ?? '?') + ' GB',
-                },
-                {
-                    label: 'Disk',
-                    percent: percentValue(disk.percent),
-                    detail: (disk.used_gb ?? '?') + ' / ' + (disk.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
                 },
                 {
                     label: 'Swap',
                     percent: percentValue(swap.percent),
                     detail: (swap.used_gb ?? '?') + ' / ' + (swap.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
                 },
             ];
+
+            const diskRows = disks.length
+                ? disks
+                : [
+                    {
+                        key: String(disk.root || 'disk').toLowerCase(),
+                        mount: String(disk.root || 'disk'),
+                        percent: disk.percent,
+                        used_gb: disk.used_gb,
+                        total_gb: disk.total_gb,
+                        read_bytes: null,
+                        write_bytes: null,
+                    },
+                ];
+            const ioRates = computeDiskIoRates(diskRows);
+            const maxObservedRate = Math.max(
+                50 * 1024 * 1024,
+                ...Object.values(ioRates).map((r) => Math.max(Number(r?.read_bps || 0), Number(r?.write_bps || 0)))
+            );
+
+            diskRows.forEach((diskRow) => {
+                const key = String(diskRow?.key || diskRow?.mount || '').trim().toLowerCase();
+                const rates = ioRates[key] || { read_bps: 0, write_bps: 0 };
+                const readMbps = Number(rates.read_bps || 0) / (1024 * 1024);
+                const writeMbps = Number(rates.write_bps || 0) / (1024 * 1024);
+                const mount = String(diskRow?.mount || diskRow?.device || diskRow?.key || 'disk');
+                const readPct = percentValue((Number(rates.read_bps || 0) / maxObservedRate) * 100);
+                const writePct = percentValue((Number(rates.write_bps || 0) / maxObservedRate) * 100);
+                gauges.push({
+                    label: 'Disk ' + mount,
+                    percent: percentValue(diskRow?.percent),
+                    detail: (diskRow?.used_gb ?? '?') + ' / ' + (diskRow?.total_gb ?? '?') + ' GB | R ' + readMbps.toFixed(1) + ' MB/s | W ' + writeMbps.toFixed(1) + ' MB/s',
+                    readPct,
+                    writePct,
+                    multiLegend: true,
+                });
+            });
 
             if (gpu) {
                 gauges.push({
                     label: 'GPU VRAM',
                     percent: percentValue(gpu.percent),
                     detail: (gpu.used_gb ?? '?') + ' / ' + (gpu.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
+                });
+            }
+
+            const cpuTemp = safeNumber(thermal.cpu_temp_c);
+            const maxTemp = safeNumber(thermal.max_temp_c);
+            const gpuTemp = safeNumber(gpu && gpu.temperature_c);
+            const tempC = (cpuTemp !== null) ? cpuTemp : ((gpuTemp !== null) ? gpuTemp : maxTemp);
+            if (tempC !== null) {
+                const tempPct = Math.max(0, Math.min(100, (tempC / 100) * 100));
+                const tempSource = (cpuTemp !== null) ? 'cpu' : ((gpuTemp !== null) ? 'gpu' : 'sensor');
+                gauges.push({
+                    label: 'Temp',
+                    percent: percentValue(tempPct),
+                    detail: tempC.toFixed(1) + ' C (' + tempSource + ')',
+                    readPct: 0,
+                    writePct: 0,
+                });
+            }
+
+            const gpuFan = safeNumber(gpu && gpu.fan_percent);
+            const maxFanRpm = safeNumber(fans.max_rpm);
+            if (gpuFan !== null || maxFanRpm !== null) {
+                const fanPercent = (gpuFan !== null)
+                    ? percentValue(gpuFan)
+                    : percentValue((Math.max(0, maxFanRpm) / 5000) * 100);
+                const fanDetail = (gpuFan !== null)
+                    ? (gpuFan.toFixed(1) + '% (gpu)')
+                    : (Math.round(maxFanRpm || 0) + ' rpm');
+                gauges.push({
+                    label: 'Fan',
+                    percent: fanPercent,
+                    detail: fanDetail,
+                    readPct: 0,
+                    writePct: 0,
                 });
             }
 
@@ -3358,16 +5374,24 @@ PAGE = """
                 const tone = gaugeTone(p);
                 const sweepClass = snapshotGaugeBooted ? '' : ' sweep';
                 const pulse = pulseClass(p);
+                const readPct = percentValue(item.readPct);
+                const writePct = percentValue(item.writePct);
+                const legend = item.multiLegend
+                    ? '<div class="gauge-legend"><span class="gauge-legend-item"><span class="gauge-legend-line usage"></span>Usage</span><span class="gauge-legend-item"><span class="gauge-legend-line read"></span>Read</span><span class="gauge-legend-item"><span class="gauge-legend-line write"></span>Write</span></div>'
+                    : '';
                 return '<div class="gauge-card">'
                     + '<div class="gauge-head"><strong>' + htmlEscape(item.label) + '</strong><span class="muted">' + p.toFixed(1) + '%</span></div>'
-                    + '<div class="tachometer' + sweepClass + pulse + '" style="--pct:' + p.toFixed(1) + ';--tone:' + tone + ';">'
+                    + '<div class="tachometer' + sweepClass + pulse + '" style="--pct:' + p.toFixed(1) + ';--rdpct:' + readPct.toFixed(1) + ';--wrpct:' + writePct.toFixed(1) + ';--tone:' + tone + ';">'
                     + '<div class="halo"></div>'
                     + '<svg viewBox="0 0 100 60" aria-hidden="true">'
                     + '<path class="arc-bg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
                     + '<path class="arc-fg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '<path class="arc-rd" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '<path class="arc-wr" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
                     + '</svg>'
                     + '<div class="ticks"></div>'
                     + '</div>'
+                        + legend
                     + '<div class="gauge-foot"><span>0%</span><span>' + htmlEscape(String(item.detail)) + '</span><span>100%</span></div>'
                     + '</div>';
             }).join('');
@@ -3568,8 +5592,10 @@ PAGE = """
             if (statusData && statusData.agent_state) {
                 renderAgents(statusData.agent_state);
                 refreshTargetDropdown(statusData.agent_state);
+                renderAgentTaskTracker(statusData.agent_tasks || { items: [] });
             } else {
                 document.getElementById('agents').innerHTML = '<div class="muted">Status unavailable.</div>';
+                renderAgentTaskTracker({ items: [] });
             }
 
             document.getElementById('events').textContent = JSON.stringify((eventsData && eventsData.items) ? eventsData.items : eventsData, null, 2);
@@ -3704,6 +5730,8 @@ PAGE = """
         }
 
         // Call on load
+        wireInlineClickFallback();
+        iconForgeLoadSectionCollapseState();
         switchView(currentView);
         refreshPinState();
         refreshChatEndpoints();
@@ -3718,6 +5746,7 @@ PAGE = """
         applyUrlLaunchContext();
         toggleWizardIconSource();
         toggleMakerIconSource();
+        setWizardStep(1);
         syncWizardStateMachinePreview();
         applySelectedStateMachineTemplate();
         refresh();
@@ -4427,6 +6456,26 @@ def iconforge_backups():
         return jsonify({"ok": False, "message": str(exc), "items": {}}), 500
 
 
+@app.get("/api/iconforge/preview")
+def iconforge_preview():
+    raw_path = str(request.args.get("path", "")).strip()
+    if not raw_path:
+        return jsonify({"ok": False, "message": "path is required"}), 400
+
+    candidate = Path(raw_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = (PROJECT_ROOT / candidate).resolve()
+    else:
+        candidate = candidate.resolve()
+
+    allowed = {".ico", ".png", ".gif", ".jpg", ".jpeg", ".webp", ".bmp", ".svg"}
+    if candidate.suffix.lower() not in allowed:
+        return jsonify({"ok": False, "message": "unsupported preview extension"}), 400
+    if not candidate.exists() or not candidate.is_file():
+        return jsonify({"ok": False, "message": "preview file not found"}), 404
+    return send_file(candidate)
+
+
 @app.post("/api/iconforge/apply")
 def iconforge_apply():
     from core.icons.icon_forge import IconForge
@@ -4820,6 +6869,120 @@ def _health_from_timestamp(ts: str | None) -> str:
 def _model_agent_state_key(name: str) -> str:
     safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in name.strip().lower())
     return f"model_agent_{safe}"
+
+
+def _slugify(value: str) -> str:
+    safe = re.sub(r"[^a-z0-9_-]+", "_", value.strip().lower())
+    return safe.strip("_") or "task"
+
+
+def _extract_assigned_tasks() -> list[dict]:
+    if not AGENT_ASSIGNMENTS_PATH.exists():
+        return []
+
+    try:
+        lines = AGENT_ASSIGNMENTS_PATH.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+
+    items: list[dict] = []
+    count_by_agent: dict[str, int] = {}
+    now = datetime.now(timezone.utc).isoformat()
+
+    for raw in lines:
+        line = raw.strip()
+        if not line.startswith("- ") or ":" not in line:
+            continue
+        body = line[2:].strip()
+        agent_part, task_part = body.split(":", 1)
+        agent = agent_part.strip()
+        task = task_part.strip()
+        if not agent or not task:
+            continue
+
+        agent_key = _slugify(agent)
+        count_by_agent[agent_key] = count_by_agent.get(agent_key, 0) + 1
+        task_id = f"{agent_key}-{count_by_agent[agent_key]}"
+        items.append(
+            {
+                "id": task_id,
+                "agent": agent,
+                "task": task,
+                "status": "assigned",
+                "started_at": "",
+                "completed_at": "",
+                "updated_at": now,
+                "note": "",
+            }
+        )
+    return items
+
+
+def _default_agent_task_state() -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "ok": True,
+        "updated_at": now,
+        "items": _extract_assigned_tasks(),
+    }
+
+
+def _normalize_agent_task_state(state: dict) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    items = state.get("items") if isinstance(state.get("items"), list) else []
+    normalized_items: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status", "assigned")).strip().lower()
+        if status not in {"assigned", "in_progress", "blocked", "done"}:
+            status = "assigned"
+        normalized_items.append(
+            {
+                "id": str(item.get("id", "")).strip(),
+                "agent": str(item.get("agent", "unknown-agent")).strip() or "unknown-agent",
+                "task": str(item.get("task", "")).strip(),
+                "status": status,
+                "started_at": str(item.get("started_at", "")).strip(),
+                "completed_at": str(item.get("completed_at", "")).strip(),
+                "updated_at": str(item.get("updated_at", "")).strip() or now,
+                "note": str(item.get("note", "")).strip(),
+            }
+        )
+    return {
+        "ok": True,
+        "updated_at": str(state.get("updated_at", "")).strip() or now,
+        "items": normalized_items,
+    }
+
+
+def load_agent_task_state() -> dict:
+    if not AGENT_TASK_TRACKER_PATH.exists():
+        initial = _default_agent_task_state()
+        _save_json_state(AGENT_TASK_TRACKER_PATH, initial)
+        return initial
+    state = _load_json_state(AGENT_TASK_TRACKER_PATH, _default_agent_task_state())
+    normalized = _normalize_agent_task_state(state)
+    if normalized != state:
+        _save_json_state(AGENT_TASK_TRACKER_PATH, normalized)
+    return normalized
+
+
+def _update_task_status(task: dict, status: str, note: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    task["status"] = status
+    task["updated_at"] = now
+    if status == "in_progress" and not str(task.get("started_at", "")).strip():
+        task["started_at"] = now
+    if status == "done":
+        if not str(task.get("started_at", "")).strip():
+            task["started_at"] = now
+        task["completed_at"] = now
+    elif status in {"assigned", "in_progress", "blocked"}:
+        if status != "blocked":
+            task["completed_at"] = ""
+    if note:
+        task["note"] = note
 
 
 def read_agent_state() -> dict[str, dict[str, str]]:

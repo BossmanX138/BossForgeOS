@@ -1,5 +1,13 @@
 # TODOs for BossForgeOS Enterprise Roadmap (Agent-Ready)
 
+---
+## TODO List Cross-References
+
+- [BossGate Features — Master TODO List](core/BossGate_Features_TODO.md)
+- [Global TODO/Backlog/Curated List](docs/todos.md)
+
+All TODOs must be kept in sync and up to date by the Archivist agent. See the BossGate master TODO for canonical cross-references and duties.
+
 ## Phase 1: Enterprise Core
 - [x] Design BossCrafts Protocol v1 message schemas (YAML/JSON schema files)
 - [x] Implement BossCrafts Protocol v1 versioning and compatibility checks

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../Anvil Secured Shuttle (A.S.S.)"
+		}
+	],
+	"settings": {
+		"powershell.cwd": "BossForgeOS"
+	}
+}
