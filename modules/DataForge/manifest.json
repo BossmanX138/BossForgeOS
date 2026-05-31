@@ -10,7 +10,7 @@
       "-m",
       "modules.DataForge.main"
     ],
-    "health_endpoint": "http://127.0.0.1:5603/health",
+    "health_endpoint": "http://127.0.0.1:5605/health",
     "event_channel": "dataforge.events"
   },
   "capabilities": [
@@ -19,5 +19,5 @@
     "data.repair",
     "data.export_mlnet"
   ],
-  "notes": "Data preparation and conversion module."
+  "notes": "Utility-first data preparation module; default usage is standalone CLI/runtime, with optional orchestrator integration."
 }

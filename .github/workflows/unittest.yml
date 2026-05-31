@@ -28,3 +28,24 @@ jobs:
         shell: pwsh
         run: |
           python -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q
+
+      - name: Validate module manifests
+        shell: pwsh
+        run: |
+          python -m core.utils.bforge module validate
+
+      - name: Module smoke checks
+        shell: pwsh
+        run: |
+          python -m modules.agentforge.main --once
+          python -m modules.DataForge.main --once
+          python -m modules.iconforge.main --once
+          python -m modules.runeforge_voice.main --once
+          python -m modules.soundforge.main --once
+
+      - name: Artifact guard
+        shell: pwsh
+        env:
+          GIT_CHECK_RANGE: ${{ github.event_name == 'pull_request' && format('{0}..{1}', github.event.pull_request.base.sha, github.sha) || format('{0}..{1}', github.event.before, github.sha) }}
+        run: |
+          python scripts/check_blocked_artifacts.py --range "$env:GIT_CHECK_RANGE"

@@ -16,12 +16,18 @@ Turn BossForgeOS into a control-plane OS over Windows where product modules can 
 - `modules/soundforge`
 - `modules/iconforge`
 - `modules/runeforge_voice`
+- `modules/DataForge` (utility-first, standalone by default)
 
 Each module includes `manifest.json` declaring:
 - standalone entrypoint
 - connector command
 - health endpoint
 - capability list
+
+DataForge policy:
+- Treat DataForge as a utility module first (conversion/validation pipelines).
+- Default operation is standalone execution.
+- Orchestrator lifecycle is optional and should only be enabled for scheduled or event-driven data workflows.
 
 ## Connectors
 - `m365_connector` -> `connectors/m365`
@@ -50,4 +56,3 @@ Each module includes `manifest.json` declaring:
 4. Move connectors into `connectors/` and replace direct imports with adapter interfaces.
 5. Split Control Hall monolith and attach module health/capability dashboards.
 6. Add end-to-end tests for orchestrator + module federation.
-
