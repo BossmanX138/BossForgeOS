@@ -26,6 +26,14 @@ class ControlHallOpsRouteTests(unittest.TestCase):
         self.assertTrue(res.get_json().get("ok"))
         mock_save.assert_called_once()
 
+    @patch("ui.control_hall._save_json_state")
+    def test_scheduler_post_invalid_action_returns_400_and_does_not_save(self, mock_save) -> None:
+        res = self.client.post("/api/scheduler", json={"action": "not_real"})
+        self.assertEqual(res.status_code, 400)
+        payload = res.get_json()
+        self.assertFalse(payload.get("ok"))
+        mock_save.assert_not_called()
+
     @patch.object(control_hall.ops_runtime_api, "cicd_get")
     def test_cicd_get_contract(self, mock_get) -> None:
         mock_get.return_value = {"ok": True, "last_run": {}, "history": []}
@@ -43,6 +51,14 @@ class ControlHallOpsRouteTests(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.get_json().get("ok"))
         mock_save.assert_called_once()
+
+    @patch("ui.control_hall._save_json_state")
+    def test_cicd_post_invalid_action_returns_400_and_does_not_save(self, mock_save) -> None:
+        res = self.client.post("/api/cicd", json={"action": "bad"})
+        self.assertEqual(res.status_code, 400)
+        payload = res.get_json()
+        self.assertFalse(payload.get("ok"))
+        mock_save.assert_not_called()
 
 
 if __name__ == "__main__":

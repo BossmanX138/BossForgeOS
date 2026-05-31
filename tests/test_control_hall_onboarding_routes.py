@@ -27,6 +27,16 @@ class ControlHallOnboardingRouteTests(unittest.TestCase):
         self.assertIn("completion_percent", payload)
         self.assertTrue(payload.get("ok"))
 
+    @patch.object(control_hall.onboarding_api, "apply_step")
+    @patch("ui.control_hall._save_json_state")
+    def test_onboarding_post_invalid_step_returns_400_and_does_not_save(self, mock_save, mock_apply) -> None:
+        mock_apply.return_value = ({"ok": False, "message": "unknown step"}, 400)
+        res = self.client.post("/api/onboarding", json={"step": "not_a_step"})
+        self.assertEqual(res.status_code, 400)
+        payload = res.get_json()
+        self.assertFalse(payload.get("ok"))
+        mock_save.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

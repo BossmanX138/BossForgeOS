@@ -6463,21 +6463,7 @@ SOUNDFORGE_SOUNDS_DIR = str(soundforge_api.SOUNDFORGE_SOUNDS_DIR)
 soundforge_api.ensure_layout()
 
 def _rewrite_config_paths(config, sound_dir="sounds"):
-    # Rewrites all sound file paths in config to be relative to sound_dir
-    def rewrite_entry(entry):
-        if not entry or not isinstance(entry, dict):
-            return entry
-        files = entry.get("files", [])
-        entry["files"] = [os.path.join(sound_dir, os.path.basename(f)) for f in files]
-        return entry
-    if "global" in config:
-        for k, v in config["global"].items():
-            config["global"][k] = rewrite_entry(v)
-    if "per_app" in config:
-        for app, events in config["per_app"].items():
-            for k, v in events.items():
-                config["per_app"][app][k] = rewrite_entry(v)
-    return config
+    return soundforge_api.rewrite_config_paths(config, sound_dir=sound_dir)
 
 
 @app.get("/api/soundforge/config")

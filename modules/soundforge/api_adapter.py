@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, BinaryIO
 
@@ -59,3 +60,23 @@ def migrate_legacy_to_soundforge(collision_policy: str = "rename") -> dict[str, 
 
 def finalize_soundstage_removal(collision_policy: str = "rename") -> dict[str, Any]:
     return service.finalize_soundstage_removal(collision_policy=collision_policy)
+
+
+def rewrite_config_paths(config: dict[str, Any], sound_dir: str = "sounds") -> dict[str, Any]:
+    def rewrite_entry(entry: Any) -> Any:
+        if not entry or not isinstance(entry, dict):
+            return entry
+        files = entry.get("files", [])
+        entry["files"] = [os.path.join(sound_dir, os.path.basename(str(f))) for f in files]
+        return entry
+
+    if "global" in config and isinstance(config["global"], dict):
+        for k, v in config["global"].items():
+            config["global"][k] = rewrite_entry(v)
+    if "per_app" in config and isinstance(config["per_app"], dict):
+        for app, events in config["per_app"].items():
+            if not isinstance(events, dict):
+                continue
+            for k, v in events.items():
+                config["per_app"][app][k] = rewrite_entry(v)
+    return config
