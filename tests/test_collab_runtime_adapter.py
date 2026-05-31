@@ -39,12 +39,14 @@ class CollabRuntimeAdapterTests(unittest.TestCase):
         locks: dict[str, str] = {}
         agent, presence = collab_api.join_agent(editors, locks, {})
         self.assertEqual(agent, "")
-        self.assertIn("anon", presence["editors"])
+        self.assertFalse(presence["ok"])
+        self.assertEqual(presence["message"], "agent is required")
+        self.assertEqual(editors, {})
 
         agent, payload = collab_api.edit_agent_payload({})
         self.assertEqual(agent, "")
-        self.assertEqual(payload["user"], "anon")
-        self.assertEqual(payload["content"], {})
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["message"], "agent is required")
 
     def test_lock_contention_does_not_override_other_owner(self) -> None:
         editors = {"coder": {"alice", "bob"}}

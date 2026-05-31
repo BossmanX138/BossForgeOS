@@ -6589,28 +6589,43 @@ try:
     @socketio.on('join_agent')
     def handle_join_agent(data):
         agent, presence = collab_api.join_agent(agent_editors, agent_locks, data)
+        if not presence.get("ok"):
+            emit('presence', presence)
+            return
         join_room(agent)
         emit('presence', presence, room=agent)
 
     @socketio.on('leave_agent')
     def handle_leave_agent(data):
         agent, presence = collab_api.leave_agent(agent_editors, agent_locks, data)
+        if not presence.get("ok"):
+            emit('presence', presence)
+            return
         leave_room(agent)
         emit('presence', presence, room=agent)
 
     @socketio.on('lock_agent')
     def handle_lock_agent(data):
         agent, presence = collab_api.lock_agent(agent_editors, agent_locks, data)
+        if not presence.get("ok"):
+            emit('presence', presence)
+            return
         emit('presence', presence, room=agent)
 
     @socketio.on('unlock_agent')
     def handle_unlock_agent(data):
         agent, presence = collab_api.unlock_agent(agent_editors, agent_locks, data)
+        if not presence.get("ok"):
+            emit('presence', presence)
+            return
         emit('presence', presence, room=agent)
 
     @socketio.on('edit_agent')
     def handle_edit_agent(data):
         agent, payload = collab_api.edit_agent_payload(data)
+        if not payload.get("ok"):
+            emit('agent_edit', payload)
+            return
         # Broadcast edit to all in room except sender
         emit('agent_edit', payload, room=agent, include_self=False)
 except ImportError:
