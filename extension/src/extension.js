@@ -282,13 +282,13 @@ class BossCraftsSidebarProvider {
     webviewView.webview.html = this.getHtml();
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
-            if (type === 'run_cli' && message.cmd) {
-              const terminal = vscode.window.createTerminal('BossForgeOS CLI');
-              terminal.show();
-              terminal.sendText(message.cmd);
-              return;
-            }
       const type = message && message.type ? String(message.type) : '';
+      if (type === 'run_cli' && message.cmd) {
+        const terminal = vscode.window.createTerminal('BossForgeOS CLI');
+        terminal.show();
+        terminal.sendText(message.cmd);
+        return;
+      }
       if (type === 'ready') {
         this.ready = true;
         this.postData();

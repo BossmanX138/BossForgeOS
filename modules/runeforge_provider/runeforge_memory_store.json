@@ -1,0 +1,111 @@
+{
+  "sessions": {
+    "sess-01": {
+      "stance": "neutral",
+      "trust_level": 50,
+      "notes": "",
+      "turns": 1,
+      "recent_modes": [
+        "tactical"
+      ],
+      "recent_signals": [
+        {
+          "persona": "coder",
+          "tone": "sassy",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.3971799910068512
+        },
+        {
+          "persona": "coder",
+          "tone": "sassy",
+          "emotion": "reassuring",
+          "intensity": "medium",
+          "confidence": 0.4032067358493805
+        }
+      ],
+      "last_seen": 1779748089
+    },
+    "sess-gate": {
+      "stance": "neutral",
+      "trust_level": 50,
+      "notes": "",
+      "turns": 0,
+      "recent_modes": [],
+      "recent_signals": [
+        {
+          "persona": "coder",
+          "tone": "focused",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.551084041595459
+        },
+        {
+          "persona": "coder",
+          "tone": "focused",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.5827292799949646
+        },
+        {
+          "persona": "coder",
+          "tone": "focused",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.5513219833374023
+        }
+      ],
+      "last_seen": 1779748659
+    },
+    "sess-tools": {
+      "stance": "neutral",
+      "trust_level": 50,
+      "notes": "",
+      "turns": 2,
+      "recent_modes": [
+        "tactical",
+        "tactical"
+      ],
+      "recent_signals": [
+        {
+          "persona": "coder",
+          "tone": "focused",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.6181601881980896
+        },
+        {
+          "persona": "coder",
+          "tone": "focused",
+          "emotion": "analytical",
+          "intensity": "medium",
+          "confidence": 0.542929470539093
+        }
+      ],
+      "last_seen": 1779749453
+    }
+  },
+  "users": {
+    "bossman": {
+      "interaction_count": 7,
+      "preferred_persona": "coder",
+      "tone_bias": "focused",
+      "top_topics": [
+        "architecture",
+        "debugging",
+        "latency",
+        "api"
+      ],
+      "last_signal": {
+        "persona": "coder",
+        "tone": "focused",
+        "emotion": "analytical",
+        "intensity": "medium",
+        "confidence": 0.542929470539093,
+        "source": "pec-fallback-llm"
+      },
+      "last_seen": 1779749453
+    }
+  },
+  "saved_at": 1779749453
+}

@@ -13,6 +13,7 @@ __pycache__/
 
 # Local model payloads and caches
 .models/
+modules/runeforge_provider/models/
 
 # Build and packaging outputs
 build/
@@ -46,6 +47,16 @@ zicorp-ai-logs.json
 CMakeCache.txt
 cmake_install.cmake
 CMakeFiles/
+**/build_vs/
+**/x64/
+**/Release/
+**/Debug/
+
+# DataForge generated artifacts
+modules/DataForge/.continue/
+modules/DataForge/ignorelogs/
+modules/DataForge/combined_mlnet.csv
+modules/DataForge/*.csv
 
 # OS/editor noise
 .DS_Store

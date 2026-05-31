@@ -1,0 +1,2 @@
+"""IconForge standalone module package."""
+

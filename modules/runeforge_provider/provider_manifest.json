@@ -1,0 +1,18 @@
+{
+  "provider_id": "runeforge_local",
+  "display_name": "Runeforge Official Local Provider",
+  "version": "1.0.0",
+  "base_url": "http://127.0.0.1:8008/v1",
+  "health_url": "http://127.0.0.1:8008/health",
+  "capabilities_endpoint": "/v1/provider/capabilities",
+  "auth": {
+    "type": "x-api-key",
+    "header": "x-api-key"
+  },
+  "compatibility": {
+    "api_style": "openai-compatible",
+    "chat_completions": "/v1/chat/completions",
+    "completions": "/v1/completions",
+    "models": "/v1/models"
+  }
+}

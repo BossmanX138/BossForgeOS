@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "module_id": "runeforge_voice",
+  "display_name": "RuneForge Voice",
+  "version": "0.1.0",
+  "standalone_entrypoint": "python -m modules.runeforge_voice.main",
+  "orchestrator_connector": {
+    "command": [
+      "python",
+      "-m",
+      "modules.runeforge_voice.connector"
+    ],
+    "health_endpoint": "http://127.0.0.1:5604/health",
+    "event_channel": "runeforge_voice.events"
+  },
+  "capabilities": [
+    "voice.tts",
+    "voice.dictation",
+    "voice.profile",
+    "voice.safety"
+  ],
+  "notes": "Scaffold manifest for standalone + orchestrator-connected operation."
+}
+

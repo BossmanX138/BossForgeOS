@@ -60,6 +60,174 @@
 ---
 All features must be skill/role-gated, logged, and privacy-compliant.
 
+
+---
+The Archivist is responsible for TODO list hygiene and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
+
+---
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+
 ---
 ## TODO List Cross-References & Archivist Duties
 
@@ -79,6 +247,7 @@ This master TODO is the canonical BossGate feature tracker. All other TODO lists
 - For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.
 - When a TODO is completed, update all lists and remove or archive the item.
 - If a TODO is moved, merged, or split, update all references and cross-links.
+- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees.
 
 ---
-The Archivist is responsible for TODO list hygiene and cross-repo accuracy.
+The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.

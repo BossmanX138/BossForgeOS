@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "module_id": "dataforge",
+  "display_name": "DataForge",
+  "version": "0.1.0",
+  "standalone_entrypoint": "python -m modules.DataForge.main",
+  "orchestrator_connector": {
+    "command": [
+      "python",
+      "-m",
+      "modules.DataForge.main"
+    ],
+    "health_endpoint": "http://127.0.0.1:5603/health",
+    "event_channel": "dataforge.events"
+  },
+  "capabilities": [
+    "data.convert",
+    "data.validate",
+    "data.repair",
+    "data.export_mlnet"
+  ],
+  "notes": "Data preparation and conversion module."
+}

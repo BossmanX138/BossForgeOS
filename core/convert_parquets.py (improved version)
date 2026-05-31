@@ -1,0 +1,68 @@
+import os
+import pandas as pd
+from pathlib import Path
+
+def convert_parquet_directory(input_dir, output_dir):
+    """
+    Convert all parquet files in input directory to CSV format.
+    Creates corresponding CSV files with same names (minus extension).
+    Handles various edge cases and provides better error reporting.
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Get list of parquet files
+    parquet_files = [f for f in os.listdir(input_dir)
+                    if os.path.isfile(os.path.join(input_dir, f))
+                    and f.lower().endswith('.parquet')]
+
+    if not parquet_files:
+        print(f"No parquet files found in {input_dir}")
+        return
+
+    print(f"Found {len(parquet_files)} parquet files to convert")
+
+    success_count = 0
+    error_count = 0
+
+    # Process each file in input directory
+    for filename in parquet_files:
+        filepath = os.path.join(input_dir, filename)
+        try:
+            print(f"\nProcessing {filename}...")
+
+            # Read parquet file with better error handling
+            df = pd.read_parquet(filepath)
+
+            # Check if DataFrame is empty
+            if df.empty:
+                print(f"Warning: {filename} contains no data")
+                continue
+
+            # Create output CSV path (same name but .csv extension)
+            csv_filename = os.path.splitext(filename)[0] + '.csv'
+            csv_path = os.path.join(output_dir, csv_filename)
+
+            # Write to CSV with better options
+            df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+
+            print(f"Successfully converted {filename} ({len(df)} rows) to {csv_filename}")
+            success_count += 1
+
+        except Exception as e:
+            error_count += 1
+            print(f"Error processing {filename}: {str(e)}")
+            # Create empty CSV with error message if we want to track failed files
+            csv_path = os.path.join(output_dir, f"ERROR_{os.path.splitext(filename)[0]}.csv")
+            pd.DataFrame([{"error": str(e), "file": filename}]).to_csv(csv_path, index=False)
+
+    print(f"\nConversion complete!")
+    print(f"Successfully converted: {success_count}")
+    print(f"Failed conversions: {error_count}")
+
+if __name__ == "__main__":
+    # Set your input and output directories here
+    input_parquet_dir = r"E:\codex-2m-thinking\Codex Data Parquets"
+    output_csv_dir = r"E:\codex-2m-thinking\Converted CSVs"
+
+    convert_parquet_directory(input_parquet_dir, output_csv_dir)

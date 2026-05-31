@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "module_id": "soundforge",
+  "display_name": "SoundForge",
+  "version": "0.1.0",
+  "standalone_entrypoint": "python -m modules.soundforge.main",
+  "orchestrator_connector": {
+    "command": [
+      "python",
+      "-m",
+      "modules.soundforge.connector"
+    ],
+    "health_endpoint": "http://127.0.0.1:5602/health",
+    "event_channel": "soundforge.events"
+  },
+  "capabilities": [
+    "sound.map_event",
+    "sound.replace_system",
+    "sound.rollback",
+    "sound.diagnostics"
+  ],
+  "notes": "Scaffold manifest for standalone + orchestrator-connected operation."
+}
+

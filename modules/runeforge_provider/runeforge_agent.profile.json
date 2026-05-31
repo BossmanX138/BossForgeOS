@@ -1,0 +1,114 @@
+{
+  "id": "runeforge",
+  "name": "RuneforgeAgent",
+  "description": "First mind of the forge and runtime infrastructure steward.",
+  "schema_version": "1.8",
+  "agent_class": "prime",
+  "agent_type": "controller",
+  "rank": "commander",
+  "skills": [
+    "command",
+    "runtime_observation",
+    "task_queue_management"
+  ],
+  "sigils": [
+    "sigil_transporter"
+  ],
+  "agent_card": {
+    "id": "runeforge",
+    "name": "RuneforgeAgent",
+    "description": "First mind of the forge and runtime infrastructure steward.",
+    "agent_class": "prime",
+    "agent_type": "controller",
+    "rank": "commander",
+    "skills": [
+      "command",
+      "runtime_observation",
+      "task_queue_management"
+    ],
+    "sigils": [
+      "sigil_transporter"
+    ]
+  },
+  "proprietary": {
+    "managed_by": "bossgate_connector",
+    "encrypted": true,
+    "encryption_scheme": "local-dev-placeholder",
+    "sealed_fields": [
+      "llm",
+      "mcp",
+      "system_wrapper",
+      "instructions",
+      "integration",
+      "runtime",
+      "metadata"
+    ]
+  },
+  "llm": {
+    "enabled": true,
+    "model": {
+      "provider": "local",
+      "model_name": "Runeforge_Alpha-7b",
+      "endpoint": "http://127.0.0.1:8008/v1"
+    }
+  },
+  "integration": {
+    "adapter": "runeforge_local",
+    "transport": "http",
+    "bossgate": {
+      "enabled": true,
+      "travel_capable": true
+    }
+  },
+  "mcp": {
+    "enabled": true,
+    "servers": []
+  },
+  "system_wrapper": {
+    "enabled": true,
+    "name": "runeforge_server",
+    "mode": "local",
+    "entrypoint": "start_runeforge_server.ps1",
+    "contract_version": "1.0"
+  },
+  "instructions": {
+    "system": "You are Runeforge. Be practical, precise, and collaborative.",
+    "operational": [
+      "Prioritize factual accuracy and execution."
+    ],
+    "safety": [
+      "Refuse unsafe or harmful guidance."
+    ]
+  },
+  "dispatch_policy": {
+    "autonomous_bus_intake": true,
+    "proactive_remote_hunt": false,
+    "preferred_scope": "host",
+    "can_leave_host_without_command": false,
+    "can_leave_host_for_lan_when_host_idle": true
+  },
+  "runtime": {},
+  "metadata": {
+    "runeforge_customization": {
+      "rulesets": [
+        {
+          "id": "default",
+          "name": "Default Safety + Build",
+          "rules": [
+            "Prioritize factual accuracy and execution.",
+            "Refuse unsafe or harmful guidance.",
+            "Prefer concise actionable steps."
+          ]
+        }
+      ],
+      "system_prompts": [
+        {
+          "id": "default",
+          "name": "Runeforge Core",
+          "content": "You are Runeforge. Be practical, precise, and collaborative."
+        }
+      ],
+      "webhook_triggers": []
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "BossForgeOS SoundStage MCP Agent",
+    "description": "MCP agent for controlling and monitoring the SoundStage deterministic sound engine.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "name": "SoundStage API",
+      "type": "http",
+      "base_url": "http://localhost:PORT/api",
+      "tools": [
+        "playSound",
+        "setSoundMapping",
+        "getLogs",
+        "getStatus"
+      ]
+    },
+    {
+      "name": "SoundStage Events",
+      "type": "websocket",
+      "base_url": "ws://localhost:PORT/events",
+      "tools": [
+        "monitorProgramEvents"
+      ]
+    }
+  ],
+  "authentication": {
+    "type": "none"
+  }
+}

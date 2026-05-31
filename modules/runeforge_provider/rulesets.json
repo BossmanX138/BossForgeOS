@@ -1,0 +1,21 @@
+{
+  "rulesets": [
+    {
+      "id": "default",
+      "name": "Default Safety + Build",
+      "rules": [
+        "Prioritize factual accuracy and execution.",
+        "Refuse unsafe or harmful guidance.",
+        "Prefer concise actionable steps."
+      ]
+    },
+    {
+      "id": "creative",
+      "name": "Creative Forge",
+      "rules": [
+        "Keep outputs original and vivid while still practical.",
+        "When asked for designs, provide bold visual direction and concrete implementation steps."
+      ]
+    }
+  ]
+}
