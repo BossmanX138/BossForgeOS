@@ -27,7 +27,7 @@ from werkzeug.utils import secure_filename
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
-from modules.agentforge import service as agentforge_service
+from modules.agentforge import api_adapter as agentforge_api
 from modules.iconforge import service as iconforge_service
 try:
     from modules.model_gateway import api_adapter as model_gateway_api
@@ -6113,13 +6113,13 @@ def model_endpoints():
 
 @app.get("/api/model/agents")
 def model_agents():
-    return jsonify(model_gateway_api.list_agent_profiles())
+    return jsonify(agentforge_api.list_agent_profiles())
 
 
 @app.post("/api/model/agents/create")
 def model_agents_create():
     payload = request.get_json(force=True, silent=True) or {}
-    result = model_gateway_api.create_agent_profile(payload)
+    result = agentforge_api.create_agent_profile(payload)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6129,215 +6129,30 @@ def agentforge_icon_upload():
     uploaded = request.files.get("icon")
     if uploaded is None:
         return jsonify({"ok": False, "message": "icon file is required"}), 400
-
-    original_name = secure_filename(uploaded.filename or "")
-    if not original_name:
-        return jsonify({"ok": False, "message": "icon file name is required"}), 400
-
-    source_ext = Path(original_name).suffix.lower()
-    allowed = {".png"}
-    if source_ext not in allowed:
-        return jsonify({"ok": False, "message": "unsupported file type; use .png"}), 400
-
     hint = str(request.form.get("icon_name", "agent_icon")).strip()
-    stem = _safe_icon_stem(hint)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        source_path = icon_dir / f"{stem}_{suffix}{source_ext}"
-        final_path = icon_dir / f"{stem}_{suffix}.ico"
-        uploaded.save(source_path)
-
-        forge = iconforge_service.get_forge(PROJECT_ROOT)
-        result = forge.create_icon_from_image(str(source_path), str(final_path))
-        if source_path.exists():
-            source_path.unlink(missing_ok=True)
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon conversion failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon uploaded and converted"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon upload failed: {exc}"}), 500
+    result, status = agentforge_api.upload_icon(uploaded=uploaded, icon_name=hint, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create")
 def agentforge_icon_create():
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    label = str(payload.get("label", "AG")).strip() or "AG"
-    background = str(payload.get("background", "#1d3557")).strip() or "#1d3557"
-    foreground = str(payload.get("foreground", "#f1faee")).strip() or "#f1faee"
-
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    final_path = icon_dir / f"{stem}_{suffix}.ico"
-
-    try:
-        forge = iconforge_service.get_forge(PROJECT_ROOT)
-        result = forge.create_icon_from_text(
-            text=label,
-            output_ico=str(final_path),
-            background=background,
-            foreground=foreground,
-        )
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
+    result, status = agentforge_api.create_icon(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create_from_canvas")
 def agentforge_icon_create_from_canvas():
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    image_data = str(payload.get("image_data", "")).strip()
-    if not image_data.startswith("data:image/png"):
-        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
-
-    comma_idx = image_data.find(",")
-    if comma_idx <= 0:
-        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
-
-    encoded = image_data[comma_idx + 1 :]
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    temp_png = icon_dir / f"{stem}_{suffix}_src.png"
-    final_path = icon_dir / f"{stem}_{suffix}.ico"
-
-    try:
-        raw = base64.b64decode(encoded)
-    except Exception:
-        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
-
-    try:
-        temp_png.write_bytes(raw)
-        forge = iconforge_service.get_forge(PROJECT_ROOT)
-        result = forge.create_icon_from_image(str(temp_png), str(final_path))
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
-    finally:
-        if temp_png.exists():
-            temp_png.unlink(missing_ok=True)
+    result, status = agentforge_api.create_icon_from_canvas(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create_animated_from_canvas")
 def agentforge_icon_create_animated_from_canvas():
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    image_data = str(payload.get("image_data", "")).strip()
-    preset = str(payload.get("preset", "pulse")).strip().lower()
-    seconds = int(payload.get("seconds", 3))
-    fps = int(payload.get("fps", 12))
-
-    if not image_data.startswith("data:image/png"):
-        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
-
-    comma_idx = image_data.find(",")
-    if comma_idx <= 0:
-        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
-
-    encoded = image_data[comma_idx + 1 :]
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    temp_png = icon_dir / f"{stem}_{suffix}_anim_src.png"
-    final_ico = icon_dir / f"{stem}_{suffix}.ico"
-    final_gif = icon_dir / f"{stem}_{suffix}.gif"
-
-    try:
-        raw = base64.b64decode(encoded)
-    except Exception:
-        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
-
-    try:
-        from PIL import Image, ImageEnhance
-    except Exception:
-        return jsonify({"ok": False, "message": "Pillow is required for animated export. Install with: pip install pillow"}), 400
-
-    seconds = max(1, min(12, seconds))
-    fps = max(6, min(30, fps))
-    total_frames = max(8, min(360, seconds * fps))
-    duration_ms = int(1000 / fps)
-
-    try:
-        temp_png.write_bytes(raw)
-        base = Image.open(temp_png).convert("RGBA")
-        w, h = base.size
-        frames = []
-
-        for idx in range(total_frames):
-            t = idx / max(1, total_frames - 1)
-            if preset == "spin":
-                angle = 360.0 * t
-                frame = base.rotate(angle, resample=Image.BICUBIC, expand=False)
-            elif preset == "shimmer":
-                frame = base.copy()
-                overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-                band_center = int((w * 1.5) * t) - (w // 4)
-                for x in range(w):
-                    dist = abs(x - band_center)
-                    if dist > w // 5:
-                        continue
-                    alpha = max(0, 140 - int((dist / (w // 5 + 1)) * 140))
-                    for y in range(h):
-                        overlay.putpixel((x, y), (255, 255, 255, alpha))
-                frame = Image.alpha_composite(frame, overlay)
-            else:
-                pulse = 0.88 + 0.20 * (0.5 + 0.5 * math.sin(2.0 * math.pi * t))
-                nw = max(8, int(w * pulse))
-                nh = max(8, int(h * pulse))
-                resized = base.resize((nw, nh), resample=Image.BICUBIC)
-                frame = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-                frame.paste(resized, ((w - nw) // 2, (h - nh) // 2), resized)
-                frame = ImageEnhance.Brightness(frame).enhance(1.05)
-            frames.append(frame)
-
-        if not frames:
-            return jsonify({"ok": False, "message": "failed to build animated frames"}), 400
-
-        frames[0].save(
-            final_gif,
-            format="GIF",
-            save_all=True,
-            append_images=frames[1:],
-            loop=0,
-            duration=duration_ms,
-            disposal=2,
-            transparency=0,
-        )
-
-        forge = iconforge_service.get_forge(PROJECT_ROOT)
-        ico_result = forge.create_icon_from_image(str(temp_png), str(final_ico))
-        if not ico_result.get("ok"):
-            return jsonify({"ok": False, "message": str(ico_result.get("message", "ico fallback creation failed"))}), 400
-
-        return jsonify(
-            {
-                "ok": True,
-                "animated": _to_project_relpath(final_gif),
-                "icon": _to_project_relpath(final_ico),
-                "preset": preset,
-                "frames": total_frames,
-                "fps": fps,
-                "seconds": seconds,
-                "message": "animated gif + ico fallback created",
-            }
-        )
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"animated export failed: {exc}"}), 500
-    finally:
-        if temp_png.exists():
-            temp_png.unlink(missing_ok=True)
+    result, status = agentforge_api.create_animated_icon_from_canvas(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.get("/api/iconforge/backups")
