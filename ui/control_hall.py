@@ -35,6 +35,8 @@ from modules.soundforge import api_adapter as soundforge_api
 from modules.ui_runtime import api_adapter as ui_runtime_api
 from modules.onboarding import api_adapter as onboarding_api
 from modules.ops_runtime import api_adapter as ops_runtime_api
+from modules.ops_runtime import agent_state_adapter as agent_state_api
+from modules.ops_runtime import task_tracker_adapter as task_tracker_api
 from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
@@ -6408,108 +6410,27 @@ def pin_close():
 
 
 def _health_from_timestamp(ts: str | None) -> str:
-    if not ts:
-        return "offline"
-    try:
-        then = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except ValueError:
-        return "offline"
-    delta = (datetime.now(timezone.utc) - then).total_seconds()
-    if delta <= 60:
-        return "online"
-    if delta <= 300:
-        return "stale"
-    return "offline"
+    return agent_state_api.health_from_timestamp(ts)
 
 
 def _model_agent_state_key(name: str) -> str:
-    safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in name.strip().lower())
-    return f"model_agent_{safe}"
+    return agent_state_api.model_agent_state_key(name)
 
 
 def _slugify(value: str) -> str:
-    safe = re.sub(r"[^a-z0-9_-]+", "_", value.strip().lower())
-    return safe.strip("_") or "task"
+    return task_tracker_api.slugify(value)
 
 
 def _extract_assigned_tasks() -> list[dict]:
-    if not AGENT_ASSIGNMENTS_PATH.exists():
-        return []
-
-    try:
-        lines = AGENT_ASSIGNMENTS_PATH.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
-
-    items: list[dict] = []
-    count_by_agent: dict[str, int] = {}
-    now = datetime.now(timezone.utc).isoformat()
-
-    for raw in lines:
-        line = raw.strip()
-        if not line.startswith("- ") or ":" not in line:
-            continue
-        body = line[2:].strip()
-        agent_part, task_part = body.split(":", 1)
-        agent = agent_part.strip()
-        task = task_part.strip()
-        if not agent or not task:
-            continue
-
-        agent_key = _slugify(agent)
-        count_by_agent[agent_key] = count_by_agent.get(agent_key, 0) + 1
-        task_id = f"{agent_key}-{count_by_agent[agent_key]}"
-        items.append(
-            {
-                "id": task_id,
-                "agent": agent,
-                "task": task,
-                "status": "assigned",
-                "started_at": "",
-                "completed_at": "",
-                "updated_at": now,
-                "note": "",
-            }
-        )
-    return items
+    return task_tracker_api.extract_assigned_tasks(AGENT_ASSIGNMENTS_PATH)
 
 
 def _default_agent_task_state() -> dict:
-    now = datetime.now(timezone.utc).isoformat()
-    return {
-        "ok": True,
-        "updated_at": now,
-        "items": _extract_assigned_tasks(),
-    }
+    return task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH)
 
 
 def _normalize_agent_task_state(state: dict) -> dict:
-    now = datetime.now(timezone.utc).isoformat()
-    items = state.get("items") if isinstance(state.get("items"), list) else []
-    normalized_items: list[dict] = []
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        status = str(item.get("status", "assigned")).strip().lower()
-        if status not in {"assigned", "in_progress", "blocked", "done"}:
-            status = "assigned"
-        normalized_items.append(
-            {
-                "id": str(item.get("id", "")).strip(),
-                "agent": str(item.get("agent", "unknown-agent")).strip() or "unknown-agent",
-                "task": str(item.get("task", "")).strip(),
-                "status": status,
-                "started_at": str(item.get("started_at", "")).strip(),
-                "completed_at": str(item.get("completed_at", "")).strip(),
-                "updated_at": str(item.get("updated_at", "")).strip() or now,
-                "note": str(item.get("note", "")).strip(),
-            }
-        )
-    return {
-        "ok": True,
-        "updated_at": str(state.get("updated_at", "")).strip() or now,
-        "items": normalized_items,
-    }
+    return task_tracker_api.normalize_agent_task_state(state)
 
 
 def load_agent_task_state() -> dict:
@@ -6525,83 +6446,11 @@ def load_agent_task_state() -> dict:
 
 
 def _update_task_status(task: dict, status: str, note: str) -> None:
-    now = datetime.now(timezone.utc).isoformat()
-    task["status"] = status
-    task["updated_at"] = now
-    if status == "in_progress" and not str(task.get("started_at", "")).strip():
-        task["started_at"] = now
-    if status == "done":
-        if not str(task.get("started_at", "")).strip():
-            task["started_at"] = now
-        task["completed_at"] = now
-    elif status in {"assigned", "in_progress", "blocked"}:
-        if status != "blocked":
-            task["completed_at"] = ""
-    if note:
-        task["note"] = note
+    task_tracker_api.update_task_status(task, status, note)
 
 
 def read_agent_state() -> dict[str, dict[str, str]]:
-    result: dict[str, dict[str, str]] = {}
-
-    dynamic_agents: dict[str, str] = {}
-    dynamic_meta: dict[str, dict[str, str]] = {}
-    profiles_path = bus.state / "model_agents.json"
-    if profiles_path.exists():
-        try:
-            profiles = json.loads(profiles_path.read_text(encoding="utf-8"))
-            if isinstance(profiles, dict):
-                endpoints = {}
-                endpoints_path = bus.state / "model_endpoints.json"
-                if endpoints_path.exists():
-                    try:
-                        raw_eps = json.loads(endpoints_path.read_text(encoding="utf-8"))
-                        if isinstance(raw_eps, dict):
-                            endpoints = raw_eps
-                    except (OSError, json.JSONDecodeError):
-                        endpoints = {}
-
-                for name, profile in profiles.items():
-                    key = str(name).strip().lower()
-                    if key:
-                        state_key = _model_agent_state_key(key)
-                        dynamic_agents[state_key] = f"Model Agent: {key}"
-                        endpoint = ""
-                        provider = ""
-                        if isinstance(profile, dict):
-                            endpoint = str(profile.get("endpoint", "")).strip()
-                        if endpoint and isinstance(endpoints, dict):
-                            endpoint_cfg = endpoints.get(endpoint)
-                            if isinstance(endpoint_cfg, dict):
-                                provider = str(endpoint_cfg.get("provider", "")).strip()
-                        dynamic_meta[state_key] = {"endpoint": endpoint, "provider": provider}
-        except (OSError, json.JSONDecodeError):
-            pass
-
-    combined = dict(AGENT_STATUS)
-    combined.update(dynamic_agents)
-
-    for key, display in combined.items():
-        state_file = bus.state / f"{key}.json"
-        payload = {}
-        if state_file.exists():
-            try:
-                payload = json.loads(state_file.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                payload = {}
-
-        last_seen = payload.get("timestamp")
-        meta = dynamic_meta.get(key, {})
-        endpoint = str(payload.get("endpoint", "") or meta.get("endpoint", "")).strip()
-        provider = str(meta.get("provider", "")).strip()
-        result[key] = {
-            "display_name": display,
-            "health": _health_from_timestamp(last_seen),
-            "last_seen": last_seen or "never",
-            "endpoint": endpoint,
-            "provider": provider,
-        }
-    return result
+    return agent_state_api.read_agent_state(state_dir=bus.state, static_agents=AGENT_STATUS)
 
 
 # === SoundForge Bundle Endpoints ===
