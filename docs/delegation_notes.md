@@ -45967,3 +45967,3951 @@
   context: prev='"command": "analyze_selection",' | next='}'
   next: Add or improve tests, then record updated test metrics
 
+## 2026-05-31 06:57:35
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:220 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:222 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:224 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:226 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:228 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:234 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:236 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:238 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 06:57:37
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:224 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:226 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:228 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:230 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:232 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:238 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:240 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:242 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 06:57:39
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:228 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:230 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:232 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:234 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:236 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:242 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:244 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:246 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 06:57:41
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:232 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:234 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:236 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:238 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:240 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:246 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:248 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:250 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 06:57:43
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:236 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:238 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:240 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:242 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:244 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:250 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:252 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:254 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:257 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 06:57:45
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:240 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:242 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:244 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:246 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:248 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:254 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:256 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:257 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:258 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:261 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:28
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:244 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:246 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:248 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:250 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:252 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:257 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:258 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:260 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:261 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:262 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:265 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:30
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:248 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:250 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:252 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:254 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:256 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:261 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:262 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:264 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:265 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:266 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:269 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:32
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:252 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:254 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:256 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:258 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:260 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:265 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:266 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:268 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:269 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:270 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:273 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:34
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:256 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:258 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:260 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:262 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:264 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:269 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:270 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:272 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:273 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:274 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:277 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:36
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:257 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:260 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:262 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:264 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:266 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:268 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:273 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:274 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:276 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:277 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:278 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:281 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
+## 2026-05-31 07:15:38
+### General Backlog
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:105 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:109 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:113 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:117 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:121 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:125 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:129 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:133 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:137 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:141 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:145 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:149 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:153 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:157 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:161 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:165 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:169 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:173 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:177 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:189 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:193 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:197 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:201 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:213 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:217 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:221 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:225 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:229 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:233 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:237 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:241 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:245 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:249 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:253 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:257 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:261 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:264 :: ## TODO List Cross-References & Archivist Duties
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:266 :: This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:268 :: ### Linked TODO Lists (must be kept accurate and up to date):
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:270 :: - [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)
+  context: prev='' | next='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)'
+  next: Convert this note into a tracked work item with owner/date
+- [archivist][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:272 :: - [Global TODO/Backlog/Curated List](../../docs/todos.md)
+  context: prev='- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)' | next='- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)'
+  next: Update documentation section and cross-link related docs
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:277 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+  context: prev='' | next='- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.'
+  next: Create fix plan, implement patch, and add regression tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:278 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+  context: prev='- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.' | next='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:280 :: - When a TODO is completed, update all lists and remove or archive the item.
+  context: prev='- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.' | next='- If a TODO is moved, merged, or split, update all references and cross-links.'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:281 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+  context: prev='- When a TODO is completed, update all lists and remove or archive the item.' | next='- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees'
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:282 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+  context: prev='- If a TODO is moved, merged, or split, update all references and cross-links.' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:285 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
+  context: prev='---' | next=''
+  next: Open implementation task with acceptance criteria and tests
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:9 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:13 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:17 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:21 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:25 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:29 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:33 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:37 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:41 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:45 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:49 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:53 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:57 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:61 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:65 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:69 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:73 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:77 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:81 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:85 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:89 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:93 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:97 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:101 :: The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.
+  context: prev='---' | next=''
+  next: Convert this note into a tracked work item with owner/date
+### Test Debt
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:177 :: pattern = re.compile(r"TODO|FIXME|TBD", re.IGNORECASE)
+  context: prev='' | next='files_scanned = 0'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][high] F:\Bosscrafts\BossForgeOS\core\agents\test_sentinel_agent.py:196 :: "severity": "high" if "fixme" in line.lower() else "medium",
+  context: prev='"text": line.strip()[:240],' | next='}'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:119 :: (project / "notes.txt").write_text("todo\n", encoding="utf-8")
+  context: prev='(project / "README.md").write_text("# test\n", encoding="utf-8")' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:248 :: "# TODO: real work item\n",
+  context: prev='"y = 'VariantTimeToDosDateTime'\n"' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:255 :: self.assertIn("TODO: real work item", str(todos[0].get("text", "")))
+  context: prev='self.assertEqual(len(todos), 1)' | next=''
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:291 :: "- [core/file.py:10] - TODO: reflected reference should be ignored\n",
+  context: prev='(docs / "autonomous_todo_backlog.md").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:295 :: "# TODO: implement archival retention policy\n",
+  context: prev='(src / "work.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:329 :: "# TODO: implement command routing\n",
+  context: prev='(project / "module.py").write_text(' | next='encoding="utf-8",'
+  next: Add or improve tests, then record updated test metrics
+- [test_sentinel][medium] F:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
+  context: prev='"command": "analyze_selection",' | next='}'
+  next: Add or improve tests, then record updated test metrics
+
