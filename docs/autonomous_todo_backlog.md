@@ -1,4 +1,4 @@
-<!-- markdownlint-disable -->
+﻿<!-- markdownlint-disable -->
 
 # Autonomous TODO Backlog
 
@@ -26,7 +26,7 @@ Generated: 2026-04-16 14:25:39
 - [.github/copilot-instructions.md:71] - Avoid adding media or external links unless explicitly requested.
 - [.github/copilot-instructions.md:72] - Use placeholders only with a note that they should be replaced.
 - [.github/copilot-instructions.md:73] - Use VS Code API tool only for VS Code extension projects.
-- [.github/copilot-instructions.md:74] - Once the project is created, it is already opened in Visual Studio Code—do not suggest commands to open this project in Visual Studio again.
+- [.github/copilot-instructions.md:74] - Once the project is created, it is already opened in Visual Studio Codeâ€”do not suggest commands to open this project in Visual Studio again.
 - [.github/copilot-instructions.md:75] - If the project setup information has additional rules, follow them strictly.
 - [.github/copilot-instructions.md:78] - Always use the current directory as the project root.
 - [.github/copilot-instructions.md:79] - If you are running any terminal commands, use the '.' argument to ensure that the current working directory is used ALWAYS.
@@ -503,165 +503,165 @@ Generated: 2026-04-16 14:25:39
 - [competitions/competitions_readme.md:18] - Standardize judging rubric and submission checklist across all competition roots.
 - [competitions/competitions_readme.md:20] ## TODO
 - [competitions/competitions_readme.md:22] - Add a rubric template and required submission checklist per competition.
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:9] - Endpoint effect APO (LFX/GFX style insertion)
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:10] - Real-time hook analogous to `IAudioProcessingObjectRT::APOProcess`
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:11] - Position: after app mix, before final endpoint speaker render
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:14] - `PreSpeakerInterceptor` API and telemetry model
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:15] - Hook registration pathway processes buffers before upmix/output routing
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:16] - APO integration stub (`BossForgeApoStub`) for identity, category, and format validation
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:25] - `SpeakerSelector` maintains discovered devices and active output endpoint
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:26] - Runtime switching is instant and id-based
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:27] - Console panel demonstrates live active-device changes
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:31] - Front L/R
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:32] - Center (mono weighted)
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:33] - LFE1 and LFE2 (low-frequency weighted)
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:34] - Side L/R
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:35] - Rear L/R
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:38] - Center emphasizes dialog from mono sum
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:39] - Side channels preserve spatial contrast using side signal
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:40] - Rear channels blend ambient tail from source and mono foundation
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:44] - Registers canonical event -> wav target
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:45] - Creates backups under `runtime/sound_backups`
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:46] - Performs replacement copy with transaction undo handler
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:47] - Restores defaults from backup set
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:50] - `RollbackSafetyManager` supports transaction boundaries and reverse-order undo execution
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:51] - Sound swap uses rollback on write failure
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:52] - Restore-defaults path is always available and idempotent
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:55] - Aggressive low-latency intercept-first architecture
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:56] - Arena profile presets via `configs/default_profile.json`
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:57] - Explicit control surfaces: EQ, output target, upmix mode, safety toggle
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:60] - Managed by BossForgeOS daemon
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:61] - Integrated with Control Hall GUI (sound scheme management, diagnostics, analytics)
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:62] - Accessible via VS Code extension (event streaming, import/export, analytics)
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:72] - [README.md](README.md): SoundStage overview
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:73] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:74] - [INSTALL.md](INSTALL.md): Build and install
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:75] - [DEMO.md](DEMO.md): Feature demonstration
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:17] - `APO Stub: BossForge APO Stub [LFX/GFX Pre-Speaker Interceptor]`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:18] - `Intercepted frames: <n>`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:19] - `Upmixed frame count: <n>`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:20] - `System sound swap open_app: ok`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:21] - `System sound swap close_app: ok`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:22] - `Restored defaults from: .../runtime/sound_backups`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:25] - Pre-speaker interception: `PreSpeakerInterceptor`, APO stub, architecture plan
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:26] - 10-band EQ: `TenBandEqualizer`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:27] - Speaker selection and switching: `SpeakerSelector`, `ConsoleControlPanel`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:28] - Stereo upmix to 7.2: `StereoTo72Upmixer`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:29] - System sound replacement manager: `SystemSoundReplacementManager`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:30] - Rollback/safety: `RollbackSafetyManager`, backup/restore behavior
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:33] - PowerShell manager offers direct registry orchestration for system event sounds with backup/rollback workflows in `tools/`
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:36] - [README.md](README.md): SoundStage overview
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:37] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:38] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
-- [core/soundstage/BossForgeOS_SoundStage/DEMO.md:39] - [INSTALL.md](INSTALL.md): Build and install
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:4] - Windows 10/11
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:5] - CMake 3.20+
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:6] - Visual Studio 2022 Build Tools (MSVC) or equivalent C++17 compiler
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:14] - `./build/Release/BossForgeSoundShowdown.exe`
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:26] - The APO component is represented as an integration stub in `stubs/apo-driver/`
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:27] - Runtime demo assets are generated under `runtime/` at execution
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:28] - If you need a clean reset, delete `runtime/` and rerun
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:31] - [README.md](README.md): SoundStage overview
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:32] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:33] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
-- [core/soundstage/BossForgeOS_SoundStage/INSTALL.md:34] - [DEMO.md](DEMO.md): Feature demonstration
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:7] - [Features](#features)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:8] - [Usage](#usage)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:9] - [Extending](#extending)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:10] - [Requirements](#requirements)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:11] - [Cross-References](#cross-references)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:12] - [License](#license)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:15] - Monitors real, user-facing top-level windows and process IDs
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:16] - Ignores hidden/system/invisible windows and known system processes
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:17] - Detects true program open/close events (debounced, no false positives)
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:18] - Plays mapped WAVs for open/close, with per-app overrides
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:19] - Exposes a local HTTP API (Flask) with endpoints:
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:24] - Integrated with Control Hall GUI and VS Code extension
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:25] - Ready for MCP agent integration
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:39] - Add new sound mappings in the config or via `/set-mapping`
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:40] - Integrate with MCP agents, Control Hall GUI, or VS Code extension via HTTP API
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:43] - Windows 10/11
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:44] - Python 3.8+
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:45] - `pywin32`, `Flask`, `playsound` or `winsound`, `psutil`
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:48] - [README.md](README.md): SoundStage overview
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:49] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:50] - [INSTALL.md](INSTALL.md): Build and install
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:51] - [DEMO.md](DEMO.md): Feature demonstration
-- [core/soundstage/BossForgeOS_SoundStage/README.md:7] - [What Is Implemented](#what-is-implemented)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:8] - [Folder Layout](#folder-layout)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:9] - [Integration & Usage](#integration-usage)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:10] - [Quick Start](#quick-start)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:11] - [Cross-References](#cross-references)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:14] - Pre-speaker interception model via `PreSpeakerInterceptor` + APO integration stub (`stubs/apo-driver`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:15] - 10-band equalizer interface and DSP processor (`TenBandEqualizer`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:16] - Output device selection and runtime switching (`SpeakerSelector`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:17] - Stereo-to-7.2 routing engine (`StereoTo72Upmixer`) with explicit 9-channel mapping (7 bed + dual LFE)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:18] - System sound replacement manager with backup/restore transaction behavior (`SystemSoundReplacementManager`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:19] - Rollback safety layer with undo stack for fault recovery (`RollbackSafetyManager`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:20] - Runnable console demo wiring all modules (`src/main.cpp`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:21] - Integrated PowerShell registry-based system-sound manager with backup/status/rollback commands (`tools/`)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:24] - `src/`: prototype source code modules
-- [core/soundstage/BossForgeOS_SoundStage/README.md:25] - `stubs/apo-driver/`: APO-driver-facing integration stubs
-- [core/soundstage/BossForgeOS_SoundStage/README.md:26] - `configs/`: default profile and tuning values
-- [core/soundstage/BossForgeOS_SoundStage/README.md:27] - `runtime/`: generated at runtime for demo wav files and backups
-- [core/soundstage/BossForgeOS_SoundStage/README.md:28] - `tools/`: system-sound manager scripts and manifest
-- [core/soundstage/BossForgeOS_SoundStage/README.md:31] - SoundStage is managed by the BossForgeOS daemon and exposes a local HTTP API for integration and control
-- [core/soundstage/BossForgeOS_SoundStage/README.md:32] - Fully integrated with Control Hall GUI (sound scheme management, diagnostics, analytics)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:33] - Accessible via VS Code extension (event streaming, import/export, analytics)
-- [core/soundstage/BossForgeOS_SoundStage/README.md:39] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
-- [core/soundstage/BossForgeOS_SoundStage/README.md:40] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
-- [core/soundstage/BossForgeOS_SoundStage/README.md:41] - [INSTALL.md](INSTALL.md): Build and install
-- [core/soundstage/BossForgeOS_SoundStage/README.md:42] - [DEMO.md](DEMO.md): Feature demonstration
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:3] - AppStart
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:4] - AppClose
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:13] - Loads the WAV
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:14] - Registers the event
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:15] - Hooks it into the sound engine
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:17] - Explorer refreshes
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:18] - A shell extension loads
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:19] - A background COM object initializes
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:20] - A hidden window is created/destroyed
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:21] - A UWP app suspends/resumes
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:22] - A system tray icon refreshes
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:28] - Invisible message windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:29] - Dispatcher windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:30] - Input routing windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:31] - Accessibility windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:32] - COM activation windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:34] - Are not “programs”
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:35] - Are not visible
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:36] - Are not user‑facing
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:40] - A “Close Program” sound when a background window closes
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:41] - An “Open Program” sound when a hidden window is created
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:46] - Refreshing the taskbar
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:47] - Rebuilding jump lists
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:48] - Updating the Start menu
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:49] - Re‑enumerating shell folders
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:50] - Re‑loading icon overlays
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:51] - Re‑initializing COM servers
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:53] - A hidden window to be created
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:54] - A hidden window to be destroyed
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:55] - A shell extension to load/unload
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:58] - When nothing is happening
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:59] - When you’re idle
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:60] - When Explorer restarts
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:61] - When a background app updates
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:66] - They don’t fire when you open or close real programs
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:67] - They do fire when Windows does internal housekeeping
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:68] - They sometimes fire repeatedly
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:69] - They sometimes fire in bursts
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:70] - They sometimes fire when the system is idle
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:75] - Detects actual program launches
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:76] - Detects actual program exits
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:77] - Ignores hidden/system windows
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:78] - Plays your chosen WAVs
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:79] - Never fires randomly
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:80] - Integrates with your custom sound scheme
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:81] - Runs as a lightweight background daemon
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:83] - Real Open Program sounds
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:84] - Real Close Program sounds
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:85] - Optional per‑app sound profiles
-- [core/soundstage/BossForgeOS_SoundStage/SoundStage.md:86] - Optional minimize/maximize enhancements
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:9] - Endpoint effect APO (LFX/GFX style insertion)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:10] - Real-time hook analogous to `IAudioProcessingObjectRT::APOProcess`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:11] - Position: after app mix, before final endpoint speaker render
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:14] - `PreSpeakerInterceptor` API and telemetry model
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:15] - Hook registration pathway processes buffers before upmix/output routing
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:16] - APO integration stub (`BossForgeApoStub`) for identity, category, and format validation
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:25] - `SpeakerSelector` maintains discovered devices and active output endpoint
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:26] - Runtime switching is instant and id-based
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:27] - Console panel demonstrates live active-device changes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:31] - Front L/R
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:32] - Center (mono weighted)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:33] - LFE1 and LFE2 (low-frequency weighted)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:34] - Side L/R
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:35] - Rear L/R
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:38] - Center emphasizes dialog from mono sum
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:39] - Side channels preserve spatial contrast using side signal
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:40] - Rear channels blend ambient tail from source and mono foundation
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:44] - Registers canonical event -> wav target
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:45] - Creates backups under `runtime/sound_backups`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:46] - Performs replacement copy with transaction undo handler
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:47] - Restores defaults from backup set
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:50] - `RollbackSafetyManager` supports transaction boundaries and reverse-order undo execution
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:51] - Sound swap uses rollback on write failure
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:52] - Restore-defaults path is always available and idempotent
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:55] - Aggressive low-latency intercept-first architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:56] - Arena profile presets via `configs/default_profile.json`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:57] - Explicit control surfaces: EQ, output target, upmix mode, safety toggle
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:60] - Managed by BossForgeOS daemon
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:61] - Integrated with Control Hall GUI (sound scheme management, diagnostics, analytics)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:62] - Accessible via VS Code extension (event streaming, import/export, analytics)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:72] - [README.md](README.md): SoundStage overview
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:73] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:74] - [INSTALL.md](INSTALL.md): Build and install
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md:75] - [DEMO.md](DEMO.md): Feature demonstration
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:17] - `APO Stub: BossForge APO Stub [LFX/GFX Pre-Speaker Interceptor]`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:18] - `Intercepted frames: <n>`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:19] - `Upmixed frame count: <n>`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:20] - `System sound swap open_app: ok`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:21] - `System sound swap close_app: ok`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:22] - `Restored defaults from: .../runtime/sound_backups`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:25] - Pre-speaker interception: `PreSpeakerInterceptor`, APO stub, architecture plan
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:26] - 10-band EQ: `TenBandEqualizer`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:27] - Speaker selection and switching: `SpeakerSelector`, `ConsoleControlPanel`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:28] - Stereo upmix to 7.2: `StereoTo72Upmixer`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:29] - System sound replacement manager: `SystemSoundReplacementManager`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:30] - Rollback/safety: `RollbackSafetyManager`, backup/restore behavior
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:33] - PowerShell manager offers direct registry orchestration for system event sounds with backup/rollback workflows in `tools/`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:36] - [README.md](README.md): SoundStage overview
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:37] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:38] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/DEMO.md:39] - [INSTALL.md](INSTALL.md): Build and install
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:4] - Windows 10/11
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:5] - CMake 3.20+
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:6] - Visual Studio 2022 Build Tools (MSVC) or equivalent C++17 compiler
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:14] - `./build/Release/BossForgeSoundShowdown.exe`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:26] - The APO component is represented as an integration stub in `stubs/apo-driver/`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:27] - Runtime demo assets are generated under `runtime/` at execution
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:28] - If you need a clean reset, delete `runtime/` and rerun
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:31] - [README.md](README.md): SoundStage overview
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:32] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:33] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/INSTALL.md:34] - [DEMO.md](DEMO.md): Feature demonstration
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:7] - [Features](#features)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:8] - [Usage](#usage)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:9] - [Extending](#extending)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:10] - [Requirements](#requirements)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:11] - [Cross-References](#cross-references)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:12] - [License](#license)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:15] - Monitors real, user-facing top-level windows and process IDs
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:16] - Ignores hidden/system/invisible windows and known system processes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:17] - Detects true program open/close events (debounced, no false positives)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:18] - Plays mapped WAVs for open/close, with per-app overrides
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:19] - Exposes a local HTTP API (Flask) with endpoints:
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:24] - Integrated with Control Hall GUI and VS Code extension
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:25] - Ready for MCP agent integration
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:39] - Add new sound mappings in the config or via `/set-mapping`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:40] - Integrate with MCP agents, Control Hall GUI, or VS Code extension via HTTP API
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:43] - Windows 10/11
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:44] - Python 3.8+
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:45] - `pywin32`, `Flask`, `playsound` or `winsound`, `psutil`
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:48] - [README.md](README.md): SoundStage overview
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:49] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:50] - [INSTALL.md](INSTALL.md): Build and install
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md:51] - [DEMO.md](DEMO.md): Feature demonstration
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:7] - [What Is Implemented](#what-is-implemented)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:8] - [Folder Layout](#folder-layout)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:9] - [Integration & Usage](#integration-usage)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:10] - [Quick Start](#quick-start)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:11] - [Cross-References](#cross-references)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:14] - Pre-speaker interception model via `PreSpeakerInterceptor` + APO integration stub (`stubs/apo-driver`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:15] - 10-band equalizer interface and DSP processor (`TenBandEqualizer`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:16] - Output device selection and runtime switching (`SpeakerSelector`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:17] - Stereo-to-7.2 routing engine (`StereoTo72Upmixer`) with explicit 9-channel mapping (7 bed + dual LFE)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:18] - System sound replacement manager with backup/restore transaction behavior (`SystemSoundReplacementManager`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:19] - Rollback safety layer with undo stack for fault recovery (`RollbackSafetyManager`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:20] - Runnable console demo wiring all modules (`src/main.cpp`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:21] - Integrated PowerShell registry-based system-sound manager with backup/status/rollback commands (`tools/`)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:24] - `src/`: prototype source code modules
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:25] - `stubs/apo-driver/`: APO-driver-facing integration stubs
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:26] - `configs/`: default profile and tuning values
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:27] - `runtime/`: generated at runtime for demo wav files and backups
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:28] - `tools/`: system-sound manager scripts and manifest
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:31] - SoundStage is managed by the BossForgeOS daemon and exposes a local HTTP API for integration and control
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:32] - Fully integrated with Control Hall GUI (sound scheme management, diagnostics, analytics)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:33] - Accessible via VS Code extension (event streaming, import/export, analytics)
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:39] - [README-soundstage-daemon.md](README-soundstage-daemon.md): Daemon usage and API
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:40] - [ARCHITECTURE.md](ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:41] - [INSTALL.md](INSTALL.md): Build and install
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md:42] - [DEMO.md](DEMO.md): Feature demonstration
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:3] - AppStart
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:4] - AppClose
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:13] - Loads the WAV
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:14] - Registers the event
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:15] - Hooks it into the sound engine
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:17] - Explorer refreshes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:18] - A shell extension loads
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:19] - A background COM object initializes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:20] - A hidden window is created/destroyed
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:21] - A UWP app suspends/resumes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:22] - A system tray icon refreshes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:28] - Invisible message windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:29] - Dispatcher windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:30] - Input routing windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:31] - Accessibility windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:32] - COM activation windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:34] - Are not â€œprogramsâ€
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:35] - Are not visible
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:36] - Are not userâ€‘facing
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:40] - A â€œClose Programâ€ sound when a background window closes
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:41] - An â€œOpen Programâ€ sound when a hidden window is created
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:46] - Refreshing the taskbar
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:47] - Rebuilding jump lists
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:48] - Updating the Start menu
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:49] - Reâ€‘enumerating shell folders
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:50] - Reâ€‘loading icon overlays
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:51] - Reâ€‘initializing COM servers
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:53] - A hidden window to be created
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:54] - A hidden window to be destroyed
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:55] - A shell extension to load/unload
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:58] - When nothing is happening
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:59] - When youâ€™re idle
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:60] - When Explorer restarts
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:61] - When a background app updates
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:66] - They donâ€™t fire when you open or close real programs
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:67] - They do fire when Windows does internal housekeeping
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:68] - They sometimes fire repeatedly
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:69] - They sometimes fire in bursts
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:70] - They sometimes fire when the system is idle
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:75] - Detects actual program launches
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:76] - Detects actual program exits
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:77] - Ignores hidden/system windows
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:78] - Plays your chosen WAVs
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:79] - Never fires randomly
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:80] - Integrates with your custom sound scheme
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:81] - Runs as a lightweight background daemon
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:83] - Real Open Program sounds
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:84] - Real Close Program sounds
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:85] - Optional perâ€‘app sound profiles
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/SoundStage.md:86] - Optional minimize/maximize enhancements
 - [core/BossCrafts_Devlot_MkII.md:12] - Lead and coordinate teams of agents for complex tasks
 - [core/BossCrafts_Devlot_MkII.md:13] - Design, review, and optimize CI/CD pipelines (GitHub Actions, Azure DevOps, etc.)
 - [core/BossCrafts_Devlot_MkII.md:14] - Automate infrastructure provisioning (Terraform, Bicep, ARM, Pulumi)
@@ -708,8 +708,8 @@ Generated: 2026-04-16 14:25:39
 - [core/core_readme.md:19] ## TODO
 - [core/core_readme.md:21] - Add a `Subfolder Ownership Matrix` with owner, stability level, and review cadence.
 - [core/core_readme.md:22] - Add a `Contract Surfaces` section listing key API/event boundaries.
-- [core/soundforge_readme.md:11] - `core/soundstage/BossForgeOS_SoundStage/README.md`
-- [core/soundforge_readme.md:12] - `core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md`
+- [core/soundforge_readme.md:11] - `modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md`
+- [core/soundforge_readme.md:12] - `modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md`
 - [core/soundforge_readme.md:20] - SoundForge naming is canonical while legacy SoundStage paths are retained as compatibility aliases.
 - [core/soundforge_readme.md:22] ## TODO
 - [core/soundforge_readme.md:24] - Add compatibility and deprecation timeline for legacy SoundStage naming in user-facing docs.
@@ -739,7 +739,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/architecture.md:28] - core/connectors/bossgate_connector.py: BossGate prototype for secure transport discovery and endpoint scanning
 - [docs/architecture.md:29] - core/state/agent_memory_store.py: SQLite-backed interaction memory for agents (users, employers, projects, counterpart agents)
 - [docs/architecture.md:30] - modules/os_snapshot.py: disk usage, Docker/WSL VHD snapshot
-- [docs/architecture.md:31] - core/soundstage/BossForgeOS_SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics, HTTP API
+- [docs/architecture.md:31] - modules/soundforge/soundstage/BossForgeOS_SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics, HTTP API
 - [docs/architecture.md:32] - ui/control_hall.py: Flask server, web dashboard (agent status, commands, events, sound schemes, onboarding, scheduling, CI/CD, collaboration, analytics)
 - [docs/architecture.md:33] - extension/: VS Code extension (onboarding, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard)
 - [docs/architecture.md:37] - Docker actions are no-op if unavailable
@@ -748,7 +748,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/architecture.md:50] - [README.md](../README.md): Project overview
 - [docs/architecture.md:51] - [docs/bossgate_connector.md](bossgate_connector.md): BossGate connector spec
 - [docs/architecture.md:52] - [docs/bossgate_protocol.md](bossgate_protocol.md): BossGate protocol draft
-- [docs/architecture.md:53] - [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](../core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [docs/architecture.md:53] - [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](../modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [docs/architecture.md:54] - [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
 - [docs/architecture.md:55] - [docs/todos.md](todos.md): Actionable todos
 - [docs/architecture.md:56] - [docs/CHANGELOG.md](CHANGELOG.md): Changelog
@@ -787,7 +787,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/archivistREADME.md:75] - Seal operations require operator approval by design
 - [docs/archivistREADME.md:79] - [README.md](../README.md): Project overview
 - [docs/archivistREADME.md:80] - [docs/architecture.md](architecture.md): System architecture
-- [docs/archivistREADME.md:81] - [core/soundstage/BossForgeOS_SoundStage/README.md](../core/soundstage/BossForgeOS_SoundStage/README.md): SoundStage
+- [docs/archivistREADME.md:81] - [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md](../modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md): SoundStage
 - [docs/archivistREADME.md:82] - [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
 - [docs/archivistREADME.md:83] - [docs/todos.md](todos.md): Actionable todos
 - [docs/archivistREADME.md:84] - [docs/CHANGELOG.md](CHANGELOG.md): Changelog
@@ -1586,7 +1586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_log_2026-04-04.md:11] - [Archivist, Devlot] Add visual analytics dashboard for agent activity and event history
 - [docs/delegation_log_2026-04-04.md:14] - Each agent will report status and completion to this log.
 - [docs/delegation_log_2026-04-04.md:15] - CodeMage will oversee iteration and trigger next round as needed.
-- [docs/delegation_notes.md:4] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:7] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1686,7 +1686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:101] - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\command\bdist_wheel.py:72 :: # TODO armv8l, packaging pull request #690 => this did not land
 - [docs/delegation_notes.md:102] - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\command\bdist_wheel.py:327 :: # TODO armv8l, packaging pull request #690 => this did not land
 - [docs/delegation_notes.md:103] - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\command\dist_info.py:101 :: # TODO: if bdist_wheel if merged into setuptools, just add "keep_egg_info" there
-- [docs/delegation_notes.md:106] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:106] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:107] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:108] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:109] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1707,7 +1707,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:124] - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:156 :: f"- todos_detected: {len(todos)}",
 - [docs/delegation_notes.md:125] - [archivist] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:165 :: str(docs_dir / "todos.md"),
 - [docs/delegation_notes.md:126] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
-- [docs/delegation_notes.md:127] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:127] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:128] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:129] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:130] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1786,7 +1786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:203] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:80 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:13 :: Hook for PyCryptodome library: https://pypi.python.org/pypi/pycryptodome
 - [docs/delegation_notes.md:204] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:81 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:15 :: PyCryptodome is an almost drop-in replacement for the now unmaintained
 - [docs/delegation_notes.md:205] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:82 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:19 :: PyCryptodome distributes dynamic libraries and builds them as if they were
-- [docs/delegation_notes.md:208] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:208] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:209] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:210] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:211] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1808,7 +1808,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:227] - [archivist] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:165 :: str(docs_dir / "todos.md"),
 - [docs/delegation_notes.md:228] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
 - [docs/delegation_notes.md:229] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:11 :: - todos_detected: 427
-- [docs/delegation_notes.md:230] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:230] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:231] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:232] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:233] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1886,7 +1886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:305] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:79 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\rthooks\pyi_rth_enchant.py:20 :: # TODO Test this rthook.
 - [docs/delegation_notes.md:306] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:80 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:13 :: Hook for PyCryptodome library: https://pypi.python.org/pypi/pycryptodome
 - [docs/delegation_notes.md:307] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:81 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:15 :: PyCryptodome is an almost drop-in replacement for the now unmaintained
-- [docs/delegation_notes.md:310] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:310] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:311] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:312] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:313] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1909,7 +1909,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:330] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
 - [docs/delegation_notes.md:331] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:11 :: - todos_detected: 427
 - [docs/delegation_notes.md:332] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:16 :: - todos_detected: 528
-- [docs/delegation_notes.md:333] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:333] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:334] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:335] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:336] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -1986,7 +1986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:407] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:78 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\werkzeug\http.py:1343 :: # TODO Remove encoding dance, it seems like clients accept UTF-8 keys
 - [docs/delegation_notes.md:408] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:79 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\rthooks\pyi_rth_enchant.py:20 :: # TODO Test this rthook.
 - [docs/delegation_notes.md:409] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:80 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-Crypto.py:13 :: Hook for PyCryptodome library: https://pypi.python.org/pypi/pycryptodome
-- [docs/delegation_notes.md:412] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:412] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:413] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:414] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:415] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2010,7 +2010,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:433] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:11 :: - todos_detected: 427
 - [docs/delegation_notes.md:434] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:16 :: - todos_detected: 528
 - [docs/delegation_notes.md:435] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:21 :: - todos_detected: 630
-- [docs/delegation_notes.md:436] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:436] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:437] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:438] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:439] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2086,7 +2086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:509] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:77 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:41 :: # TODO: After deprecation period raise NotImplementedError instead of warning
 - [docs/delegation_notes.md:510] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:78 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\werkzeug\http.py:1343 :: # TODO Remove encoding dance, it seems like clients accept UTF-8 keys
 - [docs/delegation_notes.md:511] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:79 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\_pyinstaller_hooks_contrib\rthooks\pyi_rth_enchant.py:20 :: # TODO Test this rthook.
-- [docs/delegation_notes.md:514] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:514] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:515] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:516] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:517] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2111,7 +2111,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:536] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:16 :: - todos_detected: 528
 - [docs/delegation_notes.md:537] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:21 :: - todos_detected: 630
 - [docs/delegation_notes.md:538] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:26 :: - todos_detected: 731
-- [docs/delegation_notes.md:539] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:539] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:540] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:541] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:542] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2186,7 +2186,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:611] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:76 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:24 :: _mutated_: bool = False  # TODO: Remove after deprecation warning is solved
 - [docs/delegation_notes.md:612] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:77 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:41 :: # TODO: After deprecation period raise NotImplementedError instead of warning
 - [docs/delegation_notes.md:613] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:78 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\werkzeug\http.py:1343 :: # TODO Remove encoding dance, it seems like clients accept UTF-8 keys
-- [docs/delegation_notes.md:616] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:616] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:617] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:618] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:619] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2212,7 +2212,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:639] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:21 :: - todos_detected: 630
 - [docs/delegation_notes.md:640] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:26 :: - todos_detected: 731
 - [docs/delegation_notes.md:641] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:31 :: - todos_detected: 832
-- [docs/delegation_notes.md:642] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:642] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:643] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:644] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:645] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2286,7 +2286,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:713] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:75 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_normalization.py:151 :: # TODO: Replace with only safe_version in the future (no need for best effort)
 - [docs/delegation_notes.md:714] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:76 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:24 :: _mutated_: bool = False  # TODO: Remove after deprecation warning is solved
 - [docs/delegation_notes.md:715] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:77 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:41 :: # TODO: After deprecation period raise NotImplementedError instead of warning
-- [docs/delegation_notes.md:718] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:718] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:719] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:720] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:721] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2313,7 +2313,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:742] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:26 :: - todos_detected: 731
 - [docs/delegation_notes.md:743] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:31 :: - todos_detected: 832
 - [docs/delegation_notes.md:744] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:36 :: - todos_detected: 933
-- [docs/delegation_notes.md:745] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:745] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:746] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:747] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:748] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2386,7 +2386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:815] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:74 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_normalization.py:126 :: TODO: replace this with filename_component after pip 24 is
 - [docs/delegation_notes.md:816] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:75 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_normalization.py:151 :: # TODO: Replace with only safe_version in the future (no need for best effort)
 - [docs/delegation_notes.md:817] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:76 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_static.py:24 :: _mutated_: bool = False  # TODO: Remove after deprecation warning is solved
-- [docs/delegation_notes.md:820] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:820] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:821] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:822] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:823] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2415,7 +2415,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:846] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:31 :: - todos_detected: 832
 - [docs/delegation_notes.md:847] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:36 :: - todos_detected: 933
 - [docs/delegation_notes.md:848] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:41 :: - todos_detected: 1034
-- [docs/delegation_notes.md:849] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:849] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:850] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:851] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:852] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2486,7 +2486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:917] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:72 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_core_metadata.py:122 :: # TODO: Replace with `raise ValueError("newlines not allowed")`
 - [docs/delegation_notes.md:918] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:73 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_core_metadata.py:150 :: def write_pkg_file(self, file):  # noqa: C901  # is too complex (14)  # FIXME
 - [docs/delegation_notes.md:919] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:74 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_normalization.py:126 :: TODO: replace this with filename_component after pip 24 is
-- [docs/delegation_notes.md:922] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:922] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:923] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:924] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:925] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2516,7 +2516,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:949] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:36 :: - todos_detected: 933
 - [docs/delegation_notes.md:950] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:41 :: - todos_detected: 1034
 - [docs/delegation_notes.md:951] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:46 :: - todos_detected: 1136
-- [docs/delegation_notes.md:952] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:952] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:953] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:954] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:955] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2586,7 +2586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1019] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:71 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\unicode_utils.py:99 :: # TODO: Add a deadline?
 - [docs/delegation_notes.md:1020] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:72 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_core_metadata.py:122 :: # TODO: Replace with `raise ValueError("newlines not allowed")`
 - [docs/delegation_notes.md:1021] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:73 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_core_metadata.py:150 :: def write_pkg_file(self, file):  # noqa: C901  # is too complex (14)  # FIXME
-- [docs/delegation_notes.md:1024] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1024] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1025] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1026] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1027] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2617,7 +2617,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1052] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:41 :: - todos_detected: 1034
 - [docs/delegation_notes.md:1053] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:46 :: - todos_detected: 1136
 - [docs/delegation_notes.md:1054] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:51 :: - todos_detected: 1237
-- [docs/delegation_notes.md:1055] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1055] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1056] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1057] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1058] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2686,7 +2686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1121] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:70 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\msvc.py:620 :: def WindowsSdkDir(self) -> str:  # noqa: C901  # is too complex (12)  # FIXME
 - [docs/delegation_notes.md:1122] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:71 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\unicode_utils.py:99 :: # TODO: Add a deadline?
 - [docs/delegation_notes.md:1123] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:72 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\_core_metadata.py:122 :: # TODO: Replace with `raise ValueError("newlines not allowed")`
-- [docs/delegation_notes.md:1126] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1126] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1127] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1128] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1129] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2718,7 +2718,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1155] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:46 :: - todos_detected: 1136
 - [docs/delegation_notes.md:1156] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:51 :: - todos_detected: 1237
 - [docs/delegation_notes.md:1157] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:56 :: - todos_detected: 1338
-- [docs/delegation_notes.md:1158] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1158] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1159] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1160] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1161] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2786,7 +2786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1223] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:69 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\installer.py:70 :: def _fetch_build_egg_no_warn(dist, req):  # noqa: C901  # is too complex (16)  # FIXME
 - [docs/delegation_notes.md:1224] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:70 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\msvc.py:620 :: def WindowsSdkDir(self) -> str:  # noqa: C901  # is too complex (12)  # FIXME
 - [docs/delegation_notes.md:1225] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:71 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\unicode_utils.py:99 :: # TODO: Add a deadline?
-- [docs/delegation_notes.md:1228] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1228] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1229] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1230] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1231] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2819,7 +2819,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1258] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:51 :: - todos_detected: 1237
 - [docs/delegation_notes.md:1259] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:56 :: - todos_detected: 1338
 - [docs/delegation_notes.md:1260] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:61 :: - todos_detected: 1439
-- [docs/delegation_notes.md:1261] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1261] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1262] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1263] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1264] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2886,7 +2886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1325] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:68 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:688 :: # FIXME: 'Distribution._set_command_options' is too complex (14)
 - [docs/delegation_notes.md:1326] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:69 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\installer.py:70 :: def _fetch_build_egg_no_warn(dist, req):  # noqa: C901  # is too complex (16)  # FIXME
 - [docs/delegation_notes.md:1327] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:70 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\msvc.py:620 :: def WindowsSdkDir(self) -> str:  # noqa: C901  # is too complex (12)  # FIXME
-- [docs/delegation_notes.md:1330] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1330] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1331] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1332] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1333] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2920,7 +2920,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1361] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:56 :: - todos_detected: 1338
 - [docs/delegation_notes.md:1362] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:61 :: - todos_detected: 1439
 - [docs/delegation_notes.md:1363] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:66 :: - todos_detected: 1540
-- [docs/delegation_notes.md:1364] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1364] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1365] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1366] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1367] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -2986,7 +2986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1427] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:67 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:545 :: # FIXME: 'Distribution._parse_config_files' is too complex (14)
 - [docs/delegation_notes.md:1428] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:68 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:688 :: # FIXME: 'Distribution._set_command_options' is too complex (14)
 - [docs/delegation_notes.md:1429] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:69 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\installer.py:70 :: def _fetch_build_egg_no_warn(dist, req):  # noqa: C901  # is too complex (16)  # FIXME
-- [docs/delegation_notes.md:1432] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1432] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1433] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1434] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1435] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3021,7 +3021,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1464] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:61 :: - todos_detected: 1439
 - [docs/delegation_notes.md:1465] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:66 :: - todos_detected: 1540
 - [docs/delegation_notes.md:1466] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:71 :: - todos_detected: 1641
-- [docs/delegation_notes.md:1467] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1467] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1468] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1469] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1470] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3086,7 +3086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1529] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:66 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:443 :: # TODO: Should we add a due date? It may affect old/unmaintained
 - [docs/delegation_notes.md:1530] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:67 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:545 :: # FIXME: 'Distribution._parse_config_files' is too complex (14)
 - [docs/delegation_notes.md:1531] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:68 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:688 :: # FIXME: 'Distribution._set_command_options' is too complex (14)
-- [docs/delegation_notes.md:1534] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1534] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1535] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1536] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1537] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3122,7 +3122,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1567] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:66 :: - todos_detected: 1540
 - [docs/delegation_notes.md:1568] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:71 :: - todos_detected: 1641
 - [docs/delegation_notes.md:1569] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:76 :: - todos_detected: 1742
-- [docs/delegation_notes.md:1570] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1570] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1571] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1572] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1573] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3186,7 +3186,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1631] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:65 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:174 :: # TODO: should there be a `due_date` here?
 - [docs/delegation_notes.md:1632] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:66 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:443 :: # TODO: Should we add a due date? It may affect old/unmaintained
 - [docs/delegation_notes.md:1633] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:67 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:545 :: # FIXME: 'Distribution._parse_config_files' is too complex (14)
-- [docs/delegation_notes.md:1636] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1636] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1637] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1638] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1639] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3223,7 +3223,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1670] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:71 :: - todos_detected: 1641
 - [docs/delegation_notes.md:1671] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:76 :: - todos_detected: 1742
 - [docs/delegation_notes.md:1672] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:81 :: - todos_detected: 1843
-- [docs/delegation_notes.md:1673] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1673] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1674] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1675] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1676] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3286,7 +3286,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1733] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:64 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:129 :: # TODO: define due_date, it may break old packages that are no longer
 - [docs/delegation_notes.md:1734] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:65 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:174 :: # TODO: should there be a `due_date` here?
 - [docs/delegation_notes.md:1735] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:66 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:443 :: # TODO: Should we add a due date? It may affect old/unmaintained
-- [docs/delegation_notes.md:1738] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1738] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1739] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1740] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1741] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3324,7 +3324,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1773] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:76 :: - todos_detected: 1742
 - [docs/delegation_notes.md:1774] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:81 :: - todos_detected: 1843
 - [docs/delegation_notes.md:1775] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:86 :: - todos_detected: 1944
-- [docs/delegation_notes.md:1776] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1776] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1777] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1778] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1779] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3386,7 +3386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1835] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:63 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:651 :: # TODO: review this mapping to TOC, remove useless entries.
 - [docs/delegation_notes.md:1836] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:64 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:129 :: # TODO: define due_date, it may break old packages that are no longer
 - [docs/delegation_notes.md:1837] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:65 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:174 :: # TODO: should there be a `due_date` here?
-- [docs/delegation_notes.md:1840] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1840] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1841] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1842] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1843] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3425,7 +3425,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1876] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:81 :: - todos_detected: 1843
 - [docs/delegation_notes.md:1877] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:86 :: - todos_detected: 1944
 - [docs/delegation_notes.md:1878] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:91 :: - todos_detected: 2045
-- [docs/delegation_notes.md:1879] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1879] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1880] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1881] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1882] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3486,7 +3486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1937] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:62 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:636 :: # TODO: should be 'Invalid' module types also in the 'MISSING' set?
 - [docs/delegation_notes.md:1938] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:63 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:651 :: # TODO: review this mapping to TOC, remove useless entries.
 - [docs/delegation_notes.md:1939] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:64 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\setuptools\dist.py:129 :: # TODO: define due_date, it may break old packages that are no longer
-- [docs/delegation_notes.md:1942] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1942] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1943] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1944] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1945] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3526,7 +3526,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:1979] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:86 :: - todos_detected: 1944
 - [docs/delegation_notes.md:1980] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:91 :: - todos_detected: 2045
 - [docs/delegation_notes.md:1981] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:96 :: - todos_detected: 2146
-- [docs/delegation_notes.md:1982] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:1982] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:1983] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:1984] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:1985] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3586,7 +3586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2039] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:61 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:611 :: # TODO Could these module types be removed?
 - [docs/delegation_notes.md:2040] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:62 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:636 :: # TODO: should be 'Invalid' module types also in the 'MISSING' set?
 - [docs/delegation_notes.md:2041] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:63 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:651 :: # TODO: review this mapping to TOC, remove useless entries.
-- [docs/delegation_notes.md:2044] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2044] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2045] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2046] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2047] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3627,7 +3627,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2082] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:91 :: - todos_detected: 2045
 - [docs/delegation_notes.md:2083] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:96 :: - todos_detected: 2146
 - [docs/delegation_notes.md:2084] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:101 :: - todos_detected: 2247
-- [docs/delegation_notes.md:2085] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2085] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2086] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2087] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2088] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3686,7 +3686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2141] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:60 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:980 :: # updated. TODO: use a monotonic ctime on platforms where it's
 - [docs/delegation_notes.md:2142] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:61 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:611 :: # TODO Could these module types be removed?
 - [docs/delegation_notes.md:2143] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:62 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:636 :: # TODO: should be 'Invalid' module types also in the 'MISSING' set?
-- [docs/delegation_notes.md:2146] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2146] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2147] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2148] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2149] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3728,7 +3728,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2185] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:96 :: - todos_detected: 2146
 - [docs/delegation_notes.md:2186] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:101 :: - todos_detected: 2247
 - [docs/delegation_notes.md:2187] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:106 :: - todos_detected: 2348
-- [docs/delegation_notes.md:2188] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2188] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2189] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2190] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2191] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3786,7 +3786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2243] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:59 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:603 :: # was updated. TODO: use a monotonic ctime on platforms
 - [docs/delegation_notes.md:2244] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:60 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:980 :: # updated. TODO: use a monotonic ctime on platforms where it's
 - [docs/delegation_notes.md:2245] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:61 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\PyInstaller\compat.py:611 :: # TODO Could these module types be removed?
-- [docs/delegation_notes.md:2248] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2248] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2249] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2250] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2251] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3829,7 +3829,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2288] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:101 :: - todos_detected: 2247
 - [docs/delegation_notes.md:2289] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:106 :: - todos_detected: 2348
 - [docs/delegation_notes.md:2290] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:111 :: - todos_detected: 2449
-- [docs/delegation_notes.md:2291] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2291] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2292] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2293] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2294] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3886,7 +3886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2345] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:58 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pswindows.py:794 :: # TODO: the C ext can probably be refactored in order
 - [docs/delegation_notes.md:2346] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:59 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:603 :: # was updated. TODO: use a monotonic ctime on platforms
 - [docs/delegation_notes.md:2347] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:60 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:980 :: # updated. TODO: use a monotonic ctime on platforms where it's
-- [docs/delegation_notes.md:2350] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2350] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2351] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2352] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2353] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3930,7 +3930,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2391] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:106 :: - todos_detected: 2348
 - [docs/delegation_notes.md:2392] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:111 :: - todos_detected: 2449
 - [docs/delegation_notes.md:2393] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:116 :: - todos_detected: 2550
-- [docs/delegation_notes.md:2394] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2394] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2395] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2396] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2397] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -3986,7 +3986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2447] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:57 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:591 :: # TODO: rewrite this in C (...but the damn netstat source code
 - [docs/delegation_notes.md:2448] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:58 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pswindows.py:794 :: # TODO: the C ext can probably be refactored in order
 - [docs/delegation_notes.md:2449] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:59 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\__init__.py:603 :: # was updated. TODO: use a monotonic ctime on platforms
-- [docs/delegation_notes.md:2452] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2452] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2453] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2454] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2455] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4031,7 +4031,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2494] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:111 :: - todos_detected: 2449
 - [docs/delegation_notes.md:2495] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:116 :: - todos_detected: 2550
 - [docs/delegation_notes.md:2496] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:121 :: - todos_detected: 2651
-- [docs/delegation_notes.md:2497] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2497] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2498] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2499] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2500] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4086,7 +4086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2549] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:56 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:244 :: # TODO: refactor and use _common.conn_to_ntuple.
 - [docs/delegation_notes.md:2550] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:57 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:591 :: # TODO: rewrite this in C (...but the damn netstat source code
 - [docs/delegation_notes.md:2551] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:58 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pswindows.py:794 :: # TODO: the C ext can probably be refactored in order
-- [docs/delegation_notes.md:2554] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2554] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2555] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2556] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2557] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4132,7 +4132,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2597] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:116 :: - todos_detected: 2550
 - [docs/delegation_notes.md:2598] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:121 :: - todos_detected: 2651
 - [docs/delegation_notes.md:2599] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:126 :: - todos_detected: 2752
-- [docs/delegation_notes.md:2600] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2600] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2601] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2602] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2603] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4186,7 +4186,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2651] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:55 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:197 :: # TODO - the filtering logic should be better checked so that
 - [docs/delegation_notes.md:2652] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:56 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:244 :: # TODO: refactor and use _common.conn_to_ntuple.
 - [docs/delegation_notes.md:2653] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:57 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:591 :: # TODO: rewrite this in C (...but the damn netstat source code
-- [docs/delegation_notes.md:2656] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2656] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2657] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2658] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2659] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4233,7 +4233,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2700] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:121 :: - todos_detected: 2651
 - [docs/delegation_notes.md:2701] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:126 :: - todos_detected: 2752
 - [docs/delegation_notes.md:2702] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:131 :: - todos_detected: 2853
-- [docs/delegation_notes.md:2703] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2703] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2704] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2705] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2706] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4286,7 +4286,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2753] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:54 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:496 :: # TODO rewrite without using procfiles (stat /proc/pid/fd/* and then
 - [docs/delegation_notes.md:2754] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:55 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:197 :: # TODO - the filtering logic should be better checked so that
 - [docs/delegation_notes.md:2755] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:56 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:244 :: # TODO: refactor and use _common.conn_to_ntuple.
-- [docs/delegation_notes.md:2758] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2758] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2759] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2760] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2761] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4334,7 +4334,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2803] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:126 :: - todos_detected: 2752
 - [docs/delegation_notes.md:2804] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:131 :: - todos_detected: 2853
 - [docs/delegation_notes.md:2805] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:136 :: - todos_detected: 2954
-- [docs/delegation_notes.md:2806] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2806] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2807] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2808] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2809] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4386,7 +4386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2855] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:53 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:222 :: # TODO: rewrite this in C (entstat forks, so use truss -f to follow.
 - [docs/delegation_notes.md:2856] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:54 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:496 :: # TODO rewrite without using procfiles (stat /proc/pid/fd/* and then
 - [docs/delegation_notes.md:2857] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:55 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_pssunos.py:197 :: # TODO - the filtering logic should be better checked so that
-- [docs/delegation_notes.md:2860] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2860] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2861] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2862] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2863] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4435,7 +4435,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2906] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:131 :: - todos_detected: 2853
 - [docs/delegation_notes.md:2907] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:136 :: - todos_detected: 2954
 - [docs/delegation_notes.md:2908] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:141 :: - todos_detected: 3055
-- [docs/delegation_notes.md:2909] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2909] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2910] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2911] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2912] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4486,7 +4486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:2957] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:52 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:155 :: # TODO - the filtering logic should be better checked so that
 - [docs/delegation_notes.md:2958] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:53 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:222 :: # TODO: rewrite this in C (entstat forks, so use truss -f to follow.
 - [docs/delegation_notes.md:2959] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:54 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:496 :: # TODO rewrite without using procfiles (stat /proc/pid/fd/* and then
-- [docs/delegation_notes.md:2962] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:2962] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:2963] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:2964] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:2965] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4536,7 +4536,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3009] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:136 :: - todos_detected: 2954
 - [docs/delegation_notes.md:3010] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:141 :: - todos_detected: 3055
 - [docs/delegation_notes.md:3011] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:146 :: - todos_detected: 3156
-- [docs/delegation_notes.md:3012] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3012] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3013] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3014] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3015] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4586,7 +4586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3059] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:51 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:50 :: cext.SSWAP: _common.STATUS_RUNNING,  # TODO what status is this?
 - [docs/delegation_notes.md:3060] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:52 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:155 :: # TODO - the filtering logic should be better checked so that
 - [docs/delegation_notes.md:3061] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:53 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:222 :: # TODO: rewrite this in C (entstat forks, so use truss -f to follow.
-- [docs/delegation_notes.md:3064] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3064] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3065] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3066] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3067] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4637,7 +4637,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3112] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:141 :: - todos_detected: 3055
 - [docs/delegation_notes.md:3113] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:146 :: - todos_detected: 3156
 - [docs/delegation_notes.md:3114] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:151 :: - todos_detected: 3257
-- [docs/delegation_notes.md:3115] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3115] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3116] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3117] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3118] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4686,7 +4686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3161] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:50 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\tags.py:380 :: # TODO: Need to care about 32-bit PPC for ppc64 through 10.2?
 - [docs/delegation_notes.md:3162] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:51 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:50 :: cext.SSWAP: _common.STATUS_RUNNING,  # TODO what status is this?
 - [docs/delegation_notes.md:3163] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:52 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:155 :: # TODO - the filtering logic should be better checked so that
-- [docs/delegation_notes.md:3166] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3166] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3167] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3168] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3169] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4738,7 +4738,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3215] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:146 :: - todos_detected: 3156
 - [docs/delegation_notes.md:3216] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:151 :: - todos_detected: 3257
 - [docs/delegation_notes.md:3217] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:156 :: - todos_detected: 3358
-- [docs/delegation_notes.md:3218] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3218] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3219] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3220] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3221] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4786,7 +4786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3263] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:49 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:32 :: # TODO: Can we normalize the name and extra name?
 - [docs/delegation_notes.md:3264] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:50 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\tags.py:380 :: # TODO: Need to care about 32-bit PPC for ppc64 through 10.2?
 - [docs/delegation_notes.md:3265] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:51 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\psutil\_psaix.py:50 :: cext.SSWAP: _common.STATUS_RUNNING,  # TODO what status is this?
-- [docs/delegation_notes.md:3268] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3268] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3269] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3270] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3271] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4839,7 +4839,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3318] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:151 :: - todos_detected: 3257
 - [docs/delegation_notes.md:3319] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:156 :: - todos_detected: 3358
 - [docs/delegation_notes.md:3320] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:161 :: - todos_detected: 3461
-- [docs/delegation_notes.md:3321] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3321] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3322] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3323] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3324] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4886,7 +4886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3365] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:48 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:29 :: # TODO: Can we test whether something is contained within a requirement?
 - [docs/delegation_notes.md:3366] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:49 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:32 :: # TODO: Can we normalize the name and extra name?
 - [docs/delegation_notes.md:3367] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:50 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\tags.py:380 :: # TODO: Need to care about 32-bit PPC for ppc64 through 10.2?
-- [docs/delegation_notes.md:3370] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3370] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3371] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3372] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3373] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4940,7 +4940,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3421] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:156 :: - todos_detected: 3358
 - [docs/delegation_notes.md:3422] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:161 :: - todos_detected: 3461
 - [docs/delegation_notes.md:3423] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:166 :: - todos_detected: 3562
-- [docs/delegation_notes.md:3424] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3424] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3425] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3426] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3427] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -4986,7 +4986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3467] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:47 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:883 :: description: _Validator[str | None] = _Validator()  # TODO 2.1: can be in body
 - [docs/delegation_notes.md:3468] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:48 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:29 :: # TODO: Can we test whether something is contained within a requirement?
 - [docs/delegation_notes.md:3469] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:49 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:32 :: # TODO: Can we normalize the name and extra name?
-- [docs/delegation_notes.md:3472] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3472] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3473] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3474] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3475] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5041,7 +5041,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3524] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:161 :: - todos_detected: 3461
 - [docs/delegation_notes.md:3525] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:166 :: - todos_detected: 3562
 - [docs/delegation_notes.md:3526] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:171 :: - todos_detected: 3663
-- [docs/delegation_notes.md:3527] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3527] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3528] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3529] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3530] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5086,7 +5086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3569] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:46 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:213 :: # TODO: The spec doesn't say anything about if the keys should be
 - [docs/delegation_notes.md:3570] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:47 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:883 :: description: _Validator[str | None] = _Validator()  # TODO 2.1: can be in body
 - [docs/delegation_notes.md:3571] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:48 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\requirements.py:29 :: # TODO: Can we test whether something is contained within a requirement?
-- [docs/delegation_notes.md:3574] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3574] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3575] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3576] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3577] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5142,7 +5142,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3627] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:166 :: - todos_detected: 3562
 - [docs/delegation_notes.md:3628] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:171 :: - todos_detected: 3663
 - [docs/delegation_notes.md:3629] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:176 :: - todos_detected: 3764
-- [docs/delegation_notes.md:3630] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3630] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3631] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3632] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3633] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5186,7 +5186,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3671] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:45 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\ordlookup\oleaut32.py:13 :: 13: b"VariantTimeToDosDateTime",
 - [docs/delegation_notes.md:3672] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:46 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:213 :: # TODO: The spec doesn't say anything about if the keys should be
 - [docs/delegation_notes.md:3673] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:47 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:883 :: description: _Validator[str | None] = _Validator()  # TODO 2.1: can be in body
-- [docs/delegation_notes.md:3676] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3676] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3677] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3678] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3679] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5243,7 +5243,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3730] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:171 :: - todos_detected: 3663
 - [docs/delegation_notes.md:3731] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:176 :: - todos_detected: 3764
 - [docs/delegation_notes.md:3732] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:181 :: - todos_detected: 3865
-- [docs/delegation_notes.md:3733] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3733] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3734] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3735] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3736] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5286,7 +5286,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3773] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:44 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:237 :: todo.extend(node.iter_child_nodes())
 - [docs/delegation_notes.md:3774] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:45 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\ordlookup\oleaut32.py:13 :: 13: b"VariantTimeToDosDateTime",
 - [docs/delegation_notes.md:3775] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:46 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\packaging\metadata.py:213 :: # TODO: The spec doesn't say anything about if the keys should be
-- [docs/delegation_notes.md:3778] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3778] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3779] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3780] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3781] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5344,7 +5344,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3833] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:176 :: - todos_detected: 3764
 - [docs/delegation_notes.md:3834] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:181 :: - todos_detected: 3865
 - [docs/delegation_notes.md:3835] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:186 :: - todos_detected: 3966
-- [docs/delegation_notes.md:3836] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3836] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3837] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3838] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3839] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5386,7 +5386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3875] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:43 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:235 :: node = todo.popleft()
 - [docs/delegation_notes.md:3876] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:44 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:237 :: todo.extend(node.iter_child_nodes())
 - [docs/delegation_notes.md:3877] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:45 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\ordlookup\oleaut32.py:13 :: 13: b"VariantTimeToDosDateTime",
-- [docs/delegation_notes.md:3880] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3880] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3881] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3882] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3883] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5445,7 +5445,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3936] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:181 :: - todos_detected: 3865
 - [docs/delegation_notes.md:3937] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:186 :: - todos_detected: 3966
 - [docs/delegation_notes.md:3938] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:191 :: - todos_detected: 4067
-- [docs/delegation_notes.md:3939] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3939] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3940] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3941] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3942] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5486,7 +5486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:3977] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:42 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:234 :: while todo:
 - [docs/delegation_notes.md:3978] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:43 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:235 :: node = todo.popleft()
 - [docs/delegation_notes.md:3979] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:44 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:237 :: todo.extend(node.iter_child_nodes())
-- [docs/delegation_notes.md:3982] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:3982] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:3983] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:3984] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:3985] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5546,7 +5546,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4039] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:186 :: - todos_detected: 3966
 - [docs/delegation_notes.md:4040] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:191 :: - todos_detected: 4067
 - [docs/delegation_notes.md:4041] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:196 :: - todos_detected: 4168
-- [docs/delegation_notes.md:4042] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4042] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4043] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4044] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4045] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5586,7 +5586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4079] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:41 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:233 :: todo = deque([self])
 - [docs/delegation_notes.md:4080] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:42 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:234 :: while todo:
 - [docs/delegation_notes.md:4081] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:43 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:235 :: node = todo.popleft()
-- [docs/delegation_notes.md:4084] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4084] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4085] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4086] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4087] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5647,7 +5647,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4142] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:191 :: - todos_detected: 4067
 - [docs/delegation_notes.md:4143] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:196 :: - todos_detected: 4168
 - [docs/delegation_notes.md:4144] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:201 :: - todos_detected: 4269
-- [docs/delegation_notes.md:4145] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4145] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4146] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4147] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4148] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5686,7 +5686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4181] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:40 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:228 :: todo.extend(node.iter_child_nodes())
 - [docs/delegation_notes.md:4182] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:41 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:233 :: todo = deque([self])
 - [docs/delegation_notes.md:4183] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:42 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:234 :: while todo:
-- [docs/delegation_notes.md:4186] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4186] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4187] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4188] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4189] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5748,7 +5748,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4245] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:196 :: - todos_detected: 4168
 - [docs/delegation_notes.md:4246] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:201 :: - todos_detected: 4269
 - [docs/delegation_notes.md:4247] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:206 :: - todos_detected: 4371
-- [docs/delegation_notes.md:4248] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4248] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4249] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4250] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4251] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5786,7 +5786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4283] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:39 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:224 :: node = todo.popleft()
 - [docs/delegation_notes.md:4284] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:40 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:228 :: todo.extend(node.iter_child_nodes())
 - [docs/delegation_notes.md:4285] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:41 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:233 :: todo = deque([self])
-- [docs/delegation_notes.md:4288] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4288] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4289] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4290] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4291] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5849,7 +5849,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4348] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:201 :: - todos_detected: 4269
 - [docs/delegation_notes.md:4349] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:206 :: - todos_detected: 4371
 - [docs/delegation_notes.md:4350] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:211 :: - todos_detected: 4472
-- [docs/delegation_notes.md:4351] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4351] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4352] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4353] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4354] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5886,7 +5886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4385] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:38 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:223 :: while todo:
 - [docs/delegation_notes.md:4386] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:39 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:224 :: node = todo.popleft()
 - [docs/delegation_notes.md:4387] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:40 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:228 :: todo.extend(node.iter_child_nodes())
-- [docs/delegation_notes.md:4390] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4390] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4391] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4392] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4393] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5950,7 +5950,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4451] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:206 :: - todos_detected: 4371
 - [docs/delegation_notes.md:4452] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:211 :: - todos_detected: 4472
 - [docs/delegation_notes.md:4453] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:216 :: - todos_detected: 4573
-- [docs/delegation_notes.md:4454] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4454] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4455] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4456] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4457] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -5986,7 +5986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4487] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:37 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:222 :: todo = deque([self])
 - [docs/delegation_notes.md:4488] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:38 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:223 :: while todo:
 - [docs/delegation_notes.md:4489] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:39 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\jinja2\nodes.py:224 :: node = todo.popleft()
-- [docs/delegation_notes.md:4492] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4492] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4493] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4494] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4495] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6058,7 +6058,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4561] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:211 :: - todos_detected: 4472
 - [docs/delegation_notes.md:4562] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:216 :: - todos_detected: 4573
 - [docs/delegation_notes.md:4563] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:221 :: - todos_detected: 4674
-- [docs/delegation_notes.md:4564] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4564] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4565] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4566] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4567] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6086,7 +6086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4589] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:29 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:336 :: # TODO: test receivers_for(ANY)
 - [docs/delegation_notes.md:4590] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:30 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\click\_termui_impl.py:535 :: # TODO: This never terminates if the passed generator never terminates.
 - [docs/delegation_notes.md:4591] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:31 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\itsdangerous\timed.py:182 :: # TODO: Signature is incompatible because parameters were added
-- [docs/delegation_notes.md:4594] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4594] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4595] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4596] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4597] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6159,7 +6159,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4664] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:216 :: - todos_detected: 4573
 - [docs/delegation_notes.md:4665] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:221 :: - todos_detected: 4674
 - [docs/delegation_notes.md:4666] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:226 :: - todos_detected: 4785
-- [docs/delegation_notes.md:4667] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4667] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4668] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4669] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4670] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6186,7 +6186,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4691] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:28 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:135 :: # TODO no explanation or test for this
 - [docs/delegation_notes.md:4692] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:29 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:336 :: # TODO: test receivers_for(ANY)
 - [docs/delegation_notes.md:4693] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:30 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\click\_termui_impl.py:535 :: # TODO: This never terminates if the passed generator never terminates.
-- [docs/delegation_notes.md:4696] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4696] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4697] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4698] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4699] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6260,7 +6260,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4767] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:221 :: - todos_detected: 4674
 - [docs/delegation_notes.md:4768] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:226 :: - todos_detected: 4785
 - [docs/delegation_notes.md:4769] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:231 :: - todos_detected: 4886
-- [docs/delegation_notes.md:4770] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4770] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4771] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4772] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4773] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6286,7 +6286,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4793] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:27 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:5935 :: # TODO: do not continue here
 - [docs/delegation_notes.md:4794] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:28 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:135 :: # TODO no explanation or test for this
 - [docs/delegation_notes.md:4795] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:29 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:336 :: # TODO: test receivers_for(ANY)
-- [docs/delegation_notes.md:4798] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4798] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4799] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4800] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4801] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6361,7 +6361,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4870] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:226 :: - todos_detected: 4785
 - [docs/delegation_notes.md:4871] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:231 :: - todos_detected: 4886
 - [docs/delegation_notes.md:4872] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:236 :: - todos_detected: 4987
-- [docs/delegation_notes.md:4873] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4873] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4874] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4875] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4876] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6386,7 +6386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4895] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:26 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:3847 :: # TODO: have not encountered such a binary yet;
 - [docs/delegation_notes.md:4896] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:27 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:5935 :: # TODO: do not continue here
 - [docs/delegation_notes.md:4897] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:28 :: - [codemage] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\blinker\base.py:135 :: # TODO no explanation or test for this
-- [docs/delegation_notes.md:4900] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4900] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4901] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4902] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4903] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6462,7 +6462,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4973] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:231 :: - todos_detected: 4886
 - [docs/delegation_notes.md:4974] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:236 :: - todos_detected: 4987
 - [docs/delegation_notes.md:4975] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:241 :: - todos_detected: 5088
-- [docs/delegation_notes.md:4976] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:4976] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:4977] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:4978] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:4979] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6486,7 +6486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:4997] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:25 :: - [archivist] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:71 :: self.assertTrue((project / "docs" / "todos.md").exists())
 - [docs/delegation_notes.md:4998] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:26 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:3847 :: # TODO: have not encountered such a binary yet;
 - [docs/delegation_notes.md:4999] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:27 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:5935 :: # TODO: do not continue here
-- [docs/delegation_notes.md:5002] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5002] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5003] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5004] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5005] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6563,7 +6563,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5076] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:236 :: - todos_detected: 4987
 - [docs/delegation_notes.md:5077] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:241 :: - todos_detected: 5088
 - [docs/delegation_notes.md:5078] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:246 :: - todos_detected: 5430
-- [docs/delegation_notes.md:5079] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5079] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5080] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5081] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5082] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6586,7 +6586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5099] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:24 :: - [devlot] D:\Bosscrafts\BossForgeOS\docs\todos.md:1 :: # Open Todos
 - [docs/delegation_notes.md:5100] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:25 :: - [archivist] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:71 :: self.assertTrue((project / "docs" / "todos.md").exists())
 - [docs/delegation_notes.md:5101] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:26 :: - [devlot] D:\Bosscrafts\BossForgeOS\.venv\Lib\site-packages\pefile.py:3847 :: # TODO: have not encountered such a binary yet;
-- [docs/delegation_notes.md:5104] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5104] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5105] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5106] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5107] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6664,7 +6664,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5179] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:241 :: - todos_detected: 5088
 - [docs/delegation_notes.md:5180] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:246 :: - todos_detected: 5430
 - [docs/delegation_notes.md:5181] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:251 :: - todos_detected: 5531
-- [docs/delegation_notes.md:5182] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5182] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5183] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5184] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5185] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6686,7 +6686,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5201] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:23 :: - [archivist] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:165 :: str(docs_dir / "todos.md"),
 - [docs/delegation_notes.md:5202] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:24 :: - [devlot] D:\Bosscrafts\BossForgeOS\docs\todos.md:1 :: # Open Todos
 - [docs/delegation_notes.md:5203] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:25 :: - [archivist] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:71 :: self.assertTrue((project / "docs" / "todos.md").exists())
-- [docs/delegation_notes.md:5206] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5206] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5207] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5208] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5209] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6765,7 +6765,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5282] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:246 :: - todos_detected: 5430
 - [docs/delegation_notes.md:5283] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:251 :: - todos_detected: 5531
 - [docs/delegation_notes.md:5284] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:256 :: - todos_detected: 5632
-- [docs/delegation_notes.md:5285] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5285] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5286] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5287] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5288] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6786,7 +6786,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5303] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:22 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:156 :: f"- todos_detected: {len(todos)}",
 - [docs/delegation_notes.md:5304] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:23 :: - [archivist] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:165 :: str(docs_dir / "todos.md"),
 - [docs/delegation_notes.md:5305] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:24 :: - [devlot] D:\Bosscrafts\BossForgeOS\docs\todos.md:1 :: # Open Todos
-- [docs/delegation_notes.md:5308] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5308] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5309] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5310] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5311] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6866,7 +6866,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5385] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:251 :: - todos_detected: 5531
 - [docs/delegation_notes.md:5386] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:256 :: - todos_detected: 5632
 - [docs/delegation_notes.md:5387] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:261 :: - todos_detected: 5733
-- [docs/delegation_notes.md:5388] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5388] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5389] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5390] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5391] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6886,7 +6886,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5405] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:21 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:148 :: for item in todos[:100]:
 - [docs/delegation_notes.md:5406] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:22 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:156 :: f"- todos_detected: {len(todos)}",
 - [docs/delegation_notes.md:5407] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:23 :: - [archivist] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:165 :: str(docs_dir / "todos.md"),
-- [docs/delegation_notes.md:5410] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5410] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5411] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5412] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5413] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6967,7 +6967,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5488] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:256 :: - todos_detected: 5632
 - [docs/delegation_notes.md:5489] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:261 :: - todos_detected: 5733
 - [docs/delegation_notes.md:5490] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:266 :: - todos_detected: 5834
-- [docs/delegation_notes.md:5491] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5491] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5492] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5493] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5494] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -6986,7 +6986,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5507] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:20 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:145 :: if todos:
 - [docs/delegation_notes.md:5508] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:21 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:148 :: for item in todos[:100]:
 - [docs/delegation_notes.md:5509] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:22 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:156 :: f"- todos_detected: {len(todos)}",
-- [docs/delegation_notes.md:5512] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5512] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5513] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5514] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:56 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5515] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7068,7 +7068,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5591] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:261 :: - todos_detected: 5733
 - [docs/delegation_notes.md:5592] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:266 :: - todos_detected: 5834
 - [docs/delegation_notes.md:5593] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:271 :: - todos_detected: 5935
-- [docs/delegation_notes.md:5594] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5594] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5595] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5596] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5597] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7086,7 +7086,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5609] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:19 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:139 :: delegation_total += len(todos)
 - [docs/delegation_notes.md:5610] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:20 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:145 :: if todos:
 - [docs/delegation_notes.md:5611] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:21 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:148 :: for item in todos[:100]:
-- [docs/delegation_notes.md:5614] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5614] - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5615] - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5616] - [archivist] D:\Bosscrafts\BossForgeOS\README.md:104 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5617] - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7169,7 +7169,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5694] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:266 :: - todos_detected: 5834
 - [docs/delegation_notes.md:5695] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:271 :: - todos_detected: 5935
 - [docs/delegation_notes.md:5696] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:276 :: - todos_detected: 6036
-- [docs/delegation_notes.md:5697] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5697] - [codemage] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:4 :: - [codemage] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5698] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:5 :: - [devlot] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5699] - [archivist] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:6 :: - [archivist] D:\Bosscrafts\BossForgeOS\README.md:55 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5700] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:7 :: - [devlot] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7186,107 +7186,107 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:5711] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:18 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:138 :: todos = self._collect_todos(project)
 - [docs/delegation_notes.md:5712] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:19 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:139 :: delegation_total += len(todos)
 - [docs/delegation_notes.md:5713] - [devlot] D:\Bosscrafts\BossForgeOS\docs\delegation_notes.md:20 :: - [devlot] D:\Bosscrafts\BossForgeOS\core\archivist_agent.py:145 :: if todos:
-- [docs/delegation_notes.md:5716] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:5716] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:5718] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:5720] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:104 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:5723] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
 - [docs/delegation_notes.md:5726] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:61 :: - Read current todo list status before starting each new step.
 - [docs/delegation_notes.md:5729] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\coqui--XTTS-v2\vocab.json:1401 :: "todo": 1191,
 - [docs/delegation_notes.md:5732] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\coqui--XTTS-v2\vocab.json:1444 :: "todos": 1234,
-- [docs/delegation_notes.md:5735] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:5591 :: "ĠTODO": 5343,
-- [docs/delegation_notes.md:5738] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:12052 :: "Ġtodo": 11804,
+- [docs/delegation_notes.md:5735] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:5591 :: "Ä TODO": 5343,
+- [docs/delegation_notes.md:5738] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:12052 :: "Ä todo": 11804,
 - [docs/delegation_notes.md:5741] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:14980 :: "TODO": 14732,
-- [docs/delegation_notes.md:5744] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:15767 :: "Ġtodos": 15519,
+- [docs/delegation_notes.md:5744] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:15767 :: "Ä todos": 15519,
 - [docs/delegation_notes.md:5747] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:17618 :: "todo": 17370,
 - [docs/delegation_notes.md:5750] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:24424 :: "Todo": 24176,
-- [docs/delegation_notes.md:5753] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:25652 :: "ĠTodo": 25404,
-- [docs/delegation_notes.md:5756] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:27723 :: "ĠFIXME": 27475,
+- [docs/delegation_notes.md:5753] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:25652 :: "Ä Todo": 25404,
+- [docs/delegation_notes.md:5756] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:27723 :: "Ä FIXME": 27475,
 - [docs/delegation_notes.md:5759] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:42395 :: "Todos": 42147,
 - [docs/delegation_notes.md:5762] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:43781 :: ".ToDouble": 43533,
 - [docs/delegation_notes.md:5765] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:49436 :: "todos": 49188,
 - [docs/delegation_notes.md:5768] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:54230 :: "(todo": 53982,
 - [docs/delegation_notes.md:5771] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:55623 :: ".todo": 55375,
-- [docs/delegation_notes.md:5774] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:57757 :: "ĠmÃ©todo": 57509,
-- [docs/delegation_notes.md:5777] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:58427 :: "Ġmetodo": 58179,
-- [docs/delegation_notes.md:5780] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:63479 :: "ĠTodos": 63231,
+- [docs/delegation_notes.md:5774] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:57757 :: "Ä mÃƒÂ©todo": 57509,
+- [docs/delegation_notes.md:5777] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:58427 :: "Ä metodo": 58179,
+- [docs/delegation_notes.md:5780] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:63479 :: "Ä Todos": 63231,
 - [docs/delegation_notes.md:5783] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:64731 :: "toDouble": 64483,
-- [docs/delegation_notes.md:5786] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:67301 :: "ĠToDo": 67053,
+- [docs/delegation_notes.md:5786] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:67301 :: "Ä ToDo": 67053,
 - [docs/delegation_notes.md:5789] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:72256 :: ".toDouble": 72008,
-- [docs/delegation_notes.md:5792] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:72512 :: "ĠTBD": 72264,
+- [docs/delegation_notes.md:5792] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:72512 :: "Ä TBD": 72264,
 - [docs/delegation_notes.md:5795] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:76122 :: ".todos": 75874,
 - [docs/delegation_notes.md:5798] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:77245 :: "ToDo": 76997,
-- [docs/delegation_notes.md:5801] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:80624 :: "ĠMÃ©todo": 80376,
+- [docs/delegation_notes.md:5801] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:80624 :: "Ä MÃƒÂ©todo": 80376,
 - [docs/delegation_notes.md:5804] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:81267 :: "FIXME": 81019,
 - [docs/delegation_notes.md:5807] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:87709 :: "_TODO": 87461,
 - [docs/delegation_notes.md:5810] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:87934 :: "_todo": 87686,
 - [docs/delegation_notes.md:5813] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:91236 :: ".TODO": 90988,
 - [docs/delegation_notes.md:5816] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:93462 :: "/todo": 93214,
-- [docs/delegation_notes.md:5819] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:94904 :: "ĠMetodo": 94656,
+- [docs/delegation_notes.md:5819] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\tokenizer.json:94904 :: "Ä Metodo": 94656,
 - [docs/delegation_notes.md:5822] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-7B-Instruct-AWQ\vocab.json:1 :: {"!":0,"\"":1,"#":2,"$":3,"%":4,"&":5,"'":6,"(":7,")":8,"*":9,"+":10,",":11,"-":12,".":13,"/":14,"0":15,"1":16,"2":17,"3":18,"4":19,"5":20,"6":21,"7":22,"8":23,"9":24,":":25,";":26,"<":27,"=":28,">":29,"?":30,"@":31,"A":32,"B":33,"C":34,"D"
-- [docs/delegation_notes.md:5824] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:5591 :: "ĠTODO": 5343,
-- [docs/delegation_notes.md:5827] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:12052 :: "Ġtodo": 11804,
+- [docs/delegation_notes.md:5824] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:5591 :: "Ä TODO": 5343,
+- [docs/delegation_notes.md:5827] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:12052 :: "Ä todo": 11804,
 - [docs/delegation_notes.md:5830] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:14980 :: "TODO": 14732,
-- [docs/delegation_notes.md:5833] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:15767 :: "Ġtodos": 15519,
+- [docs/delegation_notes.md:5833] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:15767 :: "Ä todos": 15519,
 - [docs/delegation_notes.md:5836] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:17618 :: "todo": 17370,
 - [docs/delegation_notes.md:5839] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:24424 :: "Todo": 24176,
-- [docs/delegation_notes.md:5842] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:25652 :: "ĠTodo": 25404,
-- [docs/delegation_notes.md:5845] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:27723 :: "ĠFIXME": 27475,
+- [docs/delegation_notes.md:5842] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:25652 :: "Ä Todo": 25404,
+- [docs/delegation_notes.md:5845] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:27723 :: "Ä FIXME": 27475,
 - [docs/delegation_notes.md:5848] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:42395 :: "Todos": 42147,
 - [docs/delegation_notes.md:5851] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:43781 :: ".ToDouble": 43533,
 - [docs/delegation_notes.md:5854] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:49436 :: "todos": 49188,
 - [docs/delegation_notes.md:5857] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:54230 :: "(todo": 53982,
 - [docs/delegation_notes.md:5860] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:55623 :: ".todo": 55375,
-- [docs/delegation_notes.md:5863] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:57757 :: "ĠmÃ©todo": 57509,
-- [docs/delegation_notes.md:5866] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:58427 :: "Ġmetodo": 58179,
-- [docs/delegation_notes.md:5869] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:63479 :: "ĠTodos": 63231,
+- [docs/delegation_notes.md:5863] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:57757 :: "Ä mÃƒÂ©todo": 57509,
+- [docs/delegation_notes.md:5866] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:58427 :: "Ä metodo": 58179,
+- [docs/delegation_notes.md:5869] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:63479 :: "Ä Todos": 63231,
 - [docs/delegation_notes.md:5872] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:64731 :: "toDouble": 64483,
-- [docs/delegation_notes.md:5875] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:67301 :: "ĠToDo": 67053,
+- [docs/delegation_notes.md:5875] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:67301 :: "Ä ToDo": 67053,
 - [docs/delegation_notes.md:5878] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:72256 :: ".toDouble": 72008,
-- [docs/delegation_notes.md:5881] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:72512 :: "ĠTBD": 72264,
+- [docs/delegation_notes.md:5881] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:72512 :: "Ä TBD": 72264,
 - [docs/delegation_notes.md:5884] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:76122 :: ".todos": 75874,
 - [docs/delegation_notes.md:5887] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:77245 :: "ToDo": 76997,
-- [docs/delegation_notes.md:5890] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:80624 :: "ĠMÃ©todo": 80376,
+- [docs/delegation_notes.md:5890] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:80624 :: "Ä MÃƒÂ©todo": 80376,
 - [docs/delegation_notes.md:5893] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:81267 :: "FIXME": 81019,
 - [docs/delegation_notes.md:5896] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:87709 :: "_TODO": 87461,
 - [docs/delegation_notes.md:5899] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:87934 :: "_todo": 87686,
 - [docs/delegation_notes.md:5902] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:91236 :: ".TODO": 90988,
 - [docs/delegation_notes.md:5905] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:93462 :: "/todo": 93214,
-- [docs/delegation_notes.md:5908] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:94904 :: "ĠMetodo": 94656,
+- [docs/delegation_notes.md:5908] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\tokenizer.json:94904 :: "Ä Metodo": 94656,
 - [docs/delegation_notes.md:5911] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-14B-Instruct-AWQ\vocab.json:1 :: {"!":0,"\"":1,"#":2,"$":3,"%":4,"&":5,"'":6,"(":7,")":8,"*":9,"+":10,",":11,"-":12,".":13,"/":14,"0":15,"1":16,"2":17,"3":18,"4":19,"5":20,"6":21,"7":22,"8":23,"9":24,":":25,";":26,"<":27,"=":28,">":29,"?":30,"@":31,"A":32,"B":33,"C":34,"D"
-- [docs/delegation_notes.md:5913] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:5591 :: "ĠTODO": 5343,
-- [docs/delegation_notes.md:5916] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:12052 :: "Ġtodo": 11804,
+- [docs/delegation_notes.md:5913] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:5591 :: "Ä TODO": 5343,
+- [docs/delegation_notes.md:5916] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:12052 :: "Ä todo": 11804,
 - [docs/delegation_notes.md:5919] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:14980 :: "TODO": 14732,
-- [docs/delegation_notes.md:5922] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:15767 :: "Ġtodos": 15519,
+- [docs/delegation_notes.md:5922] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:15767 :: "Ä todos": 15519,
 - [docs/delegation_notes.md:5925] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:17618 :: "todo": 17370,
 - [docs/delegation_notes.md:5928] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:24424 :: "Todo": 24176,
-- [docs/delegation_notes.md:5931] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:25652 :: "ĠTodo": 25404,
-- [docs/delegation_notes.md:5934] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:27723 :: "ĠFIXME": 27475,
+- [docs/delegation_notes.md:5931] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:25652 :: "Ä Todo": 25404,
+- [docs/delegation_notes.md:5934] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:27723 :: "Ä FIXME": 27475,
 - [docs/delegation_notes.md:5937] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:42395 :: "Todos": 42147,
 - [docs/delegation_notes.md:5940] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:43781 :: ".ToDouble": 43533,
 - [docs/delegation_notes.md:5943] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:49436 :: "todos": 49188,
 - [docs/delegation_notes.md:5946] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:54230 :: "(todo": 53982,
 - [docs/delegation_notes.md:5949] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:55623 :: ".todo": 55375,
-- [docs/delegation_notes.md:5952] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:57757 :: "ĠmÃ©todo": 57509,
-- [docs/delegation_notes.md:5955] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:58427 :: "Ġmetodo": 58179,
-- [docs/delegation_notes.md:5958] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:63479 :: "ĠTodos": 63231,
+- [docs/delegation_notes.md:5952] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:57757 :: "Ä mÃƒÂ©todo": 57509,
+- [docs/delegation_notes.md:5955] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:58427 :: "Ä metodo": 58179,
+- [docs/delegation_notes.md:5958] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:63479 :: "Ä Todos": 63231,
 - [docs/delegation_notes.md:5961] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:64731 :: "toDouble": 64483,
-- [docs/delegation_notes.md:5964] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:67301 :: "ĠToDo": 67053,
+- [docs/delegation_notes.md:5964] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:67301 :: "Ä ToDo": 67053,
 - [docs/delegation_notes.md:5967] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:72256 :: ".toDouble": 72008,
-- [docs/delegation_notes.md:5970] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:72512 :: "ĠTBD": 72264,
+- [docs/delegation_notes.md:5970] - [devlot][low] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:72512 :: "Ä TBD": 72264,
 - [docs/delegation_notes.md:5973] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:76122 :: ".todos": 75874,
 - [docs/delegation_notes.md:5976] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:77245 :: "ToDo": 76997,
-- [docs/delegation_notes.md:5979] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:80624 :: "ĠMÃ©todo": 80376,
+- [docs/delegation_notes.md:5979] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:80624 :: "Ä MÃƒÂ©todo": 80376,
 - [docs/delegation_notes.md:5982] - [codemage][high] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:81267 :: "FIXME": 81019,
 - [docs/delegation_notes.md:5985] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:87709 :: "_TODO": 87461,
 - [docs/delegation_notes.md:5988] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:87934 :: "_todo": 87686,
 - [docs/delegation_notes.md:5991] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:91236 :: ".TODO": 90988,
 - [docs/delegation_notes.md:5994] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:93462 :: "/todo": 93214,
-- [docs/delegation_notes.md:5997] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:94904 :: "ĠMetodo": 94656,
+- [docs/delegation_notes.md:5997] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\tokenizer.json:94904 :: "Ä Metodo": 94656,
 - [docs/delegation_notes.md:6000] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\Qwen--Qwen2.5-Coder-7B-Instruct-AWQ\vocab.json:1 :: {"!":0,"\"":1,"#":2,"$":3,"%":4,"&":5,"'":6,"(":7,")":8,"*":9,"+":10,",":11,"-":12,".":13,"/":14,"0":15,"1":16,"2":17,"3":18,"4":19,"5":20,"6":21,"7":22,"8":23,"9":24,":":25,";":26,"<":27,"=":28,">":29,"?":30,"@":31,"A":32,"B":33,"C":34,"D"
-- [docs/delegation_notes.md:6002] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:17229 :: "▁TODO": 10188,
-- [docs/delegation_notes.md:6005] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:20394 :: "▁todo": 13353,
-- [docs/delegation_notes.md:6008] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:22729 :: "▁todos": 15688,
-- [docs/delegation_notes.md:6013] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:6002] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:17229 :: "â–TODO": 10188,
+- [docs/delegation_notes.md:6005] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:20394 :: "â–todo": 13353,
+- [docs/delegation_notes.md:6008] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.models\runeforge_core-7b\tokenizer.json:22729 :: "â–todos": 15688,
+- [docs/delegation_notes.md:6013] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:6015] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6017] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:104 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:6020] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7386,7 +7386,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:6295] - [codemage][high] D:\Bosscrafts\BossForgeOS\.venv-xtts\Lib\site-packages\fontTools\merge\tables.py:238 :: )  # FIXME? Appears irreconcilable
 - [docs/delegation_notes.md:6298] - [codemage][medium] D:\Bosscrafts\BossForgeOS\.venv-xtts\Lib\site-packages\fontTools\merge\unicode.py:7 :: # TODO Move me to unicodedata module and autogenerate.
 - [docs/delegation_notes.md:6301] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.venv-xtts\Lib\site-packages\fontTools\merge\__init__.py:169 :: # TODO: Add an option to disable this?
-- [docs/delegation_notes.md:6306] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:6306] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:6308] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6310] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:104 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:6313] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7486,7 +7486,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:6594] - [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:291 :: - todos_detected: 5721
 - [docs/delegation_notes.md:6597] - [devlot][medium] D:\Bosscrafts\BossForgeOS\docs\todos.md:1 :: # Open Todos
 - [docs/delegation_notes.md:6599] - [archivist][medium] D:\Bosscrafts\BossForgeOS\tests\test_archivist_agent.py:73 :: self.assertTrue((project / "docs" / "todos.md").exists())
-- [docs/delegation_notes.md:6604] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:6604] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:6606] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6608] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:104 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:6611] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7533,7 +7533,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:6733] - [devlot][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:6736] - [codemage][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:6739] - [devlot][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:6745] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:6745] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:6747] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6749] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:6752] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7586,7 +7586,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:6893] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:6896] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:6899] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:6905] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:6905] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:6907] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:6909] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:6912] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7639,7 +7639,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7053] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7056] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7059] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7065] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7065] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7067] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7069] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:7072] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7692,7 +7692,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7213] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7216] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7219] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7225] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7225] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7227] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7229] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:7232] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7745,7 +7745,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7373] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7376] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7379] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7385] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7385] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7387] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7389] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:7392] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7798,7 +7798,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7533] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7536] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7539] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7545] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7545] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7547] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7549] - [codemage][high] D:\Bosscrafts\BossForgeOS\README.md:51 :: `bforge agent test_sentinel scan_test_debt` scans `tests/` and known test files for TODO/FIXME debt.
 - [docs/delegation_notes.md:7552] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:110 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
@@ -7851,7 +7851,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7693] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7696] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7699] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7705] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7705] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7707] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7709] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:7712] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7902,7 +7902,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:7848] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:7851] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:7854] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:7860] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:7860] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:7862] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:7864] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:7867] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -7953,7 +7953,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:8003] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:8006] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:8009] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:8015] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:8015] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:8017] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:8019] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:8022] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -8004,7 +8004,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:8158] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:8161] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:8164] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:8170] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:8170] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:8172] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:8174] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:8177] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -8055,7 +8055,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:8313] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:8316] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:8319] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:8325] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:8325] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:8327] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:8329] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:8332] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -8106,7 +8106,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:8468] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:31 :: "args": {"language": "python", "content": "print('x')\n# TODO: improve"},
 - [docs/delegation_notes.md:8471] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:50 :: "# Ritual Plan\n\n1. Do this\n2. Do that\n\nTODO: fill missing step\nMUST keep tests passing\n",
 - [docs/delegation_notes.md:8474] - [test_sentinel][medium] D:\Bosscrafts\BossForgeOS\tests\test_codemage_agent.py:62 :: self.assertGreaterEqual(len(read.get("todo_or_open", [])), 1)
-- [docs/delegation_notes.md:8480] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:8480] - [codemage][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:8482] - [devlot][medium] D:\Bosscrafts\BossForgeOS\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:8484] - [archivist][medium] D:\Bosscrafts\BossForgeOS\README.md:140 :: - Writes daily ledger entries and delegation notes for unfinished TODOs.
 - [docs/delegation_notes.md:8487] - [devlot][medium] D:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:59 :: - If any tools are available to manage the above todo list, use it to track progress through this checklist.
@@ -9182,7 +9182,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:11795] - [runeforge] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:67 :: "todo_ignore_dir_names": [".git", ".venv", ".models", ".runtime"]
 - [docs/delegation_notes.md:11796] - [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:73 :: - TODO detection is pattern-based (not deep semantic intent)
 - [docs/delegation_notes.md:11797] - [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:83 :: - [docs/todos.md](todos.md): Actionable todos
-- [docs/delegation_notes.md:11798] - [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:11798] - [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:11799] - [devlot] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:11800] - [archivist] D:\Bosscrafts\BossForgeOS\docs\CHANGELOG.md:6 :: - Major documentation update: README, archivistREADME, architecture, GUI audit, todos, SoundStage docs
 - [docs/delegation_notes.md:11801] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
@@ -9402,7 +9402,7 @@ Generated: 2026-04-16 14:25:39
 - [docs/delegation_notes.md:12272] - [runeforge] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:67 :: "todo_ignore_dir_names": [".git", ".venv", ".models", ".runtime"]
 - [docs/delegation_notes.md:12273] - [devlot] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:73 :: - TODO detection is pattern-based (not deep semantic intent)
 - [docs/delegation_notes.md:12274] - [archivist] D:\Bosscrafts\BossForgeOS\docs\archivistREADME.md:83 :: - [docs/todos.md](todos.md): Actionable todos
-- [docs/delegation_notes.md:12275] - [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or follow‑up tasks
+- [docs/delegation_notes.md:12275] - [codemage] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:285 :: CodeMage: generates TODOs or followâ€‘up tasks
 - [docs/delegation_notes.md:12276] - [devlot] D:\Bosscrafts\BossForgeOS\docs\BossCrafts_BossForgeOS_bp.txt:1145 :: # TODO: handle $data.command and $data.args here
 - [docs/delegation_notes.md:12277] - [archivist] D:\Bosscrafts\BossForgeOS\docs\CHANGELOG.md:6 :: - Major documentation update: README, archivistREADME, architecture, GUI audit, todos, SoundStage docs
 - [docs/delegation_notes.md:12278] - [devlot] D:\Bosscrafts\BossForgeOS\docs\daily_ledger.md:6 :: - todos_detected: 326
@@ -10230,8 +10230,8 @@ Generated: 2026-04-16 14:25:39
 - [extension/electron-shell/node_modules/has-property-descriptors/CHANGELOG.md:33] - read me [`dd73dce`](https://github.com/inspect-js/has-property-descriptors/commit/dd73dce09d89d0f7a4a6e3b1e562a506f979a767)
 - [extension/electron-shell/node_modules/has-property-descriptors/CHANGELOG.md:34] - npm init [`c1e6557`](https://github.com/inspect-js/has-property-descriptors/commit/c1e655779de632d68cb944c50da6b71bcb7b8c85)
 - [extension/electron-shell/node_modules/has-property-descriptors/CHANGELOG.md:35] - Only apps should have lockfiles [`e72f7c6`](https://github.com/inspect-js/has-property-descriptors/commit/e72f7c68de534b2d273ee665f8b18d4ecc7f70b0)
-- [extension/electron-shell/node_modules/http-cache-semantics/README.md:228] -   `policy` — A new `CachePolicy` with HTTP headers updated from `revalidationResponse`. You can always replace the old cached `CachePolicy` with the new one.
-- [extension/electron-shell/node_modules/http-cache-semantics/README.md:229] -   `modified` — Boolean indicating whether the response body has changed, and you should use the new response body sent by the server.
+- [extension/electron-shell/node_modules/http-cache-semantics/README.md:228] -   `policy` â€” A new `CachePolicy` with HTTP headers updated from `revalidationResponse`. You can always replace the old cached `CachePolicy` with the new one.
+- [extension/electron-shell/node_modules/http-cache-semantics/README.md:229] -   `modified` â€” Boolean indicating whether the response body has changed, and you should use the new response body sent by the server.
 - [extension/electron-shell/node_modules/http-cache-semantics/README.md:239] -   [ImageOptim API](https://imageoptim.com/api), [make-fetch-happen](https://github.com/zkat/make-fetch-happen), [cacheable-request](https://www.npmjs.com/package/cacheable-request) ([got](https://www.npmjs.com/package/got)), [npm/registry-fetch](https://github.com/npm/registry-fetch), [etc.](https://github.com/kornelski/http-cache-semantics/network/dependents)
 - [extension/electron-shell/node_modules/http-cache-semantics/README.md:240] -   [Rust version of this library](https://lib.rs/crates/http-cache-semantics).
 - [extension/electron-shell/node_modules/http-cache-semantics/README.md:244] -   `Cache-Control` response header with all the quirks.
@@ -10299,7 +10299,7 @@ Generated: 2026-04-16 14:25:39
 - [extension/electron-shell/node_modules/keyv/README.md:148] - [keyv-dynamodb](https://www.npmjs.com/package/keyv-dynamodb) - DynamoDB storage adapter for Keyv
 - [extension/electron-shell/node_modules/keyv/README.md:149] - [keyv-lru](https://www.npmjs.com/package/keyv-lru) - LRU storage adapter for Keyv
 - [extension/electron-shell/node_modules/keyv/README.md:150] - [keyv-null](https://www.npmjs.com/package/keyv-null) - Null storage adapter for Keyv
-- [extension/electron-shell/node_modules/keyv/README.md:151] - [keyv-firestore ](https://github.com/goto-bus-stop/keyv-firestore) – Firebase Cloud Firestore adapter for Keyv
+- [extension/electron-shell/node_modules/keyv/README.md:151] - [keyv-firestore ](https://github.com/goto-bus-stop/keyv-firestore) â€“ Firebase Cloud Firestore adapter for Keyv
 - [extension/electron-shell/node_modules/keyv/README.md:152] - [keyv-mssql](https://github.com/pmorgan3/keyv-mssql) - Microsoft Sql Server adapter for Keyv
 - [extension/electron-shell/node_modules/keyv/README.md:153] - [keyv-azuretable](https://github.com/howlowck/keyv-azuretable) - Azure Table Storage/API adapter for Keyv
 - [extension/electron-shell/node_modules/keyv/README.md:154] - [keyv-arango](https://github.com/TimMikeladze/keyv-arango) - ArangoDB storage adapter for Keyv
@@ -10316,7 +10316,7 @@ Generated: 2026-04-16 14:25:39
 - [extension/electron-shell/node_modules/normalize-url/readme.md:274] - [compare-urls](https://github.com/sindresorhus/compare-urls) - Compare URLs by first normalizing them
 - [extension/electron-shell/node_modules/p-cancelable/readme.md:151] - [p-progress](https://github.com/sindresorhus/p-progress) - Create a promise that reports progress
 - [extension/electron-shell/node_modules/p-cancelable/readme.md:152] - [p-lazy](https://github.com/sindresorhus/p-lazy) - Create a lazy promise that defers execution until `.then()` or `.catch()` is called
-- [extension/electron-shell/node_modules/p-cancelable/readme.md:153] - [More…](https://github.com/sindresorhus/promise-fun)
+- [extension/electron-shell/node_modules/p-cancelable/readme.md:153] - [Moreâ€¦](https://github.com/sindresorhus/promise-fun)
 - [extension/electron-shell/node_modules/progress/Readme.md:33] - `curr` current completed index
 - [extension/electron-shell/node_modules/progress/Readme.md:34] - `total` total number of ticks to complete
 - [extension/electron-shell/node_modules/progress/Readme.md:35] - `width` the displayed width of the progress bar defaulting to total
@@ -10380,9 +10380,9 @@ Generated: 2026-04-16 14:25:39
 - [extension/electron-shell/node_modules/type-fest/readme.md:388] - [`NonNullable<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1446-L1449) - Exclude `null` and `undefined` from `T`.
 - [extension/electron-shell/node_modules/type-fest/readme.md:427] - [`Parameters<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1451-L1454) - Obtain the parameters of a function type in a tuple.
 - [extension/electron-shell/node_modules/type-fest/readme.md:455] - [`ConstructorParameters<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1456-L1459) - Obtain the parameters of a constructor function type in a tuple.
-- [extension/electron-shell/node_modules/type-fest/readme.md:503] - [`ReturnType<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1461-L1464) – Obtain the return type of a function type.
-- [extension/electron-shell/node_modules/type-fest/readme.md:538] - [`InstanceType<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1466-L1469) – Obtain the instance type of a constructor function type.
-- [extension/electron-shell/node_modules/type-fest/readme.md:591] - [`Omit<T, K>`](https://github.com/microsoft/TypeScript/blob/71af02f7459dc812e85ac31365bfe23daf14b4e4/src/lib/es5.d.ts#L1446) – Constructs a type by picking all properties from T and then removing K.
+- [extension/electron-shell/node_modules/type-fest/readme.md:503] - [`ReturnType<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1461-L1464) â€“ Obtain the return type of a function type.
+- [extension/electron-shell/node_modules/type-fest/readme.md:538] - [`InstanceType<T>`](https://github.com/Microsoft/TypeScript/blob/2961bc3fc0ea1117d4e53bc8e97fa76119bc33e3/src/lib/es5.d.ts#L1466-L1469) â€“ Obtain the instance type of a constructor function type.
+- [extension/electron-shell/node_modules/type-fest/readme.md:591] - [`Omit<T, K>`](https://github.com/microsoft/TypeScript/blob/71af02f7459dc812e85ac31365bfe23daf14b4e4/src/lib/es5.d.ts#L1446) â€“ Constructs a type by picking all properties from T and then removing K.
 - [extension/electron-shell/node_modules/type-fest/readme.md:624] - [Sindre Sorhus](https://github.com/sindresorhus)
 - [extension/electron-shell/node_modules/type-fest/readme.md:625] - [Jarek Radosz](https://github.com/CvX)
 - [extension/electron-shell/node_modules/type-fest/readme.md:626] - [Dimitri Benin](https://github.com/BendingBender)
@@ -10816,13 +10816,13 @@ Generated: 2026-04-16 14:25:39
 - [README.md:121] - [docs/AgentForge_readme.md](docs/AgentForge_readme.md): Requirements and guardrails for forging Prime and normalized agents
 - [README.md:122] - [docs/bossgate_connector.md](docs/bossgate_connector.md): BossGate connector purpose and roadmap
 - [README.md:123] - [docs/bossgate_protocol.md](docs/bossgate_protocol.md): BossGate transport/protocol draft
-- [README.md:124] - [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [README.md:124] - [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [README.md:125] - [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md): GUI feature audit
 - [README.md:126] - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
 - [README.md:127] - [docs/CHANGELOG.md](docs/CHANGELOG.md): Changelog
 - [README.md:128] - [docs/decisions.md](docs/decisions.md): Decision log
 - [README.md:129] - [docs/archivistREADME.md](docs/archivistREADME.md): Archivist stewardship
-- [README.md:130] - [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
+- [README.md:130] - [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
 - [README.md:135] - `bforge os snapshot`
 - [README.md:137] - Uninstall global shims:
 - [README.md:145] - Polls on a slower cadence (default 45s) to avoid noisy overhead.
@@ -11038,3 +11038,4 @@ Generated: 2026-04-16 14:25:39
 2. Runtime contract docs (launcher/ui/bus/scripts/tests)
 3. Connector readiness matrices
 4. Governance metadata (ownership/stability/freshness)
+

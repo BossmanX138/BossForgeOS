@@ -28,7 +28,7 @@ Durable, inspectable IPC model (no sockets/brokers required)
 - core/connectors/bossgate_connector.py: BossGate prototype for secure transport discovery and endpoint scanning
 - core/state/agent_memory_store.py: SQLite-backed interaction memory for agents (users, employers, projects, counterpart agents)
 - modules/os_snapshot.py: disk usage, Docker/WSL VHD snapshot
-- core/soundstage/BossForgeOS_SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics, HTTP API
+- modules/soundforge/soundstage/BossForgeOS_SoundStage: deterministic sound event engine, system sound replacement, rollback, diagnostics, HTTP API
 - ui/control_hall.py: Flask server, web dashboard (agent status, commands, events, sound schemes, onboarding, scheduling, CI/CD, collaboration, analytics)
 - extension/: VS Code extension (onboarding, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard)
 
@@ -50,7 +50,7 @@ Durable, inspectable IPC model (no sockets/brokers required)
 - [README.md](../README.md): Project overview
 - [docs/bossgate_connector.md](bossgate_connector.md): BossGate connector spec
 - [docs/bossgate_protocol.md](bossgate_protocol.md): BossGate protocol draft
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](../core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](../modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
 - [docs/todos.md](todos.md): Actionable todos
 - [docs/CHANGELOG.md](CHANGELOG.md): Changelog

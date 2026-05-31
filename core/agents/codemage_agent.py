@@ -38,6 +38,9 @@ from core.adapters.bossgate_hands_on_adapter import BossGateHandsOnAdapter
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 
 from core.agent_registry import register_agent
+from core.agents.apprentice_axiom import ApprenticeAxiom
+from core.agents.apprentice_bricol import ApprenticeBricol
+from core.agents.apprentice_calibran import ApprenticeCalibran
 
 # GitHubConnector import
 from core.connectors.github_connector import GitHubConnector
@@ -239,6 +242,7 @@ class ModelKeeperCompat:
 # === Apprentice Sub-Agents (from mk1) ===
 
 
+class GuiApprentice:
     def __init__(self):
         self.title = "Vision Weaver"
         self.identity = [
@@ -375,7 +379,7 @@ class CodeMageAgent:
         time.sleep(1)
 
     def crest_animation(self):
-        crest = """
+        crest = r"""
         /\_/\  (BossCrafts Crest)
        ( o.o )
         > ^ <

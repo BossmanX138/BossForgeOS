@@ -26,7 +26,7 @@ TARGET_SIGNATURES = {
     "ass": (
         "a.s.s",
         "ass",
-        "autonomous security system",
+        "anvil secured shuttle",
     ),
     "bossforgeos": (
         "bossforgeos",
@@ -155,12 +155,15 @@ def broadcast_presence(
     stop_event: threading.Event | None = None,
 ) -> None:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    while stop_event is None or not stop_event.is_set():
-        agents = agents_provider() if callable(agents_provider) else []
-        packet = _build_presence_packet(node_id=node_id, agents=agents, target_type="bossgate_connector")
-        s.sendto(packet, ('<broadcast>', BOSSGATE_PORT))
-        time.sleep(max(0.2, float(interval_seconds)))
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        while stop_event is None or not stop_event.is_set():
+            agents = agents_provider() if callable(agents_provider) else []
+            packet = _build_presence_packet(node_id=node_id, agents=agents, target_type="bossgate_connector")
+            s.sendto(packet, ('<broadcast>', BOSSGATE_PORT))
+            time.sleep(max(0.2, float(interval_seconds)))
+    finally:
+        s.close()
 
 
 def broadcast_beacon(node_id: str | None = None, agents_provider: Callable[[], list[dict]] | None = None):
@@ -170,20 +173,23 @@ def broadcast_beacon(node_id: str | None = None, agents_provider: Callable[[], l
 
 def listen_for_beacons(timeout=5):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    s.bind(('', BOSSGATE_PORT))
-    s.settimeout(timeout)
-    found: dict[tuple[str, str], dict[str, Any]] = {}
-    start = time.time()
-    while time.time() - start < timeout:
-        try:
-            data, addr = s.recvfrom(4096)
-            parsed = _parse_presence_packet(data=data, sender_ip=addr[0])
-            if parsed is not None:
-                found[(parsed["address"], parsed["node_id"])] = parsed
-        except socket.timeout:
-            break
-    return list(found.values())
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.bind(('', BOSSGATE_PORT))
+        s.settimeout(timeout)
+        found: dict[tuple[str, str], dict[str, Any]] = {}
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                data, addr = s.recvfrom(4096)
+                parsed = _parse_presence_packet(data=data, sender_ip=addr[0])
+                if parsed is not None:
+                    found[(parsed["address"], parsed["node_id"])] = parsed
+            except socket.timeout:
+                break
+        return list(found.values())
+    finally:
+        s.close()
 
 
 def discover_transfer_targets(timeout=5, assistance_only: bool = False):

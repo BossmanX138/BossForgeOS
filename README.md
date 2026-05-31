@@ -52,7 +52,7 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 
 ## SoundForge Engine
 
-See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForgeOS_SoundStage/README.md) and [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
+See [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md) and [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
 
 SoundForge is the renamed module surface for the legacy SoundStage engine. Existing legacy paths and API routes remain available for compatibility.
 
@@ -121,16 +121,16 @@ SoundForge is the renamed module surface for the legacy SoundStage engine. Exist
 - [docs/AgentForge_readme.md](docs/AgentForge_readme.md): Requirements and guardrails for forging Prime and normalized agents
 - [docs/bossgate_connector.md](docs/bossgate_connector.md): BossGate connector purpose and roadmap
 - [docs/bossgate_protocol.md](docs/bossgate_protocol.md): BossGate transport/protocol draft
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md): GUI feature audit
 - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): Changelog
 - [docs/decisions.md](docs/decisions.md): Decision log
 - [docs/archivistREADME.md](docs/archivistREADME.md): Archivist stewardship
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
 
 ---
-For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `core/soundstage/BossForgeOS_SoundStage/` directories.
+For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `modules/soundforge/soundstage/BossForgeOS_SoundStage/` directories.
 
 - `bforge os snapshot`
 

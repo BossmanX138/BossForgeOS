@@ -71,6 +71,15 @@ class AgentTrace:
         if duration_ms is not None:
             payload["duration_ms"] = float(duration_ms)
         path = self.traces_dir / f"trace_{stamp}.json"
+        if path.exists():
+            # Handle low-resolution clock collisions on fast consecutive writes.
+            suffix = 1
+            while True:
+                candidate = self.traces_dir / f"trace_{stamp}_{suffix}.json"
+                if not candidate.exists():
+                    path = candidate
+                    break
+                suffix += 1
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return path
 

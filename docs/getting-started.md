@@ -8,7 +8,31 @@
 ## Install
 
 1. Install dependencies:
-   - pip install -r requirements.txt
+   - `pip install -r docs/requirements.txt`
+
+## Reproducible Dev Runtime (Windows)
+
+Use this when global `python`/`pip` setup is inconsistent.
+
+1. Create isolated runtime:
+   - `C:\Users\%USERNAME%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m venv .runtime\devpy`
+2. Upgrade packaging tools:
+   - `.runtime\devpy\Scripts\python.exe -m pip install --upgrade pip setuptools wheel`
+3. Install minimum runtime/test dependencies:
+   - `.runtime\devpy\Scripts\python.exe -m pip install flask werkzeug psutil pyyaml pandas duckdb requests msal oauthlib`
+4. Quick import verification:
+   - `.runtime\devpy\Scripts\python.exe -c "import flask, werkzeug, psutil, yaml, pandas, duckdb, requests, msal, oauthlib; print('ok')"`
+
+## Verification Commands
+
+1. DataForge module smoke:
+   - `.runtime\devpy\Scripts\python.exe -m modules.DataForge.main`
+2. Launcher help smoke:
+   - `.runtime\devpy\Scripts\python.exe -m launcher.bossforge_launcher --help`
+3. Full tests:
+   - `.runtime\devpy\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -q`
+4. Strict warning-clean tests:
+   - `.runtime\devpy\Scripts\python.exe -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q`
 
 ## Launch Services
 

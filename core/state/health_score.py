@@ -131,7 +131,11 @@ def score_agent_health(
 
     # ── Factor: recent event activity (last 30 min) ───────────────────
     recent_active = any(
-        (_minutes_since(str(e.get("timestamp", ""))) or 9999) <= 30
+        (
+            (minutes := _minutes_since(str(e.get("timestamp", ""))))
+            is not None
+            and minutes <= 30
+        )
         for e in agent_events
     )
     if recent_active:

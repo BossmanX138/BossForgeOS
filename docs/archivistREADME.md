@@ -79,7 +79,7 @@ Example:
 
 - [README.md](../README.md): Project overview
 - [docs/architecture.md](architecture.md): System architecture
-- [core/soundstage/BossForgeOS_SoundStage/README.md](../core/soundstage/BossForgeOS_SoundStage/README.md): SoundStage
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md](../modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md): SoundStage
 - [docs/gui_coverage_audit.md](gui_coverage_audit.md): GUI audit
 - [docs/todos.md](todos.md): Actionable todos
 - [docs/CHANGELOG.md](CHANGELOG.md): Changelog

@@ -4,6 +4,7 @@ import json
 import math
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -26,6 +27,14 @@ from werkzeug.utils import secure_filename
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from modules.agentforge import service as agentforge_service
+from modules.iconforge import service as iconforge_service
+try:
+    from modules.model_gateway import service as model_gateway_service
+except ModuleNotFoundError:
+    from core.model_gateway import service as model_gateway_service
+from modules.runeforge_voice import service as runeforge_voice_service
+from modules.soundforge import service as soundforge_service
 from core.security.security_sentinel_agent import SecuritySentinelAgent
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
@@ -5932,50 +5941,7 @@ def snapshot():
 
 @app.get("/api/runeforge/voice_status")
 def runeforge_voice_status():
-    pending_path = bus.state / "runeforge_pending_approval.json"
-    runeforge_state_path = bus.state / "runeforge.json"
-
-    pending = None
-    if pending_path.exists():
-        try:
-            payload = json.loads(pending_path.read_text(encoding="utf-8"))
-            if isinstance(payload, dict):
-                pending = payload
-        except (OSError, json.JSONDecodeError):
-            pending = {"error": "invalid pending approval state"}
-
-    last_report = None
-    if runeforge_state_path.exists():
-        try:
-            state = json.loads(runeforge_state_path.read_text(encoding="utf-8"))
-            if isinstance(state, dict):
-                if isinstance(state.get("report"), dict):
-                    last_report = state.get("report")
-                elif isinstance(state.get("execution"), dict) and isinstance(state.get("execution", {}).get("report"), dict):
-                    last_report = state.get("execution", {}).get("report")
-        except (OSError, json.JSONDecodeError):
-            pass
-
-    if last_report is None:
-        events = bus.read_latest_events(limit=120)
-        for item in events:
-            if str(item.get("source", "")).strip() != "runeforge":
-                continue
-            event_name = str(item.get("event", "")).strip()
-            data = item.get("data") if isinstance(item.get("data"), dict) else {}
-            if event_name in {"sentinel_plan_approval_result", "sentinel_recommendations_applied", "os_action_approval_result"}:
-                if isinstance(data.get("report"), dict):
-                    last_report = data.get("report")
-                elif isinstance(data.get("execution"), dict) and isinstance(data.get("execution", {}).get("report"), dict):
-                    last_report = data.get("execution", {}).get("report")
-                else:
-                    last_report = {
-                        "action_type": event_name,
-                        "ok": bool(data.get("ok", True)),
-                    }
-                break
-
-    return jsonify({"ok": True, "pending_approval": pending, "last_report": last_report})
+    return jsonify(runeforge_voice_service.get_voice_status(bus))
 
 
 @app.get("/api/delegation/flow")
@@ -6156,75 +6122,19 @@ def model_endpoints():
 
 @app.get("/api/model/agents")
 def model_agents():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    return jsonify({"agents": gateway.list_agent_profiles()})
+    return jsonify(agentforge_service.list_agent_profiles())
 
 
 @app.post("/api/model/agents/create")
 def model_agents_create():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
-    name = str(payload.get("name", "")).strip()
-    endpoint = str(payload.get("endpoint", "")).strip()
-    system = str(payload.get("system", "You are a helpful specialist agent."))
-    temperature = float(payload.get("temperature", 0.2))
-    max_tokens = int(payload.get("max_tokens", 900))
-    agent_class = str(payload.get("agent_class", "prime")).strip().lower()
-    has_llm_raw = payload.get("has_llm")
-    has_llm = bool(has_llm_raw) if isinstance(has_llm_raw, bool) else None
-    bossgate_enabled_raw = payload.get("bossgate_enabled")
-    bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
-    encrypt_profile_raw = payload.get("encrypt_profile")
-    encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
-    agent_type = str(payload.get("agent_type", "")).strip().lower() or None
-    rank = str(payload.get("rank", "")).strip().lower() or None
-    skills_raw = payload.get("skills")
-    skills = skills_raw if isinstance(skills_raw, list) else None
-    sigils_raw = payload.get("sigils")
-    sigils = sigils_raw if isinstance(sigils_raw, list) else None
-    dispatch_policy_raw = payload.get("dispatch_policy")
-    dispatch_policy = dispatch_policy_raw if isinstance(dispatch_policy_raw, dict) else None
-    personality_wrapper_raw = payload.get("personality_wrapper")
-    personality_wrapper = personality_wrapper_raw if isinstance(personality_wrapper_raw, dict) else None
-    system_wrapper_raw = payload.get("system_wrapper")
-    system_wrapper = system_wrapper_raw if isinstance(system_wrapper_raw, dict) else None
-    instructions_raw = payload.get("instructions")
-    instructions = instructions_raw if isinstance(instructions_raw, dict) else None
-    state_machine_raw = payload.get("state_machine")
-    state_machine = state_machine_raw if isinstance(state_machine_raw, dict) else None
-    custom_icon_path = str(payload.get("custom_icon_path", "")).strip() or None
-
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.create_agent_profile(
-        name,
-        endpoint,
-        system,
-        temperature,
-        max_tokens,
-        agent_class=agent_class,
-        has_llm=has_llm,
-        bossgate_enabled=bossgate_enabled,
-        encrypt_profile=encrypt_profile,
-        agent_type=agent_type,
-        rank=rank,
-        skills=skills,
-        sigils=sigils,
-        dispatch_policy=dispatch_policy,
-        personality_wrapper=personality_wrapper,
-        system_wrapper=system_wrapper,
-        instructions=instructions,
-        state_machine=state_machine,
-        custom_icon_path=custom_icon_path,
-    )
+    result = agentforge_service.create_agent_profile(payload)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/upload")
 def agentforge_icon_upload():
-    from core.icons.icon_forge import IconForge
-
     uploaded = request.files.get("icon")
     if uploaded is None:
         return jsonify({"ok": False, "message": "icon file is required"}), 400
@@ -6249,7 +6159,7 @@ def agentforge_icon_upload():
         final_path = icon_dir / f"{stem}_{suffix}.ico"
         uploaded.save(source_path)
 
-        forge = IconForge(PROJECT_ROOT)
+        forge = iconforge_service.get_forge(PROJECT_ROOT)
         result = forge.create_icon_from_image(str(source_path), str(final_path))
         if source_path.exists():
             source_path.unlink(missing_ok=True)
@@ -6262,8 +6172,6 @@ def agentforge_icon_upload():
 
 @app.post("/api/agentforge/icon/create")
 def agentforge_icon_create():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     icon_name = str(payload.get("icon_name", "agent_icon")).strip()
     label = str(payload.get("label", "AG")).strip() or "AG"
@@ -6277,7 +6185,7 @@ def agentforge_icon_create():
     final_path = icon_dir / f"{stem}_{suffix}.ico"
 
     try:
-        forge = IconForge(PROJECT_ROOT)
+        forge = iconforge_service.get_forge(PROJECT_ROOT)
         result = forge.create_icon_from_text(
             text=label,
             output_ico=str(final_path),
@@ -6293,8 +6201,6 @@ def agentforge_icon_create():
 
 @app.post("/api/agentforge/icon/create_from_canvas")
 def agentforge_icon_create_from_canvas():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     icon_name = str(payload.get("icon_name", "agent_icon")).strip()
     image_data = str(payload.get("image_data", "")).strip()
@@ -6320,7 +6226,7 @@ def agentforge_icon_create_from_canvas():
 
     try:
         temp_png.write_bytes(raw)
-        forge = IconForge(PROJECT_ROOT)
+        forge = iconforge_service.get_forge(PROJECT_ROOT)
         result = forge.create_icon_from_image(str(temp_png), str(final_path))
         if not result.get("ok"):
             return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
@@ -6334,8 +6240,6 @@ def agentforge_icon_create_from_canvas():
 
 @app.post("/api/agentforge/icon/create_animated_from_canvas")
 def agentforge_icon_create_animated_from_canvas():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     icon_name = str(payload.get("icon_name", "agent_icon")).strip()
     image_data = str(payload.get("image_data", "")).strip()
@@ -6421,7 +6325,7 @@ def agentforge_icon_create_animated_from_canvas():
             transparency=0,
         )
 
-        forge = IconForge(PROJECT_ROOT)
+        forge = iconforge_service.get_forge(PROJECT_ROOT)
         ico_result = forge.create_icon_from_image(str(temp_png), str(final_ico))
         if not ico_result.get("ok"):
             return jsonify({"ok": False, "message": str(ico_result.get("message", "ico fallback creation failed"))}), 400
@@ -6447,10 +6351,8 @@ def agentforge_icon_create_animated_from_canvas():
 
 @app.get("/api/iconforge/backups")
 def iconforge_backups():
-    from core.icons.icon_forge import IconForge
-
     try:
-        forge = IconForge(PROJECT_ROOT)
+        forge = iconforge_service.get_forge(PROJECT_ROOT)
         return jsonify({"ok": True, "items": forge.list_backups()})
     except Exception as exc:
         return jsonify({"ok": False, "message": str(exc), "items": {}}), 500
@@ -6478,8 +6380,6 @@ def iconforge_preview():
 
 @app.post("/api/iconforge/apply")
 def iconforge_apply():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     target_type = str(payload.get("target_type", "folder")).strip().lower()
     target = str(payload.get("target", "")).strip()
@@ -6491,7 +6391,7 @@ def iconforge_apply():
     if not icon_path.is_absolute():
         icon_path = (PROJECT_ROOT / icon_path).resolve()
 
-    forge = IconForge(PROJECT_ROOT)
+    forge = iconforge_service.get_forge(PROJECT_ROOT)
     if target_type == "folder":
         result = forge.set_folder_icon(target, str(icon_path))
     elif target_type == "shortcut":
@@ -6511,9 +6411,7 @@ def iconforge_apply():
 
 @app.post("/api/iconforge/refresh_cache")
 def iconforge_refresh_cache():
-    from core.icons.icon_forge import IconForge
-
-    forge = IconForge(PROJECT_ROOT)
+    forge = iconforge_service.get_forge(PROJECT_ROOT)
     result = forge.refresh_icon_cache()
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
@@ -6521,13 +6419,11 @@ def iconforge_refresh_cache():
 
 @app.post("/api/iconforge/restore")
 def iconforge_restore():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     backup_key = str(payload.get("backup_key", "")).strip()
     if not backup_key:
         return jsonify({"ok": False, "message": "backup_key is required"}), 400
-    forge = IconForge(PROJECT_ROOT)
+    forge = iconforge_service.get_forge(PROJECT_ROOT)
     result = forge.restore(backup_key)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
@@ -6535,14 +6431,12 @@ def iconforge_restore():
 
 @app.post("/api/iconforge/pack/export")
 def iconforge_pack_export():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     output_dir = str(payload.get("output_dir", "")).strip()
     if not output_dir:
         return jsonify({"ok": False, "message": "output_dir is required"}), 400
 
-    forge = IconForge(PROJECT_ROOT)
+    forge = iconforge_service.get_forge(PROJECT_ROOT)
     result = forge.export_icon_set(output_dir)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
@@ -6550,8 +6444,6 @@ def iconforge_pack_export():
 
 @app.post("/api/iconforge/pack/import")
 def iconforge_pack_import():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
     source = str(payload.get("source", "")).strip()
     apply_changes = bool(payload.get("apply_changes", True))
@@ -6559,7 +6451,7 @@ def iconforge_pack_import():
     if not source:
         return jsonify({"ok": False, "message": "source is required"}), 400
 
-    forge = IconForge(PROJECT_ROOT)
+    forge = iconforge_service.get_forge(PROJECT_ROOT)
     result = forge.import_icon_set(source=source, apply_changes=apply_changes, refresh_cache=refresh_cache)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
@@ -6635,61 +6527,50 @@ def model_agents_memory():
 
 @app.get("/api/model/travel/discover")
 def model_travel_discover():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     timeout = int(request.args.get("timeout", "5"))
     assistance_only = str(request.args.get("assistance_only", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    result = model_gateway_service.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/travel/validate")
 def model_travel_validate():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     destination = str(payload.get("destination", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.validate_transfer_target(destination=destination)
+    result = model_gateway_service.validate_transfer_target(destination=destination)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/assistance")
 def model_agents_assistance_set():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     requested = bool(payload.get("requested", True))
     reason = str(payload.get("reason", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.set_agent_assistance_request(name=name, requested=requested, reason=reason)
+    result = model_gateway_service.set_agent_assistance_request(name=name, requested=requested, reason=reason)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/assistance")
 def model_agents_assistance_list():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.list_assistance_requests()
+    result = model_gateway_service.list_assistance_requests()
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/locations")
 def model_agents_locations():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.list_owned_agent_locations(refresh=refresh)
+    result = model_gateway_service.list_owned_agent_locations(refresh=refresh)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/chat")
 def model_chat():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     endpoint = str(payload.get("endpoint", "")).strip()
     prompt = str(payload.get("prompt", "")).strip()
@@ -6700,8 +6581,7 @@ def model_chat():
     if not endpoint or not prompt:
         return jsonify({"ok": False, "message": "endpoint and prompt are required"}), 400
 
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
+    result = model_gateway_service.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
     return jsonify(result)
 
 
@@ -7049,16 +6929,13 @@ def read_agent_state() -> dict[str, dict[str, str]]:
 
 
 # === SoundForge Bundle Endpoints ===
-import zipfile
-import shutil
 
-SOUNDFORGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_config.json")
-LEGACY_SOUNDSTAGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_config.json")
-SOUNDFORGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_schemes")
-LEGACY_SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_schemes")
-SOUNDFORGE_SOUNDS_DIR = os.path.join(SOUNDFORGE_SCHEMES_DIR, "sounds")
-os.makedirs(SOUNDFORGE_SCHEMES_DIR, exist_ok=True)
-os.makedirs(SOUNDFORGE_SOUNDS_DIR, exist_ok=True)
+SOUNDFORGE_CONFIG_PATH = str(soundforge_service.SOUNDFORGE_CONFIG_PATH)
+LEGACY_SOUNDSTAGE_CONFIG_PATH = str(soundforge_service.LEGACY_SOUNDSTAGE_CONFIG_PATH)
+SOUNDFORGE_SCHEMES_DIR = str(soundforge_service.SOUNDFORGE_SCHEMES_DIR)
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_service.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
+SOUNDFORGE_SOUNDS_DIR = str(soundforge_service.SOUNDFORGE_SOUNDS_DIR)
+soundforge_service.ensure_layout()
 
 def _rewrite_config_paths(config, sound_dir="sounds"):
     # Rewrites all sound file paths in config to be relative to sound_dir
@@ -7080,16 +6957,7 @@ def _rewrite_config_paths(config, sound_dir="sounds"):
 
 @app.get("/api/soundforge/config")
 def soundforge_get_config():
-    source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
-    if not os.path.exists(source_config_path):
-        return jsonify({"ok": True, "config": {"global": {}, "per_app": {}}})
-    try:
-        with open(source_config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-    except Exception as ex:
-        return jsonify({"ok": False, "message": f"Failed to read config: {ex}"}), 500
-    if not isinstance(config, dict):
-        config = {"global": {}, "per_app": {}}
+    config = soundforge_service.load_active_config()
     return jsonify({"ok": True, "config": config})
 
 
@@ -7100,10 +6968,7 @@ def soundforge_save_config():
     if not isinstance(config, dict):
         return jsonify({"ok": False, "message": "config object is required"}), 400
     try:
-        with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
-        with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
+        soundforge_service.save_active_config(config)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Failed to save config: {ex}"}), 500
     return jsonify({"ok": True, "message": "SoundForge config saved."})
@@ -7113,36 +6978,10 @@ def soundforge_save_config():
 def export_soundforge_bundle():
     """Export current config + all referenced sounds as a .B4Gsoundforge zip bundle."""
     try:
-        source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
-        with open(source_config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
+        bundle_path = soundforge_service.export_bundle(Path(SOUNDFORGE_SCHEMES_DIR) / "exported.B4Gsoundforge")
     except Exception as e:
-        return jsonify({"ok": False, "message": f"Failed to load config: {e}"}), 500
-    # Gather all sound files
-    sound_files = set()
-    def gather_files(entry):
-        if not entry or not isinstance(entry, dict):
-            return
-        for f in entry.get("files", []):
-            if f: sound_files.add(f)
-    if "global" in config:
-        for v in config["global"].values():
-            gather_files(v)
-    if "per_app" in config:
-        for events in config["per_app"].values():
-            for v in events.values():
-                gather_files(v)
-    # Prepare bundle
-    bundle_path = os.path.join(SOUNDFORGE_SCHEMES_DIR, "exported.B4Gsoundforge")
-    with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as z:
-        # Add config (rewrite paths to just 'sounds/filename')
-        config_for_bundle = _rewrite_config_paths(json.loads(json.dumps(config)), sound_dir="sounds")
-        z.writestr("soundforge_config.json", json.dumps(config_for_bundle, indent=2))
-        # Add all sound files
-        for f in sound_files:
-            if os.path.exists(f):
-                z.write(f, arcname=os.path.join("sounds", os.path.basename(f)))
-    return send_file(bundle_path, as_attachment=True, download_name="exported.B4Gsoundforge")
+        return jsonify({"ok": False, "message": f"Failed to export bundle: {e}"}), 500
+    return send_file(str(bundle_path), as_attachment=True, download_name="exported.B4Gsoundforge")
 
 @app.post("/api/soundforge/import_bundle")
 @app.post("/api/soundstage/import_bundle")
@@ -7152,46 +6991,105 @@ def import_soundforge_bundle():
         return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
     bundle = request.files["bundle"]
     scheme_name = request.form.get("scheme_name", "imported_scheme")
-    scheme_dir = os.path.join(SOUNDFORGE_SCHEMES_DIR, scheme_name)
-    os.makedirs(scheme_dir, exist_ok=True)
-    # Extract bundle
-    with zipfile.ZipFile(bundle, "r") as z:
-        z.extractall(scheme_dir)
-    # Move/copy sounds to managed dir
-    sounds_src = os.path.join(scheme_dir, "sounds")
-    for fname in os.listdir(sounds_src):
-        src = os.path.join(sounds_src, fname)
-        dst = os.path.join(SOUNDFORGE_SOUNDS_DIR, fname)
-        shutil.copy2(src, dst)
-    # Load and rewrite config
-    config_path = os.path.join(scheme_dir, "soundforge_config.json")
-    if not os.path.exists(config_path):
-        config_path = os.path.join(scheme_dir, "soundstage_config.json")
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    config = _rewrite_config_paths(config, sound_dir="core/soundforge_schemes/sounds")
-    # Save as active config
-    with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
-    with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
-    return jsonify({"ok": True, "message": f"Imported scheme '{scheme_name}' and activated."})
+    collision_policy = request.form.get("collision_policy", "rename")
+    try:
+        result = soundforge_service.import_bundle(
+            bundle.stream,
+            scheme_name=scheme_name,
+            collision_policy=collision_policy,
+        )
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to import bundle: {ex}"}), 500
+    return jsonify(
+        {
+            "ok": True,
+            "message": f"Imported scheme '{result.get('scheme_name', scheme_name)}' and activated.",
+            "result": result,
+        }
+    )
 
 @app.get("/api/soundforge/list_schemes")
 @app.get("/api/soundstage/list_schemes")
 def list_soundforge_schemes():
     """List available imported SoundForge schemes."""
-    schemes = []
-    for name in os.listdir(SOUNDFORGE_SCHEMES_DIR):
-        path = os.path.join(SOUNDFORGE_SCHEMES_DIR, name)
-        if os.path.isdir(path):
-            schemes.append(name)
-    if not schemes and os.path.isdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
-        for name in os.listdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
-            path = os.path.join(LEGACY_SOUNDSTAGE_SCHEMES_DIR, name)
-            if os.path.isdir(path):
-                schemes.append(name)
+    schemes = soundforge_service.list_schemes()
     return jsonify({"ok": True, "schemes": schemes})
+
+
+@app.post("/api/soundforge/activate_scheme")
+@app.post("/api/soundstage/activate_scheme")
+def activate_soundforge_scheme():
+    payload = request.get_json(force=True, silent=True) or {}
+    scheme_name = payload.get("scheme_name")
+    if not isinstance(scheme_name, str) or not scheme_name.strip():
+        return jsonify({"ok": False, "message": "scheme_name is required"}), 400
+    try:
+        result = soundforge_service.activate_scheme(scheme_name)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to activate scheme: {ex}"}), 500
+    return jsonify(result)
+
+
+@app.post("/api/soundforge/validate_bundle")
+@app.post("/api/soundstage/validate_bundle")
+def validate_soundforge_bundle():
+    if "bundle" not in request.files:
+        return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
+    bundle = request.files["bundle"]
+    try:
+        report = soundforge_service.validate_bundle(bundle.stream)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Validation failed: {ex}"}), 500
+    return jsonify(report)
+
+
+@app.get("/api/soundforge/diagnostics")
+@app.get("/api/soundstage/diagnostics")
+def soundforge_diagnostics():
+    try:
+        report = soundforge_service.diagnose_config()
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Diagnostics failed: {ex}"}), 500
+    return jsonify(report)
+
+
+@app.get("/api/soundforge/migration_status")
+@app.get("/api/soundstage/migration_status")
+def soundforge_migration_status():
+    try:
+        status = soundforge_service.migration_status()
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Migration status failed: {ex}"}), 500
+    return jsonify({"ok": True, "status": status})
+
+
+@app.post("/api/soundforge/migrate_legacy")
+@app.post("/api/soundstage/migrate_legacy")
+def soundforge_migrate_legacy():
+    payload = request.get_json(force=True, silent=True) or {}
+    collision_policy = str(payload.get("collision_policy", "rename")).strip().lower()
+    if collision_policy not in {"rename", "replace", "fail"}:
+        return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
+    try:
+        result = soundforge_service.migrate_legacy_to_soundforge(collision_policy=collision_policy)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Migration failed: {ex}"}), 500
+    return jsonify(result)
+
+
+@app.post("/api/soundforge/finalize_soundstage_removal")
+@app.post("/api/soundstage/finalize_removal")
+def soundforge_finalize_soundstage_removal():
+    payload = request.get_json(force=True, silent=True) or {}
+    collision_policy = str(payload.get("collision_policy", "rename")).strip().lower()
+    if collision_policy not in {"rename", "replace", "fail"}:
+        return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
+    try:
+        result = soundforge_service.finalize_soundstage_removal(collision_policy=collision_policy)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Finalization failed: {ex}"}), 500
+    code = 200 if result.get("ok") else 409
+    return jsonify(result), code
 
 
 
@@ -7276,6 +7174,23 @@ def _default_scheduler_state() -> dict:
     return {"jobs": [], "history": []}
 
 
+_SCHEDULER_FORBIDDEN_SHELL_CHARS = ("|", "&", ";", ">", "<", "$", "`")
+
+
+def _validate_scheduler_command(command: str) -> tuple[bool, str]:
+    raw = str(command or "").strip()
+    if not raw:
+        return True, ""
+    if any(token in raw for token in _SCHEDULER_FORBIDDEN_SHELL_CHARS):
+        return False, "command contains forbidden shell control characters"
+    return True, ""
+
+
+def _split_scheduler_command(command: str) -> list[str]:
+    parts = shlex.split(command, posix=False)
+    return [item for item in parts if str(item).strip()]
+
+
 def _default_cicd_state() -> dict:
     return {"last_run": {}, "history": []}
 
@@ -7307,6 +7222,9 @@ def scheduler():
     if action == "add":
         label = str(payload.get("label", "")).strip() or "unnamed-job"
         command = str(payload.get("command", "")).strip()
+        ok, error = _validate_scheduler_command(command)
+        if not ok:
+            return jsonify({"ok": False, "message": error}), 400
         interval_seconds = max(30, int(payload.get("interval_seconds", 300)))
         job_id = f"job-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
         jobs.append(
@@ -7343,13 +7261,41 @@ def scheduler():
         if not command:
             result = {"ok": True, "message": "job has no command; treated as metadata-only task", "exit_code": 0}
         else:
-            proc = subprocess.run(command, cwd=str(PROJECT_ROOT), shell=True, capture_output=True, text=True)
-            result = {
-                "ok": proc.returncode == 0,
-                "exit_code": proc.returncode,
-                "stdout": (proc.stdout or "")[-2000:],
-                "stderr": (proc.stderr or "")[-2000:],
-            }
+            ok, error = _validate_scheduler_command(command)
+            if not ok:
+                result = {"ok": False, "message": error, "exit_code": 2}
+            else:
+                try:
+                    cmd_parts = _split_scheduler_command(command)
+                except ValueError as ex:
+                    result = {"ok": False, "message": f"invalid command syntax: {ex}", "exit_code": 2}
+                else:
+                    if not cmd_parts:
+                        result = {"ok": False, "message": "empty command after parsing", "exit_code": 2}
+                    else:
+                        try:
+                            proc = subprocess.run(
+                                cmd_parts,
+                                cwd=str(PROJECT_ROOT),
+                                shell=False,
+                                capture_output=True,
+                                text=True,
+                                timeout=300,
+                            )
+                            result = {
+                                "ok": proc.returncode == 0,
+                                "exit_code": proc.returncode,
+                                "stdout": (proc.stdout or "")[-2000:],
+                                "stderr": (proc.stderr or "")[-2000:],
+                            }
+                        except subprocess.TimeoutExpired as ex:
+                            result = {
+                                "ok": False,
+                                "exit_code": 124,
+                                "stdout": ((ex.stdout or "") if isinstance(ex.stdout, str) else "")[-2000:],
+                                "stderr": ((ex.stderr or "") if isinstance(ex.stderr, str) else "")[-2000:],
+                                "message": "command timed out",
+                            }
 
         history.append(
             {

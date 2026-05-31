@@ -718,6 +718,10 @@ class ArchivistAgent:
         for path in todo_files:
             if not path.exists():
                 continue
+            # Keep generated docs/todos.md backlog sections intact; it already includes
+            # cross-reference content from _write_actionable_todos.
+            if path == project / "docs" / "todos.md":
+                continue
             try:
                 content = path.read_text(encoding="utf-8")
             except Exception:

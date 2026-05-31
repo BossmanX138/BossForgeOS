@@ -1,0 +1,30 @@
+﻿name: Unittest
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          pip install pandas duckdb requests msal oauthlib werkzeug
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          python -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q
