@@ -43,10 +43,10 @@ jobs:
           python -m modules.runeforge_voice.main --once
           python -m modules.soundforge.main --once
 
-      - name: Module doctor (external enabled)
+      - name: Module doctor
         shell: pwsh
         run: |
-          python -m core.utils.bforge module doctor --include-external
+          python -m core.utils.bforge module doctor
 
       - name: Artifact guard
         shell: pwsh
