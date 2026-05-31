@@ -11,18 +11,18 @@ All TODOs must be kept in sync and up to date by the Archivist agent. See the Bo
 
 Curated by Archivist from actionable TODO/FIXME/TBD signals.
 
-Generated: 2026-05-31 06:05:26
-Total actionable: 265
-General backlog: 256
+Generated: 2026-05-31 06:11:26
+Total actionable: 283
+General backlog: 274
 Test debt: 9
 
 ## Priority Backlog
 
-- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:181 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:205 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:181 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+- [codemage][high] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:205 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
   next: Create fix plan, implement patch, and add regression tests
-- [codemage][high] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:241 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
+- [codemage][high] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:265 :: - Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] F:\Bosscrafts\BossForgeOS\core\agents\archivist_agent.py:129 :: TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
   next: Create fix plan, implement patch, and add regression tests
@@ -50,23 +50,23 @@ Test debt: 9
   next: Create fix plan, implement patch, and add regression tests
 - [codemage][high] F:\Bosscrafts\BossForgeOS\modules\runeforge_provider\models\Runeforge_Alpha-7b\tokenizer.json:34651 :: "▁FIXME": 27610,
   next: Create fix plan, implement patch, and add regression tests
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:182 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:206 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:184 :: - When a TODO is completed, update all lists and remove or archive the item.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:208 :: - When a TODO is completed, update all lists and remove or archive the item.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:185 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:209 :: - If a TODO is moved, merged, or split, update all references and cross-links.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:186 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_ROADMAP.md:210 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
   next: Convert this note into a tracked work item with owner/date
 - [codemage][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:5 :: Each TODO is staged for agent delegation. Agents can be assigned to design, implement, test, or document each item as discrete tasks.
   next: Open implementation task with acceptance criteria and tests
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:182 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:206 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:184 :: - When a TODO is completed, update all lists and remove or archive the item.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:208 :: - When a TODO is completed, update all lists and remove or archive the item.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:185 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:209 :: - If a TODO is moved, merged, or split, update all references and cross-links.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:186 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\ENTERPRISE_TODO_LIST.md:210 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
   next: Convert this note into a tracked work item with owner/date
 - [devlot][medium] F:\Bosscrafts\BossForgeOS\.github\copilot-instructions.md:2 :: Verify that the copilot-instructions.md file in the .github directory is created.
   next: Review context, confirm scope, and create a concrete next task
@@ -94,13 +94,13 @@ Test debt: 9
   next: Review context, confirm scope, and create a concrete next task
 - [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:39 :: Implement skill checks for agents, role checks for humans
   next: Review context, confirm scope, and create a concrete next task
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:242 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:266 :: - Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:244 :: - When a TODO is completed, update all lists and remove or archive the item.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:268 :: - When a TODO is completed, update all lists and remove or archive the item.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:245 :: - If a TODO is moved, merged, or split, update all references and cross-links.
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:269 :: - If a TODO is moved, merged, or split, update all references and cross-links.
   next: Convert this note into a tracked work item with owner/date
-- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:246 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
+- [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Features_TODO.md:270 :: - ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees
   next: Convert this note into a tracked work item with owner/date
 - [devlot][medium] F:\Bosscrafts\BossForgeOS\core\BossGate_Prime_Tab_stubs.py:65 :: # TODO: Add video chat, group chat, collaborative editing, etc.
   next: Convert this note into a tracked work item with owner/date
