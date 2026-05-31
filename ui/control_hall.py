@@ -6409,44 +6409,19 @@ def pin_close():
     return jsonify({"ok": True, "running": False, "view": "", "alpha": PIN_OVERLAY_ALPHA})
 
 
-def _health_from_timestamp(ts: str | None) -> str:
-    return agent_state_api.health_from_timestamp(ts)
-
-
-def _model_agent_state_key(name: str) -> str:
-    return agent_state_api.model_agent_state_key(name)
-
-
-def _slugify(value: str) -> str:
-    return task_tracker_api.slugify(value)
-
-
-def _extract_assigned_tasks() -> list[dict]:
-    return task_tracker_api.extract_assigned_tasks(AGENT_ASSIGNMENTS_PATH)
-
-
-def _default_agent_task_state() -> dict:
-    return task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH)
-
-
-def _normalize_agent_task_state(state: dict) -> dict:
-    return task_tracker_api.normalize_agent_task_state(state)
-
-
 def load_agent_task_state() -> dict:
     if not AGENT_TASK_TRACKER_PATH.exists():
-        initial = _default_agent_task_state()
+        initial = task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH)
         _save_json_state(AGENT_TASK_TRACKER_PATH, initial)
         return initial
-    state = _load_json_state(AGENT_TASK_TRACKER_PATH, _default_agent_task_state())
-    normalized = _normalize_agent_task_state(state)
+    state = _load_json_state(
+        AGENT_TASK_TRACKER_PATH,
+        task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH),
+    )
+    normalized = task_tracker_api.normalize_agent_task_state(state)
     if normalized != state:
         _save_json_state(AGENT_TASK_TRACKER_PATH, normalized)
     return normalized
-
-
-def _update_task_status(task: dict, status: str, note: str) -> None:
-    task_tracker_api.update_task_status(task, status, note)
 
 
 def read_agent_state() -> dict[str, dict[str, str]]:
@@ -6461,10 +6436,6 @@ SOUNDFORGE_SCHEMES_DIR = str(soundforge_api.SOUNDFORGE_SCHEMES_DIR)
 LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_api.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
 SOUNDFORGE_SOUNDS_DIR = str(soundforge_api.SOUNDFORGE_SOUNDS_DIR)
 soundforge_api.ensure_layout()
-
-def _rewrite_config_paths(config, sound_dir="sounds"):
-    return soundforge_api.rewrite_config_paths(config, sound_dir=sound_dir)
-
 
 @app.get("/api/soundforge/config")
 def soundforge_get_config():

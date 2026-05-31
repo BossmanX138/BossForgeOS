@@ -34,6 +34,32 @@ class CollabRuntimeAdapterTests(unittest.TestCase):
         self.assertEqual(payload["user"], "alice")
         self.assertIsInstance(payload["content"], dict)
 
+    def test_defaults_apply_for_missing_agent_and_user(self) -> None:
+        editors: dict[str, set[str]] = {}
+        locks: dict[str, str] = {}
+        agent, presence = collab_api.join_agent(editors, locks, {})
+        self.assertEqual(agent, "")
+        self.assertIn("anon", presence["editors"])
+
+        agent, payload = collab_api.edit_agent_payload({})
+        self.assertEqual(agent, "")
+        self.assertEqual(payload["user"], "anon")
+        self.assertEqual(payload["content"], {})
+
+    def test_lock_contention_does_not_override_other_owner(self) -> None:
+        editors = {"coder": {"alice", "bob"}}
+        locks: dict[str, str] = {"coder": "alice"}
+        _, presence = collab_api.lock_agent(editors, locks, {"agent": "coder", "user": "bob"})
+        self.assertEqual(locks["coder"], "alice")
+        self.assertEqual(presence["lock"], "alice")
+
+    def test_unlock_by_non_owner_keeps_lock(self) -> None:
+        editors = {"coder": {"alice", "bob"}}
+        locks: dict[str, str] = {"coder": "alice"}
+        _, presence = collab_api.unlock_agent(editors, locks, {"agent": "coder", "user": "bob"})
+        self.assertEqual(locks["coder"], "alice")
+        self.assertEqual(presence["lock"], "alice")
+
 
 if __name__ == "__main__":
     unittest.main()
