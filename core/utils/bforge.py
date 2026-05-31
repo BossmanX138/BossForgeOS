@@ -456,6 +456,7 @@ def cmd_module(args: argparse.Namespace) -> None:
         report["runtime"] = {"ok": True, "modules": runtime_rows}
 
         smoke_rows: list[dict[str, Any]] = []
+        include_external = bool(getattr(args, "include_external", False))
         for item in registry.summarize():
             module_id = str(item.get("module_id", ""))
             entry = str(item.get("standalone_entrypoint", "")).strip()
@@ -480,8 +481,27 @@ def cmd_module(args: argparse.Namespace) -> None:
                     row["status"] = "error"
                     row["detail"] = str(ex)
             else:
-                row["status"] = "skipped"
-                row["detail"] = "standalone entrypoint is not python -m; skipped in doctor smoke"
+                if include_external and entry:
+                    try:
+                        proc = subprocess.run(
+                            entry.split(),
+                            cwd=str(repo_root),
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            timeout=20,
+                        )
+                        if proc.returncode != 0:
+                            row["ok"] = False
+                            row["status"] = "failed"
+                            row["detail"] = (proc.stderr or proc.stdout or "").strip()[:400]
+                    except Exception as ex:
+                        row["ok"] = False
+                        row["status"] = "error"
+                        row["detail"] = str(ex)
+                else:
+                    row["status"] = "skipped"
+                    row["detail"] = "standalone entrypoint is not python -m; pass --include-external to attempt it"
             smoke_rows.append(row)
         if any(not bool(row.get("ok")) for row in smoke_rows):
             report["ok"] = False
@@ -1310,6 +1330,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_module_stop.set_defaults(func=cmd_module)
 
     p_module_doctor = p_module_sub.add_parser("doctor", help="Run module registry/runtime/smoke diagnostics")
+    p_module_doctor.add_argument(
+        "--include-external",
+        action="store_true",
+        help="Attempt smoke runs for non `python -m` standalone entrypoints",
+    )
     p_module_doctor.set_defaults(func=cmd_module)
 
     global PLUGIN_LOAD_STATE

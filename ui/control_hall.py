@@ -30,9 +30,9 @@ from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from modules.agentforge import service as agentforge_service
 from modules.iconforge import service as iconforge_service
 try:
-    from modules.model_gateway import service as model_gateway_service
+    from modules.model_gateway import api_adapter as model_gateway_api
 except ModuleNotFoundError:
-    from core.model_gateway import service as model_gateway_service
+    from core.model_gateway import service as model_gateway_api
 from modules.runeforge_voice import service as runeforge_voice_service
 from modules.soundforge import api_adapter as soundforge_api
 from core.security.security_sentinel_agent import SecuritySentinelAgent
@@ -6108,27 +6108,18 @@ def archivist_seal():
 
 @app.get("/api/model/endpoints")
 def model_endpoints():
-    path = bus.state / "model_endpoints.json"
-    if not path.exists():
-        return jsonify({"endpoints": {}})
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return jsonify({"endpoints": {}})
-        return jsonify({"endpoints": data})
-    except (OSError, json.JSONDecodeError):
-        return jsonify({"endpoints": {}})
+    return jsonify(model_gateway_api.list_endpoints_from_state(str(bus.state / "model_endpoints.json")))
 
 
 @app.get("/api/model/agents")
 def model_agents():
-    return jsonify(agentforge_service.list_agent_profiles())
+    return jsonify(model_gateway_api.list_agent_profiles())
 
 
 @app.post("/api/model/agents/create")
 def model_agents_create():
     payload = request.get_json(force=True, silent=True) or {}
-    result = agentforge_service.create_agent_profile(payload)
+    result = model_gateway_api.create_agent_profile(payload)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6459,68 +6450,39 @@ def iconforge_pack_import():
 
 @app.post("/api/model/agents/triage")
 def model_agents_triage():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    from core.schemas.agent_schema import infer_incident_domains, rank_agents_for_incident
-
     payload = request.get_json(force=True, silent=True) or {}
     incident = payload.get("incident") if isinstance(payload.get("incident"), dict) else {}
     weights_raw = payload.get("weights")
     weights = weights_raw if isinstance(weights_raw, dict) else None
-
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    profiles = gateway.list_agent_profiles()
-    candidates = []
-    for name, profile in profiles.items():
-        if not isinstance(profile, dict):
-            continue
-        item = dict(profile)
-        item.setdefault("id", str(name).strip().lower())
-        item.setdefault("name", str(name).strip().lower())
-        candidates.append(item)
-
-    ranked = rank_agents_for_incident(incident=incident, agent_profiles=candidates, weights=weights)
-    return jsonify(
-        {
-            "ok": True,
-            "incident_inference": infer_incident_domains(incident),
-            "ranked_candidates": ranked,
-            "candidate_count": len(candidates),
-        }
-    )
+    return jsonify(model_gateway_api.triage_agent_candidates(incident=incident, weights=weights))
 
 
 @app.post("/api/model/agents/delete")
 def model_agents_delete():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.delete_agent_profile(name)
+    result = model_gateway_api.delete_agent_profile(name)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/run")
 def model_agents_run():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     task = str(payload.get("task", "")).strip()
     endpoint = str(payload.get("endpoint", "")).strip()
     memory_context = payload.get("memory_context") if isinstance(payload.get("memory_context"), dict) else {}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.run_agent_profile(name, task, endpoint, memory_context=memory_context)
+    result = model_gateway_api.run_agent_profile(name, task, endpoint, memory_context=memory_context)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/memory")
 def model_agents_memory():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     name = str(request.args.get("name", "")).strip()
     limit = int(request.args.get("limit", "25"))
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.recall_agent_memory(name=name, limit=limit)
+    result = model_gateway_api.recall_agent_memory(name=name, limit=limit)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6529,7 +6491,7 @@ def model_agents_memory():
 def model_travel_discover():
     timeout = int(request.args.get("timeout", "5"))
     assistance_only = str(request.args.get("assistance_only", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    result = model_gateway_service.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    result = model_gateway_api.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6538,7 +6500,7 @@ def model_travel_discover():
 def model_travel_validate():
     payload = request.get_json(force=True, silent=True) or {}
     destination = str(payload.get("destination", "")).strip()
-    result = model_gateway_service.validate_transfer_target(destination=destination)
+    result = model_gateway_api.validate_transfer_target(destination=destination)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6549,14 +6511,14 @@ def model_agents_assistance_set():
     name = str(payload.get("name", "")).strip()
     requested = bool(payload.get("requested", True))
     reason = str(payload.get("reason", "")).strip()
-    result = model_gateway_service.set_agent_assistance_request(name=name, requested=requested, reason=reason)
+    result = model_gateway_api.set_agent_assistance_request(name=name, requested=requested, reason=reason)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/assistance")
 def model_agents_assistance_list():
-    result = model_gateway_service.list_assistance_requests()
+    result = model_gateway_api.list_assistance_requests()
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6564,7 +6526,7 @@ def model_agents_assistance_list():
 @app.get("/api/model/agents/locations")
 def model_agents_locations():
     refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    result = model_gateway_service.list_owned_agent_locations(refresh=refresh)
+    result = model_gateway_api.list_owned_agent_locations(refresh=refresh)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6581,7 +6543,7 @@ def model_chat():
     if not endpoint or not prompt:
         return jsonify({"ok": False, "message": "endpoint and prompt are required"}), 400
 
-    result = model_gateway_service.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
+    result = model_gateway_api.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
     return jsonify(result)
 
 
