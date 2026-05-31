@@ -92,6 +92,73 @@ class BforgeModuleLifecycleTests(unittest.TestCase):
         out = bforge._load_module_runtime(self.runtime_path)
         self.assertEqual(out, {"a": {"pid": 1}})
 
+    @patch("core.utils.bforge.pretty")
+    @patch("core.utils.bforge.subprocess.run")
+    @patch("core.utils.bforge._pid_alive")
+    @patch("core.utils.bforge._module_runtime_path")
+    @patch("core.utils.bforge._load_module_runtime")
+    @patch("core.utils.bforge.ModuleRegistry")
+    def test_module_doctor_reports_success(
+        self,
+        mock_registry,
+        mock_load_runtime,
+        mock_runtime_path,
+        mock_pid_alive,
+        mock_subprocess_run,
+        mock_pretty,
+    ) -> None:
+        mock_runtime_path.return_value = self.runtime_path
+        mock_load_runtime.return_value = {"soundforge": {"pid": 3456, "started_at": "now"}}
+        mock_pid_alive.return_value = True
+        mock_registry.return_value.validate.return_value = {"ok": True, "modules_found": 1}
+        mock_registry.return_value.summarize.return_value = [
+            {
+                "module_id": "soundforge",
+                "standalone_entrypoint": "python -m modules.soundforge.main",
+            }
+        ]
+        mock_subprocess_run.return_value = type("Proc", (), {"returncode": 0, "stdout": "ok", "stderr": ""})()
+
+        args = self._module_args(sub="doctor")
+        bforge.cmd_module(args)
+
+        out = mock_pretty.call_args.args[0]
+        self.assertTrue(out["ok"])
+        self.assertTrue(out["smoke"]["ok"])
+        self.assertEqual(out["runtime"]["modules"][0]["module_id"], "soundforge")
+
+    @patch("core.utils.bforge.pretty")
+    @patch("core.utils.bforge.subprocess.run")
+    @patch("core.utils.bforge._pid_alive")
+    @patch("core.utils.bforge._module_runtime_path")
+    @patch("core.utils.bforge._load_module_runtime")
+    @patch("core.utils.bforge.ModuleRegistry")
+    def test_module_doctor_exits_nonzero_on_smoke_failure(
+        self,
+        mock_registry,
+        mock_load_runtime,
+        mock_runtime_path,
+        mock_pid_alive,
+        mock_subprocess_run,
+        _mock_pretty,
+    ) -> None:
+        mock_runtime_path.return_value = self.runtime_path
+        mock_load_runtime.return_value = {}
+        mock_pid_alive.return_value = False
+        mock_registry.return_value.validate.return_value = {"ok": True, "modules_found": 1}
+        mock_registry.return_value.summarize.return_value = [
+            {
+                "module_id": "soundforge",
+                "standalone_entrypoint": "python -m modules.soundforge.main",
+            }
+        ]
+        mock_subprocess_run.return_value = type("Proc", (), {"returncode": 1, "stdout": "", "stderr": "boom"})()
+
+        args = self._module_args(sub="doctor")
+        with self.assertRaises(SystemExit) as ex:
+            bforge.cmd_module(args)
+        self.assertEqual(ex.exception.code, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

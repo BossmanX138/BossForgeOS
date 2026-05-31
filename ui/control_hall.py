@@ -34,7 +34,7 @@ try:
 except ModuleNotFoundError:
     from core.model_gateway import service as model_gateway_service
 from modules.runeforge_voice import service as runeforge_voice_service
-from modules.soundforge import service as soundforge_service
+from modules.soundforge import api_adapter as soundforge_api
 from core.security.security_sentinel_agent import SecuritySentinelAgent
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
@@ -6930,12 +6930,12 @@ def read_agent_state() -> dict[str, dict[str, str]]:
 
 # === SoundForge Bundle Endpoints ===
 
-SOUNDFORGE_CONFIG_PATH = str(soundforge_service.SOUNDFORGE_CONFIG_PATH)
-LEGACY_SOUNDSTAGE_CONFIG_PATH = str(soundforge_service.LEGACY_SOUNDSTAGE_CONFIG_PATH)
-SOUNDFORGE_SCHEMES_DIR = str(soundforge_service.SOUNDFORGE_SCHEMES_DIR)
-LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_service.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
-SOUNDFORGE_SOUNDS_DIR = str(soundforge_service.SOUNDFORGE_SOUNDS_DIR)
-soundforge_service.ensure_layout()
+SOUNDFORGE_CONFIG_PATH = str(soundforge_api.SOUNDFORGE_CONFIG_PATH)
+LEGACY_SOUNDSTAGE_CONFIG_PATH = str(soundforge_api.LEGACY_SOUNDSTAGE_CONFIG_PATH)
+SOUNDFORGE_SCHEMES_DIR = str(soundforge_api.SOUNDFORGE_SCHEMES_DIR)
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_api.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
+SOUNDFORGE_SOUNDS_DIR = str(soundforge_api.SOUNDFORGE_SOUNDS_DIR)
+soundforge_api.ensure_layout()
 
 def _rewrite_config_paths(config, sound_dir="sounds"):
     # Rewrites all sound file paths in config to be relative to sound_dir
@@ -6957,7 +6957,7 @@ def _rewrite_config_paths(config, sound_dir="sounds"):
 
 @app.get("/api/soundforge/config")
 def soundforge_get_config():
-    config = soundforge_service.load_active_config()
+    config = soundforge_api.load_active_config()
     return jsonify({"ok": True, "config": config})
 
 
@@ -6968,7 +6968,7 @@ def soundforge_save_config():
     if not isinstance(config, dict):
         return jsonify({"ok": False, "message": "config object is required"}), 400
     try:
-        soundforge_service.save_active_config(config)
+        soundforge_api.save_active_config(config)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Failed to save config: {ex}"}), 500
     return jsonify({"ok": True, "message": "SoundForge config saved."})
@@ -6978,7 +6978,7 @@ def soundforge_save_config():
 def export_soundforge_bundle():
     """Export current config + all referenced sounds as a .B4Gsoundforge zip bundle."""
     try:
-        bundle_path = soundforge_service.export_bundle(Path(SOUNDFORGE_SCHEMES_DIR) / "exported.B4Gsoundforge")
+        bundle_path = soundforge_api.export_bundle(Path(SOUNDFORGE_SCHEMES_DIR) / "exported.B4Gsoundforge")
     except Exception as e:
         return jsonify({"ok": False, "message": f"Failed to export bundle: {e}"}), 500
     return send_file(str(bundle_path), as_attachment=True, download_name="exported.B4Gsoundforge")
@@ -6993,7 +6993,7 @@ def import_soundforge_bundle():
     scheme_name = request.form.get("scheme_name", "imported_scheme")
     collision_policy = request.form.get("collision_policy", "rename")
     try:
-        result = soundforge_service.import_bundle(
+        result = soundforge_api.import_bundle(
             bundle.stream,
             scheme_name=scheme_name,
             collision_policy=collision_policy,
@@ -7012,7 +7012,7 @@ def import_soundforge_bundle():
 @app.get("/api/soundstage/list_schemes")
 def list_soundforge_schemes():
     """List available imported SoundForge schemes."""
-    schemes = soundforge_service.list_schemes()
+    schemes = soundforge_api.list_schemes()
     return jsonify({"ok": True, "schemes": schemes})
 
 
@@ -7024,7 +7024,7 @@ def activate_soundforge_scheme():
     if not isinstance(scheme_name, str) or not scheme_name.strip():
         return jsonify({"ok": False, "message": "scheme_name is required"}), 400
     try:
-        result = soundforge_service.activate_scheme(scheme_name)
+        result = soundforge_api.activate_scheme(scheme_name)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Failed to activate scheme: {ex}"}), 500
     return jsonify(result)
@@ -7037,7 +7037,7 @@ def validate_soundforge_bundle():
         return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
     bundle = request.files["bundle"]
     try:
-        report = soundforge_service.validate_bundle(bundle.stream)
+        report = soundforge_api.validate_bundle(bundle.stream)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Validation failed: {ex}"}), 500
     return jsonify(report)
@@ -7047,7 +7047,7 @@ def validate_soundforge_bundle():
 @app.get("/api/soundstage/diagnostics")
 def soundforge_diagnostics():
     try:
-        report = soundforge_service.diagnose_config()
+        report = soundforge_api.diagnose_config()
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Diagnostics failed: {ex}"}), 500
     return jsonify(report)
@@ -7057,7 +7057,7 @@ def soundforge_diagnostics():
 @app.get("/api/soundstage/migration_status")
 def soundforge_migration_status():
     try:
-        status = soundforge_service.migration_status()
+        status = soundforge_api.migration_status()
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Migration status failed: {ex}"}), 500
     return jsonify({"ok": True, "status": status})
@@ -7071,7 +7071,7 @@ def soundforge_migrate_legacy():
     if collision_policy not in {"rename", "replace", "fail"}:
         return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
     try:
-        result = soundforge_service.migrate_legacy_to_soundforge(collision_policy=collision_policy)
+        result = soundforge_api.migrate_legacy_to_soundforge(collision_policy=collision_policy)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Migration failed: {ex}"}), 500
     return jsonify(result)
@@ -7085,7 +7085,7 @@ def soundforge_finalize_soundstage_removal():
     if collision_policy not in {"rename", "replace", "fail"}:
         return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
     try:
-        result = soundforge_service.finalize_soundstage_removal(collision_policy=collision_policy)
+        result = soundforge_api.finalize_soundstage_removal(collision_policy=collision_policy)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Finalization failed: {ex}"}), 500
     code = 200 if result.get("ok") else 409

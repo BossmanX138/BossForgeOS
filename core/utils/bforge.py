@@ -431,6 +431,66 @@ def cmd_module(args: argparse.Namespace) -> None:
     runtime_path = _module_runtime_path()
     runtime = _load_module_runtime(runtime_path)
 
+    if args.sub == "doctor":
+        report: dict[str, Any] = {"ok": True, "validation": {}, "runtime": {}, "smoke": {}}
+        try:
+            report["validation"] = registry.validate()
+        except ModuleValidationError as ex:
+            report["ok"] = False
+            report["validation"] = {"ok": False, "error": str(ex)}
+
+        runtime_rows: list[dict[str, Any]] = []
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = runtime.get(module_id, {})
+            pid = int(entry.get("pid", 0) or 0)
+            running = _pid_alive(pid)
+            runtime_rows.append(
+                {
+                    "module_id": module_id,
+                    "pid": pid,
+                    "running": running,
+                    "started_at": entry.get("started_at", ""),
+                }
+            )
+        report["runtime"] = {"ok": True, "modules": runtime_rows}
+
+        smoke_rows: list[dict[str, Any]] = []
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = str(item.get("standalone_entrypoint", "")).strip()
+            row = {"module_id": module_id, "ok": True, "status": "passed", "detail": ""}
+            if entry.lower().startswith("python -m "):
+                module_name = entry[len("python -m ") :].strip()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, "-m", module_name, "--once"],
+                        cwd=str(repo_root),
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        timeout=20,
+                    )
+                    if proc.returncode != 0:
+                        row["ok"] = False
+                        row["status"] = "failed"
+                        row["detail"] = (proc.stderr or proc.stdout or "").strip()[:400]
+                except Exception as ex:
+                    row["ok"] = False
+                    row["status"] = "error"
+                    row["detail"] = str(ex)
+            else:
+                row["status"] = "skipped"
+                row["detail"] = "standalone entrypoint is not python -m; skipped in doctor smoke"
+            smoke_rows.append(row)
+        if any(not bool(row.get("ok")) for row in smoke_rows):
+            report["ok"] = False
+        report["smoke"] = {"ok": all(bool(row.get("ok")) for row in smoke_rows), "modules": smoke_rows}
+        pretty(report)
+        if not report["ok"]:
+            raise SystemExit(2)
+        return
+
     if args.sub == "status":
         module_rows = []
         for item in registry.summarize():
@@ -1248,6 +1308,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_module_stop = p_module_sub.add_parser("stop", help="Stop module connector process")
     p_module_stop.add_argument("module_id")
     p_module_stop.set_defaults(func=cmd_module)
+
+    p_module_doctor = p_module_sub.add_parser("doctor", help="Run module registry/runtime/smoke diagnostics")
+    p_module_doctor.set_defaults(func=cmd_module)
 
     global PLUGIN_LOAD_STATE
     PLUGIN_LOAD_STATE = _load_plugins(sub)
