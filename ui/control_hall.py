@@ -2,7 +2,6 @@ import atexit
 import json
 import os
 import re
-import shlex
 import subprocess
 import sys
 
@@ -35,6 +34,7 @@ from modules.security import api_adapter as security_api
 from modules.soundforge import api_adapter as soundforge_api
 from modules.ui_runtime import api_adapter as ui_runtime_api
 from modules.onboarding import api_adapter as onboarding_api
+from modules.ops_runtime import api_adapter as ops_runtime_api
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
@@ -6846,28 +6846,11 @@ def _save_json_state(path: Path, payload: dict) -> None:
 
 
 def _default_scheduler_state() -> dict:
-    return {"jobs": [], "history": []}
-
-
-_SCHEDULER_FORBIDDEN_SHELL_CHARS = ("|", "&", ";", ">", "<", "$", "`")
-
-
-def _validate_scheduler_command(command: str) -> tuple[bool, str]:
-    raw = str(command or "").strip()
-    if not raw:
-        return True, ""
-    if any(token in raw for token in _SCHEDULER_FORBIDDEN_SHELL_CHARS):
-        return False, "command contains forbidden shell control characters"
-    return True, ""
-
-
-def _split_scheduler_command(command: str) -> list[str]:
-    parts = shlex.split(command, posix=False)
-    return [item for item in parts if str(item).strip()]
+    return ops_runtime_api.default_scheduler_state()
 
 
 def _default_cicd_state() -> dict:
-    return {"last_run": {}, "history": []}
+    return ops_runtime_api.default_cicd_state()
 
 
 def _default_onboarding_state() -> dict:
@@ -6879,105 +6862,13 @@ def scheduler():
     state = _load_json_state(SCHEDULER_STATE_PATH, _default_scheduler_state())
 
     if request.method == 'GET':
-        return jsonify({"ok": True, **state})
+        return jsonify(ops_runtime_api.scheduler_get(state))
 
     payload = request.get_json(force=True, silent=True) or {}
-    action = str(payload.get("action", "")).strip().lower()
-
-    jobs = state.get("jobs") if isinstance(state.get("jobs"), list) else []
-    history = state.get("history") if isinstance(state.get("history"), list) else []
-
-    if action == "add":
-        label = str(payload.get("label", "")).strip() or "unnamed-job"
-        command = str(payload.get("command", "")).strip()
-        ok, error = _validate_scheduler_command(command)
-        if not ok:
-            return jsonify({"ok": False, "message": error}), 400
-        interval_seconds = max(30, int(payload.get("interval_seconds", 300)))
-        job_id = f"job-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
-        jobs.append(
-            {
-                "id": job_id,
-                "label": label,
-                "command": command,
-                "interval_seconds": interval_seconds,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
-        state["jobs"] = jobs
-        state["history"] = history[-50:]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job added", "job_id": job_id, **state})
-
-    if action == "remove":
-        job_id = str(payload.get("id", "")).strip()
-        if not job_id:
-            return jsonify({"ok": False, "message": "id is required"}), 400
-        state["jobs"] = [item for item in jobs if str(item.get("id", "")).strip() != job_id]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job removed", **state})
-
-    if action == "run_now":
-        job_id = str(payload.get("id", "")).strip()
-        if not job_id:
-            return jsonify({"ok": False, "message": "id is required"}), 400
-        job = next((item for item in jobs if str(item.get("id", "")).strip() == job_id), None)
-        if not isinstance(job, dict):
-            return jsonify({"ok": False, "message": "job not found"}), 404
-
-        command = str(job.get("command", "")).strip()
-        if not command:
-            result = {"ok": True, "message": "job has no command; treated as metadata-only task", "exit_code": 0}
-        else:
-            ok, error = _validate_scheduler_command(command)
-            if not ok:
-                result = {"ok": False, "message": error, "exit_code": 2}
-            else:
-                try:
-                    cmd_parts = _split_scheduler_command(command)
-                except ValueError as ex:
-                    result = {"ok": False, "message": f"invalid command syntax: {ex}", "exit_code": 2}
-                else:
-                    if not cmd_parts:
-                        result = {"ok": False, "message": "empty command after parsing", "exit_code": 2}
-                    else:
-                        try:
-                            proc = subprocess.run(
-                                cmd_parts,
-                                cwd=str(PROJECT_ROOT),
-                                shell=False,
-                                capture_output=True,
-                                text=True,
-                                timeout=300,
-                            )
-                            result = {
-                                "ok": proc.returncode == 0,
-                                "exit_code": proc.returncode,
-                                "stdout": (proc.stdout or "")[-2000:],
-                                "stderr": (proc.stderr or "")[-2000:],
-                            }
-                        except subprocess.TimeoutExpired as ex:
-                            result = {
-                                "ok": False,
-                                "exit_code": 124,
-                                "stdout": ((ex.stdout or "") if isinstance(ex.stdout, str) else "")[-2000:],
-                                "stderr": ((ex.stderr or "") if isinstance(ex.stderr, str) else "")[-2000:],
-                                "message": "command timed out",
-                            }
-
-        history.append(
-            {
-                "job_id": job_id,
-                "label": str(job.get("label", "")).strip(),
-                "ran_at": datetime.now(timezone.utc).isoformat(),
-                **result,
-            }
-        )
-        state["history"] = history[-100:]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job executed", "result": result, **state})
-
-    return jsonify({"ok": False, "message": "unsupported scheduler action"}), 400
+    result, status = ops_runtime_api.scheduler_post(state=state, payload=payload, project_root=PROJECT_ROOT)
+    if status == 200 and result.get("ok"):
+        _save_json_state(SCHEDULER_STATE_PATH, {k: v for k, v in result.items() if k not in {"ok", "message", "result"}})
+    return jsonify(result), status
 
 
 @app.route('/api/cicd', methods=['GET', 'POST'])
@@ -6985,37 +6876,13 @@ def cicd():
     state = _load_json_state(CICD_STATE_PATH, _default_cicd_state())
 
     if request.method == 'GET':
-        return jsonify({"ok": True, **state})
+        return jsonify(ops_runtime_api.cicd_get(state))
 
     payload = request.get_json(force=True, silent=True) or {}
-    action = str(payload.get("action", "")).strip().lower()
-    suite = str(payload.get("suite", "quick")).strip().lower()
-
-    if action != "run":
-        return jsonify({"ok": False, "message": "unsupported cicd action"}), 400
-
-    if suite == "full":
-        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
-    else:
-        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]
-
-    proc = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
-    result = {
-        "suite": suite,
-        "command": " ".join(cmd),
-        "ok": proc.returncode == 0,
-        "exit_code": proc.returncode,
-        "stdout": (proc.stdout or "")[-5000:],
-        "stderr": (proc.stderr or "")[-5000:],
-        "ran_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    history = state.get("history") if isinstance(state.get("history"), list) else []
-    history.append(result)
-    state["last_run"] = result
-    state["history"] = history[-30:]
-    _save_json_state(CICD_STATE_PATH, state)
-    return jsonify({"ok": True, **state})
+    result, status = ops_runtime_api.cicd_post(state=state, payload=payload, project_root=PROJECT_ROOT)
+    if status == 200 and result.get("ok"):
+        _save_json_state(CICD_STATE_PATH, {k: v for k, v in result.items() if k != "ok"})
+    return jsonify(result), status
 
 
 @app.route('/api/onboarding', methods=['POST'])
