@@ -506,7 +506,10 @@ def cmd_module(args: argparse.Namespace) -> None:
         if any(not bool(row.get("ok")) for row in smoke_rows):
             report["ok"] = False
         report["smoke"] = {"ok": all(bool(row.get("ok")) for row in smoke_rows), "modules": smoke_rows}
-        pretty(report)
+        if bool(getattr(args, "json", False)):
+            print(json.dumps(report, separators=(",", ":")))
+        else:
+            pretty(report)
         if not report["ok"]:
             raise SystemExit(2)
         return
@@ -1334,6 +1337,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--include-external",
         action="store_true",
         help="Attempt smoke runs for non `python -m` standalone entrypoints",
+    )
+    p_module_doctor.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit compact JSON for machine parsing",
     )
     p_module_doctor.set_defaults(func=cmd_module)
 

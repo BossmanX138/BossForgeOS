@@ -1,7 +1,5 @@
 import atexit
-import base64
 import json
-import math
 import os
 import re
 import shlex
@@ -23,7 +21,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from flask import Flask, jsonify, render_template_string, request, send_file
-from werkzeug.utils import secure_filename
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
@@ -34,8 +31,8 @@ try:
 except ModuleNotFoundError:
     from core.model_gateway import service as model_gateway_api
 from modules.runeforge_voice import service as runeforge_voice_service
+from modules.security import api_adapter as security_api
 from modules.soundforge import api_adapter as soundforge_api
-from core.security.security_sentinel_agent import SecuritySentinelAgent
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
@@ -6364,36 +6361,20 @@ def model_chat():
 
 @app.get("/api/security/state")
 def security_state():
-    path = bus.state / "security_sentinel.json"
-    if not path.exists():
-        return jsonify({"ok": True, "status": "idle", "findings": []})
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        payload = {"ok": False, "message": "invalid security state", "findings": []}
-    if not isinstance(payload, dict):
-        payload = {"ok": False, "message": "invalid security state", "findings": []}
-    payload.setdefault("findings", [])
-    return jsonify(payload)
+    return jsonify(security_api.read_security_state(bus.state / "security_sentinel.json"))
 
 
 @app.post("/api/security/scan")
 def security_scan():
     payload = request.get_json(force=True, silent=True) or {}
     path = str(payload.get("path", "")).strip()
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.scan_workspace(path)
-    agent.bus.emit_event("security_sentinel", "manual:scan_workspace", result)
-    agent.bus.write_state("security_sentinel", {"service": "security_sentinel", "pid": os.getpid(), "last_command": "scan_workspace", **result})
-    status = 200 if result.get("ok") else 400
+    result, status = security_api.scan_workspace(path)
     return jsonify(result), status
 
 
 @app.get("/api/security/secrets")
 def security_secrets():
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.list_secrets()
-    return jsonify(result)
+    return jsonify(security_api.list_secrets())
 
 
 @app.post("/api/security/policy/set")
@@ -6401,9 +6382,7 @@ def security_policy_set():
     payload = request.get_json(force=True, silent=True) or {}
     agent_name = str(payload.get("agent", "")).strip()
     actions = payload.get("actions") if isinstance(payload.get("actions"), list) else []
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.set_policy(agent_name, [str(a) for a in actions])
-    status = 200 if result.get("ok") else 400
+    result, status = security_api.set_policy(agent_name, [str(a) for a in actions])
     return jsonify(result), status
 
 
@@ -6412,31 +6391,13 @@ def security_policy_check():
     payload = request.get_json(force=True, silent=True) or {}
     agent_name = str(payload.get("agent", "")).strip()
     action = str(payload.get("action", "")).strip()
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.check_policy(agent_name, action)
-    return jsonify(result)
+    return jsonify(security_api.check_policy(agent_name, action))
 
 
 def _pin_overlay_is_running() -> bool:
     global PIN_OVERLAY_PROCESS
     if PIN_OVERLAY_PROCESS is None:
         return False
-
-
-    def _safe_icon_stem(value: str) -> str:
-        cleaned = secure_filename(str(value or "").strip())
-        if not cleaned:
-            return "agent_icon"
-        stem = Path(cleaned).stem.replace("-", "_")
-        stem = "".join(ch for ch in stem if ch.isalnum() or ch == "_").strip("_")
-        return (stem[:64] or "agent_icon").lower()
-
-
-    def _to_project_relpath(path: Path) -> str:
-        try:
-            return str(path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
-        except Exception:
-            return str(path).replace("\\", "/")
     return PIN_OVERLAY_PROCESS.poll() is None
 
 
