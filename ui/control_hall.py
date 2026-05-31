@@ -35,6 +35,7 @@ from modules.soundforge import api_adapter as soundforge_api
 from modules.ui_runtime import api_adapter as ui_runtime_api
 from modules.onboarding import api_adapter as onboarding_api
 from modules.ops_runtime import api_adapter as ops_runtime_api
+from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
@@ -6781,48 +6782,31 @@ try:
 
     @socketio.on('join_agent')
     def handle_join_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
+        agent, presence = collab_api.join_agent(agent_editors, agent_locks, data)
         join_room(agent)
-        agent_editors.setdefault(agent, set()).add(user)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors[agent]), 'lock': agent_locks.get(agent)}, room=agent)
+        emit('presence', presence, room=agent)
 
     @socketio.on('leave_agent')
     def handle_leave_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
+        agent, presence = collab_api.leave_agent(agent_editors, agent_locks, data)
         leave_room(agent)
-        if agent in agent_editors:
-            agent_editors[agent].discard(user)
-            if not agent_editors[agent]:
-                agent_editors.pop(agent)
-        if agent_locks.get(agent) == user:
-            agent_locks.pop(agent)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        emit('presence', presence, room=agent)
 
     @socketio.on('lock_agent')
     def handle_lock_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        if agent_locks.get(agent) in (None, user):
-            agent_locks[agent] = user
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        agent, presence = collab_api.lock_agent(agent_editors, agent_locks, data)
+        emit('presence', presence, room=agent)
 
     @socketio.on('unlock_agent')
     def handle_unlock_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        if agent_locks.get(agent) == user:
-            agent_locks.pop(agent)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        agent, presence = collab_api.unlock_agent(agent_editors, agent_locks, data)
+        emit('presence', presence, room=agent)
 
     @socketio.on('edit_agent')
     def handle_edit_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        content = data.get('content', {})
+        agent, payload = collab_api.edit_agent_payload(data)
         # Broadcast edit to all in room except sender
-        emit('agent_edit', {'agent': agent, 'user': user, 'content': content}, room=agent, include_self=False)
+        emit('agent_edit', payload, room=agent, include_self=False)
 except ImportError:
     socketio = None
 
