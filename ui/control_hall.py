@@ -25,7 +25,7 @@ from flask import Flask, jsonify, render_template_string, request, send_file
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from modules.agentforge import api_adapter as agentforge_api
-from modules.iconforge import service as iconforge_service
+from modules.iconforge import api_adapter as iconforge_api
 try:
     from modules.model_gateway import api_adapter as model_gateway_api
 except ModuleNotFoundError:
@@ -6154,109 +6154,49 @@ def agentforge_icon_create_animated_from_canvas():
 
 @app.get("/api/iconforge/backups")
 def iconforge_backups():
-    try:
-        forge = iconforge_service.get_forge(PROJECT_ROOT)
-        return jsonify({"ok": True, "items": forge.list_backups()})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": str(exc), "items": {}}), 500
+    result, status = iconforge_api.list_backups(PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.get("/api/iconforge/preview")
 def iconforge_preview():
-    raw_path = str(request.args.get("path", "")).strip()
-    if not raw_path:
-        return jsonify({"ok": False, "message": "path is required"}), 400
-
-    candidate = Path(raw_path).expanduser()
-    if not candidate.is_absolute():
-        candidate = (PROJECT_ROOT / candidate).resolve()
-    else:
-        candidate = candidate.resolve()
-
-    allowed = {".ico", ".png", ".gif", ".jpg", ".jpeg", ".webp", ".bmp", ".svg"}
-    if candidate.suffix.lower() not in allowed:
-        return jsonify({"ok": False, "message": "unsupported preview extension"}), 400
-    if not candidate.exists() or not candidate.is_file():
-        return jsonify({"ok": False, "message": "preview file not found"}), 404
+    candidate, err, status = iconforge_api.resolve_preview_path(PROJECT_ROOT, request.args.get("path", ""))
+    if err is not None:
+        return jsonify(err), status
     return send_file(candidate)
 
 
 @app.post("/api/iconforge/apply")
 def iconforge_apply():
     payload = request.get_json(force=True, silent=True) or {}
-    target_type = str(payload.get("target_type", "folder")).strip().lower()
-    target = str(payload.get("target", "")).strip()
-    icon = str(payload.get("icon", "")).strip()
-    if not target or not icon:
-        return jsonify({"ok": False, "message": "target and icon are required"}), 400
-
-    icon_path = Path(icon)
-    if not icon_path.is_absolute():
-        icon_path = (PROJECT_ROOT / icon_path).resolve()
-
-    forge = iconforge_service.get_forge(PROJECT_ROOT)
-    if target_type == "folder":
-        result = forge.set_folder_icon(target, str(icon_path))
-    elif target_type == "shortcut":
-        result = forge.set_shortcut_icon(target, str(icon_path))
-    elif target_type == "file_extension":
-        result = forge.set_file_extension_icon(target, str(icon_path))
-    elif target_type == "application":
-        result = forge.set_application_icon(target, str(icon_path))
-    elif target_type == "drive":
-        result = forge.set_drive_icon(target, str(icon_path))
-    else:
-        return jsonify({"ok": False, "message": f"unsupported target_type: {target_type}"}), 400
-
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.apply_icon(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/refresh_cache")
 def iconforge_refresh_cache():
-    forge = iconforge_service.get_forge(PROJECT_ROOT)
-    result = forge.refresh_icon_cache()
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.refresh_icon_cache(PROJECT_ROOT)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/restore")
 def iconforge_restore():
     payload = request.get_json(force=True, silent=True) or {}
-    backup_key = str(payload.get("backup_key", "")).strip()
-    if not backup_key:
-        return jsonify({"ok": False, "message": "backup_key is required"}), 400
-    forge = iconforge_service.get_forge(PROJECT_ROOT)
-    result = forge.restore(backup_key)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.restore_backup(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/pack/export")
 def iconforge_pack_export():
     payload = request.get_json(force=True, silent=True) or {}
-    output_dir = str(payload.get("output_dir", "")).strip()
-    if not output_dir:
-        return jsonify({"ok": False, "message": "output_dir is required"}), 400
-
-    forge = iconforge_service.get_forge(PROJECT_ROOT)
-    result = forge.export_icon_set(output_dir)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.export_pack(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/pack/import")
 def iconforge_pack_import():
     payload = request.get_json(force=True, silent=True) or {}
-    source = str(payload.get("source", "")).strip()
-    apply_changes = bool(payload.get("apply_changes", True))
-    refresh_cache = bool(payload.get("refresh_cache", False))
-    if not source:
-        return jsonify({"ok": False, "message": "source is required"}), 400
-
-    forge = iconforge_service.get_forge(PROJECT_ROOT)
-    result = forge.import_icon_set(source=source, apply_changes=apply_changes, refresh_cache=refresh_cache)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.import_pack(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
