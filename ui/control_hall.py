@@ -33,6 +33,8 @@ except ModuleNotFoundError:
 from modules.runeforge_voice import service as runeforge_voice_service
 from modules.security import api_adapter as security_api
 from modules.soundforge import api_adapter as soundforge_api
+from modules.ui_runtime import api_adapter as ui_runtime_api
+from modules.onboarding import api_adapter as onboarding_api
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
@@ -6365,24 +6367,19 @@ atexit.register(_terminate_pin_overlay)
 @app.get("/api/pin/state")
 def pin_state():
     global PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA
-    if PIN_OVERLAY_PROCESS is not None and PIN_OVERLAY_PROCESS.poll() is not None:
-        PIN_OVERLAY_PROCESS = None
-        PIN_OVERLAY_VIEW = ""
-    return jsonify({"ok": True, "running": _pin_overlay_is_running(), "view": PIN_OVERLAY_VIEW, "alpha": PIN_OVERLAY_ALPHA})
+    out = ui_runtime_api.pin_state(PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA, _pin_overlay_is_running)
+    PIN_OVERLAY_PROCESS = out.pop("_process", PIN_OVERLAY_PROCESS)
+    PIN_OVERLAY_VIEW = out.pop("_view", PIN_OVERLAY_VIEW)
+    return jsonify(out)
 
 
 @app.post("/api/pin/launch")
 def pin_launch():
     global PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA
     payload = request.get_json(force=True, silent=True) or {}
-    view = str(payload.get("view", "")).strip() or "view_status"
-    try:
-        alpha = float(payload.get("alpha", PIN_OVERLAY_ALPHA))
-    except (TypeError, ValueError):
-        alpha = PIN_OVERLAY_ALPHA
-    alpha = max(0.35, min(1.0, alpha))
+    view, alpha = ui_runtime_api.pin_launch_payload(payload, PIN_OVERLAY_ALPHA)
 
-    overlay_path = Path(__file__).resolve().parent / "pin_overlay.py"
+    overlay_path = ui_runtime_api.pin_overlay_path(__file__)
     if not overlay_path.exists():
         return jsonify({"ok": False, "message": f"overlay script missing: {overlay_path}"}), 500
 
@@ -6874,14 +6871,7 @@ def _default_cicd_state() -> dict:
 
 
 def _default_onboarding_state() -> dict:
-    return {
-        "steps": {
-            "workspace_check": False,
-            "security_baseline": False,
-            "model_gateway": False,
-        },
-        "updated_at": "",
-    }
+    return onboarding_api.default_state()
 
 
 @app.route('/api/scheduler', methods=['GET', 'POST'])
@@ -7034,35 +7024,17 @@ def onboarding():
     state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
     payload = request.get_json(force=True, silent=True) or {}
     step = str(payload.get("step", "")).strip().lower()
-
-    if step == "workspace_check":
-        checks = {
-            "project_root_exists": PROJECT_ROOT.exists(),
-            "bus_state_exists": (bus.root / "state").exists(),
-            "core_exists": (PROJECT_ROOT / "core").exists(),
-            "ui_exists": (PROJECT_ROOT / "ui").exists(),
-        }
-        state.setdefault("checks", {}).update(checks)
-        state.setdefault("steps", {})["workspace_check"] = all(bool(v) for v in checks.values())
-    elif step in {"security_baseline", "model_gateway"}:
-        state.setdefault("steps", {})[step] = True
-    else:
-        return jsonify({"ok": False, "message": "unsupported onboarding step"}), 400
-
-    state["updated_at"] = datetime.now(timezone.utc).isoformat()
-    _save_json_state(ONBOARDING_STATE_PATH, state)
-    return jsonify({"ok": True, **state})
+    result, status = onboarding_api.apply_step(state, step, PROJECT_ROOT, bus.root)
+    if status == 200:
+        _save_json_state(ONBOARDING_STATE_PATH, {k: v for k, v in result.items() if k != "ok"})
+    return jsonify(result), status
 
 
 @app.route('/api/onboarding/status', methods=['GET'])
 @app.route('/onboarding', methods=['GET'])
 def onboarding_status():
     state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
-    steps = state.get("steps") if isinstance(state.get("steps"), dict) else {}
-    completion = 0.0
-    if steps:
-        completion = round((sum(1 for value in steps.values() if bool(value)) / max(1, len(steps))) * 100.0, 1)
-    return jsonify({"ok": True, "completion_percent": completion, **state})
+    return jsonify(onboarding_api.status_payload(state))
 
 
 def main() -> None:
