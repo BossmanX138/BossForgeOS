@@ -72,7 +72,7 @@ SoundForge is the renamed module surface for the legacy SoundStage engine. Exist
 ## VS Code Extension
 
 - Sidebar panel with onboarding wizard, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
-- REST API integration with Control Hall and SoundStage
+- REST API integration with Control Hall and SoundForge (legacy SoundStage compatibility routes retained)
 - Status bar, command palette, extension settings
 - See `extension/README.md` for usage
 

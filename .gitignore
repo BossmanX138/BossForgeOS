@@ -19,6 +19,8 @@ build/
 dist/
 releases/
 *.spec
+obj/
+bin/
 
 # Local bus/state/event artifacts
 bus/
@@ -31,6 +33,19 @@ archivist_onboarded_projects.json
 # Logs
 *.log
 build_exe.log
+zicorp-ai-logs.json
+
+# VS/VSCode and workspace noise
+.vscode/
+*.code-workspace
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.recipe
+*.tlog
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
 
 # OS/editor noise
 .DS_Store

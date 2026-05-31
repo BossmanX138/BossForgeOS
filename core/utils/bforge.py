@@ -3,14 +3,18 @@ import ctypes
 import importlib.util
 import json
 import os
+import signal
+import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Any, Dict
 
 from core.agents.archivist_agent import ArchivistAgent
-from core.icons import IconForge
+from modules.iconforge import service as iconforge_service
+from core.orchestrator.module_registry import ModuleRegistry, ModuleValidationError
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
-from modules.os_snapshot import snapshot_all
 
 
 AGENTS = {
@@ -48,7 +52,7 @@ def _plugin_dirs() -> list[Path]:
     return [repo_plugins, user_plugins]
 
 
-def _load_plugins(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> list[dict[str, str]]:
+def _load_plugins(subparsers: argparse._SubParsersAction) -> list[dict[str, str]]:
     loaded: list[dict[str, str]] = []
     seen_paths: set[str] = set()
 
@@ -100,10 +104,11 @@ def cmd_status(_: argparse.Namespace) -> None:
     pretty(out)
 
 
-    # Model-Keeper compatibility alias
-    p_model_keeper = subparsers.add_parser("model-keeper", help="Model-Keeper compatibility commands")
-    p_model_keeper.add_argument("action", choices=["status"], help="Action to perform")
-    p_model_keeper.set_defaults(func=cmd_model_keeper)
+def cmd_model_keeper(args: argparse.Namespace) -> None:
+    if args.action == "status":
+        cmd_status(args)
+        return
+    raise SystemExit("unknown model-keeper action")
 
 def cmd_tail(args: argparse.Namespace) -> None:
     bus = RuneBus(resolve_root_from_env())
@@ -124,6 +129,8 @@ def cmd_agent(args: argparse.Namespace) -> None:
 def cmd_os(args: argparse.Namespace) -> None:
     bus = RuneBus(resolve_root_from_env())
     if args.sub == "snapshot":
+        from modules.os_snapshot import snapshot_all
+
         pretty(snapshot_all())
         return
 
@@ -397,6 +404,172 @@ def cmd_security(args: argparse.Namespace) -> None:
     raise SystemExit("unknown security command")
 
 
+def cmd_module(args: argparse.Namespace) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    registry = ModuleRegistry(repo_root=repo_root)
+
+    if args.sub == "list":
+        pretty({"ok": True, "modules": registry.summarize()})
+        return
+
+    if args.sub == "show":
+        item = registry.get(args.module_id)
+        if item is None:
+            raise SystemExit(f"module not found: {args.module_id}")
+        pretty({"ok": True, "module": item})
+        return
+
+    if args.sub == "validate":
+        try:
+            out = registry.validate()
+        except ModuleValidationError as ex:
+            pretty({"ok": False, "error": str(ex)})
+            raise SystemExit(2)
+        pretty(out)
+        return
+
+    runtime_path = _module_runtime_path()
+    runtime = _load_module_runtime(runtime_path)
+
+    if args.sub == "status":
+        module_rows = []
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = runtime.get(module_id, {})
+            pid = int(entry.get("pid", 0) or 0)
+            module_rows.append(
+                {
+                    **item,
+                    "pid": pid,
+                    "running": _pid_alive(pid),
+                    "started_at": entry.get("started_at", ""),
+                    "log_file": entry.get("log_file", ""),
+                }
+            )
+        pretty({"ok": True, "modules": module_rows})
+        return
+
+    if args.sub == "start":
+        item = registry.get(args.module_id)
+        if item is None:
+            raise SystemExit(f"module not found: {args.module_id}")
+        module_id = str(item.get("module_id", ""))
+        existing = runtime.get(module_id, {})
+        existing_pid = int(existing.get("pid", 0) or 0)
+        if _pid_alive(existing_pid):
+            pretty({"ok": True, "message": "module already running", "module_id": module_id, "pid": existing_pid})
+            return
+
+        cmd = item.get("connector_command", [])
+        if bool(getattr(args, "standalone", False)):
+            entry = str(item.get("standalone_entrypoint", "")).strip()
+            if not entry:
+                raise SystemExit(f"module {module_id} has no standalone entrypoint")
+            if entry.lower().startswith("python -m "):
+                module_name = entry[len("python -m ") :].strip()
+                cmd = ["python", "-m", module_name]
+            else:
+                cmd = entry.split()
+        if not isinstance(cmd, list) or not cmd:
+            raise SystemExit(f"module {module_id} has invalid connector command")
+
+        # Prefer the currently running interpreter when manifests specify `python`.
+        if cmd and str(cmd[0]).strip().lower() in {"python", "python3", "py"}:
+            cmd = [sys.executable, *cmd[1:]]
+        elif cmd and str(cmd[0]).strip().lower() == "powershell":
+            pwsh = shutil.which("powershell") or r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+            cmd = [pwsh, *cmd[1:]]
+
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(repo_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        runtime[module_id] = {
+            "pid": proc.pid,
+            "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "log_file": "",
+            "command": cmd,
+        }
+        _save_module_runtime(runtime_path, runtime)
+        pretty({"ok": True, "module_id": module_id, "pid": proc.pid, "log_file": ""})
+        return
+
+    if args.sub == "stop":
+        module_id = str(args.module_id).strip()
+        entry = runtime.get(module_id)
+        if not isinstance(entry, dict):
+            raise SystemExit(f"module not tracked in runtime state: {module_id}")
+        pid = int(entry.get("pid", 0) or 0)
+        if not _pid_alive(pid):
+            runtime.pop(module_id, None)
+            _save_module_runtime(runtime_path, runtime)
+            pretty({"ok": True, "message": "module already stopped", "module_id": module_id, "pid": pid})
+            return
+        try:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], check=False, capture_output=True)
+            else:
+                os.kill(pid, signal.SIGTERM)
+        except OSError as ex:
+            raise SystemExit(f"failed to stop module {module_id} pid={pid}: {ex}") from ex
+        runtime.pop(module_id, None)
+        _save_module_runtime(runtime_path, runtime)
+        pretty({"ok": True, "module_id": module_id, "pid": pid, "stopped": True})
+        return
+
+    raise SystemExit("unknown module command")
+
+
+def _module_runtime_path() -> Path:
+    bus = RuneBus(resolve_root_from_env())
+    return bus.state / "module_runtime.json"
+
+
+def _load_module_runtime(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for key, value in payload.items():
+        if isinstance(value, dict):
+            out[str(key)] = value
+    return out
+
+
+def _save_module_runtime(path: Path, payload: dict[str, dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        if os.name == "nt":
+            proc = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            stdout = (proc.stdout or "").strip()
+            if not stdout or "No tasks are running" in stdout:
+                return False
+            return f'"{pid}"' in stdout
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def _resolve_project_path(path_arg: str | None) -> Path:
     raw = path_arg.strip() if path_arg else os.getcwd()
     target = Path(raw).expanduser().resolve()
@@ -657,7 +830,7 @@ def cmd_model(args: argparse.Namespace) -> None:
 
 
 def cmd_icons(args: argparse.Namespace) -> None:
-    forge = IconForge(resolve_root_from_env())
+    forge = iconforge_service.get_forge(resolve_root_from_env())
 
     if args.sub == "create-from-image":
         sizes = [int(item.strip()) for item in (args.sizes or "").split(",") if item.strip()]
@@ -750,6 +923,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status")
     p_status.set_defaults(func=cmd_status)
+
+    p_model_keeper = sub.add_parser("model-keeper", help="Model-Keeper compatibility commands")
+    p_model_keeper.add_argument("action", choices=["status"], help="Action to perform")
+    p_model_keeper.set_defaults(func=cmd_model_keeper)
 
     p_tail = sub.add_parser("tail")
     p_tail.add_argument("--limit", type=int, default=20)
@@ -1042,6 +1219,35 @@ def build_parser() -> argparse.ArgumentParser:
     p_policy_check.add_argument("agent")
     p_policy_check.add_argument("action")
     p_policy_check.set_defaults(func=cmd_security)
+
+    p_module = sub.add_parser("module", help="Standalone module registry commands")
+    p_module_sub = p_module.add_subparsers(dest="sub")
+
+    p_module_list = p_module_sub.add_parser("list", help="List registered module manifests")
+    p_module_list.set_defaults(func=cmd_module)
+
+    p_module_show = p_module_sub.add_parser("show", help="Show one module manifest summary")
+    p_module_show.add_argument("module_id")
+    p_module_show.set_defaults(func=cmd_module)
+
+    p_module_validate = p_module_sub.add_parser("validate", help="Validate all module manifests")
+    p_module_validate.set_defaults(func=cmd_module)
+
+    p_module_status = p_module_sub.add_parser("status", help="Show module runtime status")
+    p_module_status.set_defaults(func=cmd_module)
+
+    p_module_start = p_module_sub.add_parser("start", help="Start module connector process")
+    p_module_start.add_argument("module_id")
+    p_module_start.add_argument(
+        "--standalone",
+        action="store_true",
+        help="Start module standalone entrypoint instead of connector command",
+    )
+    p_module_start.set_defaults(func=cmd_module)
+
+    p_module_stop = p_module_sub.add_parser("stop", help="Stop module connector process")
+    p_module_stop.add_argument("module_id")
+    p_module_stop.set_defaults(func=cmd_module)
 
     global PLUGIN_LOAD_STATE
     PLUGIN_LOAD_STATE = _load_plugins(sub)
