@@ -6579,6 +6579,63 @@ def soundforge_finalize_soundstage_removal():
 # Collaborative Agent Editing #
 ###############################
 
+
+def _collab_join_flow(
+    agent_editors: dict[str, set[str]],
+    agent_locks: dict[str, str],
+    data: dict,
+    *,
+    emit_fn,
+    join_room_fn,
+) -> None:
+    agent, presence = collab_api.join_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    join_room_fn(agent)
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_leave_flow(
+    agent_editors: dict[str, set[str]],
+    agent_locks: dict[str, str],
+    data: dict,
+    *,
+    emit_fn,
+    leave_room_fn,
+) -> None:
+    agent, presence = collab_api.leave_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    leave_room_fn(agent)
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_lock_flow(agent_editors: dict[str, set[str]], agent_locks: dict[str, str], data: dict, *, emit_fn) -> None:
+    agent, presence = collab_api.lock_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_unlock_flow(agent_editors: dict[str, set[str]], agent_locks: dict[str, str], data: dict, *, emit_fn) -> None:
+    agent, presence = collab_api.unlock_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_edit_flow(data: dict, *, emit_fn) -> None:
+    agent, payload = collab_api.edit_agent_payload(data)
+    if not payload.get("ok"):
+        emit_fn("agent_edit", payload)
+        return
+    emit_fn("agent_edit", payload, room=agent, include_self=False)
+
+
 try:
     from flask_socketio import SocketIO, emit, join_room, leave_room
     socketio = SocketIO(app, cors_allowed_origins="*")
@@ -6588,46 +6645,23 @@ try:
 
     @socketio.on('join_agent')
     def handle_join_agent(data):
-        agent, presence = collab_api.join_agent(agent_editors, agent_locks, data)
-        if not presence.get("ok"):
-            emit('presence', presence)
-            return
-        join_room(agent)
-        emit('presence', presence, room=agent)
+        _collab_join_flow(agent_editors, agent_locks, data, emit_fn=emit, join_room_fn=join_room)
 
     @socketio.on('leave_agent')
     def handle_leave_agent(data):
-        agent, presence = collab_api.leave_agent(agent_editors, agent_locks, data)
-        if not presence.get("ok"):
-            emit('presence', presence)
-            return
-        leave_room(agent)
-        emit('presence', presence, room=agent)
+        _collab_leave_flow(agent_editors, agent_locks, data, emit_fn=emit, leave_room_fn=leave_room)
 
     @socketio.on('lock_agent')
     def handle_lock_agent(data):
-        agent, presence = collab_api.lock_agent(agent_editors, agent_locks, data)
-        if not presence.get("ok"):
-            emit('presence', presence)
-            return
-        emit('presence', presence, room=agent)
+        _collab_lock_flow(agent_editors, agent_locks, data, emit_fn=emit)
 
     @socketio.on('unlock_agent')
     def handle_unlock_agent(data):
-        agent, presence = collab_api.unlock_agent(agent_editors, agent_locks, data)
-        if not presence.get("ok"):
-            emit('presence', presence)
-            return
-        emit('presence', presence, room=agent)
+        _collab_unlock_flow(agent_editors, agent_locks, data, emit_fn=emit)
 
     @socketio.on('edit_agent')
     def handle_edit_agent(data):
-        agent, payload = collab_api.edit_agent_payload(data)
-        if not payload.get("ok"):
-            emit('agent_edit', payload)
-            return
-        # Broadcast edit to all in room except sender
-        emit('agent_edit', payload, room=agent, include_self=False)
+        _collab_edit_flow(data, emit_fn=emit)
 except ImportError:
     socketio = None
 
