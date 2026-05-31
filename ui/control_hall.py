@@ -5805,6 +5805,7 @@ def status():
             "status": "online",
             "agents": AGENT_STATUS,
             "agent_state": read_agent_state(),
+            "agent_tasks": load_agent_task_state(),
             "recent_events": latest,
         }
     )
