@@ -67,3 +67,6 @@ docs/*.code-workspace
 !*_voice.wav
 !voices/
 !voices/**
+
+# Local Superpowers worktrees
+.worktrees/
