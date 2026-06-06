@@ -1,4 +1,0 @@
-{"ts": 1779770025, "path": "/health", "method": "GET", "status": 200, "role": "anonymous", "model_id": "default", "latency_ms": 211, "error": null}
-{"ts": 1779770374, "path": "/app/", "method": "GET", "status": 404, "role": "admin", "model_id": "default", "latency_ms": 62, "error": null}
-{"ts": 1779770374, "path": "/favicon.ico", "method": "GET", "status": 404, "role": "admin", "model_id": "default", "latency_ms": 0, "error": null}
-{"ts": 1779770474, "path": "/app/", "method": "GET", "status": 404, "role": "admin", "model_id": "default", "latency_ms": 87, "error": null}

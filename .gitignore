@@ -35,6 +35,8 @@ archivist_onboarded_projects.json
 *.log
 build_exe.log
 zicorp-ai-logs.json
+modules/runeforge_provider/logs/*.jsonl
+modules/runeforge_provider/runeforge_memory_store.json
 
 # VS/VSCode and workspace noise
 .vscode/
