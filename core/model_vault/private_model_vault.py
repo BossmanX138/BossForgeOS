@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
+import secrets
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 MODEL_VAULT_SCHEMA_VERSION = "1.0"
@@ -169,3 +177,279 @@ def inspect_model_source(
         "required_categories": ["model_config", "tokenizer", "weights"],
         "total_size": sum(int(item["size"]) for item in files),
     }
+
+
+def _normalized_agent_id(value: str) -> str:
+    agent_id = str(value or "").strip().lower()
+    if (
+        not agent_id
+        or agent_id in {".", ".."}
+        or "/" in agent_id
+        or "\\" in agent_id
+    ):
+        raise ValueError("agent_id must be a normalized path-safe identifier")
+    return agent_id
+
+
+def _aes_key(secret_key: str) -> bytes:
+    secret = str(secret_key or "")
+    if not secret:
+        raise ValueError("private model secret_key is required")
+    return hashlib.sha256(secret.encode("utf-8")).digest()
+
+
+def _canonical_json(payload: dict[str, Any]) -> bytes:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _chunk_aad(
+    *,
+    package_id: str,
+    owner_agent_id: str,
+    relative_path: str,
+    chunk_index: int,
+    plaintext_size: int,
+) -> bytes:
+    return _canonical_json(
+        {
+            "package_id": package_id,
+            "owner_agent_id": owner_agent_id,
+            "relative_path": relative_path,
+            "chunk_index": chunk_index,
+            "plaintext_size": plaintext_size,
+        }
+    )
+
+
+def _encrypt_json(payload: dict[str, Any], aes: AESGCM) -> dict[str, str | int]:
+    nonce = secrets.token_bytes(12)
+    ciphertext = aes.encrypt(nonce, _canonical_json(payload), None)
+    return {
+        "version": 1,
+        "alg": "AES-256-GCM",
+        "nonce_b64": base64.b64encode(nonce).decode("ascii"),
+        "ciphertext_b64": base64.b64encode(ciphertext).decode("ascii"),
+    }
+
+
+def _decrypt_json(blob: dict[str, Any], aes: AESGCM) -> dict[str, Any]:
+    if str(blob.get("alg", "")).upper() != "AES-256-GCM":
+        raise ValueError("unsupported private model encryption algorithm")
+    try:
+        nonce = base64.b64decode(str(blob["nonce_b64"]), validate=True)
+        ciphertext = base64.b64decode(str(blob["ciphertext_b64"]), validate=True)
+        plaintext = aes.decrypt(nonce, ciphertext, None)
+        payload = json.loads(plaintext.decode("utf-8"))
+    except (KeyError, ValueError, UnicodeDecodeError, json.JSONDecodeError, InvalidTag) as exc:
+        raise ValueError("private model manifest authentication failed") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("private model manifest must decrypt to an object")
+    return payload
+
+
+def build_private_model_package(
+    *,
+    agent_id: str,
+    source_root: str | Path,
+    vault_root: str | Path,
+    secret_key: str,
+    key_ref: str,
+    base_source_root: str | Path | None = None,
+    runtime_requirements: dict[str, object] | None = None,
+    chunk_size: int = 4 * 1024 * 1024,
+) -> dict[str, object]:
+    owner_agent_id = _normalized_agent_id(agent_id)
+    normalized_key_ref = str(key_ref or "").strip()
+    if not normalized_key_ref:
+        raise ValueError("private model key_ref is required")
+    safe_chunk_size = int(chunk_size)
+    if safe_chunk_size <= 0:
+        raise ValueError("private model chunk_size must be positive")
+
+    inventory = inspect_model_source(source_root, base_source_root=base_source_root)
+    root = Path(vault_root).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    package_id = f"pmv-{secrets.token_hex(16)}"
+    staging = root / ".staging" / f"{owner_agent_id}-{package_id}"
+    final = root / owner_agent_id / package_id
+    if final.exists():
+        raise ValueError(f"private model package already exists: {package_id}")
+
+    aes = AESGCM(_aes_key(secret_key))
+    manifest_files: list[dict[str, Any]] = []
+    activated = False
+    try:
+        (staging / "chunks").mkdir(parents=True, exist_ok=False)
+        for file_item in inventory["files"]:
+            relative_path = str(file_item["relative_path"])
+            file_id = hashlib.sha256(relative_path.encode("utf-8")).hexdigest()
+            chunk_dir = staging / "chunks" / file_id
+            chunk_dir.mkdir(parents=True)
+            plaintext_hasher = hashlib.sha256()
+            chunk_records: list[dict[str, Any]] = []
+            with Path(str(file_item["source_path"])).open("rb") as source:
+                chunk_index = 0
+                while True:
+                    plaintext = source.read(safe_chunk_size)
+                    if not plaintext:
+                        break
+                    plaintext_hasher.update(plaintext)
+                    nonce = secrets.token_bytes(12)
+                    aad = _chunk_aad(
+                        package_id=package_id,
+                        owner_agent_id=owner_agent_id,
+                        relative_path=relative_path,
+                        chunk_index=chunk_index,
+                        plaintext_size=len(plaintext),
+                    )
+                    ciphertext = aes.encrypt(nonce, plaintext, aad)
+                    chunk_blob = {
+                        "version": 1,
+                        "alg": "AES-256-GCM",
+                        "nonce_b64": base64.b64encode(nonce).decode("ascii"),
+                        "ciphertext_b64": base64.b64encode(ciphertext).decode("ascii"),
+                    }
+                    chunk_relpath = f"chunks/{file_id}/{chunk_index:06d}.chunk"
+                    (staging / chunk_relpath).write_text(
+                        json.dumps(chunk_blob, separators=(",", ":")),
+                        encoding="utf-8",
+                    )
+                    chunk_records.append(
+                        {
+                            "index": chunk_index,
+                            "storage_path": chunk_relpath,
+                            "plaintext_size": len(plaintext),
+                            "plaintext_sha256": hashlib.sha256(plaintext).hexdigest(),
+                            "ciphertext_size": len(ciphertext),
+                            "ciphertext_sha256": hashlib.sha256(ciphertext).hexdigest(),
+                        }
+                    )
+                    chunk_index += 1
+            manifest_files.append(
+                {
+                    "relative_path": relative_path,
+                    "source_group": str(file_item["source_group"]),
+                    "category": str(file_item["category"]),
+                    "size": int(file_item["size"]),
+                    "sha256": plaintext_hasher.hexdigest(),
+                    "chunks": chunk_records,
+                }
+            )
+
+        manifest = {
+            "schema_version": MODEL_VAULT_SCHEMA_VERSION,
+            "package_id": package_id,
+            "owner_agent_id": owner_agent_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "key_ref": normalized_key_ref,
+            "source_roots": inventory["source_roots"],
+            "adapter_only": bool(inventory["adapter_only"]),
+            "present_categories": inventory["present_categories"],
+            "required_categories": inventory["required_categories"],
+            "runtime_requirements": dict(runtime_requirements or {}),
+            "files": manifest_files,
+            "genesis_checkpoint": {
+                "kind": "package_attestation",
+                "package_id": package_id,
+            },
+        }
+        encrypted_manifest = _encrypt_json(manifest, aes)
+        manifest_bytes = _canonical_json(encrypted_manifest)
+        (staging / "package.manifest.enc").write_bytes(manifest_bytes)
+        attestation = {
+            "schema_version": MODEL_VAULT_SCHEMA_VERSION,
+            "package_id": package_id,
+            "owner_agent_id": owner_agent_id,
+            "alg": "AES-256-GCM",
+            "key_ref": normalized_key_ref,
+            "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+            "verified": False,
+        }
+        (staging / "package.attestation.json").write_text(
+            json.dumps(attestation, sort_keys=True, indent=2),
+            encoding="utf-8",
+        )
+        verify_private_model_package(staging, secret_key)
+        attestation["verified"] = True
+        (staging / "package.attestation.json").write_text(
+            json.dumps(attestation, sort_keys=True, indent=2),
+            encoding="utf-8",
+        )
+        final.parent.mkdir(parents=True, exist_ok=True)
+        staging.replace(final)
+        activated = True
+        return {
+            "schema_version": MODEL_VAULT_SCHEMA_VERSION,
+            "package_id": package_id,
+            "owner_agent_id": owner_agent_id,
+            "package_path": str(final),
+            "ciphertext_ref": str(final),
+            "attestation_sha256": hashlib.sha256(
+                (final / "package.attestation.json").read_bytes()
+            ).hexdigest(),
+            "key_ref": normalized_key_ref,
+            "verified": True,
+        }
+    finally:
+        if not activated and staging.exists():
+            shutil.rmtree(staging)
+
+
+def verify_private_model_package(
+    package_root: str | Path,
+    secret_key: str,
+) -> dict[str, Any]:
+    root = Path(package_root).resolve(strict=True)
+    try:
+        attestation = json.loads(
+            (root / "package.attestation.json").read_text(encoding="utf-8")
+        )
+        manifest_bytes = (root / "package.manifest.enc").read_bytes()
+        encrypted_manifest = json.loads(manifest_bytes.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("private model package metadata is invalid") from exc
+    expected_manifest_hash = hashlib.sha256(manifest_bytes).hexdigest()
+    if str(attestation.get("manifest_sha256", "")) != expected_manifest_hash:
+        raise ValueError("private model encrypted manifest digest mismatch")
+
+    aes = AESGCM(_aes_key(secret_key))
+    manifest = _decrypt_json(encrypted_manifest, aes)
+    if manifest.get("package_id") != attestation.get("package_id"):
+        raise ValueError("private model package_id mismatch")
+    if manifest.get("owner_agent_id") != attestation.get("owner_agent_id"):
+        raise ValueError("private model owner mismatch")
+
+    for file_item in manifest.get("files", []):
+        relative_path = str(file_item["relative_path"])
+        file_hasher = hashlib.sha256()
+        reconstructed_size = 0
+        for chunk in file_item.get("chunks", []):
+            chunk_path = root / str(chunk["storage_path"])
+            try:
+                blob = json.loads(chunk_path.read_text(encoding="utf-8"))
+                nonce = base64.b64decode(str(blob["nonce_b64"]), validate=True)
+                ciphertext = base64.b64decode(str(blob["ciphertext_b64"]), validate=True)
+            except (OSError, KeyError, ValueError, json.JSONDecodeError) as exc:
+                raise ValueError("private model ciphertext chunk is invalid") from exc
+            if hashlib.sha256(ciphertext).hexdigest() != str(chunk["ciphertext_sha256"]):
+                raise ValueError("private model ciphertext digest mismatch")
+            aad = _chunk_aad(
+                package_id=str(manifest["package_id"]),
+                owner_agent_id=str(manifest["owner_agent_id"]),
+                relative_path=relative_path,
+                chunk_index=int(chunk["index"]),
+                plaintext_size=int(chunk["plaintext_size"]),
+            )
+            try:
+                plaintext = aes.decrypt(nonce, ciphertext, aad)
+            except InvalidTag as exc:
+                raise ValueError("private model chunk authentication failed") from exc
+            if hashlib.sha256(plaintext).hexdigest() != str(chunk["plaintext_sha256"]):
+                raise ValueError("private model plaintext digest mismatch")
+            reconstructed_size += len(plaintext)
+            file_hasher.update(plaintext)
+        if reconstructed_size != int(file_item["size"]):
+            raise ValueError("private model reconstructed file size mismatch")
+        if file_hasher.hexdigest() != str(file_item["sha256"]):
+            raise ValueError("private model reconstructed file digest mismatch")
+    return manifest

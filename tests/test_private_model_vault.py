@@ -3,7 +3,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.model_vault.private_model_vault import inspect_model_source
+from core.model_vault.private_model_vault import (
+    build_private_model_package,
+    inspect_model_source,
+    verify_private_model_package,
+)
 
 
 def write_complete_model(root: Path, marker: bytes = b"weights") -> None:
@@ -87,6 +91,55 @@ class PrivateModelVaultTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "base model"):
                 inspect_model_source(adapter)
+
+    def test_encrypted_package_round_trip_contains_no_plaintext_weights(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source"
+            vaults = Path(tmp) / "vaults"
+            write_complete_model(source, b"private-weight-material")
+
+            descriptor = build_private_model_package(
+                agent_id="wayfinder",
+                source_root=source,
+                vault_root=vaults,
+                secret_key="wayfinder-secret",
+                key_ref="agent-model-key:wayfinder",
+                chunk_size=4,
+            )
+
+            package_root = Path(descriptor["package_path"])
+            encrypted_bytes = b"".join(
+                path.read_bytes() for path in package_root.rglob("*.chunk")
+            )
+            self.assertNotIn(b"private-weight-material", encrypted_bytes)
+            self.assertTrue(descriptor["verified"])
+            verified = verify_private_model_package(
+                package_root,
+                "wayfinder-secret",
+            )
+            self.assertEqual(verified["owner_agent_id"], "wayfinder")
+            self.assertEqual(verified["package_id"], descriptor["package_id"])
+
+    def test_package_verification_rejects_tampered_chunk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source"
+            write_complete_model(source)
+            descriptor = build_private_model_package(
+                agent_id="wayfinder",
+                source_root=source,
+                vault_root=Path(tmp) / "vaults",
+                secret_key="wayfinder-secret",
+                key_ref="agent-model-key:wayfinder",
+                chunk_size=4,
+            )
+            package_root = Path(descriptor["package_path"])
+            chunk = next(package_root.rglob("*.chunk"))
+            payload = json.loads(chunk.read_text(encoding="utf-8"))
+            payload["ciphertext_b64"] = "AAAA"
+            chunk.write_text(json.dumps(payload), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "ciphertext|decrypt|authentication"):
+                verify_private_model_package(package_root, "wayfinder-secret")
 
 
 if __name__ == "__main__":
