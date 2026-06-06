@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import shutil
 import sys
 import pathlib
 
@@ -29,6 +30,7 @@ from core.connectors.bossgate_connector import (
     generate_secure_address,
     is_valid_secure_address,
 )
+from core.model_vault import build_private_model_package
 from core.runner import (
     build_agent_runner_manifest,
     build_runner_bootstrap,
@@ -79,6 +81,7 @@ class ModelGateway:
         self.agent_locations_path = self.bus.state / "owned_agent_locations.json"
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
         self.agent_gate_dir = self.bus.state / "agent_gates"
+        self.private_model_root = self.bus.state / "private_models"
         self.node_id = self._load_or_create_node_id()
         self.endpoints = self._load_endpoints()
         self.profiles = self._load_profiles()
@@ -96,6 +99,7 @@ class ModelGateway:
         self.last_result: Dict[str, Any] = {"ok": True, "message": "idle"}
         self.bossgate_commands = BossGateCommandAgent(interval_seconds=max(1, int(interval_seconds)), root=self.bus.root)
         self.agent_gate_dir.mkdir(parents=True, exist_ok=True)
+        self.private_model_root.mkdir(parents=True, exist_ok=True)
         if enable_presence_broadcast:
             self._start_presence_broadcast()
 
@@ -182,7 +186,12 @@ class ModelGateway:
             runner_manifest = build_agent_runner_manifest(key)
         runtime["bossforge_ai_runner"] = runner_manifest
         normalized["runtime"] = runtime
-        normalized["runner_bootstrap"] = build_runner_bootstrap(key, runner_manifest)
+        private_model_package = runtime.get("private_model_package")
+        normalized["runner_bootstrap"] = build_runner_bootstrap(
+            key,
+            runner_manifest,
+            private_model_package if isinstance(private_model_package, dict) else None,
+        )
 
         normalized["public_id"] = str(normalized.get("public_id", key)).strip() or key
         normalized["rarity"] = normalize_rarity(normalized.get("rarity"))
@@ -632,6 +641,9 @@ class ModelGateway:
         instructions: Dict[str, Any] | None = None,
         state_machine: Dict[str, Any] | None = None,
         custom_icon_path: str | None = None,
+        model_source_path: str | None = None,
+        model_base_source_path: str | None = None,
+        model_runtime_requirements: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
         return self._create_agent_profile(
             name,
@@ -654,6 +666,9 @@ class ModelGateway:
             instructions,
             state_machine,
             custom_icon_path,
+            model_source_path,
+            model_base_source_path,
+            model_runtime_requirements,
         )
 
     def delete_agent_profile(self, name: str) -> Dict[str, Any]:
@@ -1010,6 +1025,9 @@ class ModelGateway:
         instructions: Dict[str, Any] | None = None,
         state_machine: Dict[str, Any] | None = None,
         custom_icon_path: str | None = None,
+        model_source_path: str | None = None,
+        model_base_source_path: str | None = None,
+        model_runtime_requirements: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
         key = name.strip().lower()
         if not key:
@@ -1088,12 +1106,54 @@ class ModelGateway:
         if custom_icon_path:
             profile["custom_icon_path"] = str(custom_icon_path).strip()
         profile = self._normalize_agent_profile(key, profile)
-        profile = self._ensure_agent_gate_file(profile)
-        self.agent_profiles[key] = profile
-        self._save_agent_profiles()
-        self.memory_store.register_agent(agent_name=key, agent_class=profile["agent_class"], has_llm=bool(profile.get("has_llm")))
-        self._write_agent_presence(name=key, endpoint=endpoint, status="deployed", detail="profile saved")
-        return {"ok": True, "agent": profile}
+        package_descriptor: Dict[str, Any] | None = None
+        package_path: Path | None = None
+        try:
+            if bool(profile.get("has_llm")):
+                selected_source = str(
+                    model_source_path
+                    or os.getenv("BOSSFORGE_DEFAULT_MODEL_SOURCE", "")
+                ).strip()
+                if not selected_source:
+                    return {
+                        "ok": False,
+                        "message": "model source is required for LLM-enabled agent creation",
+                    }
+                package_descriptor = build_private_model_package(
+                    agent_id=key,
+                    source_root=selected_source,
+                    base_source_root=model_base_source_path,
+                    vault_root=self.private_model_root,
+                    secret_key=f"{self.node_id}:{key}:private-model-v1",
+                    key_ref=f"node:{self.node_id}:agent:{key}:private-model-v1",
+                    runtime_requirements=model_runtime_requirements,
+                )
+                package_path = Path(str(package_descriptor["package_path"]))
+                runtime = dict(profile.get("runtime", {}))
+                runtime["private_model_package"] = package_descriptor
+                profile["runtime"] = runtime
+                profile = self._normalize_agent_profile(key, profile)
+
+            profile = self._ensure_agent_gate_file(profile)
+            self.agent_profiles[key] = profile
+            self._save_agent_profiles()
+            self.memory_store.register_agent(
+                agent_name=key,
+                agent_class=profile["agent_class"],
+                has_llm=bool(profile.get("has_llm")),
+            )
+            self._write_agent_presence(
+                name=key,
+                endpoint=endpoint,
+                status="deployed",
+                detail="profile saved",
+            )
+            return {"ok": True, "agent": profile}
+        except Exception as exc:
+            self.agent_profiles.pop(key, None)
+            if package_path is not None and package_path.exists():
+                shutil.rmtree(package_path)
+            return {"ok": False, "message": f"agent creation failed: {exc}"}
 
     def _run_agent_profile(
         self,

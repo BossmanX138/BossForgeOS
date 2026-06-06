@@ -14,9 +14,16 @@ class ModelGatewayAgentTests(unittest.TestCase):
     def setUp(self) -> None:
         self._old_root = os.environ.get("BOSSFORGE_ROOT")
         self._old_presence_flag = os.environ.get("BOSSGATE_DISABLE_PRESENCE_BROADCAST")
+        self._old_model_source = os.environ.get("BOSSFORGE_DEFAULT_MODEL_SOURCE")
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["BOSSFORGE_ROOT"] = self.tmp.name
         os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = "1"
+        self.model_source = Path(self.tmp.name) / "test_model"
+        self.model_source.mkdir()
+        (self.model_source / "config.json").write_text('{"model_type":"qwen2"}', encoding="utf-8")
+        (self.model_source / "tokenizer.json").write_text('{"version":"1.0"}', encoding="utf-8")
+        (self.model_source / "model.safetensors").write_bytes(b"tiny-test-weights")
+        os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = str(self.model_source)
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -28,6 +35,10 @@ class ModelGatewayAgentTests(unittest.TestCase):
             os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
         else:
             os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = self._old_presence_flag
+        if self._old_model_source is None:
+            os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
+        else:
+            os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = self._old_model_source
 
     def test_default_endpoints_written(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -463,6 +474,46 @@ class ModelGatewayAgentTests(unittest.TestCase):
             "bossforge-ai-runner-wake-v1",
         )
 
+    def test_created_agent_owns_verified_private_model_package(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="private_model_owner",
+            endpoint="ollama",
+            system_prompt="Own the model.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_model_package"]
+        self.assertEqual(descriptor["owner_agent_id"], "private_model_owner")
+        self.assertTrue(descriptor["verified"])
+        self.assertEqual(
+            created["agent"]["capsule"]["vaults"]["model"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+        self.assertEqual(
+            created["agent"]["runner_bootstrap"]["private_model_package"]["package_id"],
+            descriptor["package_id"],
+        )
+
+    def test_new_llm_agent_creation_fails_without_model_source(self) -> None:
+        os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="missing_model",
+            endpoint="ollama",
+            system_prompt="Cannot be incomplete.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertFalse(created["ok"])
+        self.assertIn("model source", created["message"])
+        self.assertNotIn("missing_model", agent.agent_profiles)
+
     def test_owned_agent_locations_refresh_uses_discovery(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.create_agent_profile(
@@ -557,11 +608,10 @@ class ModelGatewayAgentTests(unittest.TestCase):
         installed = agent.bossgate_install_agent(
             package_file=str(package_path),
             secret_key="pack-key",
-            install_name="porter_clone",
             **self.AUTH,
         )
         self.assertTrue(installed["ok"])
-        self.assertIn("porter_clone", agent.agent_profiles)
+        self.assertIn("porter", agent.agent_profiles)
 
     def test_bossgate_transfer_agent_requires_approved_target(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
