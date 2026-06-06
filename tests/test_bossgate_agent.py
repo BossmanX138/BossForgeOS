@@ -15,9 +15,16 @@ class BossGateCommandAgentTests(unittest.TestCase):
     def setUp(self) -> None:
         self._old_root = os.environ.get("BOSSFORGE_ROOT")
         self._old_presence_flag = os.environ.get("BOSSGATE_DISABLE_PRESENCE_BROADCAST")
+        self._old_model_source = os.environ.get("BOSSFORGE_DEFAULT_MODEL_SOURCE")
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["BOSSFORGE_ROOT"] = self.tmp.name
         os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = "1"
+        model_source = Path(self.tmp.name) / "test_model"
+        model_source.mkdir()
+        (model_source / "config.json").write_text('{"model_type":"qwen2"}', encoding="utf-8")
+        (model_source / "tokenizer.json").write_text('{"version":"1.0"}', encoding="utf-8")
+        (model_source / "model.safetensors").write_bytes(b"tiny-test-weights")
+        os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = str(model_source)
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -29,6 +36,10 @@ class BossGateCommandAgentTests(unittest.TestCase):
             os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
         else:
             os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = self._old_presence_flag
+        if self._old_model_source is None:
+            os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
+        else:
+            os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = self._old_model_source
 
     def test_status_ping_command(self) -> None:
         agent = BossGateCommandAgent(interval_seconds=1)
