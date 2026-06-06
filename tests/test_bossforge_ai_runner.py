@@ -59,6 +59,40 @@ class BossForgeAIRunnerTests(unittest.TestCase):
         self.assertEqual(bootstrap["vault_bindings"]["model"], "capsule.vaults.model")
         validate_runner_bootstrap(bootstrap)
 
+    def test_runner_bootstrap_binds_verified_private_model_package(self) -> None:
+        manifest = build_agent_runner_manifest("wayfinder")
+        descriptor = {
+            "schema_version": "1.0",
+            "package_id": "pmv-123",
+            "owner_agent_id": "wayfinder",
+            "package_path": "F:/vaults/wayfinder/pmv-123",
+            "ciphertext_ref": "private_models/wayfinder/pmv-123",
+            "attestation_sha256": "a" * 64,
+            "key_ref": "agent-model-key:wayfinder",
+            "verified": True,
+        }
+
+        bootstrap = build_runner_bootstrap("wayfinder", manifest, descriptor)
+
+        self.assertEqual(bootstrap["private_model_package"], descriptor)
+        validate_runner_bootstrap(bootstrap)
+
+    def test_runner_bootstrap_rejects_private_model_owned_by_sibling(self) -> None:
+        manifest = build_agent_runner_manifest("wayfinder")
+        descriptor = {
+            "schema_version": "1.0",
+            "package_id": "pmv-123",
+            "owner_agent_id": "sibling",
+            "package_path": "F:/vaults/sibling/pmv-123",
+            "ciphertext_ref": "private_models/sibling/pmv-123",
+            "attestation_sha256": "a" * 64,
+            "key_ref": "agent-model-key:sibling",
+            "verified": True,
+        }
+
+        with self.assertRaisesRegex(ValueError, "owner"):
+            build_runner_bootstrap("wayfinder", manifest, descriptor)
+
     def test_signed_template_declares_development_integrity_scheme(self) -> None:
         template = build_signed_gifted_template()
         self.assertEqual(

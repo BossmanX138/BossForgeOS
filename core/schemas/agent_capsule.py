@@ -54,6 +54,7 @@ _SEALED_PROFILE_VIEW_FIELDS = {
     "runtime_lineage",
     "capsule",
     "private_model",
+    "private_model_package",
     "memory_vault",
     "capability_vault",
     "dream_vault",
@@ -108,6 +109,11 @@ def build_runtime_lineage(profile: dict[str, Any]) -> dict[str, Any]:
 def build_capsule_manifest(profile: dict[str, Any]) -> dict[str, Any]:
     vault_refs = profile.get("vault_refs")
     refs = dict(vault_refs) if isinstance(vault_refs, dict) else {}
+    runtime = profile.get("runtime")
+    runtime_data = runtime if isinstance(runtime, dict) else {}
+    private_model = runtime_data.get("private_model_package")
+    if isinstance(private_model, dict):
+        refs["model"] = _text(private_model.get("ciphertext_ref"))
     return {
         "schema_version": CAPSULE_SCHEMA_VERSION,
         "agent_id": _text(profile.get("id") or profile.get("name")).lower(),

@@ -463,7 +463,7 @@ def validate_private_model_descriptor(
     descriptor: dict[str, Any],
     *,
     expected_agent_id: str,
-    vault_root: str | Path,
+    vault_root: str | Path | None = None,
 ) -> None:
     if not isinstance(descriptor, dict):
         raise ValueError("private model descriptor must be an object")
@@ -480,7 +480,14 @@ def validate_private_model_descriptor(
         raise ValueError("private model descriptor must be verified")
     if not str(descriptor.get("key_ref", "")).strip():
         raise ValueError("private model descriptor key_ref is required")
+    if not str(descriptor.get("ciphertext_ref", "")).strip():
+        raise ValueError("private model descriptor ciphertext_ref is required")
+    attestation_sha256 = str(descriptor.get("attestation_sha256", "")).strip()
+    if len(attestation_sha256) != 64:
+        raise ValueError("private model descriptor attestation digest is invalid")
 
+    if vault_root is None:
+        return
     root = Path(vault_root).resolve()
     owner_root = (root / owner).resolve()
     package_path = Path(str(descriptor.get("package_path", ""))).resolve(strict=True)

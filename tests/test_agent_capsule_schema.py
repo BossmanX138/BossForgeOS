@@ -83,6 +83,36 @@ class AgentCapsuleSchemaTests(unittest.TestCase):
         self.assertNotIn("capsule", view)
         self.assertEqual(view["skills"], ["bossgate_travel_control"])
 
+    def test_capsule_model_vault_binds_private_model_ciphertext(self) -> None:
+        profile = self._profile()
+        profile["runtime"] = {
+            "private_model_package": {
+                "schema_version": "1.0",
+                "package_id": "pmv-123",
+                "owner_agent_id": "wayfinder",
+                "package_path": "F:/vaults/wayfinder/pmv-123",
+                "ciphertext_ref": "private_models/wayfinder/pmv-123",
+                "attestation_sha256": "a" * 64,
+                "key_ref": "agent-model-key:wayfinder",
+                "verified": True,
+            }
+        }
+
+        manifest = build_capsule_manifest(profile)
+
+        self.assertEqual(
+            manifest["vaults"]["model"]["ciphertext_ref"],
+            "private_models/wayfinder/pmv-123",
+        )
+
+    def test_authenticated_view_redacts_private_model_package(self) -> None:
+        profile = self._profile()
+        profile["private_model_package"] = {"package_id": "pmv-secret"}
+
+        view = build_authenticated_profile_view(profile)
+
+        self.assertNotIn("private_model_package", view)
+
     def test_canonical_profile_normalizes_capsule_fields_and_sparse_card(self) -> None:
         profile = normalize_agent_profile("scribe", {"name": "Scribe"})
         self.assertEqual(profile["public_id"], "scribe")

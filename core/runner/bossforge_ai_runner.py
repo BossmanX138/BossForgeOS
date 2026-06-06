@@ -6,6 +6,8 @@ import json
 from copy import deepcopy
 from typing import Any
 
+from core.model_vault import validate_private_model_descriptor
+
 
 RUNNER_CONTRACT_VERSION = "1.0"
 GIFTED_TEMPLATE_VERSION = "gifted-runtime-v1"
@@ -170,12 +172,16 @@ def validate_agent_runner_manifest(manifest: dict[str, Any]) -> None:
         raise ValueError("descendant runner manifests must record RuneForge ancestry")
 
 
-def build_runner_bootstrap(agent_id: str, manifest: dict[str, Any]) -> dict[str, Any]:
+def build_runner_bootstrap(
+    agent_id: str,
+    manifest: dict[str, Any],
+    private_model_package: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     validate_agent_runner_manifest(manifest)
     normalized_id = _text(agent_id).lower()
     if manifest["agent_id"] != normalized_id:
         raise ValueError("runner bootstrap agent_id must match manifest")
-    return {
+    bootstrap = {
         "agent_id": normalized_id,
         "wake_contract": "bossforge-ai-runner-wake-v1",
         "install_contract": "bossforge-ai-runner-install-v1",
@@ -188,6 +194,13 @@ def build_runner_bootstrap(agent_id: str, manifest: dict[str, Any]) -> dict[str,
             "capability": "capsule.vaults.capability",
         },
     }
+    if private_model_package is not None:
+        validate_private_model_descriptor(
+            private_model_package,
+            expected_agent_id=normalized_id,
+        )
+        bootstrap["private_model_package"] = deepcopy(private_model_package)
+    return bootstrap
 
 
 def validate_runner_bootstrap(bootstrap: dict[str, Any]) -> None:
@@ -215,3 +228,9 @@ def validate_runner_bootstrap(bootstrap: dict[str, Any]) -> None:
     for key in ("runner", "model", "memory", "capability"):
         if not _text(vault_bindings.get(key)):
             raise ValueError(f"runner bootstrap vault binding is required: {key}")
+    private_model_package = bootstrap.get("private_model_package")
+    if private_model_package is not None:
+        validate_private_model_descriptor(
+            private_model_package,
+            expected_agent_id=agent_id,
+        )
