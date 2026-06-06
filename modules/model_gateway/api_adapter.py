@@ -70,12 +70,33 @@ def recall_agent_memory(name: str, limit: int = 25) -> dict[str, Any]:
     return _gateway().recall_agent_memory(name=str(name or "").strip(), limit=int(limit))
 
 
-def discover_travel_targets(timeout: int = 5, assistance_only: bool = False) -> dict[str, Any]:
-    return _gateway().discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+def discover_travel_targets(
+    timeout: int = 5,
+    assistance_only: bool = False,
+    operator_id: str = "",
+    scope_id: str = "",
+    actor_type: str = "human",
+) -> dict[str, Any]:
+    return _gateway().discover_travel_targets(
+        timeout=timeout,
+        assistance_only=assistance_only,
+        operator_id=str(operator_id or "").strip(),
+        scope_id=str(scope_id or "").strip(),
+        actor_type=str(actor_type or "human").strip(),
+    )
 
 
-def validate_transfer_target(destination: str) -> dict[str, Any]:
-    return _gateway().validate_transfer_target(destination=str(destination or "").strip())
+def bossgate_map_snapshot(refresh: bool = False, timeout: int = 2) -> dict[str, Any]:
+    return _gateway().bossgate_map_snapshot(refresh=bool(refresh), timeout=int(timeout))
+
+
+def validate_transfer_target(destination: str, operator_id: str = "", scope_id: str = "", actor_type: str = "human") -> dict[str, Any]:
+    return _gateway().validate_transfer_target(
+        destination=str(destination or "").strip(),
+        operator_id=str(operator_id or "").strip(),
+        scope_id=str(scope_id or "").strip(),
+        actor_type=str(actor_type or "human").strip(),
+    )
 
 
 def set_agent_assistance_request(name: str, requested: bool = True, reason: str = "") -> dict[str, Any]:

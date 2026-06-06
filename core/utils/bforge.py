@@ -3,6 +3,7 @@ import ctypes
 import importlib.util
 import json
 import os
+import re
 import signal
 import shutil
 import subprocess
@@ -30,6 +31,8 @@ AGENTS = {
     "codemage": "codemage",
     "runeforge": "runeforge",
     "devlot": "devlot",
+    "bossgate": "bossgate",
+    "bg": "bossgate",
     "model-keeper": "model_keeper",  # CLI alias for compatibility layer
     "speaker": "speaker",
     "model_keeper": "model_keeper",
@@ -912,6 +915,166 @@ def cmd_model(args: argparse.Namespace) -> None:
     raise SystemExit("unknown model command")
 
 
+def cmd_bossgate(args: argparse.Namespace) -> None:
+    bus = RuneBus(resolve_root_from_env())
+    todo_path = Path(__file__).resolve().parents[2] / "docs" / "bossgate_connector_todo.md"
+
+    if args.sub == "status":
+        state_path = bus.state / "bossgate.json"
+        state_payload: Dict[str, Any] = {}
+        if state_path.exists():
+            try:
+                loaded = json.loads(state_path.read_text(encoding="utf-8"))
+                if isinstance(loaded, dict):
+                    state_payload = loaded
+            except (OSError, json.JSONDecodeError):
+                state_payload = {"ok": False, "message": "failed to read bossgate state"}
+        recent = [
+            item
+            for item in bus.read_latest_events(limit=max(1, int(args.limit)))
+            if str(item.get("source", "")).strip().lower() == "bossgate"
+        ]
+        pretty(
+            {
+                "ok": True,
+                "state_file": str(state_path),
+                "state": state_payload,
+                "recent_events": recent,
+            }
+        )
+        return
+
+    if args.sub == "tail":
+        limit = max(1, int(args.limit))
+        recent = [
+            item
+            for item in bus.read_latest_events(limit=max(50, limit * 4))
+            if str(item.get("source", "")).strip().lower() == "bossgate"
+        ][:limit]
+        for event in recent:
+            print(f"[{event.get('timestamp')}] {event.get('source')} -> {event.get('event')} | {event.get('data')}")
+        return
+
+    if args.sub == "discover":
+        payload = {
+            "timeout": args.timeout,
+            "assistance_only": bool(args.assistance_only),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_discover_targets", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "map":
+        payload = {
+            "refresh": bool(args.refresh),
+            "timeout": int(args.timeout),
+        }
+        path = bus.emit_command("bossgate", "bossgate_map_snapshot", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "scan":
+        payload = {
+            "destination": args.destination,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_scan_target", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "package":
+        payload = {
+            "name": args.name,
+            "target_system_id": args.target_system_id,
+            "visibility_profile": args.visibility_profile,
+            "policy_ref": args.policy_ref,
+            "secret_key": args.secret_key,
+            "output_file": args.output_file,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_package_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "transfer":
+        payload = {
+            "package_file": args.package_file,
+            "destination": args.destination,
+            "dry_run": bool(args.dry_run),
+            "resume_from_chunk": int(args.resume_from_chunk),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_transfer_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "install":
+        payload = {
+            "package_file": args.package_file,
+            "secret_key": args.secret_key,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_install_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "rotate-key":
+        payload = {
+            "key_id": args.key_id,
+            "secret_key": args.secret_key,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_rotate_key", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "complete":
+        if not todo_path.exists():
+            raise SystemExit(f"todo tracker not found: {todo_path}")
+        todo_id = str(args.todo_id).strip().upper()
+        lines = todo_path.read_text(encoding="utf-8").splitlines()
+        target_idx = -1
+        pat = re.compile(rf"^- \[(?P<mark>[ xX])\] \({re.escape(todo_id)}\) ")
+        for i, line in enumerate(lines):
+            if pat.match(line):
+                target_idx = i
+                break
+        if target_idx < 0:
+            raise SystemExit(f"todo id not found: {todo_id}")
+
+        if lines[target_idx].startswith("- [ ]"):
+            lines[target_idx] = lines[target_idx].replace("- [ ]", "- [x]", 1)
+
+        evidence = str(args.evidence or "").strip()
+        if evidence:
+            stamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            evidence_line = f"  evidence: [{stamp}] {evidence}"
+            insert_at = target_idx + 1
+            while insert_at < len(lines) and (lines[insert_at].startswith("  ") or not lines[insert_at].strip()):
+                insert_at += 1
+            lines.insert(insert_at, evidence_line)
+
+        todo_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        bus.emit_event("bforge", "bossgate:todo_completed", {"todo_id": todo_id, "evidence": evidence})
+        pretty({"ok": True, "todo_id": todo_id, "todo_path": str(todo_path), "evidence_added": bool(evidence)})
+        return
+
+    raise SystemExit("unknown bossgate command")
+
+
 def cmd_icons(args: argparse.Namespace) -> None:
     forge = iconforge_service.get_forge(resolve_root_from_env())
 
@@ -1182,6 +1345,85 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_model_stop_all = p_model_sub.add_parser("stop-all", help="Stop all tracked model servers")
     p_model_stop_all.set_defaults(func=cmd_model)
+
+    p_bossgate = sub.add_parser("bossgate", help="Queue BossGate command agent requests")
+    p_bossgate_sub = p_bossgate.add_subparsers(dest="sub")
+
+    p_bg_status = p_bossgate_sub.add_parser("status", help="Show current BossGate state and recent events")
+    p_bg_status.add_argument("--limit", type=int, default=10)
+    p_bg_status.set_defaults(func=cmd_bossgate)
+
+    p_bg_tail = p_bossgate_sub.add_parser("tail", help="Tail recent BossGate events")
+    p_bg_tail.add_argument("--limit", type=int, default=20)
+    p_bg_tail.set_defaults(func=cmd_bossgate)
+
+    p_bg_discover = p_bossgate_sub.add_parser("discover", help="Discover BossGate transfer targets")
+    p_bg_discover.add_argument("--timeout", type=int, default=5)
+    p_bg_discover.add_argument("--assistance-only", action="store_true")
+    p_bg_discover.add_argument("--operator-id", required=True)
+    p_bg_discover.add_argument("--scope-id", required=True)
+    p_bg_discover.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_discover.set_defaults(func=cmd_bossgate)
+
+    p_bg_map = p_bossgate_sub.add_parser("map", help="Build/read BossGate beacon map snapshot")
+    p_bg_map.add_argument("--refresh", action="store_true")
+    p_bg_map.add_argument("--timeout", type=int, default=2)
+    p_bg_map.set_defaults(func=cmd_bossgate)
+
+    p_bg_scan = p_bossgate_sub.add_parser("scan", help="Validate a destination as a transfer target")
+    p_bg_scan.add_argument("destination")
+    p_bg_scan.add_argument("--operator-id", required=True)
+    p_bg_scan.add_argument("--scope-id", required=True)
+    p_bg_scan.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_scan.set_defaults(func=cmd_bossgate)
+
+    p_bg_package = p_bossgate_sub.add_parser("package", help="Package an agent for BossGate transfer")
+    p_bg_package.add_argument("name")
+    p_bg_package.add_argument("--target-system-id", required=True)
+    p_bg_package.add_argument(
+        "--visibility-profile",
+        default="none",
+        choices=["none", "id_card_only", "model_card_only", "id_and_model_card"],
+    )
+    p_bg_package.add_argument("--policy-ref", default="policy/default")
+    p_bg_package.add_argument("--secret-key", default="")
+    p_bg_package.add_argument("--output-file", default="")
+    p_bg_package.add_argument("--operator-id", required=True)
+    p_bg_package.add_argument("--scope-id", required=True)
+    p_bg_package.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_package.set_defaults(func=cmd_bossgate)
+
+    p_bg_transfer = p_bossgate_sub.add_parser("transfer", help="Queue a BossGate transfer intent")
+    p_bg_transfer.add_argument("package_file")
+    p_bg_transfer.add_argument("destination")
+    p_bg_transfer.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
+    p_bg_transfer.add_argument("--no-dry-run", dest="dry_run", action="store_false")
+    p_bg_transfer.add_argument("--resume-from-chunk", type=int, default=0)
+    p_bg_transfer.add_argument("--operator-id", required=True)
+    p_bg_transfer.add_argument("--scope-id", required=True)
+    p_bg_transfer.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_transfer.set_defaults(func=cmd_bossgate)
+
+    p_bg_install = p_bossgate_sub.add_parser("install", help="Install/validate a BossGate package")
+    p_bg_install.add_argument("package_file")
+    p_bg_install.add_argument("--secret-key", default="")
+    p_bg_install.add_argument("--operator-id", required=True)
+    p_bg_install.add_argument("--scope-id", required=True)
+    p_bg_install.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_install.set_defaults(func=cmd_bossgate)
+
+    p_bg_rotate = p_bossgate_sub.add_parser("rotate-key", help="Rotate BossGate active encryption key")
+    p_bg_rotate.add_argument("--key-id", default="")
+    p_bg_rotate.add_argument("--secret-key", default="")
+    p_bg_rotate.add_argument("--operator-id", required=True)
+    p_bg_rotate.add_argument("--scope-id", required=True)
+    p_bg_rotate.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_rotate.set_defaults(func=cmd_bossgate)
+
+    p_bg_complete = p_bossgate_sub.add_parser("complete", help="Mark a BossGate TODO id as completed")
+    p_bg_complete.add_argument("todo_id", help="Todo id, e.g. BG-004")
+    p_bg_complete.add_argument("--evidence", default="", help="Optional evidence note (test command, commit, etc.)")
+    p_bg_complete.set_defaults(func=cmd_bossgate)
 
     p_icons = sub.add_parser("icons", help="IconForge: create icons and apply Windows icon overrides")
     p_icons_sub = p_icons.add_subparsers(dest="sub")

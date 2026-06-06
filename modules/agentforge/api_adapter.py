@@ -20,6 +20,14 @@ def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
     return agentforge_service.create_agent_profile(payload)
 
 
+def view_agent_profile(name: str, viewer_id: str = "", viewer_channel: str = "") -> dict[str, Any]:
+    return agentforge_service.view_agent_profile(name=name, viewer_id=viewer_id, viewer_channel=viewer_channel)
+
+
+def set_agent_disclosure_posture(name: str, posture: str) -> dict[str, Any]:
+    return agentforge_service.set_agent_disclosure_posture(name=name, posture=posture)
+
+
 def _safe_icon_stem(value: str) -> str:
     cleaned = secure_filename(str(value or "").strip())
     if not cleaned:

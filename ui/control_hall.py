@@ -23,6 +23,7 @@ from flask import Flask, jsonify, render_template_string, request, send_file
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
+from core.security.bossgate_authorization import BossGateAuthorizationRegistry
 from modules.agentforge import api_adapter as agentforge_api
 from modules.iconforge import api_adapter as iconforge_api
 try:
@@ -46,6 +47,10 @@ app = Flask(__name__)
 bus = RuneBus(resolve_root_from_env())
 socketio = None
 PIN_OVERLAY_PROCESS = None
+
+
+def _bossgate_authorization() -> BossGateAuthorizationRegistry:
+    return BossGateAuthorizationRegistry(bus.state / "bossgate_human_roles.json")
 PIN_OVERLAY_VIEW = ""
 PIN_OVERLAY_ALPHA = 0.95
 AGENTFORGE_POOL_PATH = PROJECT_ROOT / "state" / "agentforge_custom_pool.json"
@@ -255,6 +260,40 @@ PAGE = """
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: .04em;
+        }
+        .topology-shell {
+            margin-top: 8px;
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            background: rgba(12, 14, 20, 0.76);
+            padding: 10px;
+        }
+        .topology-graph {
+            width: 100%;
+            min-height: 320px;
+            border: 1px solid #2b2f3a;
+            border-radius: 8px;
+            background: radial-gradient(circle at 50% 50%, rgba(77,166,255,0.06), rgba(10,12,18,0.8));
+        }
+        .topology-legend {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .topology-edge-list {
+            margin-top: 8px;
+            border-top: 1px solid #2b2f3a;
+            padding-top: 8px;
+            display: grid;
+            gap: 4px;
+        }
+        .topology-edge-item {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .topology-empty {
+            color: var(--muted);
+            font-size: 12px;
         }
         .workspace-stack {
             display: grid;
@@ -1116,8 +1155,12 @@ PAGE = """
             <div class="group-label">Assistants</div>
             <button class="nav-btn" data-view="view_chat" onclick="switchView('view_chat')">Model Chat</button>
             <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">AgentForge</button>
+            <button class="nav-btn" data-view="view_bossgate_map" data-bossgate-panel="bossgate_map" onclick="switchView('view_bossgate_map')">BossGate Map</button>
+            <button class="nav-btn" data-view="view_bossgate_access" data-bossgate-panel="operator" onclick="switchView('view_bossgate_access')">BossGate Access</button>
+            <button class="nav-btn" data-view="view_bossgate_commerce" data-bossgate-panel="commerce" onclick="switchView('view_bossgate_commerce')">BossGate Commerce</button>
+            <button class="nav-btn" data-view="view_bossgate_support" data-bossgate-panel="support" onclick="switchView('view_bossgate_support')">BossGate Support</button>
             <button class="nav-btn" data-view="view_iconforge" onclick="switchView('view_iconforge')" style="color:#ffb27d; font-weight:bold;">IconForge Studio</button>
-            <button class="nav-btn" data-view="view_discovery" onclick="switchView('view_discovery')">Discovery Map</button>
+            <button class="nav-btn" data-view="view_discovery" data-bossgate-panel="discovery" onclick="switchView('view_discovery')">Discovery Map</button>
             <button class="nav-btn" data-view="view_security" onclick="switchView('view_security')">Security</button>
             <button class="nav-btn" data-view="view_sounds" onclick="switchView('view_sounds')" style="color:#39ff14; font-weight:bold;">Sounds</button>
             <div class="group-label">Diagnostics</div>
@@ -1266,6 +1309,77 @@ PAGE = """
                 </div>
                 <div id="discovery_loadout" class="discovery-loadout muted">Select a pin to inspect its loadout.</div>
                 <pre id="discovery_raw">No discovery data loaded.</pre>
+            </section>
+
+            <section id="view_bossgate_map" class="card view-panel">
+                <h2>BossGate Map</h2>
+                <div class="muted">Live gate beacon topology showing gates, travelable destinations, and agent locations.</div>
+                <div class="row">
+                    <button onclick="refreshBossGateMap(true)">Refresh BossGate Map</button>
+                    <span id="bossgate_map_summary" class="muted"></span>
+                </div>
+                <div id="bossgate_topology" class="topology-shell">
+                    <div class="topology-empty">No map topology loaded yet.</div>
+                </div>
+                <pre id="bossgate_map_raw">No BossGate map loaded.</pre>
+            </section>
+
+            <section id="view_bossgate_access" class="card view-panel">
+                <h2>BossGate Access</h2>
+                <div class="muted">Human-role permissions control which BossGate mechanisms are available.</div>
+                <div class="row">
+                    <input id="bossgate_current_user" value="bossforge-owner" placeholder="current human user" />
+                    <button onclick="refreshBossGateAccess()">Load Access</button>
+                </div>
+                <pre id="bossgate_access_summary">Load a user to inspect roles and permissions.</pre>
+                <div data-bossgate-permission="bossgate.package">
+                    <h3>Operator Package</h3>
+                    <div class="row">
+                        <input id="bossgate_package_agent_name" placeholder="agent name" />
+                        <input id="bossgate_package_target" placeholder="target system id" />
+                        <button onclick="dispatchBossGateOperator('bossgate_package_agent')">Package Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-permission="bossgate.transfer">
+                    <h3>Operator Transfer</h3>
+                    <div class="row">
+                        <input id="bossgate_transfer_file" placeholder="package file" />
+                        <input id="bossgate_transfer_destination" placeholder="destination URL" />
+                        <button onclick="dispatchBossGateOperator('bossgate_transfer_agent')">Transfer Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-permission="bossgate.install">
+                    <h3>Operator Install</h3>
+                    <div class="row">
+                        <input id="bossgate_install_file" placeholder="package file" />
+                        <button onclick="dispatchBossGateOperator('bossgate_install_agent')">Install Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-panel="security_admin">
+                    <h3>Security Administration</h3>
+                    <div class="row">
+                        <input id="bossgate_assign_user" placeholder="human user id" />
+                        <input id="bossgate_assign_roles" placeholder="roles, comma separated" />
+                        <button onclick="assignBossGateRoles()">Assign Roles</button>
+                    </div>
+                    <div class="row">
+                        <input id="bossgate_custom_role" placeholder="custom role name" />
+                        <input id="bossgate_custom_permissions" placeholder="permissions, comma separated" />
+                        <button onclick="saveBossGateCustomRole()">Save Custom Role</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view_bossgate_commerce" class="card view-panel">
+                <h2>BossGate Commerce</h2>
+                <div class="muted">Commerce responsibility workspace. License issue, validation, and usage report commands are permission-mapped and remain pending under BG-017 through BG-021.</div>
+                <pre id="bossgate_commerce_summary">Load BossGate Access to inspect commerce permissions.</pre>
+            </section>
+
+            <section id="view_bossgate_support" class="card view-panel">
+                <h2>BossGate Support</h2>
+                <div class="muted">Support responsibility workspace. Remote-debug open and close controls are permission-mapped and remain pending under BG-022 through BG-025.</div>
+                <pre id="bossgate_support_summary">Load BossGate Access to inspect support permissions.</pre>
             </section>
 
             <section id="view_chat" class="card view-panel">
@@ -1462,7 +1576,7 @@ PAGE = """
                             <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
                         </div>
                         <label class="muted" style="display:flex; align-items:center; gap:6px;">
-                            <input id="wizard_encrypt_profile" type="checkbox" checked /> Encrypt profile via BossGate
+                            <input id="wizard_encrypt_profile" type="checkbox" checked /> Hide proprietary profile details
                         </label>
                     </div>
 
@@ -1649,7 +1763,7 @@ PAGE = """
                         <input id="maker_max_tokens" type="number" min="64" max="8192" step="1" value="900" placeholder="max tokens" />
                         <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_has_llm" type="checkbox" checked /> has LLM</label>
                         <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_bossgate_enabled" type="checkbox" checked /> BossGate enabled</label>
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Encrypt profile</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Hide proprietary profile details</label>
                         <button onclick="createAgentProfile()">Create/Update</button>
                     </div>
                     <pre id="maker_validation" class="muted">Role-aware validation ready.</pre>
@@ -2247,7 +2361,7 @@ PAGE = """
 
         async function refreshDiscoveryMap() {
             const assistanceOnly = !!document.getElementById('discovery_assistance_only')?.checked;
-            const data = await fetchJsonWithTimeout('/api/model/travel/discover?timeout=5&assistance_only=' + (assistanceOnly ? 'true' : 'false'), 5000);
+            const data = await fetchJsonWithTimeout('/api/model/travel/discover?timeout=5&operator_id=' + encodeURIComponent(bossGateCurrentUser()) + '&scope_id=bossgate-map-read&assistance_only=' + (assistanceOnly ? 'true' : 'false'), 5000);
             const discovered = (data && data.ok && Array.isArray(data.targets)) ? data.targets : [];
             const locationsData = await fetchJsonWithTimeout('/api/model/agents/locations?refresh=true', 5000);
             discoveryLocations = (locationsData && locationsData.ok && locationsData.agents && typeof locationsData.agents === 'object') ? locationsData.agents : {};
@@ -2266,6 +2380,191 @@ PAGE = """
                 );
             }
             renderDiscoveryMapPins();
+        }
+
+        async function refreshBossGateMap(refreshRemote = true) {
+            const data = await fetchJsonWithTimeout('/api/model/travel/map?refresh=' + (refreshRemote ? 'true' : 'false') + '&timeout=3', 5000);
+            const transferData = await fetchJsonWithTimeout('/api/model/travel/transfers?limit=25', 5000);
+            const raw = document.getElementById('bossgate_map_raw');
+            const summary = document.getElementById('bossgate_map_summary');
+            const transfers = (transferData && transferData.ok && Array.isArray(transferData.items)) ? transferData.items : [];
+            if (raw) raw.textContent = JSON.stringify({ map: data, transfers }, null, 2);
+            const map = (data && data.ok && data.map && typeof data.map === 'object') ? data.map : {};
+            const gateCount = Array.isArray(map.gates) ? map.gates.length : 0;
+            const travelableCount = Array.isArray(map.travelable_gates) ? map.travelable_gates.length : 0;
+            const agentCount = map.agents && typeof map.agents === 'object' ? Object.keys(map.agents).length : 0;
+            if (summary) summary.textContent = `gates: ${gateCount} | travelable: ${travelableCount} | agents: ${agentCount} | transfers: ${transfers.length}`;
+            renderBossGateTopology(map, transfers);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function _hostFromAddress(address) {
+            const raw = String(address || '').trim();
+            if (!raw) return '';
+            try {
+                const u = new URL(raw);
+                return u.hostname || raw;
+            } catch (_) {
+                const lowered = raw.toLowerCase();
+                let trimmed = raw;
+                if (lowered.startsWith('http://')) trimmed = raw.slice(7);
+                else if (lowered.startsWith('https://')) trimmed = raw.slice(8);
+                return trimmed.split('/')[0];
+            }
+        }
+
+        function renderBossGateTopology(map, transfers = []) {
+            const root = document.getElementById('bossgate_topology');
+            if (!root) return;
+            const gates = Array.isArray(map && map.gates) ? map.gates : [];
+            const travelable = Array.isArray(map && map.travelable_gates) ? map.travelable_gates : [];
+            const agents = map && map.agents && typeof map.agents === 'object' ? map.agents : {};
+            const travelableSet = new Set(travelable.map((item) => String(item && (item.address || item.destination || item.endpoint || '')).trim()).filter(Boolean));
+
+            if (!gates.length) {
+                root.innerHTML = '<div class="topology-empty">No discovered gates in current snapshot.</div>';
+                return;
+            }
+
+            const byGate = {};
+            for (const [name, agent] of Object.entries(agents)) {
+                if (!agent || typeof agent !== 'object') continue;
+                const node = String(agent.current_node || agent.node_id || '').trim();
+                if (!node) continue;
+                if (!byGate[node]) byGate[node] = [];
+                byGate[node].push(String(name));
+            }
+            const nodes = gates.map((gate) => {
+                const nodeId = String(gate && (gate.node_id || gate.name || gate.id || 'unknown')).trim() || 'unknown';
+                const address = String(gate && (gate.address || gate.endpoint || '')).trim();
+                const type = String(gate && gate.target_type || 'bossgate_connector').trim();
+                return {
+                    id: nodeId,
+                    label: nodeId,
+                    address,
+                    host: _hostFromAddress(address),
+                    type,
+                    travelable: !!(address && travelableSet.has(address)),
+                    agents: byGate[nodeId] || [],
+                    external: false,
+                };
+            });
+            const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
+            const nodeByAddress = Object.fromEntries(nodes.filter((n) => n.address).map((n) => [n.address, n]));
+            const nodeByHost = Object.fromEntries(nodes.filter((n) => n.host).map((n) => [n.host, n]));
+
+            const edgeItems = [];
+            for (const t of transfers) {
+                if (!t || typeof t !== 'object') continue;
+                const sourceId = String(t.node_id || '').trim();
+                const destination = String(t.destination || '').trim();
+                if (!sourceId || !destination) continue;
+                let target = nodeByAddress[destination] || nodeByHost[_hostFromAddress(destination)];
+                if (!target) {
+                    const extId = `external:${_hostFromAddress(destination) || destination}`;
+                    if (!nodeById[extId]) {
+                        nodeById[extId] = {
+                            id: extId,
+                            label: _hostFromAddress(destination) || destination,
+                            address: destination,
+                            host: _hostFromAddress(destination),
+                            type: "external",
+                            travelable: false,
+                            agents: [],
+                            external: true,
+                        };
+                        nodes.push(nodeById[extId]);
+                    }
+                    target = nodeById[extId];
+                }
+                if (!nodeById[sourceId]) {
+                    nodeById[sourceId] = {
+                        id: sourceId,
+                        label: sourceId,
+                        address: "",
+                        host: "",
+                        type: "source",
+                        travelable: false,
+                        agents: [],
+                        external: true,
+                    };
+                    nodes.push(nodeById[sourceId]);
+                }
+                edgeItems.push({
+                    from: sourceId,
+                    to: target.id,
+                    status: String(t.status || "unknown"),
+                    dryRun: !!t.dry_run,
+                    timestamp: Number(t.timestamp || 0),
+                });
+            }
+
+            const width = 980;
+            const height = 420;
+            const cx = width / 2;
+            const cy = height / 2;
+            const radius = Math.max(120, Math.min(width, height) * 0.34);
+            const total = Math.max(nodes.length, 1);
+            const pos = {};
+            nodes.forEach((n, idx) => {
+                const ang = (Math.PI * 2 * idx) / total - (Math.PI / 2);
+                pos[n.id] = { x: cx + radius * Math.cos(ang), y: cy + radius * Math.sin(ang) };
+            });
+
+            const edgeSvg = edgeItems.map((edge) => {
+                const a = pos[edge.from];
+                const b = pos[edge.to];
+                if (!a || !b) return '';
+                const color = edge.status === "transfer_failed" ? "#FF4D4D"
+                    : edge.status === "validated_only" ? "#4DA6FF"
+                    : "#4CC46A";
+                const dash = edge.dryRun ? 'stroke-dasharray="5 4"' : '';
+                return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#bg_arrow)" opacity="0.9" />`;
+            }).join('');
+
+            const nodeSvg = nodes.map((n) => {
+                const p = pos[n.id];
+                if (!p) return '';
+                const fill = n.external ? "#2a2f3a" : (n.travelable ? "#1f3b2a" : "#2a2230");
+                const stroke = n.external ? "#7f8ca3" : (n.travelable ? "#4CC46A" : "#D4A857");
+                const agentText = n.agents.length ? ` | ${n.agents.slice(0, 2).join(",")}` : "";
+                return `
+                    <g>
+                        <circle cx="${p.x}" cy="${p.y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="2" />
+                        <text x="${p.x}" y="${p.y - 30}" text-anchor="middle" fill="#e6ddcb" font-size="12">${escapeHtml(n.label)}</text>
+                        <text x="${p.x}" y="${p.y + 42}" text-anchor="middle" fill="#a9b1c1" font-size="11">${escapeHtml(n.type + agentText)}</text>
+                    </g>
+                `;
+            }).join('');
+
+            const edgeList = edgeItems.slice(-10).reverse().map((e) => {
+                const from = nodeById[e.from] ? nodeById[e.from].label : e.from;
+                const to = nodeById[e.to] ? nodeById[e.to].label : e.to;
+                const when = e.timestamp > 0 ? new Date(e.timestamp * 1000).toLocaleString() : "unknown-time";
+                return `<div class="topology-edge-item">${escapeHtml(when)} | ${escapeHtml(from)} -> ${escapeHtml(to)} | ${escapeHtml(e.status)}${e.dryRun ? " (dry-run)" : ""}</div>`;
+            }).join('');
+
+            root.innerHTML = `
+                <svg class="topology-graph" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="bg_arrow" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto">
+                            <polygon points="0 0, 7 3.5, 0 7" fill="#D4A857"></polygon>
+                        </marker>
+                    </defs>
+                    ${edgeSvg}
+                    ${nodeSvg}
+                </svg>
+                <div class="topology-legend">Green edge: posted transfer. Blue dashed edge: dry-run validation. Red edge: failed transfer.</div>
+                <div class="topology-edge-list">${edgeList || '<div class="topology-empty">No recent transfer edges.</div>'}</div>
+            `;
         }
 
         function renderSoundEvents() {
@@ -2293,6 +2592,7 @@ PAGE = """
                 view_scheduler: 'AgentForge.png',
                 view_chat: 'RuneVoiceOS.png',
                 view_maker: 'AgentForge.png',
+                view_bossgate_map: 'BossGate.png',
                 view_iconforge: 'IconForge.png',
                 view_discovery: 'BossGate.png',
                 view_security: 'bossgate.svg',
@@ -2312,6 +2612,7 @@ PAGE = """
                 view_diagnostics: 'BossForgeOS.png',
                 view_sounds: 'Soundforge.png',
                 view_maker: 'AgentForge.png',
+                view_bossgate_map: 'BossGate.png',
                 view_iconforge: 'IconForge.png',
                 view_security: 'bossgate.svg',
                 view_onboarding: 'RuneVoiceOS.png',
@@ -2375,6 +2676,8 @@ PAGE = """
             if (viewId === 'view_diagnostics') refreshDiagnostics();
             if (viewId === 'view_sounds') fetchSoundEvents();
             if (viewId === 'view_discovery') refreshDiscoveryMap();
+            if (viewId === 'view_bossgate_map') refreshBossGateMap(true);
+            if (viewId === 'view_bossgate_access') refreshBossGateAccess();
             if (viewId === 'view_iconforge') {
                 refreshIconForgeOps();
                 if (!iconForgeVisited) {
@@ -2655,6 +2958,62 @@ PAGE = """
             const data = await res.json();
             document.getElementById('toast').textContent = data.ok ? ('Command queued: ' + command) : ('Command failed: ' + (data.message || 'unknown error'));
             refresh();
+        }
+
+        function bossGateCurrentUser() {
+            const input = document.getElementById('bossgate_current_user');
+            const user = String(input?.value || localStorage.getItem('bossgate_current_user') || 'bossforge-owner').trim() || 'bossforge-owner';
+            localStorage.setItem('bossgate_current_user', user);
+            if (input) input.value = user;
+            return user;
+        }
+
+        function csvValues(id) {
+            return String(document.getElementById(id)?.value || '').split(',').map((item) => item.trim()).filter(Boolean);
+        }
+
+        async function refreshBossGateAccess() {
+            const user = bossGateCurrentUser();
+            const data = await fetchJsonWithTimeout('/api/bossgate/access/capabilities?user_id=' + encodeURIComponent(user));
+            const permissions = new Set(Array.isArray(data?.permissions) ? data.permissions : []);
+            const panels = data?.panels || {};
+            document.querySelectorAll('[data-bossgate-permission]').forEach((el) => {
+                el.style.display = permissions.has(el.dataset.bossgatePermission) ? '' : 'none';
+            });
+            document.querySelectorAll('[data-bossgate-panel]').forEach((el) => {
+                el.style.display = panels[el.dataset.bossgatePanel] ? '' : 'none';
+            });
+            const summary = document.getElementById('bossgate_access_summary');
+            if (summary) summary.textContent = JSON.stringify(data, null, 2);
+            const commerce = document.getElementById('bossgate_commerce_summary');
+            if (commerce) commerce.textContent = JSON.stringify({ enabled: !!panels.commerce, permissions: [...permissions].filter((item) => item.includes('license') || item.includes('usage') || item.includes('commerce')) }, null, 2);
+            const support = document.getElementById('bossgate_support_summary');
+            if (support) support.textContent = JSON.stringify({ enabled: !!panels.support, permissions: [...permissions].filter((item) => item.includes('remote_debug') || item.includes('support')) }, null, 2);
+        }
+
+        async function dispatchBossGateOperator(command) {
+            const base = { operator_id: bossGateCurrentUser(), scope_id: 'control-hall', actor_type: 'human' };
+            if (command === 'bossgate_package_agent') {
+                Object.assign(base, { name: document.getElementById('bossgate_package_agent_name').value.trim(), target_system_id: document.getElementById('bossgate_package_target').value.trim() });
+            } else if (command === 'bossgate_transfer_agent') {
+                Object.assign(base, { package_file: document.getElementById('bossgate_transfer_file').value.trim(), destination: document.getElementById('bossgate_transfer_destination').value.trim(), dry_run: true });
+            } else if (command === 'bossgate_install_agent') {
+                Object.assign(base, { package_file: document.getElementById('bossgate_install_file').value.trim() });
+            }
+            await sendCmd('bossgate', command, base);
+        }
+
+        async function assignBossGateRoles() {
+            const userId = document.getElementById('bossgate_assign_user').value.trim();
+            const res = await fetch('/api/bossgate/access/users/' + encodeURIComponent(userId) + '/roles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acting_user: bossGateCurrentUser(), roles: csvValues('bossgate_assign_roles') }) });
+            document.getElementById('toast').textContent = JSON.stringify(await res.json());
+            await refreshBossGateAccess();
+        }
+
+        async function saveBossGateCustomRole() {
+            const res = await fetch('/api/bossgate/access/roles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acting_user: bossGateCurrentUser(), role_name: document.getElementById('bossgate_custom_role').value.trim(), permissions: csvValues('bossgate_custom_permissions') }) });
+            document.getElementById('toast').textContent = JSON.stringify(await res.json());
+            await refreshBossGateAccess();
         }
 
         function refreshTargetDropdown(agents) {
@@ -5625,6 +5984,9 @@ PAGE = """
             if (currentView === 'view_delegation') {
                 await refreshDelegationFlowPanel();
             }
+            if (currentView === 'view_bossgate_map') {
+                await refreshBossGateMap(false);
+            }
 
             const failed = [statusData, eventsData, snapData, sealData, voiceData, delegationData].filter(x => x && x.ok === false).length;
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
@@ -5761,6 +6123,7 @@ PAGE = """
         syncWizardStateMachinePreview();
         applySelectedStateMachineTemplate();
         refresh();
+        refreshBossGateAccess();
         listSoundforgeSchemes();
         setInterval(refresh, 4000);
         setInterval(refreshPinState, 3000);
@@ -6127,6 +6490,55 @@ def model_agents_create():
     return jsonify(result), status
 
 
+@app.get("/api/agentforge/agents/<name>/view")
+def agentforge_agent_view(name: str):
+    result = agentforge_api.view_agent_profile(
+        name,
+        viewer_id=str(request.args.get("viewer_id", "")).strip(),
+        viewer_channel=str(request.args.get("viewer_channel", "")).strip(),
+    )
+    status = 200 if result.get("ok") else 404
+    return jsonify(result), status
+
+
+@app.post("/api/agentforge/agents/<name>/disclosure")
+def agentforge_agent_disclosure(name: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    result = agentforge_api.set_agent_disclosure_posture(name, str(payload.get("disclosure_posture", "")).strip())
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/bossgate/access/capabilities")
+def bossgate_access_capabilities():
+    user_id = str(request.args.get("user_id", "")).strip()
+    return jsonify(_bossgate_authorization().capabilities_for_user(user_id))
+
+
+@app.post("/api/bossgate/access/roles")
+def bossgate_access_roles():
+    payload = request.get_json(force=True, silent=True) or {}
+    permissions = payload.get("permissions") if isinstance(payload.get("permissions"), list) else []
+    result = _bossgate_authorization().create_or_update_custom_role(
+        acting_user=str(payload.get("acting_user", "")).strip(),
+        role_name=str(payload.get("role_name", "")).strip(),
+        permissions=[str(item) for item in permissions],
+    )
+    return jsonify(result), (200 if result.get("ok") else 403)
+
+
+@app.post("/api/bossgate/access/users/<user_id>/roles")
+def bossgate_access_user_roles(user_id: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    roles = payload.get("roles") if isinstance(payload.get("roles"), list) else []
+    result = _bossgate_authorization().assign_user_roles(
+        acting_user=str(payload.get("acting_user", "")).strip(),
+        user_id=str(user_id).strip(),
+        roles=[str(item) for item in roles],
+    )
+    return jsonify(result), (200 if result.get("ok") else 403)
+
+
 @app.post("/api/agentforge/icon/upload")
 def agentforge_icon_upload():
     uploaded = request.files.get("icon")
@@ -6249,7 +6661,33 @@ def model_agents_memory():
 def model_travel_discover():
     timeout = int(request.args.get("timeout", "5"))
     assistance_only = str(request.args.get("assistance_only", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    result = model_gateway_api.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    operator_id = str(request.args.get("operator_id", "")).strip()
+    scope_id = str(request.args.get("scope_id", "")).strip()
+    actor_type = str(request.args.get("actor_type", "human")).strip()
+    result = model_gateway_api.discover_travel_targets(
+        timeout=timeout,
+        assistance_only=assistance_only,
+        operator_id=operator_id,
+        scope_id=scope_id,
+        actor_type=actor_type,
+    )
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/travel/map")
+def model_travel_map():
+    refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
+    timeout = int(request.args.get("timeout", "2"))
+    result = model_gateway_api.bossgate_map_snapshot(refresh=refresh, timeout=timeout)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/travel/transfers")
+def model_travel_transfers():
+    limit = int(request.args.get("limit", "20"))
+    result = _read_bossgate_transfers(limit=limit)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6258,7 +6696,12 @@ def model_travel_discover():
 def model_travel_validate():
     payload = request.get_json(force=True, silent=True) or {}
     destination = str(payload.get("destination", "")).strip()
-    result = model_gateway_api.validate_transfer_target(destination=destination)
+    result = model_gateway_api.validate_transfer_target(
+        destination=destination,
+        operator_id=str(payload.get("operator_id", "")).strip(),
+        scope_id=str(payload.get("scope_id", "")).strip(),
+        actor_type=str(payload.get("actor_type", "human")).strip(),
+    )
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
@@ -6683,6 +7126,28 @@ def _load_json_state(path: Path, fallback: dict) -> dict:
 
 def _save_json_state(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _read_bossgate_transfers(limit: int = 20) -> dict:
+    path = bus.state / "bossgate_transfers.jsonl"
+    if not path.exists():
+        return {"ok": True, "items": []}
+    entries = []
+    try:
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(item, dict):
+                entries.append(item)
+    except OSError as ex:
+        return {"ok": False, "message": str(ex), "items": []}
+    lim = max(1, int(limit))
+    return {"ok": True, "items": entries[-lim:]}
 
 
 def _default_scheduler_state() -> dict:

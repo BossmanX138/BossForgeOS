@@ -12,14 +12,36 @@ def _gateway() -> Any:
     return ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
 
 
-def discover_travel_targets(timeout: int = 5, assistance_only: bool = False) -> dict[str, Any]:
+def discover_travel_targets(
+    timeout: int = 5,
+    assistance_only: bool = False,
+    operator_id: str = "",
+    scope_id: str = "",
+    actor_type: str = "human",
+) -> dict[str, Any]:
     gateway = _gateway()
-    return gateway.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    return gateway.discover_travel_targets(
+        timeout=timeout,
+        assistance_only=assistance_only,
+        operator_id=operator_id,
+        scope_id=scope_id,
+        actor_type=actor_type,
+    )
 
 
-def validate_transfer_target(destination: str) -> dict[str, Any]:
+def validate_transfer_target(
+    destination: str,
+    operator_id: str = "",
+    scope_id: str = "",
+    actor_type: str = "human",
+) -> dict[str, Any]:
     gateway = _gateway()
-    return gateway.validate_transfer_target(destination=str(destination or "").strip())
+    return gateway.validate_transfer_target(
+        destination=str(destination or "").strip(),
+        operator_id=operator_id,
+        scope_id=scope_id,
+        actor_type=actor_type,
+    )
 
 
 def set_agent_assistance_request(name: str, requested: bool = True, reason: str = "") -> dict[str, Any]:

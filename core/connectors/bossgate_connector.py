@@ -2,9 +2,17 @@ import socket
 import json
 import threading
 import time
+import secrets
+import hashlib
+import hmac
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from urllib.parse import urlparse
 from urllib import request
+import re
+import base64
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 BOSSGATE_PORT = 50505
 BOSSGATE_BEACON = b'BOSSGATE-ASS-PAIRING'
@@ -37,6 +45,23 @@ TARGET_SIGNATURES = {
         "bridgebase alpha",
     ),
 }
+
+METADATA_VISIBILITY_LEVELS = {
+    "none",
+    "id_card_only",
+    "model_card_only",
+    "id_and_model_card",
+}
+
+SECURE_ADDRESS_WORDLIST = (
+    "anvil", "arc", "atlas", "axiom", "beacon", "blaze", "bridge", "cipher",
+    "codemage", "comet", "core", "delta", "ember", "forge", "gate", "glint",
+    "haven", "helix", "ion", "jade", "keystone", "lumen", "matrix", "nova",
+    "onyx", "orbit", "phoenix", "pulse", "quartz", "quill", "raven", "rune",
+    "saber", "sentinel", "shuttle", "sigma", "spark", "spoke", "star", "titan",
+    "trace", "vector", "vertex", "warden", "zenith",
+)
+SECURE_ADDRESS_PATTERN = re.compile(r"^\*(?:[a-z]+(?:\*[a-z]+){6})\*$")
 
 
 def _normalize_url_for_scan(raw_url: str) -> str:
@@ -263,6 +288,286 @@ def _http_options_headers(url: str, timeout: float = 2.0):
         status = int(getattr(resp, "status", 200))
         headers = {k: v for k, v in resp.headers.items()}
     return status, headers
+
+
+def generate_secure_address(wordlist: tuple[str, ...] | list[str] | None = None) -> str:
+    words = tuple(str(w).strip().lower() for w in (wordlist or SECURE_ADDRESS_WORDLIST) if str(w).strip())
+    if len(words) < 7:
+        raise ValueError("wordlist must contain at least 7 words")
+    selected = [secrets.choice(words) for _ in range(7)]
+    return "*" + "*".join(selected) + "*"
+
+
+def is_valid_secure_address(address: str) -> bool:
+    return bool(SECURE_ADDRESS_PATTERN.match((address or "").strip().lower()))
+
+
+def apply_metadata_visibility_profile(
+    profile: str | None,
+    agent_id_card: dict[str, Any] | None = None,
+    model_card_snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    normalized_profile = str(profile or "none").strip().lower()
+    if normalized_profile not in METADATA_VISIBILITY_LEVELS:
+        normalized_profile = "none"
+
+    result: dict[str, Any] = {
+        "profile": normalized_profile,
+        "agent_id_card": None,
+        "model_card_snapshot": None,
+    }
+    if normalized_profile in {"id_card_only", "id_and_model_card"}:
+        result["agent_id_card"] = dict(agent_id_card or {})
+    if normalized_profile in {"model_card_only", "id_and_model_card"}:
+        result["model_card_snapshot"] = dict(model_card_snapshot or {})
+    return result
+
+
+def _json_hash(payload: dict[str, Any]) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _derive_aes256_key(secret_key: str) -> bytes:
+    return hashlib.sha256(str(secret_key).encode("utf-8")).digest()
+
+
+def build_chunk_manifest(payload: str, chunk_size: int = 65536) -> dict[str, Any]:
+    encoded = str(payload).encode("utf-8")
+    safe_chunk_size = max(1, int(chunk_size))
+    chunks = []
+    for index, offset in enumerate(range(0, len(encoded), safe_chunk_size)):
+        chunk = encoded[offset : offset + safe_chunk_size]
+        chunks.append(
+            {
+                "index": index,
+                "offset": offset,
+                "size": len(chunk),
+                "sha256": hashlib.sha256(chunk).hexdigest(),
+            }
+        )
+    return {
+        "algorithm": "SHA-256",
+        "chunk_size": safe_chunk_size,
+        "chunk_count": len(chunks),
+        "payload_size": len(encoded),
+        "chunks": chunks,
+    }
+
+
+def validate_chunk_manifest(payload: str, manifest: dict[str, Any]) -> tuple[bool, str]:
+    if str(manifest.get("algorithm", "")).strip().upper() != "SHA-256":
+        return False, "unsupported chunk checksum algorithm"
+    expected = build_chunk_manifest(payload, chunk_size=int(manifest.get("chunk_size", 0) or 0))
+    if int(manifest.get("payload_size", -1)) != expected["payload_size"]:
+        return False, "chunk payload size mismatch"
+    if int(manifest.get("chunk_count", -1)) != expected["chunk_count"]:
+        return False, "chunk count mismatch"
+    chunks = manifest.get("chunks")
+    if not isinstance(chunks, list) or len(chunks) != expected["chunk_count"]:
+        return False, "invalid chunk manifest"
+    for index, expected_chunk in enumerate(expected["chunks"]):
+        chunk = chunks[index]
+        if not isinstance(chunk, dict):
+            return False, f"invalid chunk metadata at index {index}"
+        for field in ("index", "offset", "size"):
+            if int(chunk.get(field, -1)) != expected_chunk[field]:
+                return False, f"chunk {field} mismatch at index {index}"
+        if not hmac.compare_digest(str(chunk.get("sha256", "")), expected_chunk["sha256"]):
+            return False, f"chunk checksum mismatch at index {index}"
+    return True, "ok"
+
+
+def build_transfer_resume_plan(
+    envelope: dict[str, Any],
+    completed_chunk_indexes: list[int] | tuple[int, ...] | None = None,
+) -> dict[str, Any]:
+    manifest = envelope.get("chunk_manifest")
+    if not isinstance(manifest, dict):
+        raise ValueError("resume requires a chunk manifest")
+    chunk_count = int(manifest.get("chunk_count", -1))
+    if chunk_count < 0:
+        raise ValueError("resume requires a valid chunk count")
+    completed = sorted({int(index) for index in (completed_chunk_indexes or [])})
+    if any(index < 0 or index >= chunk_count for index in completed):
+        raise ValueError("completed chunk checkpoint is out of range")
+    pending = [index for index in range(chunk_count) if index not in completed]
+    return {
+        "version": 1,
+        "payload_hash": str(envelope.get("payload_hash", "")),
+        "chunk_count": chunk_count,
+        "completed_chunk_indexes": completed,
+        "pending_chunk_indexes": pending,
+        "next_chunk_index": pending[0] if pending else None,
+        "complete": len(pending) == 0,
+    }
+
+
+def validate_transfer_resume_plan(envelope: dict[str, Any], resume_plan: dict[str, Any]) -> tuple[bool, str]:
+    if int(resume_plan.get("version", 0) or 0) != 1:
+        return False, "unsupported resume plan version"
+    if str(resume_plan.get("payload_hash", "")) != str(envelope.get("payload_hash", "")):
+        return False, "resume payload hash mismatch"
+    try:
+        expected = build_transfer_resume_plan(
+            envelope,
+            completed_chunk_indexes=list(resume_plan.get("completed_chunk_indexes", [])),
+        )
+    except (TypeError, ValueError):
+        return False, "invalid resume chunk checkpoint"
+    for field in ("chunk_count", "completed_chunk_indexes", "pending_chunk_indexes", "next_chunk_index", "complete"):
+        if resume_plan.get(field) != expected[field]:
+            return False, f"resume {field} mismatch"
+    return True, "ok"
+
+
+def build_transfer_replay_token(envelope: dict[str, Any]) -> str:
+    encrypted_payload = str(envelope.get("encrypted_payload", ""))
+    nonce_source = encrypted_payload
+    try:
+        raw = base64.b64decode(encrypted_payload.encode("ascii"))
+        blob = json.loads(raw.decode("utf-8"))
+        if isinstance(blob, dict) and str(blob.get("nonce_b64", "")).strip():
+            nonce_source = str(blob.get("nonce_b64", "")).strip()
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        pass
+    return _json_hash(
+        {
+            "issuer": str(envelope.get("issuer", "")).strip(),
+            "nonce": nonce_source,
+        }
+    )
+
+
+def encrypt_json_payload(payload: dict[str, Any], secret_key: str, key_id: str = "") -> str:
+    key = _derive_aes256_key(secret_key)
+    aes = AESGCM(key)
+    nonce = secrets.token_bytes(12)
+    plaintext = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ciphertext = aes.encrypt(nonce, plaintext, associated_data=None)
+    blob = {
+        "version": 1,
+        "alg": "AES-256-GCM",
+        "key_id": str(key_id).strip() or "default",
+        "nonce_b64": base64.b64encode(nonce).decode("ascii"),
+        "ciphertext_b64": base64.b64encode(ciphertext).decode("ascii"),
+    }
+    return base64.b64encode(json.dumps(blob, separators=(",", ":")).encode("utf-8")).decode("ascii")
+
+
+def decrypt_json_payload(encoded_payload: str, secret_key: str | dict[str, str]) -> dict[str, Any]:
+    raw = base64.b64decode(str(encoded_payload).encode("ascii"))
+    blob = json.loads(raw.decode("utf-8"))
+    if not isinstance(blob, dict):
+        raise ValueError("encrypted payload blob must be an object")
+    if str(blob.get("alg", "")).strip().upper() != "AES-256-GCM":
+        raise ValueError("unsupported payload encryption algorithm")
+
+    nonce = base64.b64decode(str(blob.get("nonce_b64", "")).encode("ascii"))
+    ciphertext = base64.b64decode(str(blob.get("ciphertext_b64", "")).encode("ascii"))
+    key_id = str(blob.get("key_id", "default")).strip() or "default"
+    if isinstance(secret_key, dict):
+        resolved = str(secret_key.get(key_id, "")).strip() or str(secret_key.get("default", "")).strip()
+        if not resolved:
+            raise ValueError(f"no key available for key_id='{key_id}'")
+        key = _derive_aes256_key(resolved)
+    else:
+        key = _derive_aes256_key(secret_key)
+    aes = AESGCM(key)
+    plaintext = aes.decrypt(nonce, ciphertext, associated_data=None)
+    payload = json.loads(plaintext.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("decrypted payload must be an object")
+    return payload
+
+
+def build_transfer_envelope(
+    *,
+    agent_id: str,
+    agent_version: str,
+    issuer: str,
+    target_system_id: str,
+    encrypted_payload: str,
+    policy_ref: str,
+    secret_key: str,
+    expires_in_seconds: int = 300,
+    envelope_version: int = 1,
+    chunk_size: int = 65536,
+) -> dict[str, Any]:
+    created_at = datetime.now(timezone.utc)
+    expires_at = created_at + timedelta(seconds=max(1, int(expires_in_seconds)))
+
+    base = {
+        "envelope_version": int(envelope_version),
+        "agent_id": str(agent_id).strip(),
+        "agent_version": str(agent_version).strip(),
+        "issuer": str(issuer).strip(),
+        "target_system_id": str(target_system_id).strip(),
+        "created_at": created_at.isoformat(),
+        "expires_at": expires_at.isoformat(),
+        "cipher_suite": "AES-256-GCM",
+        "encrypted_payload": str(encrypted_payload),
+        "policy_ref": str(policy_ref).strip(),
+        "chunk_manifest": build_chunk_manifest(str(encrypted_payload), chunk_size=chunk_size),
+    }
+    base["payload_hash"] = _json_hash({"encrypted_payload": base["encrypted_payload"]})
+    message = _json_hash(base).encode("utf-8")
+    base["signature"] = hmac.new(str(secret_key).encode("utf-8"), message, hashlib.sha256).hexdigest()
+    return base
+
+
+def validate_transfer_envelope(
+    envelope: dict[str, Any],
+    secret_key: str,
+    replay_tokens: set[str] | None = None,
+) -> tuple[bool, str]:
+    required = {
+        "envelope_version", "agent_id", "agent_version", "issuer", "target_system_id",
+        "created_at", "expires_at", "cipher_suite", "encrypted_payload", "payload_hash",
+        "signature", "policy_ref",
+    }
+    missing = [field for field in required if field not in envelope]
+    if missing:
+        return False, f"missing fields: {', '.join(sorted(missing))}"
+
+    if str(envelope.get("cipher_suite", "")).strip().upper() != "AES-256-GCM":
+        return False, "unsupported cipher suite"
+
+    expected_hash = _json_hash({"encrypted_payload": str(envelope.get("encrypted_payload", ""))})
+    if str(envelope.get("payload_hash", "")) != expected_hash:
+        return False, "payload hash mismatch"
+
+    chunk_manifest = envelope.get("chunk_manifest")
+    if chunk_manifest is not None:
+        if not isinstance(chunk_manifest, dict):
+            return False, "invalid chunk manifest"
+        chunks_ok, chunks_reason = validate_chunk_manifest(str(envelope.get("encrypted_payload", "")), chunk_manifest)
+        if not chunks_ok:
+            return False, chunks_reason
+
+    signing_payload = {k: v for k, v in envelope.items() if k != "signature"}
+    expected_sig = hmac.new(
+        str(secret_key).encode("utf-8"),
+        _json_hash(signing_payload).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(str(envelope.get("signature", "")), expected_sig):
+        return False, "signature mismatch"
+
+    try:
+        expires_at = datetime.fromisoformat(str(envelope.get("expires_at", "")))
+    except ValueError:
+        return False, "invalid expires_at"
+    if datetime.now(timezone.utc) >= expires_at.astimezone(timezone.utc):
+        return False, "envelope expired"
+
+    if replay_tokens is not None:
+        replay_token = build_transfer_replay_token(envelope)
+        if replay_token in replay_tokens:
+            return False, "replay detected: encrypted payload nonce was already consumed"
+        replay_tokens.add(replay_token)
+
+    return True, "ok"
 
 
 # --- Secure Address and Communication ---
