@@ -269,6 +269,10 @@ def build_private_model_package(
     inventory = inspect_model_source(source_root, base_source_root=base_source_root)
     root = Path(vault_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
+    total_size = int(inventory["total_size"])
+    required_bytes = max(total_size * 2, total_size + 16 * 1024 * 1024)
+    if shutil.disk_usage(root).free < required_bytes:
+        raise ValueError("insufficient disk space for encrypted model package")
     package_id = f"pmv-{secrets.token_hex(16)}"
     staging = root / ".staging" / f"{owner_agent_id}-{package_id}"
     final = root / owner_agent_id / package_id
@@ -453,3 +457,43 @@ def verify_private_model_package(
         if file_hasher.hexdigest() != str(file_item["sha256"]):
             raise ValueError("private model reconstructed file digest mismatch")
     return manifest
+
+
+def validate_private_model_descriptor(
+    descriptor: dict[str, Any],
+    *,
+    expected_agent_id: str,
+    vault_root: str | Path,
+) -> None:
+    if not isinstance(descriptor, dict):
+        raise ValueError("private model descriptor must be an object")
+    owner = _normalized_agent_id(str(descriptor.get("owner_agent_id", "")))
+    expected = _normalized_agent_id(expected_agent_id)
+    if owner != expected:
+        raise ValueError("private model descriptor owner does not match agent")
+    if descriptor.get("schema_version") != MODEL_VAULT_SCHEMA_VERSION:
+        raise ValueError("private model descriptor schema version is invalid")
+    package_id = str(descriptor.get("package_id", "")).strip()
+    if not package_id:
+        raise ValueError("private model descriptor package_id is required")
+    if descriptor.get("verified") is not True:
+        raise ValueError("private model descriptor must be verified")
+    if not str(descriptor.get("key_ref", "")).strip():
+        raise ValueError("private model descriptor key_ref is required")
+
+    root = Path(vault_root).resolve()
+    owner_root = (root / owner).resolve()
+    package_path = Path(str(descriptor.get("package_path", ""))).resolve(strict=True)
+    if package_path.parent != owner_root:
+        raise ValueError("private model descriptor package path violates owner isolation")
+    if package_path.name != package_id:
+        raise ValueError("private model descriptor package path does not match package_id")
+    attestation_path = package_path / "package.attestation.json"
+    try:
+        attestation = json.loads(attestation_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("private model package attestation is invalid") from exc
+    if attestation.get("owner_agent_id") != owner:
+        raise ValueError("private model package attestation owner mismatch")
+    if attestation.get("package_id") != package_id:
+        raise ValueError("private model package attestation package_id mismatch")

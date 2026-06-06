@@ -2,10 +2,13 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from core.model_vault.private_model_vault import (
     build_private_model_package,
     inspect_model_source,
+    validate_private_model_descriptor,
     verify_private_model_package,
 )
 
@@ -140,6 +143,59 @@ class PrivateModelVaultTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "ciphertext|decrypt|authentication"):
                 verify_private_model_package(package_root, "wayfinder-secret")
+
+    def test_disk_preflight_fails_before_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source"
+            vaults = Path(tmp) / "vaults"
+            write_complete_model(source)
+
+            with patch(
+                "core.model_vault.private_model_vault.shutil.disk_usage",
+                return_value=SimpleNamespace(total=100, used=99, free=1),
+            ):
+                with self.assertRaisesRegex(ValueError, "insufficient disk space"):
+                    build_private_model_package(
+                        agent_id="wayfinder",
+                        source_root=source,
+                        vault_root=vaults,
+                        secret_key="secret",
+                        key_ref="key:wayfinder",
+                    )
+
+            self.assertFalse((vaults / ".staging").exists())
+
+    def test_sibling_packages_have_distinct_ownership_and_ciphertext(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "source"
+            vaults = Path(tmp) / "vaults"
+            write_complete_model(source, b"same-model")
+
+            first = build_private_model_package(
+                agent_id="first",
+                source_root=source,
+                vault_root=vaults,
+                secret_key="first-secret",
+                key_ref="key:first",
+                chunk_size=4,
+            )
+            second = build_private_model_package(
+                agent_id="second",
+                source_root=source,
+                vault_root=vaults,
+                secret_key="second-secret",
+                key_ref="key:second",
+                chunk_size=4,
+            )
+
+            self.assertNotEqual(first["package_id"], second["package_id"])
+            self.assertNotEqual(first["package_path"], second["package_path"])
+            first_chunk = next(Path(first["package_path"]).rglob("*.chunk")).read_bytes()
+            second_chunk = next(Path(second["package_path"]).rglob("*.chunk")).read_bytes()
+            self.assertNotEqual(first_chunk, second_chunk)
+            validate_private_model_descriptor(first, expected_agent_id="first", vault_root=vaults)
+            with self.assertRaisesRegex(ValueError, "owner"):
+                validate_private_model_descriptor(first, expected_agent_id="second", vault_root=vaults)
 
 
 if __name__ == "__main__":
