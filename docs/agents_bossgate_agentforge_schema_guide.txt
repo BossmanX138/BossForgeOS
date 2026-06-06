@@ -474,7 +474,27 @@ Implemented:
 
 Not yet implemented:
 - process supervision for waking the runner
-- complete model-weight copying into private model vaults
 - memory-vault-backed learning
 - dream training and signed checkpoints
 - full move-only BossGate transport
+
+====================================================================
+19) Private Model Vault (Implemented Stage 2 Completion)
+====================================================================
+Implemented:
+- deterministic complete model-source inventory
+- sharded-weight validation
+- adapter plus complete local base-model composition
+- bounded AES-256-GCM encrypted chunks with authenticated metadata
+- encrypted proprietary package manifest and sparse public attestation
+- disk preflight, staged verification, and atomic activation
+- unique package ownership and sibling-rebind rejection
+- runner bootstrap and capsule model-vault binding
+- immediate Model Gateway and AgentForge creation integration
+- deny-by-default standalone entitlement enforcement
+
+Deferred:
+- protected runtime mount/decryption for inference
+- production subscription service and production key custody
+- dream-generated checkpoint weight sets
+- full-capsule BossGate network movement and source retirement

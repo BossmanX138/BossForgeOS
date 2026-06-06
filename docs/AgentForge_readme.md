@@ -40,6 +40,14 @@ This is the canonical requirements and guardrails document for forging BossCraft
    - Control Hall reveals BossGate Access, Commerce, Support, and Security Administration mechanisms from effective permissions.
    - Commerce and Support workspaces exist now; licensing and remote-debug command implementations remain tracked separately.
 
+6. Every newly forged LLM-enabled agent owns a complete private model package.
+   - AgentForge requires a complete local model source or trusted configured default.
+   - Weights, tokenizer, configuration, adapters, base model, and supporting assets are streamed into independently encrypted AES-256-GCM chunks.
+   - Adapter-only sources must include a resolvable complete local base model.
+   - The Forge source remains unchanged and is not an alternate agent version.
+   - Unsubscribed standalone AgentForge creates only local Skilled or Normalized agents and forces BossGate travel off.
+   - Subscribed standalone may unlock Prime and travel-capable creation through a trusted entitlement provider.
+
 ## Guardrails
 
 1. No silent escalation.
@@ -278,7 +286,7 @@ Use this file as the living source of truth for future "you add one, I add one" 
 
 ## Policy Versioning
 
-- Current policy version: `v1.13.0`
+- Current policy version: `v1.14.0`
 - Policy changes must update this section with date, summary, and impacted modules.
 
 ### Change Log
@@ -297,6 +305,7 @@ Use this file as the living source of truth for future "you add one, I add one" 
 - v1.11.0 (2026-06-02): added persisted human BossGate roles, multi-role permission union, seeded-security-admin governance, agent skill gates, and permission-driven Control Hall workspaces.
 - v1.12.0 (2026-06-02): added the Stage 1 sealed portable-agent capsule foundation: sparse public identity, encrypted vault descriptors, sealed RuneForge runtime lineage, immutable rarity guard, lifecycle metadata, and address-safe AgentForge views.
 - v1.13.0 (2026-06-06): added the Stage 2 gifted portable runner contract: signed neutral template metadata, RuneForge personalized-origin manifest, detached descendant runner manifests, and per-agent runner bootstrap metadata.
+- v1.14.0 (2026-06-06): completed Stage 2 private-model forging with deterministic source inspection, adapter/base composition, streaming authenticated encryption, atomic package activation, per-agent ownership, runner/capsule binding, and standalone subscription authority.
 - Impacted modules for v1.0.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`
 - Impacted modules for v1.8.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `ui/control_hall.py`
 - Impacted modules for v1.9.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `core/agents/model_gateway_agent.py`, `ui/control_hall.py`
@@ -304,6 +313,7 @@ Use this file as the living source of truth for future "you add one, I add one" 
 - Impacted modules for v1.11.0: `core/security/bossgate_authorization.py`, `core/agents/bossgate_agent.py`, `core/agents/model_gateway_agent.py`, `core/utils/bforge.py`, `ui/control_hall.py`
 - Impacted modules for v1.12.0: `core/schemas/agent_capsule.py`, `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `core/agents/model_gateway_agent.py`, `modules/agentforge/service.py`
 - Impacted modules for v1.13.0: `core/runner/bossforge_ai_runner.py`, `core/schemas/agent_schema.py`, `core/agents/model_gateway_agent.py`, `modules/runeforge_provider/runeforge_agent.profile.json`, `modules/runeforge_provider/provider_manifest.json`
+- Impacted modules for v1.14.0: `core/model_vault/private_model_vault.py`, `core/runner/bossforge_ai_runner.py`, `core/schemas/agent_capsule.py`, `core/agents/model_gateway_agent.py`, `modules/agentforge/entitlements.py`, `modules/agentforge/service.py`, `modules/agentforge/api_adapter.py`, `ui/control_hall.py`
 
 ## TODO
 

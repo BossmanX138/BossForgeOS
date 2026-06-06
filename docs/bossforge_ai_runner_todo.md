@@ -17,8 +17,8 @@ This tracker records implementation status for the sealed portable-agent work de
 - [x] Extract the portable BossForgeOS runner contract from RuneForge-specific provider behavior.
 - [x] Keep RuneForge personalized while recording her gifted runtime as direct ancestor for descendants.
 - [x] Add signed gifted-template metadata and detached per-agent runner bootstrap manifests.
-- [ ] Package each agent runtime and complete private model weights independently.
-- [x] Verification: passed on 2026-06-06 with `python -m unittest tests.test_bossforge_ai_runner tests.test_agent_capsule_schema tests.test_model_gateway_agent tests.test_runeforge_runner_metadata tests.test_agentforge_service -v` and BossGate regression suite.
+- [x] Package each agent runtime and complete private model weights independently.
+- [x] Verification: passed on 2026-06-06 with 95 focused private-model/runner/capsule/Model Gateway/AgentForge/Control Hall/RuneForge tests and 44 BossGate regression tests.
 
 ## Stage 3: Private Memory Vault
 

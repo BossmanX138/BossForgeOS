@@ -206,6 +206,15 @@ Safety rules:
 3. Key rotation promotes a new active key while retaining prior keys for package decrypt/install continuity.
 4. This is local-file key management for prototype stage; secure external vault integration is still pending.
 
+## Private Model Package Boundary
+
+AgentForge now creates an independently owned encrypted private-model package
+for every new LLM-enabled agent. The capsule model vault and runner bootstrap
+reference that verified package. BossGate full-capsule travel must carry these
+encrypted chunks unchanged as part of the agent and must not substitute a
+destination-side shared model. Network transfer, destination mounting, and
+source secure retirement remain Stage 6 work.
+
 ## Non-Goals
 
 1. Unauthenticated remote execution.

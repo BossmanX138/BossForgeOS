@@ -257,3 +257,12 @@ BossGate operations must remain:
 4. Revocable
 
 Unauthorized scanning, access, or data extraction is out-of-scope by design.
+
+## Private Model Payload Contract
+
+The agent capsule model vault references a verified per-agent private-model
+package containing encrypted chunk files, an encrypted manifest, and a sparse
+attestation. Package ownership must match the runner and capsule agent ID.
+BossGate transport may resume and verify these ciphertext artifacts, but may
+not rename the agent, rebind the package to a sibling identity, or replace the
+package with shared destination weights.
