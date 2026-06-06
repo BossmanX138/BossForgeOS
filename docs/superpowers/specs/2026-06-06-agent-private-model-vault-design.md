@@ -27,6 +27,12 @@ descendants receive independent packages created from an approved source.
 6. The Forge source remains unchanged after successful packaging.
 7. BossGate later transports this exact agent-owned package with the complete
    capsule.
+8. AgentForge uses the same package format in BossForgeOS and standalone
+   operation.
+9. Unsubscribed standalone AgentForge may create local-only Skilled and
+   Normalized agents, but may not create Prime or travel-capable agents.
+10. Subscribed standalone AgentForge may create Prime and travel-capable
+    agents after a server-side entitlement check succeeds.
 
 ## Scope
 
@@ -41,6 +47,7 @@ This stage implements:
 7. AgentForge creation integration.
 8. Package verification and isolation tests.
 9. Documentation and completion-tracker updates.
+10. Standalone AgentForge creation-authority enforcement.
 
 This stage does not implement:
 
@@ -50,6 +57,67 @@ This stage does not implement:
 4. Production key-management infrastructure.
 5. Runtime decryption or protected model mounting beyond the package contract
    needed by a later loader stage.
+6. Billing, checkout, subscription issuance, or production entitlement-server
+   infrastructure.
+
+## AgentForge Deployment Modes
+
+AgentForge uses one capsule and private-model package format in every
+deployment mode. Deployment mode changes creation authority, not agent file
+compatibility.
+
+### BossForgeOS Integrated
+
+BossForgeOS-integrated AgentForge retains full creation authority under
+BossForgeOS security and role policy. It may create Prime, Skilled, Normalized,
+local-only, and travel-capable agents when all existing class, rank, type,
+role, and BossGate requirements pass.
+
+### Standalone Unsubscribed
+
+An unsubscribed standalone installation:
+
+1. May create Skilled and Normalized agents.
+2. Must reject Prime creation.
+3. Forces `bossgate_enabled=false`.
+4. Forces `travel_capable=false`.
+5. Creates encrypted private model packages in a configurable standalone
+   storage root.
+6. Uses a local protected key provider.
+7. Must not require BossForgeOS, Model Gateway daemon, RuneForge, or BossGate
+   to be running.
+8. Produces the same capsule and model-vault schemas used by BossForgeOS.
+
+The resulting agent is portable as a sealed artifact format, but its creation
+policy marks it local-only and it cannot undergo BossGate travel unless a
+later authorized promotion or re-forging flow explicitly grants that
+capability.
+
+### Standalone Subscribed
+
+A subscribed standalone installation may create Prime and travel-capable
+agents with the same validation rules as BossForgeOS-integrated AgentForge.
+The subscription unlock does not bypass rank, type, security, encryption,
+ownership, or BossGate policy.
+
+### Entitlement Enforcement
+
+Creation authority is determined by trusted runtime context and an injected
+entitlement provider. It is never accepted from request payload fields.
+
+The provider returns a signed or otherwise trusted decision containing:
+
+1. Installation or account subject.
+2. Product identifier.
+3. Subscription tier.
+4. Allowed creation capabilities.
+5. Issued and expiry timestamps.
+6. Verification status.
+
+Until production subscription verification exists, standalone operation is
+deny-by-default and behaves as unsubscribed. Tests may inject a deterministic
+entitlement provider. UI controls reflect the decision but do not enforce it;
+service-layer policy rejects direct API or modified-client bypass attempts.
 
 ## Package Contents
 
@@ -172,24 +240,27 @@ sets within this same agent's vault.
 
 ## Creation Data Flow
 
-1. AgentForge validates the requested agent profile and source model
+1. AgentForge resolves trusted deployment mode and entitlement.
+2. AgentForge validates requested class and travel authority against that
+   decision.
+3. AgentForge validates the requested agent profile and source model
    selection.
-2. The source inspector builds and validates the complete source inventory.
-3. AgentForge obtains a unique package ID and protected per-agent key
+4. The source inspector builds and validates the complete source inventory.
+5. AgentForge obtains a unique package ID and protected per-agent key
    reference.
-4. The vault service creates a staging directory beneath the intended
+6. The vault service creates a staging directory beneath the intended
    private-model root.
-5. Source files are read in bounded chunks, encrypted, hashed, and written to
+7. Source files are read in bounded chunks, encrypted, hashed, and written to
    staging.
-6. The encrypted package manifest and non-secret attestation are written.
-7. The service decrypts and verifies every staged chunk against the sealed
+8. The encrypted package manifest and non-secret attestation are written.
+9. The service decrypts and verifies every staged chunk against the sealed
    manifest.
-8. The service verifies file reconstruction hashes, required categories,
+10. The service verifies file reconstruction hashes, required categories,
    package ownership, and aggregate attestation.
-9. The staging directory is atomically renamed to its final package path.
-10. The capsule model vault receives the package ciphertext reference.
-11. The agent runner manifest receives the private model package binding.
-12. Agent creation completes only after the final capsule and runner
+11. The staging directory is atomically renamed to its final package path.
+12. The capsule model vault receives the package ciphertext reference.
+13. The agent runner manifest receives the private model package binding.
+14. Agent creation completes only after the final capsule and runner
     validations pass.
 
 ## Atomicity And Failure Handling
@@ -290,6 +361,14 @@ Tests must prove:
 15. The Forge source remains byte-for-byte unchanged.
 16. Existing runner, capsule, AgentForge, Model Gateway, and BossGate
     regression suites continue to pass.
+17. Unsubscribed standalone rejects Prime creation.
+18. Unsubscribed standalone forces local-only, non-travel-capable policy.
+19. Subscribed standalone permits Prime and travel-capable requests only when
+    the entitlement provider verifies the required capabilities.
+20. Request payloads cannot claim subscription or integrated deployment mode.
+21. Standalone packaging succeeds without a running BossForgeOS, Model
+    Gateway daemon, RuneForge, or BossGate.
+22. Standalone and integrated packages validate against the same schema.
 
 ## Documentation Updates
 
@@ -303,7 +382,8 @@ Implementation updates:
 6. `docs/bossgate_connector.md` where the future full-capsule package boundary
    is described
 7. `docs/bossgate_protocol.md` where the future travel payload is described
+8. `modules/agentforge/manifest.json` with standalone entitlement and
+   local-only capability notes
 
 The Stage 2 tracker item is marked complete only after the private model
 package implementation and its regression suites pass.
-
