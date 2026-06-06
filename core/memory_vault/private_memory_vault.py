@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import threading
 from datetime import datetime, timezone
@@ -82,6 +83,24 @@ def _normalize_utc_timestamp(value: str) -> str:
 
 def _sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _is_parent_or_self(parent: Path, child: Path) -> bool:
+    return child == parent or parent in child.parents
+
+
+def _is_reparse_or_symlink(path: Path) -> bool:
+    if not path.exists():
+        return False
+    if path.is_symlink():
+        return True
+    isjunction = getattr(os.path, "isjunction", None)
+    if callable(isjunction):
+        try:
+            return bool(isjunction(path))
+        except OSError:
+            return False
+    return False
 
 
 def _sha256_file(path: Path) -> str:
@@ -296,22 +315,30 @@ class PrivateMemoryVault:
 
     def _assert_not_symlink_or_outside(self, path: Path, *, field_name: str, allow_missing: bool) -> None:
         resolved_root = self.vault_root.resolve(strict=False)
-        resolved_path = path.resolve(strict=False)
         try:
-            resolved_path.relative_to(resolved_root)
-        except ValueError as exc:
-            raise ValueError(f"{field_name} resolves outside vault_root") from exc
-
-        if allow_missing and not path.exists():
             relative_parts = path.relative_to(self.vault_root).parts
-        else:
-            relative_parts = resolved_path.relative_to(resolved_root).parts
+        except ValueError as exc:
+            raise ValueError(f"{field_name} path escape rejected") from exc
 
         current = self.vault_root
         for part in relative_parts:
             current = current / part
-            if current.exists() and current.is_symlink():
-                raise ValueError(f"{field_name} symlink rejected")
+            if _is_reparse_or_symlink(current):
+                raise ValueError(f"{field_name} reparse or symlink rejected")
+
+        resolved_owner_root = self.agent_root.resolve(strict=False)
+        expected_resolved_owner_root = resolved_root / self.agent_id
+        if resolved_owner_root != expected_resolved_owner_root:
+            raise ValueError(f"{field_name} owner root rebind rejected")
+        if not _is_parent_or_self(resolved_root, resolved_owner_root):
+            raise ValueError(f"{field_name} owner root escapes vault_root")
+
+        resolved_path = path.resolve(strict=False)
+        expected_resolved_path = resolved_root.joinpath(*relative_parts)
+        if resolved_path != expected_resolved_path:
+            raise ValueError(f"{field_name} path rebind rejected")
+        if not _is_parent_or_self(resolved_root, resolved_path):
+            raise ValueError(f"{field_name} resolves outside vault_root")
 
     @property
     def manifest_path(self) -> Path:
@@ -1005,40 +1032,55 @@ def validate_private_memory_descriptor(
     if verification_key is None:
         raise ValueError("private memory descriptor verification_key is required with vault_root")
 
-    resolved_root = Path(vault_root).resolve(strict=False)
-    expected_agent_root = (resolved_root / normalized_owner).resolve(strict=False)
-    lexical_agent_root = Path(vault_root) / normalized_owner
-    if lexical_agent_root.exists() and lexical_agent_root.is_symlink():
-        raise ValueError("private memory descriptor owner directory symlink rejected")
-    manifest_path = Path(ciphertext_ref).resolve(strict=False)
-    expected_manifest_path = expected_agent_root / "vault.manifest.enc"
-    if manifest_path != expected_manifest_path:
+    lexical_root = Path(vault_root)
+    resolved_root = lexical_root.resolve(strict=False)
+    lexical_agent_root = lexical_root / normalized_owner
+    if _is_reparse_or_symlink(lexical_agent_root):
+        raise ValueError("private memory descriptor owner directory reparse or symlink rejected")
+
+    resolved_owner_root = lexical_agent_root.resolve(strict=False)
+    expected_resolved_owner_root = resolved_root / normalized_owner
+    if resolved_owner_root != expected_resolved_owner_root:
+        raise ValueError("private memory descriptor owner root rebind rejected")
+    if not _is_parent_or_self(resolved_root, resolved_owner_root):
+        raise ValueError("private memory descriptor owner root escapes vault_root")
+
+    lexical_manifest_path = Path(ciphertext_ref)
+    if lexical_manifest_path != lexical_agent_root / "vault.manifest.enc":
         raise ValueError("private memory descriptor ciphertext_ref path mismatch")
-    if (Path(vault_root) / normalized_owner / "vault.manifest.enc").exists() and (Path(vault_root) / normalized_owner / "vault.manifest.enc").is_symlink():
-        raise ValueError("private memory descriptor manifest symlink rejected")
+    if _is_reparse_or_symlink(lexical_manifest_path):
+        raise ValueError("private memory descriptor manifest reparse or symlink rejected")
+    manifest_path = lexical_manifest_path.resolve(strict=False)
+    expected_manifest_path = expected_resolved_owner_root / "vault.manifest.enc"
+    if manifest_path != expected_manifest_path:
+        raise ValueError("private memory descriptor ciphertext_ref path rebind rejected")
     try:
-        manifest_path.relative_to(expected_agent_root)
+        lexical_manifest_path.relative_to(lexical_agent_root)
     except ValueError as exc:
         raise ValueError("private memory descriptor path escape rejected") from exc
-    if not manifest_path.exists():
+    if not _is_parent_or_self(resolved_root, manifest_path):
+        raise ValueError("private memory descriptor path escape rejected")
+    if not lexical_manifest_path.exists():
         raise ValueError("private memory descriptor manifest is missing")
 
-    attestation_path = expected_agent_root / "vault.attestation.json"
-    if not attestation_path.exists():
+    lexical_attestation_path = lexical_agent_root / "vault.attestation.json"
+    if _is_reparse_or_symlink(lexical_attestation_path):
+        raise ValueError("private memory descriptor attestation reparse or symlink rejected")
+    attestation_path = lexical_attestation_path.resolve(strict=False)
+    expected_attestation_path = expected_resolved_owner_root / "vault.attestation.json"
+    if attestation_path != expected_attestation_path:
+        raise ValueError("private memory descriptor attestation path rebind rejected")
+    if not _is_parent_or_self(resolved_root, attestation_path):
+        raise ValueError("private memory descriptor path escape rejected")
+    if not lexical_attestation_path.exists():
         raise ValueError("private memory descriptor attestation is missing")
-    if (Path(vault_root) / normalized_owner / "vault.attestation.json").exists() and (Path(vault_root) / normalized_owner / "vault.attestation.json").is_symlink():
-        raise ValueError("private memory descriptor attestation symlink rejected")
-    if _sha256_file(attestation_path) != attestation_sha256:
+    if _sha256_file(lexical_attestation_path) != attestation_sha256:
         raise ValueError("private memory descriptor attestation digest mismatch")
 
     try:
-        attestation = json.loads(attestation_path.read_text("utf-8"))
+        attestation = json.loads(lexical_attestation_path.read_text("utf-8"))
     except json.JSONDecodeError as exc:
         raise ValueError("private memory descriptor attestation metadata mismatch") from exc
-    if manifest_path.resolve(strict=False).parent != expected_agent_root:
-        raise ValueError("private memory descriptor path escape rejected")
-    if attestation_path.resolve(strict=False).parent != expected_agent_root:
-        raise ValueError("private memory descriptor path escape rejected")
     if not isinstance(attestation, dict):
         raise ValueError("private memory descriptor attestation metadata mismatch")
     if not _HEX_64_RE.fullmatch(str(attestation.get("manifest_sha256", ""))):
@@ -1047,7 +1089,7 @@ def validate_private_memory_descriptor(
         attestation,
         owner_agent_id=normalized_owner,
         key_ref=key_ref,
-        manifest_sha256=_sha256_file(manifest_path),
+        manifest_sha256=_sha256_file(lexical_manifest_path),
     )
     verify_attestation(
         {key: value for key, value in validated_attestation.items() if key != "signature"},

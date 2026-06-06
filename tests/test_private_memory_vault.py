@@ -1155,6 +1155,92 @@ class PrivateMemoryJournalTests(unittest.TestCase):
                     verification_key=self._verification_key(),
                 )
 
+    def test_descriptor_validation_rejects_mocked_resolved_owner_escape_without_symlink_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            root.mkdir()
+            vault = self._make_vault(root)
+            descriptor = vault.initialize()
+
+            outside_owner = Path(tmp) / "outside-owner"
+            outside_owner.mkdir()
+            (outside_owner / "vault.manifest.enc").write_bytes((root / "scribe" / "vault.manifest.enc").read_bytes())
+            (outside_owner / "vault.attestation.json").write_bytes((root / "scribe" / "vault.attestation.json").read_bytes())
+
+            original_resolve = private_memory_vault_module.Path.resolve
+            owner_path = root / "scribe"
+            owner_manifest = owner_path / "vault.manifest.enc"
+            owner_attestation = owner_path / "vault.attestation.json"
+
+            def fake_resolve(path_obj: Path, strict: bool = False) -> Path:
+                raw = Path(path_obj)
+                if raw == owner_path:
+                    return outside_owner
+                if raw == owner_manifest:
+                    return outside_owner / "vault.manifest.enc"
+                if raw == owner_attestation:
+                    return outside_owner / "vault.attestation.json"
+                return original_resolve(raw, strict=strict)
+
+            with patch.object(private_memory_vault_module.Path, "resolve", autospec=True, side_effect=fake_resolve):
+                with self.assertRaisesRegex(ValueError, "outside|escape|rebind|owner"):
+                    validate_private_memory_descriptor(
+                        descriptor,
+                        expected_agent_id="scribe",
+                        vault_root=root,
+                        verification_key=self._verification_key(),
+                    )
+
+    def test_windows_junction_owner_rebinding_is_rejected_when_available(self) -> None:
+        import os
+
+        if os.name != "nt":
+            self.skipTest("junction regression only applies on Windows")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            source_root = Path(tmp) / "source"
+            outside = Path(tmp) / "outside"
+            root.mkdir()
+            source_root.mkdir()
+            outside.mkdir()
+
+            source_vault = self._make_vault(source_root)
+            source_descriptor = source_vault.initialize()
+
+            junction_path = root / "scribe"
+            from subprocess import run
+
+            mklink = run(
+                ["cmd", "/c", "mklink", "/J", str(junction_path), str(outside)],
+                capture_output=True,
+                text=True,
+            )
+            if mklink.returncode != 0:
+                self.skipTest("mklink /J unavailable on this host")
+
+            (outside / "vault.manifest.enc").write_bytes((source_root / "scribe" / "vault.manifest.enc").read_bytes())
+            (outside / "vault.attestation.json").write_bytes(
+                (source_root / "scribe" / "vault.attestation.json").read_bytes()
+            )
+
+            rebound_descriptor = {
+                **source_descriptor,
+                "ciphertext_ref": str(junction_path / "vault.manifest.enc"),
+                "attestation_sha256": hashlib.sha256((outside / "vault.attestation.json").read_bytes()).hexdigest(),
+            }
+
+            rebound_vault = self._make_vault(root)
+            with self.assertRaisesRegex(ValueError, "outside|escape|rebind|owner|reparse|symlink"):
+                rebound_vault.initialize()
+            with self.assertRaisesRegex(ValueError, "outside|escape|rebind|owner|reparse|symlink"):
+                validate_private_memory_descriptor(
+                    rebound_descriptor,
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                    verification_key=self._verification_key(),
+                )
+
     def test_initialize_fails_if_persisted_manifest_or_attestation_is_corrupted_after_write(self) -> None:
         def run_case(root: Path, corrupt_name: str) -> None:
             vault = self._make_vault(root)
