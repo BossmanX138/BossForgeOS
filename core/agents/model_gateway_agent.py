@@ -20,7 +20,26 @@ from typing import Any, Dict
 from urllib import error, request
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
-from core.connectors.bossgate_connector import broadcast_presence, discover_transfer_targets, scan_rest_endpoints
+from core.agents.bossgate_agent import BossGateCommandAgent
+from core.connectors.bossgate_connector import (
+    broadcast_presence,
+    decrypt_json_payload,
+    discover_transfer_targets,
+    encrypt_json_payload,
+    generate_secure_address,
+    is_valid_secure_address,
+)
+from core.runner import (
+    build_agent_runner_manifest,
+    build_runner_bootstrap,
+    validate_agent_runner_manifest,
+)
+from core.schemas.agent_capsule import (
+    build_capsule_manifest,
+    build_runtime_lineage,
+    normalize_availability,
+    normalize_rarity,
+)
 from core.state.agent_memory_store import AgentMemoryStore
 
 
@@ -59,6 +78,7 @@ class ModelGateway:
         self.locations_path = self.bus.state / "owned_gateway_locations.json"
         self.agent_locations_path = self.bus.state / "owned_agent_locations.json"
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
+        self.agent_gate_dir = self.bus.state / "agent_gates"
         self.node_id = self._load_or_create_node_id()
         self.endpoints = self._load_endpoints()
         self.profiles = self._load_profiles()
@@ -74,6 +94,8 @@ class ModelGateway:
         self._presence_stop_event = threading.Event()
         self._presence_thread: threading.Thread | None = None
         self.last_result: Dict[str, Any] = {"ok": True, "message": "idle"}
+        self.bossgate_commands = BossGateCommandAgent(interval_seconds=max(1, int(interval_seconds)), root=self.bus.root)
+        self.agent_gate_dir.mkdir(parents=True, exist_ok=True)
         if enable_presence_broadcast:
             self._start_presence_broadcast()
 
@@ -111,6 +133,10 @@ class ModelGateway:
         encrypt_profile_raw = normalized.get("encrypt_profile")
         encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
         normalized["encrypt_profile"] = encrypt_profile
+        disclosure_posture = str(normalized.get("disclosure_posture", "")).strip().lower()
+        if disclosure_posture not in {"hidden", "non_hidden"}:
+            disclosure_posture = "hidden" if encrypt_profile else "non_hidden"
+        normalized["disclosure_posture"] = disclosure_posture
 
         tools = normalized.get("tools")
         normalized["tools"] = sorted({str(t).strip() for t in tools if str(t).strip()}) if isinstance(tools, list) else []
@@ -126,8 +152,6 @@ class ModelGateway:
 
         bossgate_enabled_raw = normalized.get("bossgate_enabled")
         bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
-        if not encrypt_profile:
-            bossgate_enabled = False
         normalized["bossgate_enabled"] = bossgate_enabled
 
         has_llm_raw = normalized.get("has_llm")
@@ -146,6 +170,25 @@ class ModelGateway:
         normalized["created_by_node"] = created_by_node or self.node_id
         current_node = str(normalized.get("current_node", "")).strip()
         normalized["current_node"] = current_node or self.node_id
+
+        runtime_raw = normalized.get("runtime")
+        runtime = dict(runtime_raw) if isinstance(runtime_raw, dict) else {}
+        if "bossforge_ai_runner" in runtime:
+            runner_manifest = runtime["bossforge_ai_runner"]
+            validate_agent_runner_manifest(runner_manifest)
+            if runner_manifest["agent_id"] != key:
+                raise ValueError("runner manifest agent_id must match profile key")
+        else:
+            runner_manifest = build_agent_runner_manifest(key)
+        runtime["bossforge_ai_runner"] = runner_manifest
+        normalized["runtime"] = runtime
+        normalized["runner_bootstrap"] = build_runner_bootstrap(key, runner_manifest)
+
+        normalized["public_id"] = str(normalized.get("public_id", key)).strip() or key
+        normalized["rarity"] = normalize_rarity(normalized.get("rarity"))
+        normalized["availability"] = normalize_availability(normalized.get("availability"))
+        normalized["runtime_lineage"] = build_runtime_lineage({"id": key, **normalized})
+        normalized["capsule"] = build_capsule_manifest({"id": key, **normalized})
         return normalized
 
     def _load_profiles(self) -> Dict[str, Dict[str, Any]]:
@@ -341,6 +384,35 @@ class ModelGateway:
     def _agent_state_name(self, name: str) -> str:
         safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in name.strip().lower())
         return f"model_agent_{safe}"
+
+    def _agent_gate_file_path(self, name: str) -> Path:
+        safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in name.strip().lower())
+        return self.agent_gate_dir / f"{safe}.bossgate"
+
+    def _ensure_agent_gate_file(self, profile: Dict[str, Any]) -> Dict[str, Any]:
+        key = str(profile.get("name", "")).strip().lower()
+        if not key:
+            return profile
+        secure_address = str(profile.get("secure_address", "")).strip().lower()
+        if not is_valid_secure_address(secure_address):
+            secure_address = generate_secure_address()
+            profile["secure_address"] = secure_address
+
+        gate_payload = {
+            "version": 1,
+            "agent_name": key,
+            "secure_address": secure_address,
+            "created_by_node": str(profile.get("created_by_node", self.node_id)).strip() or self.node_id,
+            "current_node": str(profile.get("current_node", self.node_id)).strip() or self.node_id,
+            "profile": profile,
+            "sealed_at": int(time.time()),
+        }
+        encrypted_blob = encrypt_json_payload(gate_payload, secret_key=self.node_id, key_id="model_gateway_local")
+        gate_path = self._agent_gate_file_path(key)
+        gate_path.write_text(encrypted_blob, encoding="utf-8")
+        profile["gate_file"] = str(gate_path)
+        profile["gate_encrypted"] = True
+        return profile
 
     def _write_agent_presence(self, name: str, endpoint: str, status: str, detail: str = "") -> None:
         self.bus.write_state(
@@ -594,6 +666,33 @@ class ModelGateway:
         self._save_agent_profiles()
         return {"ok": True, "message": f"agent deleted: {key}"}
 
+    def set_agent_disclosure_posture(self, name: str, posture: str) -> Dict[str, Any]:
+        key = name.strip().lower()
+        normalized_posture = posture.strip().lower()
+        if not key:
+            return {"ok": False, "message": "name is required"}
+        if normalized_posture not in {"hidden", "non_hidden"}:
+            return {"ok": False, "message": "invalid disclosure_posture: expected hidden or non_hidden"}
+        profile = self.agent_profiles.get(key)
+        if not isinstance(profile, dict):
+            return {"ok": False, "message": f"agent not found: {key}"}
+
+        updated = dict(profile)
+        updated["disclosure_posture"] = normalized_posture
+        updated["encrypt_profile"] = normalized_posture == "hidden"
+        try:
+            updated = self._ensure_agent_gate_file(updated)
+        except OSError as exc:
+            return {"ok": False, "message": f"failed to refresh encrypted gate file: {exc}"}
+        self.agent_profiles[key] = updated
+        self._save_agent_profiles()
+        return {
+            "ok": True,
+            "agent": key,
+            "disclosure_posture": normalized_posture,
+            "gate_encrypted": bool(updated.get("gate_encrypted", False)),
+        }
+
     def run_agent_profile(
         self,
         name: str,
@@ -742,31 +841,126 @@ class ModelGateway:
             "agents": dict(self.owned_agent_locations),
         }
 
-    def discover_travel_targets(self, timeout: int = 5, assistance_only: bool = False) -> Dict[str, Any]:
-        safe_timeout = max(1, int(timeout))
-        targets = discover_transfer_targets(timeout=safe_timeout, assistance_only=bool(assistance_only))
-        return {
-            "ok": True,
-            "timeout": safe_timeout,
-            "assistance_only": bool(assistance_only),
-            "targets": targets,
-            "policy": "travel_allowed_only_to_bossgate_ass_bossforgeos_bridgebase_alpha",
-        }
+    def discover_travel_targets(
+        self,
+        timeout: int = 5,
+        assistance_only: bool = False,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        return self.bossgate_commands.discover_targets(
+            timeout=timeout,
+            assistance_only=assistance_only,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
 
-    def validate_transfer_target(self, destination: str) -> Dict[str, Any]:
-        target = destination.strip()
-        if not target:
-            return {"ok": False, "message": "destination is required", "allowed_for_transfer": False}
-        result = scan_rest_endpoints(target)
-        if not isinstance(result, dict):
-            return {
-                "ok": False,
-                "message": "invalid transfer validation result",
-                "allowed_for_transfer": False,
-                "destination": target,
-            }
-        result.setdefault("destination", target)
-        return result
+    def bossgate_map_snapshot(self, refresh: bool = False, timeout: int = 2) -> Dict[str, Any]:
+        return self.bossgate_commands.map_snapshot(refresh=bool(refresh), timeout=max(1, int(timeout)))
+
+    def validate_transfer_target(self, destination: str, operator_id: str = "", scope_id: str = "", actor_type: str = "human") -> Dict[str, Any]:
+        return self.bossgate_commands.scan_target(destination, operator_id=operator_id, scope_id=scope_id, actor_type=actor_type)
+
+    def bossgate_package_agent(
+        self,
+        name: str,
+        target_system_id: str,
+        visibility_profile: str = "none",
+        policy_ref: str = "policy/default",
+        secret_key: str = "",
+        output_file: str = "",
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        return self.bossgate_commands.package_agent(
+            name=name,
+            target_system_id=target_system_id,
+            visibility_profile=visibility_profile,
+            policy_ref=policy_ref,
+            secret_key=secret_key,
+            output_file=output_file,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
+
+    def bossgate_transfer_agent(
+        self,
+        package_file: str,
+        destination: str,
+        dry_run: bool = True,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        return self.bossgate_commands.transfer_agent(
+            package_file=package_file,
+            destination=destination,
+            dry_run=dry_run,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
+
+    def bossgate_install_agent(
+        self,
+        package_file: str,
+        secret_key: str = "",
+        install_name: str = "",
+        endpoint_override: str = "",
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        # Compatibility shim: keep legacy install behavior that materializes profile
+        # into model_gateway state while still validating through BossGate command agent.
+        validated = self.bossgate_commands.install_agent(
+            package_file=package_file,
+            secret_key=secret_key,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
+        if not validated.get("ok"):
+            return validated
+        package_path = Path(package_file).expanduser().resolve()
+        package_doc = json.loads(package_path.read_text(encoding="utf-8"))
+        envelope = package_doc.get("envelope", {})
+        payload = decrypt_json_payload(str(envelope.get("encrypted_payload", "")), secret_key=(secret_key or self.node_id))
+        profile = payload.get("profile") if isinstance(payload, dict) else {}
+        if not isinstance(profile, dict):
+            return {"ok": False, "message": "package payload missing profile"}
+        source_name = str(profile.get("name", payload.get("agent_name", ""))).strip().lower()
+        target_name = install_name.strip().lower() or source_name
+        if not target_name:
+            return {"ok": False, "message": "install name is required"}
+        endpoint = endpoint_override.strip() or str(profile.get("endpoint", "")).strip()
+        if endpoint not in self.endpoints:
+            return {"ok": False, "message": f"unknown endpoint: {endpoint}"}
+        if target_name != source_name and isinstance(profile.get("runtime"), dict):
+            runtime = dict(profile["runtime"])
+            runtime.pop("bossforge_ai_runner", None)
+            profile["runtime"] = runtime
+        profile["name"] = target_name
+        profile["id"] = target_name
+        profile["endpoint"] = endpoint
+        profile["current_node"] = self.node_id
+        if not str(profile.get("created_by_node", "")).strip():
+            profile["created_by_node"] = self.node_id
+        normalized = self._normalize_agent_profile(target_name, profile)
+        normalized = self._ensure_agent_gate_file(normalized)
+        self.agent_profiles[target_name] = normalized
+        self._save_agent_profiles()
+        self.memory_store.register_agent(
+            agent_name=target_name,
+            agent_class=normalized.get("agent_class", "prime"),
+            has_llm=bool(normalized.get("has_llm", True)),
+        )
+        self._write_agent_presence(name=target_name, endpoint=endpoint, status="installed", detail=f"from {package_path.name}")
+        return {"ok": True, "agent": target_name, "installed_from": str(package_path), "source_agent": source_name, "endpoint": endpoint}
 
     def set_mcp_server(self, name: str, command: str, args: list[str] | None = None, env: Dict[str, str] | None = None) -> Dict[str, Any]:
         key = name.strip().lower()
@@ -842,6 +1036,7 @@ class ModelGateway:
             "has_llm": llm_enabled,
             "bossgate_enabled": bool(bossgate_enabled),
             "encrypt_profile": bool(encrypt_profile),
+            "disclosure_posture": "hidden" if bool(encrypt_profile) else "non_hidden",
             "created_by_node": self.node_id,
             "current_node": self.node_id,
             "memory_enabled": True,
@@ -893,6 +1088,7 @@ class ModelGateway:
         if custom_icon_path:
             profile["custom_icon_path"] = str(custom_icon_path).strip()
         profile = self._normalize_agent_profile(key, profile)
+        profile = self._ensure_agent_gate_file(profile)
         self.agent_profiles[key] = profile
         self._save_agent_profiles()
         self.memory_store.register_agent(agent_name=key, agent_class=profile["agent_class"], has_llm=bool(profile.get("has_llm")))
@@ -1061,13 +1257,68 @@ class ModelGateway:
             name = str(args.get("name", "")).strip()
             limit = int(args.get("limit", 25))
             result = self.recall_agent_memory(name=name, limit=limit)
-        elif command == "discover_travel_targets":
+        elif command in {"discover_travel_targets", "bossgate_discover_targets"}:
             timeout = int(args.get("timeout", 5))
             assistance_only = bool(args.get("assistance_only", False))
-            result = self.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
-        elif command == "validate_transfer_target":
+            result = self.discover_travel_targets(
+                timeout=timeout,
+                assistance_only=assistance_only,
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command in {"validate_transfer_target", "bossgate_scan_target"}:
             destination = str(args.get("destination", "")).strip()
-            result = self.validate_transfer_target(destination)
+            result = self.validate_transfer_target(
+                destination,
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_package_agent":
+            name = str(args.get("name", "")).strip()
+            target_system_id = str(args.get("target_system_id", "")).strip()
+            visibility_profile = str(args.get("visibility_profile", "none")).strip()
+            policy_ref = str(args.get("policy_ref", "policy/default")).strip()
+            secret_key = str(args.get("secret_key", "")).strip()
+            output_file = str(args.get("output_file", "")).strip()
+            result = self.bossgate_package_agent(
+                name=name,
+                target_system_id=target_system_id,
+                visibility_profile=visibility_profile,
+                policy_ref=policy_ref,
+                secret_key=secret_key,
+                output_file=output_file,
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_transfer_agent":
+            package_file = str(args.get("package_file", "")).strip()
+            destination = str(args.get("destination", "")).strip()
+            dry_run = bool(args.get("dry_run", True))
+            result = self.bossgate_transfer_agent(
+                package_file=package_file,
+                destination=destination,
+                dry_run=dry_run,
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_install_agent":
+            package_file = str(args.get("package_file", "")).strip()
+            secret_key = str(args.get("secret_key", "")).strip()
+            install_name = str(args.get("install_name", "")).strip()
+            endpoint_override = str(args.get("endpoint_override", "")).strip()
+            result = self.bossgate_install_agent(
+                package_file=package_file,
+                secret_key=secret_key,
+                install_name=install_name,
+                endpoint_override=endpoint_override,
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
         elif command == "set_agent_assistance_request":
             name = str(args.get("name", "")).strip()
             requested = bool(args.get("requested", True))

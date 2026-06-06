@@ -5,9 +5,12 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.agents.model_gateway_agent import ModelGatewayAgent
+from core.schemas.agent_capsule import CAPSULE_VAULT_NAMES
 
 
 class ModelGatewayAgentTests(unittest.TestCase):
+    AUTH = {"operator_id": "bossforge-owner", "scope_id": "test-scope"}
+
     def setUp(self) -> None:
         self._old_root = os.environ.get("BOSSFORGE_ROOT")
         self._old_presence_flag = os.environ.get("BOSSGATE_DISABLE_PRESENCE_BROADCAST")
@@ -218,7 +221,22 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(profile["bossgate_enabled"])
         self.assertTrue(profile["has_llm"])
 
-    def test_create_agent_can_disable_encryption(self) -> None:
+    def test_create_agent_defaults_to_hidden_disclosure(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="sealed_profile",
+            endpoint="ollama",
+            system_prompt="Hidden by default.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["sealed_profile"]
+        self.assertEqual(profile["disclosure_posture"], "hidden")
+        self.assertTrue(profile["gate_encrypted"])
+
+    def test_create_agent_non_hidden_compatibility_preserves_bossgate_encryption(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         created = agent.create_agent_profile(
             name="plain_profile",
@@ -233,7 +251,33 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(created["ok"])
         profile = agent.agent_profiles["plain_profile"]
         self.assertFalse(profile["encrypt_profile"])
-        self.assertFalse(profile["bossgate_enabled"])
+        self.assertEqual(profile["disclosure_posture"], "non_hidden")
+        self.assertTrue(profile["bossgate_enabled"])
+        self.assertTrue(profile["gate_encrypted"])
+
+    def test_set_agent_disclosure_posture_is_reversible(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="switchable",
+            endpoint="ollama",
+            system_prompt="Switch views safely.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        gate_path = Path(agent.agent_profiles["switchable"]["gate_file"])
+        first_blob = gate_path.read_text(encoding="utf-8")
+
+        unsealed = agent.set_agent_disclosure_posture("switchable", "non_hidden")
+        self.assertTrue(unsealed["ok"])
+        self.assertEqual(agent.agent_profiles["switchable"]["disclosure_posture"], "non_hidden")
+        self.assertTrue(agent.agent_profiles["switchable"]["gate_encrypted"])
+        self.assertNotEqual(gate_path.read_text(encoding="utf-8"), first_blob)
+
+        resealed = agent.set_agent_disclosure_posture("switchable", "hidden")
+        self.assertTrue(resealed["ok"])
+        self.assertEqual(agent.agent_profiles["switchable"]["disclosure_posture"], "hidden")
 
     def test_export_import_json_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -281,12 +325,28 @@ class ModelGatewayAgentTests(unittest.TestCase):
 
     def test_discover_travel_targets_command(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
-        with patch("core.agents.model_gateway_agent.discover_transfer_targets", return_value=[{"address": "10.0.0.5", "allowed_for_transfer": True}]):
-            result = agent.discover_travel_targets(timeout=3, assistance_only=True)
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=[{"address": "10.0.0.5", "allowed_for_transfer": True}]):
+            result = agent.discover_travel_targets(timeout=3, assistance_only=True, **self.AUTH)
         self.assertTrue(result["ok"])
         self.assertEqual(result["timeout"], 3)
         self.assertTrue(result["assistance_only"])
         self.assertEqual(len(result["targets"]), 1)
+
+    def test_bossgate_discover_targets_command_alias(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(agent, "discover_travel_targets", return_value={"ok": True, "targets": []}) as mocked:
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "bossgate_discover_targets",
+                    "args": {"timeout": 7, "assistance_only": True, **self.AUTH},
+                }
+            )
+        self.assertTrue(mocked.called)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 7)
+        self.assertTrue(mocked.call_args.kwargs["assistance_only"])
+        self.assertEqual(mocked.call_args.kwargs["operator_id"], "bossforge-owner")
+        self.assertEqual(mocked.call_args.kwargs["scope_id"], "test-scope")
 
     def test_set_and_list_agent_assistance_requests(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -340,6 +400,69 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertEqual(profile["created_by_node"], agent.node_id)
         self.assertEqual(profile["current_node"], agent.node_id)
 
+    def test_created_agent_has_encrypted_gate_file(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="gatekeeper",
+            endpoint="ollama",
+            system_prompt="Protect profile.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["gatekeeper"]
+        gate_file = Path(str(profile.get("gate_file", "")))
+        self.assertTrue(gate_file.exists())
+        self.assertTrue(bool(profile.get("gate_encrypted", False)))
+        sealed_blob = gate_file.read_text(encoding="utf-8").strip()
+        self.assertTrue(len(sealed_blob) > 20)
+        self.assertNotIn("\"agent_name\":\"gatekeeper\"", sealed_blob)
+
+    def test_created_agent_carries_stage1_capsule_metadata(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="capsule_runner",
+            endpoint="ollama",
+            system_prompt="Travel safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["capsule_runner"]
+        self.assertEqual(profile["public_id"], "capsule_runner")
+        self.assertEqual(profile["rarity"], "common")
+        self.assertEqual(profile["availability"], "available")
+        self.assertEqual(profile["runtime_lineage"]["ancestor_id"], "runeforge")
+        self.assertTrue(profile["runtime_lineage"]["sealed"])
+        self.assertEqual(profile["capsule"]["lifecycle_state"], "sealed")
+        self.assertEqual(set(profile["capsule"]["vaults"]), set(CAPSULE_VAULT_NAMES))
+
+    def test_created_agent_carries_portable_runner_metadata(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="portable_runner",
+            endpoint="ollama",
+            system_prompt="Run independently.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["portable_runner"]
+        self.assertIn("runtime", profile)
+        runner_manifest = profile["runtime"]["bossforge_ai_runner"]
+        self.assertEqual(runner_manifest["agent_id"], "portable_runner")
+        self.assertEqual(runner_manifest["runner_role"], "descendant")
+        self.assertFalse(runner_manifest["depends_on_runeforge_online"])
+        self.assertEqual(
+            profile["runner_bootstrap"]["runner_manifest"]["agent_id"],
+            "portable_runner",
+        )
+        self.assertEqual(
+            profile["runner_bootstrap"]["wake_contract"],
+            "bossforge-ai-runner-wake-v1",
+        )
+
     def test_owned_agent_locations_refresh_uses_discovery(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.create_agent_profile(
@@ -384,11 +507,119 @@ class ModelGatewayAgentTests(unittest.TestCase):
             "endpoints": [],
             "metadata": {},
         }
-        with patch("core.agents.model_gateway_agent.scan_rest_endpoints", return_value=mock_result):
-            result = agent.validate_transfer_target("example.com")
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={**mock_result, "destination": "example.com"}):
+            result = agent.validate_transfer_target("example.com", **self.AUTH)
         self.assertFalse(result["ok"])
         self.assertFalse(result["allowed_for_transfer"])
         self.assertEqual(result["destination"], "example.com")
+
+    def test_bossgate_scan_target_command_alias(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(agent, "validate_transfer_target", return_value={"ok": True, "allowed_for_transfer": True}) as mocked:
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "bossgate_scan_target",
+                    "args": {"destination": "example.com", **self.AUTH},
+                }
+            )
+        self.assertTrue(mocked.called)
+        self.assertEqual(mocked.call_args.args[0], "example.com")
+        self.assertEqual(mocked.call_args.kwargs["operator_id"], "bossforge-owner")
+        self.assertEqual(mocked.call_args.kwargs["scope_id"], "test-scope")
+
+    def test_bossgate_package_and_install_roundtrip(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="porter",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+            skills=["bossgate_coms_array"],
+        )
+        self.assertTrue(created["ok"])
+
+        packaged = agent.bossgate_package_agent(
+            name="porter",
+            target_system_id="bridgebase-alpha-01",
+            visibility_profile="id_card_only",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+        package_path = Path(packaged["package_file"])
+        self.assertTrue(package_path.exists())
+
+        del agent.agent_profiles["porter"]
+        agent._save_agent_profiles()
+        installed = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            install_name="porter_clone",
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+        self.assertIn("porter_clone", agent.agent_profiles)
+
+    def test_bossgate_transfer_agent_requires_approved_target(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="runner",
+            endpoint="ollama",
+            system_prompt="Runner profile.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        packaged = agent.bossgate_package_agent(
+            name="runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={"ok": False, "allowed_for_transfer": False, "target_type": "unknown"}):
+            denied = agent.bossgate_transfer_agent(
+                package_file=packaged["package_file"],
+                destination="example.com",
+                dry_run=True,
+                **self.AUTH,
+            )
+        self.assertFalse(denied["ok"])
+
+    def test_bossgate_transfer_agent_dry_run_logs_intent(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="runner2",
+            endpoint="ollama",
+            system_prompt="Runner profile.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        packaged = agent.bossgate_package_agent(
+            name="runner2",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            accepted = agent.bossgate_transfer_agent(
+                package_file=packaged["package_file"],
+                destination="http://bridgebase.local",
+                dry_run=True,
+                **self.AUTH,
+            )
+        self.assertTrue(accepted["ok"])
+        self.assertEqual(accepted["status"], "validated_only")
+        self.assertTrue(agent.bossgate_commands.transfer_log_path.exists())
 
 
 if __name__ == "__main__":
