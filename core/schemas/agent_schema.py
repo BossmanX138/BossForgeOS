@@ -4,6 +4,16 @@ import re
 from pathlib import Path
 from typing import Any
 
+from core.runner import build_agent_runner_manifest, validate_agent_runner_manifest
+from core.schemas.agent_capsule import (
+    build_capsule_manifest,
+    build_public_identity_card,
+    build_runtime_lineage,
+    normalize_availability,
+    normalize_rarity,
+    validate_capsule_manifest,
+)
+
 AGENT_SCHEMA_VERSION = "1.8"
 _AGENT_ID_RE = re.compile(r"^[a-z][a-z0-9_\-]{1,63}$")
 _AGENT_CLASSES = {"prime", "skilled", "normalized"}
@@ -80,6 +90,10 @@ _PROPRIETARY_SEALED_FIELDS = [
     "integration",
     "runtime",
     "metadata",
+    "skills",
+    "sigils",
+    "capsule",
+    "runtime_lineage",
 ]
 _PRIORITY_DIMENSION_WEIGHTS = {
     "urgency": 0.35,
@@ -406,16 +420,7 @@ def _default_dispatch_policy_for_type(agent_type: str) -> dict[str, Any]:
 
 
 def to_agent_card(profile: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "id": str(profile.get("id", "")).strip(),
-        "name": str(profile.get("name", "")).strip(),
-        "description": str(profile.get("description", "")).strip(),
-        "agent_class": str(profile.get("agent_class", "normalized")).strip().lower() or "normalized",
-        "agent_type": str(profile.get("agent_type", "worker")).strip().lower() or "worker",
-        "rank": str(profile.get("rank", "cadet")).strip().lower() or "cadet",
-        "skills": _normalize_string_list(profile.get("skills")),
-        "sigils": _normalize_string_list(profile.get("sigils")),
-    }
+    return build_public_identity_card(profile)
 
 
 def normalize_agent_profile(agent_id: str, profile: dict[str, Any] | None) -> dict[str, Any]:
@@ -442,6 +447,9 @@ def normalize_agent_profile(agent_id: str, profile: dict[str, Any] | None) -> di
 
     raw_rank = str(raw.get("rank", "")).strip().lower()
     out["rank"] = raw_rank if raw_rank in _AGENT_RANKS else _default_rank_for_class(out["agent_class"])
+    out["public_id"] = str(raw.get("public_id", normalized_id)).strip() or normalized_id
+    out["rarity"] = normalize_rarity(raw.get("rarity"))
+    out["availability"] = normalize_availability(raw.get("availability"))
 
     if "module" in out and not isinstance(out.get("module"), str):
         out["module"] = str(out.get("module", ""))
@@ -602,7 +610,16 @@ def normalize_agent_profile(agent_id: str, profile: dict[str, Any] | None) -> di
     }
 
     runtime = raw.get("runtime")
-    out["runtime"] = runtime if isinstance(runtime, dict) else {}
+    runtime_out = dict(runtime) if isinstance(runtime, dict) else {}
+    if "bossforge_ai_runner" not in runtime_out:
+        runner_manifest = build_agent_runner_manifest(normalized_id)
+    else:
+        runner_manifest = runtime_out.get("bossforge_ai_runner")
+    validate_agent_runner_manifest(runner_manifest)
+    if runner_manifest["agent_id"] != normalized_id:
+        raise ValueError("runner manifest agent_id must match profile id")
+    runtime_out["bossforge_ai_runner"] = runner_manifest
+    out["runtime"] = runtime_out
 
     metadata = raw.get("metadata")
     metadata_out = metadata if isinstance(metadata, dict) else {}
@@ -624,6 +641,8 @@ def normalize_agent_profile(agent_id: str, profile: dict[str, Any] | None) -> di
     }
     out["metadata"] = metadata_out
 
+    out["runtime_lineage"] = build_runtime_lineage(out)
+    out["capsule"] = build_capsule_manifest(out)
     out["agent_card"] = to_agent_card(out)
 
     return out
@@ -736,10 +755,28 @@ def validate_agent_profile(profile: dict[str, Any]) -> None:
         if not isinstance(capabilities, list) or not all(isinstance(item, str) for item in capabilities):
             raise ValueError("agent profile capabilities must be a list of strings")
 
-    for key in ("integration", "dispatch_policy", "runtime", "metadata", "mcp", "system_wrapper", "instructions", "agent_card", "proprietary"):
+    for key in (
+        "integration",
+        "dispatch_policy",
+        "runtime",
+        "metadata",
+        "mcp",
+        "system_wrapper",
+        "instructions",
+        "agent_card",
+        "proprietary",
+        "runtime_lineage",
+        "capsule",
+    ):
         value = profile.get(key)
         if value is not None and not isinstance(value, dict):
             raise ValueError(f"agent profile {key} must be an object")
+
+    runtime = profile.get("runtime") if isinstance(profile.get("runtime"), dict) else {}
+    runner_manifest = runtime.get("bossforge_ai_runner")
+    validate_agent_runner_manifest(runner_manifest)
+    if runner_manifest["agent_id"] != agent_id:
+        raise ValueError("runner manifest agent_id must match profile id")
 
     dispatch_policy = profile.get("dispatch_policy") if isinstance(profile.get("dispatch_policy"), dict) else {}
     for key in (
@@ -802,19 +839,16 @@ def validate_agent_profile(profile: dict[str, Any]) -> None:
                 raise ValueError("ranger agents dispatch scope must be 'remote'")
 
     agent_card = profile.get("agent_card") if isinstance(profile.get("agent_card"), dict) else {}
-    for key in ("id", "name", "description", "agent_class", "agent_type"):
-        if not str(agent_card.get(key, "")).strip():
-            raise ValueError(f"agent profile agent_card.{key} is required")
-    card_type = str(agent_card.get("agent_type", "")).strip().lower()
-    if card_type not in _AGENT_TYPES:
-        raise ValueError("agent profile agent_card.agent_type must be 'authority', 'controller', 'worker', 'security', 'tester', or 'ranger'")
-    card_rank = str(agent_card.get("rank", "")).strip().lower()
-    if not card_rank:
-        raise ValueError("agent profile agent_card.rank is required")
-    if card_rank not in _AGENT_RANKS:
-        raise ValueError(f"agent profile agent_card.rank must be one of: {', '.join(_AGENT_RANKS)}")
-    if str(agent_card.get("id", "")).strip() != agent_id:
-        raise ValueError("agent profile agent_card.id must match profile id")
+    expected_card = build_public_identity_card(profile)
+    if agent_card != expected_card:
+        raise ValueError("agent profile agent_card must match the sparse public identity contract")
+    if str(agent_card.get("public_id", "")).strip() != agent_id:
+        raise ValueError("agent profile agent_card.public_id must match profile id")
+
+    runtime_lineage = profile.get("runtime_lineage")
+    if not isinstance(runtime_lineage, dict) or runtime_lineage.get("sealed") is not True:
+        raise ValueError("agent profile runtime_lineage must be sealed")
+    validate_capsule_manifest(profile.get("capsule"))
 
     llm = profile.get("llm")
     if not isinstance(llm, dict):
