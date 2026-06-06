@@ -89,7 +89,7 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
             session_id="session-1",
             sequence=7,
             event_type="commitment",
-            payload={"text": "I will follow up."},
+            payload={"text": "I promise to follow up."},
             timestamp="2026-06-06T12:00:00+00:00",
         )
         second = normalize_memory_event(
@@ -97,7 +97,7 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
             session_id="session-1",
             sequence=7,
             event_type="commitment",
-            payload={"text": "I will follow up."},
+            payload={"text": "I promise to follow up."},
             timestamp="2026-06-06T12:00:00+00:00",
         )
 
@@ -105,7 +105,7 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
 
     def test_manual_importance_and_reason_categories(self) -> None:
         reason_inputs = [
-            ("commitment", {"text": "I will do it."}, "commitment"),
+            ("commitment", {"text": "I promise to do it."}, "commitment"),
             ("relationship_change", {"text": "We changed our contact with Alex."}, "relationship_change"),
             ("lifecycle", {"text": "The project started."}, "lifecycle"),
             ("refusal", {"text": "I cannot comply."}, "refusal"),
@@ -139,6 +139,17 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         self.assertTrue(manual["importance"]["manually_marked"])
         self.assertIn("manual", manual["importance"]["reason_codes"])
 
+        ordinary_note = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=5,
+            event_type="note",
+            payload={"text": "We will review this tomorrow."},
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+        self.assertEqual(ordinary_note["importance"]["level"], "normal")
+        self.assertNotIn("commitment", ordinary_note["importance"]["reason_codes"])
+
     def test_only_supported_relationship_fields_and_search_tokens_are_normalized(self) -> None:
         event = normalize_memory_event(
             agent_id="scribe",
@@ -161,11 +172,12 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         relationship_types = [item["type"] for item in event["relationships"]]
         self.assertEqual(
             relationship_types,
-            ["agent", "employer", "organization", "project", "user"],
+            ["agent", "agent", "employer", "organization", "project", "user"],
         )
         self.assertEqual(
             event["relationships"],
             [
+                {"type": "agent", "key": "helper"},
                 {"type": "agent", "key": "peer-one"},
                 {"type": "employer", "key": "BossForge"},
                 {"type": "organization", "key": "Forge Ops"},
@@ -178,6 +190,42 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         self.assertTrue(all(len(token) >= 3 for token in event["search_terms"]))
         self.assertIn("alpha", event["search_terms"])
         self.assertIn("anvil", event["search_terms"])
+
+    def test_session_ids_use_same_strict_path_safe_contract(self) -> None:
+        for value in ("", ".", "..", "bad id", "bad/id", "bad\\id", "bad,id", "bad\tid"):
+            with self.assertRaisesRegex(ValueError, "session_id"):
+                event_aad(
+                    agent_id="scribe",
+                    session_id=value,
+                    sequence=1,
+                    event_id="event-1",
+                    event_type="note",
+                    timestamp="2026-06-06T12:00:00+00:00",
+                    previous_ciphertext_sha256="",
+                )
+            with self.assertRaisesRegex(ValueError, "session_id"):
+                normalize_memory_event(
+                    agent_id="scribe",
+                    session_id=value,
+                    sequence=1,
+                    event_type="note",
+                    payload={"text": "ok"},
+                    timestamp="2026-06-06T12:00:00+00:00",
+                )
+        self.assertEqual(
+            json.loads(
+                event_aad(
+                    agent_id="scribe",
+                    session_id="Session-1",
+                    sequence=1,
+                    event_id="event-1",
+                    event_type="note",
+                    timestamp="2026-06-06T12:00:00+00:00",
+                    previous_ciphertext_sha256="",
+                ).decode("utf-8")
+            )["session_id"],
+            "Session-1",
+        )
 
     def test_encrypt_json_roundtrip_and_wrong_aad_failure(self) -> None:
         key = derive_memory_key("node-1", "scribe")
@@ -197,16 +245,63 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "authentication"):
             decrypt_json(envelope, key, aad + b"x")
 
+        non_object = encrypt_bytes(canonical_json(["not", "an", "object"]), key, aad)
+        with self.assertRaisesRegex(ValueError, "object"):
+            decrypt_json(non_object, key, aad)
+
+    def test_decrypt_bytes_rejects_malformed_envelopes(self) -> None:
+        key = derive_memory_key("node-1", "scribe")
+        aad = event_aad(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=10,
+            event_id="event-10",
+            event_type="note",
+            timestamp="2026-06-06T12:00:00+00:00",
+            previous_ciphertext_sha256="prev",
+        )
+        envelope = encrypt_bytes(b"payload", key, aad)
+
+        malformed_cases = [
+            None,
+            [],
+            {"alg": "AES-256-GCM"},
+            {
+                **envelope,
+                "nonce_b64": "@@@",
+            },
+            {
+                **envelope,
+                "ciphertext_sha256": "0" * 64,
+            },
+            {
+                **envelope,
+                "alg": "AES-128-GCM",
+            },
+        ]
+        for bad in malformed_cases:
+            with self.assertRaisesRegex(ValueError, "authentication"):
+                decrypt_bytes(bad, key, aad)
+
+        with self.assertRaisesRegex(ValueError, "authentication"):
+            decrypt_bytes(envelope, key, aad + b"x")
+
     def test_attestation_sign_and_verify_tamper_rejection(self) -> None:
         key = derive_memory_key("node-1", "scribe")
         payload = {"agent_id": "scribe", "event_id": "event-10", "version": 1}
         signature = sign_attestation(payload, key)
 
         self.assertEqual(signature, sign_attestation(payload, key))
-        verify_attestation(payload, key, signature)
+        verify_attestation(payload, signature, key)
 
         with self.assertRaisesRegex(ValueError, "signature mismatch"):
-            verify_attestation(payload, key, signature[:-1] + ("0" if signature[-1] != "0" else "1"))
+            verify_attestation(
+                {"agent_id": "scribe", "event_id": "event-10", "version": 2},
+                signature,
+                key,
+            )
+        with self.assertRaisesRegex(ValueError, "signature mismatch"):
+            verify_attestation(payload, signature[:-1] + ("0" if signature[-1] != "0" else "1"), key)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@ import hashlib
 import re
 from typing import Any
 
-from .crypto import MEMORY_VAULT_SCHEMA_VERSION, canonical_json, normalize_agent_id
+from .crypto import (
+    MEMORY_VAULT_SCHEMA_VERSION,
+    canonical_json,
+    normalize_agent_id,
+    _normalize_path_safe_id,
+)
 
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -29,7 +34,7 @@ _REASON_EVENT_TYPES = {
     "milestone",
 }
 _REASON_KEYWORDS = {
-    "commitment": {"commit", "committed", "promise", "will", "follow", "followup"},
+    "commitment": {"commitment", "committed", "promise", "promised", "followup", "follow-up"},
     "decision": {"decide", "decided", "decision", "ship", "approved"},
     "relationship_change": {"change", "changed", "contact", "relationship", "reassign"},
     "lifecycle": {"start", "started", "launch", "launched", "end", "ended"},
@@ -40,13 +45,6 @@ _REASON_KEYWORDS = {
     "discovery": {"discover", "discovered", "found", "learned"},
     "milestone": {"milestone", "shipping", "shipped", "complete", "completed", "reach", "reached"},
 }
-
-
-def _normalize_path_safe_field(value: str, *, field_name: str) -> str:
-    text = str(value or "").strip()
-    if not text or text in {".", ".."} or "/" in text or "\\" in text:
-        raise ValueError(f"{field_name} must be a normalized path-safe identifier")
-    return text
 
 
 def _tokenize(value: str) -> set[str]:
@@ -66,7 +64,7 @@ def _payload_strings(payload: dict[str, Any]) -> list[str]:
 
 
 def _relationship_items(payload: dict[str, Any]) -> list[dict[str, str]]:
-    relationships: dict[str, dict[str, str]] = {}
+    relationships: dict[tuple[str, str], dict[str, str]] = {}
     for field, relationship_type in _SUPPORTED_RELATIONSHIP_FIELDS.items():
         value = payload.get(field)
         if not isinstance(value, str):
@@ -74,7 +72,7 @@ def _relationship_items(payload: dict[str, Any]) -> list[dict[str, str]]:
         key = value.strip()
         if not key:
             continue
-        relationships[relationship_type] = {"type": relationship_type, "key": key}
+        relationships[(relationship_type, key)] = {"type": relationship_type, "key": key}
     return [relationships[key] for key in sorted(relationships)]
 
 
@@ -148,7 +146,7 @@ def normalize_memory_event(
     timestamp: str,
 ) -> dict[str, Any]:
     normalized_agent_id = normalize_agent_id(agent_id)
-    normalized_session_id = _normalize_path_safe_field(session_id, field_name="session_id")
+    normalized_session_id = _normalize_path_safe_id(session_id, field_name="session_id")
     normalized_event_type = str(event_type or "").strip()
     if not normalized_event_type:
         raise ValueError("event_type is required")
@@ -172,10 +170,12 @@ def normalize_memory_event(
     relationships = _relationship_items(payload)
     reason_codes = _classify_reason_codes(normalized_event_type, payload)
     manually_marked = bool(payload.get("important"))
+    if manually_marked and "manual" not in reason_codes:
+        reason_codes = sorted([*reason_codes, "manual"])
     importance = {
         "level": "high" if reason_codes else "normal",
         "manually_marked": manually_marked,
-        "reason_codes": sorted(set([*reason_codes, "manual"] if manually_marked and "manual" not in reason_codes else reason_codes)),
+        "reason_codes": reason_codes,
     }
 
     return {

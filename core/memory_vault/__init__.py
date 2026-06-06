@@ -31,4 +31,3 @@ __all__ = [
     "sign_attestation",
     "verify_attestation",
 ]
-

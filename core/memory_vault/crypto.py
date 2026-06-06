@@ -7,6 +7,7 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 MEMORY_VAULT_SCHEMA_VERSION = "1.0"
 _MEMORY_KEY_CONTEXT = "private-memory-v1"
 _VALID_AGENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
-_VALID_PATH_SAFE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_VALID_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
@@ -49,7 +50,7 @@ def _normalize_path_safe_id(value: str, *, field_name: str) -> str:
         raise ValueError(f"{field_name} must be a normalized path-safe identifier")
     if "/" in identifier or "\\" in identifier:
         raise ValueError(f"{field_name} must be a normalized path-safe identifier")
-    if not _VALID_PATH_SAFE_RE.fullmatch(identifier):
+    if not _VALID_SESSION_ID_RE.fullmatch(identifier):
         raise ValueError(f"{field_name} must be a normalized path-safe identifier")
     return identifier
 
@@ -78,6 +79,8 @@ def encrypt_bytes(plaintext: bytes, key: bytes, aad: bytes) -> dict[str, str | i
 
 def decrypt_bytes(envelope: dict[str, Any], key: bytes, aad: bytes) -> bytes:
     try:
+        if not isinstance(envelope, Mapping):
+            raise ValueError("memory envelope authentication failed")
         if str(envelope.get("alg", "")) != "AES-256-GCM":
             raise ValueError("unsupported memory envelope algorithm")
         nonce = base64.b64decode(str(envelope["nonce_b64"]), validate=True)
@@ -138,7 +141,7 @@ def sign_attestation(payload: dict[str, Any], key: bytes) -> str:
     return mac.hexdigest()
 
 
-def verify_attestation(payload: dict[str, Any], key: bytes, signature: str) -> None:
+def verify_attestation(payload: dict[str, Any], signature: str, key: bytes) -> None:
     expected = sign_attestation(payload, key)
     if not hmac.compare_digest(expected, str(signature)):
         raise ValueError("memory attestation signature mismatch")
@@ -164,4 +167,3 @@ def atomic_write_bytes(path: str | Path, data: bytes) -> None:
 
 def atomic_write_json(path: str | Path, payload: object) -> None:
     atomic_write_bytes(path, canonical_json(payload))
-
