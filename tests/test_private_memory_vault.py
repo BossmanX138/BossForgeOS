@@ -2,11 +2,14 @@ import base64
 import hashlib
 import json
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import core.memory_vault.private_memory_vault as private_memory_vault_module
 from core.memory_vault import (
+    PrivateMemoryVault,
     atomic_write_bytes,
     atomic_write_json,
     canonical_json,
@@ -19,6 +22,7 @@ from core.memory_vault import (
     normalize_agent_id,
     normalize_memory_event,
     sign_attestation,
+    validate_private_memory_descriptor,
     verify_attestation,
 )
 
@@ -546,6 +550,480 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
             )
         with self.assertRaisesRegex(ValueError, "signature mismatch"):
             verify_attestation(payload, signature[:-1] + ("0" if signature[-1] != "0" else "1"), key)
+
+class PrivateMemoryJournalTests(unittest.TestCase):
+    def _make_vault(self, root: Path) -> PrivateMemoryVault:
+        return PrivateMemoryVault(
+            vault_root=root,
+            agent_id="scribe",
+            node_secret="super-secret-node-key",
+            key_ref="key-2026-06",
+        )
+
+    def _decrypt_manifest(self, vault: PrivateMemoryVault) -> dict:
+        return decrypt_json(
+            json.loads(vault.manifest_path.read_text("utf-8")),
+            vault._key,
+            private_memory_vault_module._artifact_aad(
+                owner_agent_id=vault.agent_id,
+                artifact_kind="vault.manifest",
+            ),
+        )
+
+    def _decrypt_state(self, vault: PrivateMemoryVault, session_id: str) -> dict:
+        session_root = vault.agent_root / "active" / session_id
+        return decrypt_json(
+            json.loads((session_root / "session.state.enc").read_text("utf-8")),
+            vault._key,
+            private_memory_vault_module._artifact_aad(
+                owner_agent_id=vault.agent_id,
+                artifact_kind="session.state",
+                session_id=session_id,
+            ),
+        )
+
+    def test_initialize_descriptor_manifest_and_attestation_verified_and_no_secret(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+
+            descriptor = vault.initialize()
+
+            self.assertEqual(
+                descriptor,
+                {
+                    "schema_version": "1.0",
+                    "owner_agent_id": "scribe",
+                    "ciphertext_ref": str((Path(tmp) / "scribe" / "vault.manifest.enc").resolve()),
+                    "attestation_sha256": hashlib.sha256(
+                        (Path(tmp) / "scribe" / "vault.attestation.json").read_bytes()
+                    ).hexdigest(),
+                    "key_ref": "key-2026-06",
+                    "verified": True,
+                },
+            )
+
+            validated = validate_private_memory_descriptor(
+                descriptor,
+                expected_agent_id="scribe",
+                vault_root=Path(tmp),
+            )
+            self.assertEqual(validated, descriptor)
+            self.assertEqual(
+                self._decrypt_manifest(vault),
+                {
+                    "schema_version": "1.0",
+                    "owner_agent_id": "scribe",
+                    "key_ref": "key-2026-06",
+                },
+            )
+
+            attestation = json.loads((Path(tmp) / "scribe" / "vault.attestation.json").read_text("utf-8"))
+            self.assertEqual(
+                list(attestation.keys()),
+                [
+                    "alg",
+                    "key_ref",
+                    "manifest_sha256",
+                    "owner",
+                    "schema",
+                    "signature",
+                    "verified",
+                ],
+            )
+            self.assertEqual(attestation["owner"], "scribe")
+            self.assertEqual(attestation["key_ref"], "key-2026-06")
+            self.assertTrue(attestation["verified"])
+            self.assertNotIn("super-secret-node-key", canonical_json(attestation).decode("utf-8"))
+
+            for file_path in (Path(tmp) / "scribe").rglob("*"):
+                if file_path.is_file():
+                    contents = file_path.read_bytes()
+                    self.assertNotIn(b"super-secret-node-key", contents)
+
+    def test_initialize_is_idempotent_for_same_owner_and_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+
+            first = vault.initialize()
+            second = vault.initialize()
+
+            self.assertEqual(second, first)
+
+    def test_append_two_events_builds_chain_and_required_artifacts_without_plaintext_secret(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vault = self._make_vault(root)
+            vault.initialize()
+
+            first = vault.append_event(
+                "session-1",
+                "decision",
+                {"text": "vault-secret-phrase alpha", "project": "Anvil", "topics": ["launch"]},
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            second = vault.append_event(
+                "session-1",
+                "note",
+                {"text": "follow-up on vault-secret-phrase", "user": "Boss"},
+                timestamp="2026-06-06T12:05:00+00:00",
+            )
+
+            self.assertEqual(first["sequence"], 1)
+            self.assertEqual(second["sequence"], 2)
+            self.assertEqual(first["previous_ciphertext_sha256"], "")
+            self.assertEqual(second["previous_ciphertext_sha256"], first["ciphertext_sha256"])
+
+            session_root = root / "scribe" / "active" / "session-1"
+            for relative in (
+                Path("journal/000001.event.enc"),
+                Path("journal/000002.event.enc"),
+                Path("search.index.enc"),
+                Path("important.index.enc"),
+                Path("relationship.index.enc"),
+                Path("session.state.enc"),
+            ):
+                self.assertTrue((session_root / relative).exists(), str(relative))
+
+            verified = vault.verify_active_session("session-1")
+            self.assertEqual(
+                verified,
+                {
+                    "verified": True,
+                    "owner_agent_id": "scribe",
+                    "session_id": "session-1",
+                    "event_count": 2,
+                    "last_sequence": 2,
+                    "last_ciphertext_sha256": second["ciphertext_sha256"],
+                },
+            )
+
+            for file_path in (root / "scribe").rglob("*"):
+                if file_path.is_file():
+                    self.assertNotIn(b"vault-secret-phrase", file_path.read_bytes(), str(file_path))
+
+    def test_live_indexes_capture_search_topics_importance_and_relationships(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+
+            important = vault.append_event(
+                "session-1",
+                "decision",
+                {
+                    "text": "We decided to ship Project Anvil immediately.",
+                    "project": "Anvil",
+                    "topics": ["launch", "priority"],
+                    "agent": "helper-alpha",
+                    "counterpart_agent": "helper-beta",
+                    "important": True,
+                    "summary": "Ship Anvil now.",
+                },
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            ordinary = vault.append_event(
+                "session-1",
+                "note",
+                {
+                    "text": "Boss asked helper-alpha for a checklist.",
+                    "user": "Boss",
+                    "agent": "helper-alpha",
+                    "topics": ["checklist"],
+                },
+                timestamp="2026-06-06T12:10:00+00:00",
+            )
+
+            indexes = vault.read_active_indexes("session-1")
+            search = indexes["search"]
+            important_index = indexes["important"]
+            relationships = indexes["relationships"]
+
+            self.assertEqual(search["terms"]["anvil"], [important["event_id"]])
+            self.assertEqual(search["terms"]["helper"], [important["event_id"], ordinary["event_id"]])
+            self.assertEqual(search["topics"]["launch"], [important["event_id"]])
+            self.assertEqual(search["topics"]["checklist"], [ordinary["event_id"]])
+            self.assertEqual(
+                search["events"][important["event_id"]],
+                {
+                    "sequence": 1,
+                    "timestamp": "2026-06-06T12:00:00+00:00",
+                    "event_type": "decision",
+                },
+            )
+
+            self.assertEqual(important_index["event_ids"], [important["event_id"]])
+            self.assertEqual(important_index["events"][important["event_id"]]["level"], "high")
+            self.assertIn("manual", important_index["events"][important["event_id"]]["reason_codes"])
+            self.assertLessEqual(len(important_index["events"][important["event_id"]]["summary"]), 400)
+
+            self.assertEqual(
+                relationships["agent"]["helper-alpha"]["interaction_count"],
+                2,
+            )
+            self.assertEqual(
+                relationships["agent"]["helper-beta"]["interaction_count"],
+                1,
+            )
+            self.assertEqual(
+                relationships["agent"]["helper-alpha"]["significant_event_ids"],
+                [important["event_id"]],
+            )
+            self.assertEqual(
+                relationships["agent"]["helper-beta"]["significant_event_ids"],
+                [important["event_id"]],
+            )
+            self.assertEqual(
+                relationships["project"]["Anvil"]["significant_event_ids"],
+                [important["event_id"]],
+            )
+
+    def test_verify_active_session_rejects_deleted_swapped_replayed_corrupt_and_extra_journal_artifacts(self) -> None:
+        def build_session(root: Path) -> PrivateMemoryVault:
+            vault = self._make_vault(root)
+            vault.initialize()
+            vault.append_event(
+                "session-1",
+                "decision",
+                {"text": "first secret", "project": "Anvil"},
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            vault.append_event(
+                "session-1",
+                "note",
+                {"text": "second secret", "user": "Boss"},
+                timestamp="2026-06-06T12:05:00+00:00",
+            )
+            vault.append_event(
+                "session-1",
+                "note",
+                {"text": "third secret", "user": "Boss"},
+                timestamp="2026-06-06T12:10:00+00:00",
+            )
+            return vault
+
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = build_session(Path(tmp))
+            first_path = vault.agent_root / "active" / "session-1" / "journal" / "000001.event.enc"
+            first_path.unlink()
+            with self.assertRaisesRegex(ValueError, "missing|sequence|journal"):
+                vault.verify_active_session("session-1")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = build_session(Path(tmp))
+            journal_root = vault.agent_root / "active" / "session-1" / "journal"
+            first_blob = (journal_root / "000001.event.enc").read_bytes()
+            second_blob = (journal_root / "000002.event.enc").read_bytes()
+            atomic_write_bytes(journal_root / "000001.event.enc", second_blob)
+            atomic_write_bytes(journal_root / "000002.event.enc", first_blob)
+            with self.assertRaisesRegex(ValueError, "sequence|hash|metadata|authentication"):
+                vault.verify_active_session("session-1")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = build_session(Path(tmp))
+            journal_root = vault.agent_root / "active" / "session-1" / "journal"
+            atomic_write_bytes(
+                journal_root / "000003.event.enc",
+                (journal_root / "000001.event.enc").read_bytes(),
+            )
+            with self.assertRaisesRegex(ValueError, "replay|hash|metadata|sequence|authentication"):
+                vault.verify_active_session("session-1")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = build_session(Path(tmp))
+            third_path = vault.agent_root / "active" / "session-1" / "journal" / "000003.event.enc"
+            payload = json.loads(third_path.read_text("utf-8"))
+            payload["envelope"]["ciphertext_b64"] = base64.b64encode(b"corrupt").decode("ascii")
+            atomic_write_json(third_path, payload)
+            with self.assertRaisesRegex(ValueError, "authentication|digest"):
+                vault.verify_active_session("session-1")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = build_session(Path(tmp))
+            journal_root = vault.agent_root / "active" / "session-1" / "journal"
+            extra = json.loads((journal_root / "000003.event.enc").read_text("utf-8"))
+            extra["sequence"] = 4
+            atomic_write_json(journal_root / "000004.event.enc", extra)
+            with self.assertRaisesRegex(ValueError, "extra|sequence|journal"):
+                vault.verify_active_session("session-1")
+
+    def test_missing_or_corrupt_indexes_rebuild_from_journal_and_clear_state_flag(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+            important = vault.append_event(
+                "session-1",
+                "decision",
+                {"text": "We decided to ship Anvil.", "project": "Anvil", "important": True},
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            vault.append_event(
+                "session-1",
+                "note",
+                {"text": "Boss asked for status.", "user": "Boss"},
+                timestamp="2026-06-06T12:05:00+00:00",
+            )
+
+            session_root = vault.agent_root / "active" / "session-1"
+            (session_root / "search.index.enc").unlink()
+            atomic_write_json(session_root / "important.index.enc", {"broken": True})
+
+            state = self._decrypt_state(vault, "session-1")
+            state["indexes_need_rebuild"] = True
+            atomic_write_json(
+                session_root / "session.state.enc",
+                encrypt_json(
+                    state,
+                    vault._key,
+                    private_memory_vault_module._artifact_aad(
+                        owner_agent_id=vault.agent_id,
+                        artifact_kind="session.state",
+                        session_id="session-1",
+                    ),
+                ),
+            )
+
+            indexes = vault.read_active_indexes("session-1")
+            self.assertEqual(indexes["important"]["event_ids"], [important["event_id"]])
+            self.assertEqual(indexes["relationships"]["project"]["Anvil"]["interaction_count"], 1)
+            self.assertFalse(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
+
+    def test_event_write_failure_does_not_advance_sequence_or_create_journal_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+            original_atomic_write_json = private_memory_vault_module.atomic_write_json
+
+            def failing_atomic_write_json(path: Path, payload: object) -> None:
+                if Path(path).name.endswith(".event.enc"):
+                    raise RuntimeError("event write failed")
+                original_atomic_write_json(path, payload)
+
+            with patch.object(private_memory_vault_module, "atomic_write_json", side_effect=failing_atomic_write_json):
+                with self.assertRaisesRegex(RuntimeError, "event write failed"):
+                    vault.append_event(
+                        "session-1",
+                        "note",
+                        {"text": "vault-secret-phrase"},
+                        timestamp="2026-06-06T12:00:00+00:00",
+                    )
+
+            session_root = vault.agent_root / "active" / "session-1"
+            self.assertFalse((session_root / "journal").exists())
+            self.assertEqual(self._decrypt_state(vault, "session-1")["last_sequence"], 0)
+
+    def test_index_write_failure_preserves_event_advances_state_marks_rebuild_and_next_read_repairs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+            original_atomic_write_json = private_memory_vault_module.atomic_write_json
+
+            def failing_atomic_write_json(path: Path, payload: object) -> None:
+                if Path(path).name == "search.index.enc":
+                    raise RuntimeError("index write failed")
+                original_atomic_write_json(path, payload)
+
+            with patch.object(private_memory_vault_module, "atomic_write_json", side_effect=failing_atomic_write_json):
+                with self.assertRaisesRegex(RuntimeError, "index write failed"):
+                    vault.append_event(
+                        "session-1",
+                        "decision",
+                        {"text": "Ship Anvil.", "project": "Anvil", "important": True},
+                        timestamp="2026-06-06T12:00:00+00:00",
+                    )
+
+            session_root = vault.agent_root / "active" / "session-1"
+            self.assertTrue((session_root / "journal" / "000001.event.enc").exists())
+            state = self._decrypt_state(vault, "session-1")
+            self.assertEqual(state["last_sequence"], 1)
+            self.assertTrue(state["indexes_need_rebuild"])
+
+            indexes = vault.read_active_indexes("session-1")
+            self.assertFalse(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
+            self.assertEqual(list(indexes["relationships"]["project"].keys()), ["Anvil"])
+
+    def test_descriptor_validation_rejects_sibling_rebound_unverified_and_bad_digest_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vault = self._make_vault(root)
+            descriptor = vault.initialize()
+
+            with self.assertRaisesRegex(ValueError, "verified"):
+                validate_private_memory_descriptor(
+                    {**descriptor, "verified": False},
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                )
+            with self.assertRaisesRegex(ValueError, "64 hex"):
+                validate_private_memory_descriptor(
+                    {**descriptor, "attestation_sha256": "bad-digest"},
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                )
+            with self.assertRaisesRegex(ValueError, "path mismatch|escape"):
+                validate_private_memory_descriptor(
+                    {**descriptor, "ciphertext_ref": str((root / "sibling" / "vault.manifest.enc").resolve())},
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                )
+            with self.assertRaisesRegex(ValueError, "owner_agent_id"):
+                validate_private_memory_descriptor(
+                    {**descriptor, "owner_agent_id": "other"},
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                )
+
+    def test_concurrent_appends_produce_contiguous_unique_sequences_and_valid_chain(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+
+            results: list[dict] = []
+            errors: list[Exception] = []
+            lock = threading.Lock()
+
+            def worker(index: int) -> None:
+                try:
+                    result = vault.append_event(
+                        "session-1",
+                        "note",
+                        {"text": f"event {index}", "user": "Boss"},
+                    )
+                    with lock:
+                        results.append(result)
+                except Exception as exc:  # pragma: no cover - diagnostic path
+                    with lock:
+                        errors.append(exc)
+
+            threads = [threading.Thread(target=worker, args=(index,)) for index in range(10)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+            self.assertEqual(errors, [])
+            self.assertEqual(sorted(item["sequence"] for item in results), list(range(1, 11)))
+            self.assertEqual(len({item["event_id"] for item in results}), 10)
+            self.assertEqual(vault.verify_active_session("session-1")["last_sequence"], 10)
+
+    def test_no_plaintext_secret_appears_in_journal_index_state_or_manifest_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vault = self._make_vault(root)
+            vault.initialize()
+            vault.append_event(
+                "session-1",
+                "decision",
+                {
+                    "text": "customer-secret-token should never appear plaintext",
+                    "reason": "customer-secret-token",
+                    "project": "Anvil",
+                    "important": True,
+                },
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+
+            for file_path in (root / "scribe").rglob("*"):
+                if file_path.is_file():
+                    self.assertNotIn(b"customer-secret-token", file_path.read_bytes(), str(file_path))
 
 
 if __name__ == "__main__":

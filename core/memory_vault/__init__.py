@@ -14,9 +14,11 @@ from .crypto import (
     verify_attestation,
 )
 from .events import normalize_memory_event
+from .private_memory_vault import PrivateMemoryVault, validate_private_memory_descriptor
 
 __all__ = [
     "MEMORY_VAULT_SCHEMA_VERSION",
+    "PrivateMemoryVault",
     "atomic_write_bytes",
     "atomic_write_json",
     "canonical_json",
@@ -29,5 +31,6 @@ __all__ = [
     "normalize_agent_id",
     "normalize_memory_event",
     "sign_attestation",
+    "validate_private_memory_descriptor",
     "verify_attestation",
 ]
