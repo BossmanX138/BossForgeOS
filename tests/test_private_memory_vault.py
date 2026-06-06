@@ -560,6 +560,9 @@ class PrivateMemoryJournalTests(unittest.TestCase):
             key_ref="key-2026-06",
         )
 
+    def _verification_key(self) -> bytes:
+        return derive_memory_key("super-secret-node-key", "scribe")
+
     def _decrypt_manifest(self, vault: PrivateMemoryVault) -> dict:
         return decrypt_json(
             json.loads(vault.manifest_path.read_text("utf-8")),
@@ -606,6 +609,7 @@ class PrivateMemoryJournalTests(unittest.TestCase):
                 descriptor,
                 expected_agent_id="scribe",
                 vault_root=Path(tmp),
+                verification_key=self._verification_key(),
             )
             self.assertEqual(validated, descriptor)
             self.assertEqual(
@@ -700,6 +704,57 @@ class PrivateMemoryJournalTests(unittest.TestCase):
             for file_path in (root / "scribe").rglob("*"):
                 if file_path.is_file():
                     self.assertNotIn(b"vault-secret-phrase", file_path.read_bytes(), str(file_path))
+
+    def test_append_event_recovers_after_state_write_failure_and_next_append_continues_sequence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vault = self._make_vault(root)
+            vault.initialize()
+            original_atomic_write_json = private_memory_vault_module.atomic_write_json
+            session_root = root / "scribe" / "active" / "session-1"
+
+            def failing_atomic_write_json(path: Path, payload: object) -> None:
+                target = Path(path)
+                if (
+                    target.name == "session.state.enc"
+                    and (session_root / "journal" / "000001.event.enc").exists()
+                    and (session_root / "search.index.enc").exists()
+                    and (session_root / "important.index.enc").exists()
+                    and (session_root / "relationship.index.enc").exists()
+                ):
+                    raise RuntimeError("state write failed")
+                original_atomic_write_json(target, payload)
+
+            with patch.object(private_memory_vault_module, "atomic_write_json", side_effect=failing_atomic_write_json):
+                with self.assertRaisesRegex(RuntimeError, "state write failed"):
+                    vault.append_event(
+                        "session-1",
+                        "decision",
+                        {"text": "Ship Anvil.", "project": "Anvil", "important": True},
+                        timestamp="2026-06-06T12:00:00Z",
+                    )
+
+            self.assertTrue((session_root / "journal" / "000001.event.enc").exists())
+            stale_state = self._decrypt_state(vault, "session-1")
+            self.assertEqual(stale_state["last_sequence"], 0)
+            self.assertEqual(stale_state["last_ciphertext_sha256"], "")
+
+            rebuilt = vault.read_active_indexes("session-1")
+            self.assertEqual(len(rebuilt["search"]["events"]), 1)
+
+            recovered_state = self._decrypt_state(vault, "session-1")
+            self.assertEqual(recovered_state["last_sequence"], 1)
+            self.assertRegex(recovered_state["last_ciphertext_sha256"], r"^[0-9a-f]{64}$")
+            self.assertFalse(recovered_state["indexes_need_rebuild"])
+
+            second = vault.append_event(
+                "session-1",
+                "note",
+                {"text": "Boss requested a follow-up.", "user": "Boss"},
+                timestamp="2026-06-06T12:05:00+00:00",
+            )
+            self.assertEqual(second["sequence"], 2)
+            self.assertEqual(vault.verify_active_session("session-1")["last_sequence"], 2)
 
     def test_live_indexes_capture_search_topics_importance_and_relationships(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -886,6 +941,37 @@ class PrivateMemoryJournalTests(unittest.TestCase):
             self.assertEqual(indexes["relationships"]["project"]["Anvil"]["interaction_count"], 1)
             self.assertFalse(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
 
+    def test_timestamp_must_be_utc_aware_and_z_normalizes_to_plus_00_00(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = self._make_vault(Path(tmp))
+            vault.initialize()
+
+            vault.append_event(
+                "session-1",
+                "note",
+                {"text": "Normalized UTC timestamp."},
+                timestamp="2026-06-06T12:00:00Z",
+            )
+            indexes = vault.read_active_indexes("session-1")
+            only_event_id = next(iter(indexes["search"]["events"]))
+            self.assertEqual(
+                indexes["search"]["events"][only_event_id]["timestamp"],
+                "2026-06-06T12:00:00+00:00",
+            )
+
+            for bad_timestamp in (
+                "2026-06-06T12:00:00",
+                "2026-06-06T12:00:00-04:00",
+                "not-a-time",
+            ):
+                with self.assertRaisesRegex(ValueError, "timestamp"):
+                    vault.append_event(
+                        "session-2",
+                        "note",
+                        {"text": "bad"},
+                        timestamp=bad_timestamp,
+                    )
+
     def test_event_write_failure_does_not_advance_sequence_or_create_journal_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             vault = self._make_vault(Path(tmp))
@@ -940,6 +1026,45 @@ class PrivateMemoryJournalTests(unittest.TestCase):
             self.assertFalse(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
             self.assertEqual(list(indexes["relationships"]["project"].keys()), ["Anvil"])
 
+    def test_late_index_write_failures_leave_mixed_indexes_and_next_read_rebuilds_all_consistently(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for failing_name in ("important.index.enc", "relationship.index.enc"):
+                with self.subTest(failing_name=failing_name):
+                    root = Path(tmp) / failing_name.replace(".", "-")
+                    root.mkdir(parents=True, exist_ok=True)
+                    vault = self._make_vault(root)
+                    vault.initialize()
+                    original_atomic_write_json = private_memory_vault_module.atomic_write_json
+
+                    def failing_atomic_write_json(path: Path, payload: object) -> None:
+                        if Path(path).name == failing_name:
+                            raise RuntimeError(f"{failing_name} write failed")
+                        original_atomic_write_json(path, payload)
+
+                    with patch.object(
+                        private_memory_vault_module,
+                        "atomic_write_json",
+                        side_effect=failing_atomic_write_json,
+                    ):
+                        with self.assertRaisesRegex(RuntimeError, failing_name):
+                            vault.append_event(
+                                "session-1",
+                                "decision",
+                                {"text": "Ship Anvil now.", "project": "Anvil", "important": True},
+                                timestamp="2026-06-06T12:00:00+00:00",
+                            )
+
+                    session_root = vault.agent_root / "active" / "session-1"
+                    self.assertTrue((session_root / "journal" / "000001.event.enc").exists())
+                    self.assertTrue((session_root / "search.index.enc").exists())
+                    self.assertTrue(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
+
+                    indexes = vault.read_active_indexes("session-1")
+                    self.assertEqual(list(indexes["search"]["events"].values())[0]["sequence"], 1)
+                    self.assertEqual(indexes["important"]["event_ids"], [next(iter(indexes["important"]["events"]))])
+                    self.assertEqual(indexes["relationships"]["project"]["Anvil"]["interaction_count"], 1)
+                    self.assertFalse(self._decrypt_state(vault, "session-1")["indexes_need_rebuild"])
+
     def test_descriptor_validation_rejects_sibling_rebound_unverified_and_bad_digest_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -951,25 +1076,107 @@ class PrivateMemoryJournalTests(unittest.TestCase):
                     {**descriptor, "verified": False},
                     expected_agent_id="scribe",
                     vault_root=root,
+                    verification_key=self._verification_key(),
                 )
             with self.assertRaisesRegex(ValueError, "64 hex"):
                 validate_private_memory_descriptor(
                     {**descriptor, "attestation_sha256": "bad-digest"},
                     expected_agent_id="scribe",
                     vault_root=root,
+                    verification_key=self._verification_key(),
                 )
             with self.assertRaisesRegex(ValueError, "path mismatch|escape"):
                 validate_private_memory_descriptor(
                     {**descriptor, "ciphertext_ref": str((root / "sibling" / "vault.manifest.enc").resolve())},
                     expected_agent_id="scribe",
                     vault_root=root,
+                    verification_key=self._verification_key(),
                 )
             with self.assertRaisesRegex(ValueError, "owner_agent_id"):
                 validate_private_memory_descriptor(
                     {**descriptor, "owner_agent_id": "other"},
                     expected_agent_id="scribe",
                     vault_root=root,
+                    verification_key=self._verification_key(),
                 )
+
+    def test_descriptor_validation_rejects_forged_attestation_signature_when_verification_key_supplied(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            vault = self._make_vault(root)
+            descriptor = vault.initialize()
+            attestation_path = root / "scribe" / "vault.attestation.json"
+            attestation = json.loads(attestation_path.read_text("utf-8"))
+            attestation["signature"] = "0" * 64
+            atomic_write_json(attestation_path, attestation)
+            forged_descriptor = {
+                **descriptor,
+                "attestation_sha256": hashlib.sha256(attestation_path.read_bytes()).hexdigest(),
+            }
+
+            with self.assertRaisesRegex(ValueError, "signature"):
+                validate_private_memory_descriptor(
+                    forged_descriptor,
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                    verification_key=self._verification_key(),
+                )
+
+    def test_symlinked_owner_directory_is_rejected_and_validation_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            outside = Path(tmp) / "outside"
+            root.mkdir()
+            outside.mkdir()
+            owner_link = root / "scribe"
+            try:
+                owner_link.symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable on this host")
+
+            vault = self._make_vault(root)
+            with self.assertRaisesRegex(ValueError, "symlink|outside|escape"):
+                vault.initialize()
+            self.assertEqual(list(outside.iterdir()), [])
+
+            descriptor = {
+                "schema_version": "1.0",
+                "owner_agent_id": "scribe",
+                "ciphertext_ref": str((owner_link / "vault.manifest.enc").resolve()),
+                "attestation_sha256": "0" * 64,
+                "key_ref": "key-2026-06",
+                "verified": True,
+            }
+            with self.assertRaisesRegex(ValueError, "symlink|outside|escape|path mismatch"):
+                validate_private_memory_descriptor(
+                    descriptor,
+                    expected_agent_id="scribe",
+                    vault_root=root,
+                    verification_key=self._verification_key(),
+                )
+
+    def test_initialize_fails_if_persisted_manifest_or_attestation_is_corrupted_after_write(self) -> None:
+        def run_case(root: Path, corrupt_name: str) -> None:
+            vault = self._make_vault(root)
+            original_atomic_write_json = private_memory_vault_module.atomic_write_json
+
+            def corrupting_atomic_write_json(path: Path, payload: object) -> None:
+                target = Path(path)
+                original_atomic_write_json(target, payload)
+                if target.name == corrupt_name:
+                    target.write_text("{\"corrupt\":true}", encoding="utf-8")
+
+            with patch.object(
+                private_memory_vault_module,
+                "atomic_write_json",
+                side_effect=corrupting_atomic_write_json,
+            ):
+                with self.assertRaisesRegex(ValueError, "manifest|attestation|authentication|metadata|signature"):
+                    vault.initialize()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            run_case(Path(tmp) / "manifest", "vault.manifest.enc")
+            run_case(Path(tmp) / "attestation", "vault.attestation.json")
 
     def test_concurrent_appends_produce_contiguous_unique_sequences_and_valid_chain(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
