@@ -54,6 +54,40 @@ class PrivateModelVaultTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "declared shard"):
                 inspect_model_source(source)
 
+    def test_adapter_inventory_includes_complete_base_model(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "base"
+            adapter = Path(tmp) / "adapter"
+            write_complete_model(base, b"base-weights")
+            adapter.mkdir()
+            (adapter / "adapter_config.json").write_text(
+                json.dumps({"base_model_name_or_path": str(base)}),
+                encoding="utf-8",
+            )
+            (adapter / "adapter_model.safetensors").write_bytes(b"adapter")
+
+            inspected = inspect_model_source(adapter)
+
+            roots = {item["source_group"] for item in inspected["files"]}
+            self.assertEqual(roots, {"adapter", "base"})
+            self.assertIn(
+                "base/model.safetensors",
+                {item["relative_path"] for item in inspected["files"]},
+            )
+
+    def test_adapter_inventory_rejects_unresolved_base_model(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            adapter = Path(tmp) / "adapter"
+            adapter.mkdir()
+            (adapter / "adapter_config.json").write_text(
+                '{"base_model_name_or_path":"missing"}',
+                encoding="utf-8",
+            )
+            (adapter / "adapter_model.safetensors").write_bytes(b"adapter")
+
+            with self.assertRaisesRegex(ValueError, "base model"):
+                inspect_model_source(adapter)
+
 
 if __name__ == "__main__":
     unittest.main()

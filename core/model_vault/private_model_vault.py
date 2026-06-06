@@ -42,20 +42,22 @@ def _category(relative_path: str) -> str:
 
 def _validate_declared_shards(root: Path, files: list[dict[str, Any]]) -> None:
     for item in files:
-        relative_path = str(item["relative_path"])
-        if Path(relative_path).name.lower() not in _WEIGHT_INDEX_NAMES:
+        source_relative_path = str(item["source_relative_path"])
+        if Path(source_relative_path).name.lower() not in _WEIGHT_INDEX_NAMES:
             continue
         index_path = Path(str(item["source_path"]))
         try:
             payload = json.loads(index_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise ValueError(f"invalid model weight index: {relative_path}") from exc
+            raise ValueError(f"invalid model weight index: {source_relative_path}") from exc
         weight_map = payload.get("weight_map")
         if not isinstance(weight_map, dict) or not weight_map:
-            raise ValueError(f"model weight index has no weight_map: {relative_path}")
+            raise ValueError(f"model weight index has no weight_map: {source_relative_path}")
         for declared in sorted({str(value).strip() for value in weight_map.values()}):
             if not declared:
-                raise ValueError(f"model weight index has an empty declared shard: {relative_path}")
+                raise ValueError(
+                    f"model weight index has an empty declared shard: {source_relative_path}"
+                )
             candidate = root / declared
             try:
                 resolved = _resolve_inside(root, candidate)
@@ -65,14 +67,7 @@ def _validate_declared_shards(root: Path, files: list[dict[str, Any]]) -> None:
                 raise ValueError(f"declared shard is missing: {declared}")
 
 
-def inspect_model_source(source_root: str | Path) -> dict[str, object]:
-    try:
-        root = Path(source_root).resolve(strict=True)
-    except (FileNotFoundError, OSError, RuntimeError) as exc:
-        raise ValueError(f"model source does not exist: {source_root}") from exc
-    if not root.is_dir():
-        raise ValueError("model source must be a directory")
-
+def _inventory_group(root: Path, source_group: str, prefix: str = "") -> list[dict[str, Any]]:
     files: list[dict[str, Any]] = []
     for path in sorted(root.rglob("*"), key=lambda item: item.as_posix().lower()):
         if path.is_symlink():
@@ -80,16 +75,23 @@ def inspect_model_source(source_root: str | Path) -> dict[str, object]:
         if not path.is_file():
             continue
         resolved = _resolve_inside(root, path)
-        relative = resolved.relative_to(root).as_posix()
+        source_relative = resolved.relative_to(root).as_posix()
+        relative = f"{prefix}/{source_relative}" if prefix else source_relative
         files.append(
             {
                 "source_path": str(resolved),
+                "source_relative_path": source_relative,
                 "relative_path": relative,
+                "source_group": source_group,
                 "size": resolved.stat().st_size,
-                "category": _category(relative),
+                "category": _category(source_relative),
             }
         )
+    _validate_declared_shards(root, files)
+    return files
 
+
+def _validate_complete_model(files: list[dict[str, Any]]) -> set[str]:
     present = {str(item["category"]) for item in files}
     for required, message in (
         ("weights", "model weights are required"),
@@ -98,10 +100,70 @@ def inspect_model_source(source_root: str | Path) -> dict[str, object]:
     ):
         if required not in present:
             raise ValueError(message)
+    return present
 
-    _validate_declared_shards(root, files)
+
+def _resolve_adapter_base(adapter_root: Path, base_source_root: str | Path | None) -> Path:
+    candidate = Path(base_source_root) if base_source_root is not None else None
+    if candidate is None:
+        config_path = adapter_root / "adapter_config.json"
+        try:
+            payload = json.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError("adapter base model configuration is invalid") from exc
+        declared = str(payload.get("base_model_name_or_path", "")).strip()
+        if declared:
+            declared_path = Path(declared)
+            candidate = declared_path if declared_path.is_absolute() else adapter_root / declared_path
+    if candidate is None:
+        raise ValueError("adapter base model is required")
+    try:
+        resolved = candidate.resolve(strict=True)
+    except (FileNotFoundError, OSError, RuntimeError) as exc:
+        raise ValueError(f"adapter base model does not exist: {candidate}") from exc
+    if not resolved.is_dir():
+        raise ValueError("adapter base model must be a directory")
+    return resolved
+
+
+def inspect_model_source(
+    source_root: str | Path,
+    base_source_root: str | Path | None = None,
+) -> dict[str, object]:
+    try:
+        root = Path(source_root).resolve(strict=True)
+    except (FileNotFoundError, OSError, RuntimeError) as exc:
+        raise ValueError(f"model source does not exist: {source_root}") from exc
+    if not root.is_dir():
+        raise ValueError("model source must be a directory")
+
+    adapter_only = (
+        (root / "adapter_config.json").is_file()
+        and (root / "adapter_model.safetensors").is_file()
+        and not any((root / name).is_file() for name in _WEIGHT_INDEX_NAMES)
+        and not (root / "model.safetensors").is_file()
+        and not (root / "pytorch_model.bin").is_file()
+    )
+    if adapter_only:
+        base_root = _resolve_adapter_base(root, base_source_root)
+        adapter_files = _inventory_group(root, "adapter", "adapter")
+        base_files = _inventory_group(base_root, "base", "base")
+        present = _validate_complete_model(base_files)
+        present.update(str(item["category"]) for item in adapter_files)
+        files = sorted(
+            [*adapter_files, *base_files],
+            key=lambda item: str(item["relative_path"]),
+        )
+        source_roots = {"adapter": str(root), "base": str(base_root)}
+    else:
+        files = _inventory_group(root, "model")
+        present = _validate_complete_model(files)
+        source_roots = {"model": str(root)}
+
     return {
         "source_root": str(root),
+        "source_roots": source_roots,
+        "adapter_only": adapter_only,
         "files": files,
         "present_categories": sorted(present),
         "required_categories": ["model_config", "tokenizer", "weights"],
