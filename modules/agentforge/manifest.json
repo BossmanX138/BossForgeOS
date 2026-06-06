@@ -19,6 +19,14 @@
     "agent.profile",
     "agent.template"
   ],
+  "standalone_policy": {
+    "default_tier": "local",
+    "allowed_agent_classes": [
+      "skilled",
+      "normalized"
+    ],
+    "prime_requires": "agent.create.prime",
+    "travel_requires": "agent.create.travel"
+  },
   "notes": "Scaffold manifest for standalone + orchestrator-connected operation."
 }
-
