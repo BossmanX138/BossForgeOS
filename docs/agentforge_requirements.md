@@ -4,4 +4,4 @@ This file is kept for compatibility with older references.
 
 Canonical source:
 
-- [docs/AgentForge_readme.md](docs/AgentForge_readme.md)
+- [docs/AgentForge_readme.md](./AgentForge_readme.md)

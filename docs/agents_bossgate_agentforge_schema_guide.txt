@@ -437,3 +437,44 @@ Highest impact follow-ups:
 - Proprietary block: encrypted/managed internal fields policy metadata
 
 End of guide.
+
+====================================================================
+17) Sealed Portable-Agent Capsule Foundation (Implemented Stage 1)
+====================================================================
+Stage 1 establishes the metadata contract for the BossForgeOS AI runner capsule.
+
+Implemented:
+- sparse public identity card: name, public_id, agent_class, agent_type, rank, rarity, availability
+- address-safe public and authenticated AgentForge profile views
+- encrypted descriptor layout for identity, runner, model, memory, capability, dream, and BossGate vaults
+- sealed RuneForge gifted-runtime lineage metadata
+- immutable rarity guard
+- validated capsule lifecycle states and transitions
+- Model Gateway lightweight-profile capsule metadata
+
+Not yet implemented:
+- portable runtime loading and full model-weight packaging
+- private relationship-memory persistence and learning
+- dream training, signed checkpoint activation, and rollback
+- skill, tool, and sigil evolution workflows
+- full move-only capsule travel over BossGate
+
+====================================================================
+18) Gifted Portable AI Runner (Implemented Stage 2 Slice)
+====================================================================
+Stage 2 establishes the metadata contract for agent-local BossForgeOS AI runners.
+
+Implemented:
+- neutral BossForgeOS AI runner template metadata
+- deterministic development-integrity template signing and verification
+- RuneForge personalized-origin runner manifest
+- detached descendant runner manifests with sealed RuneForge ancestry
+- per-agent runner bootstrap payloads bound to capsule vault descriptors
+- RuneForge provider gifted runtime template reference
+
+Not yet implemented:
+- process supervision for waking the runner
+- complete model-weight copying into private model vaults
+- memory-vault-backed learning
+- dream training and signed checkpoints
+- full move-only BossGate transport

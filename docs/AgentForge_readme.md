@@ -25,6 +25,21 @@ This is the canonical requirements and guardrails document for forging BossCraft
    - If the user has already granted permission for the current session or an active time-based window, additional prompts may be skipped for actions covered by that grant.
    - Grants must be explicit, scoped, and revocable.
 
+4. BossGate encryption and AgentForge profile views are separate controls.
+   - New agents default to a `hidden` disclosure posture.
+   - AgentForge may switch an existing agent between `hidden` and `non_hidden`.
+   - Posture changes affect future views of that agent only.
+   - Gate companion files and BossGate travel packages remain encrypted for both postures.
+   - Authenticated `bossforgeos` and `agentforge_standalone` viewers may render a `non_hidden` profile.
+   - `bridgebase_alpha` is registered as a future configurable viewer channel but disabled by default.
+
+5. Human BossGate responsibilities are role-based and interface-backed.
+   - Seeded roles: `viewer`, `operator`, `security_admin`, `commerce_manager`, and `support_engineer`.
+   - Human users may hold multiple roles; effective permissions combine.
+   - Only users assigned seeded `security_admin` may create custom roles or assign human roles.
+   - Control Hall reveals BossGate Access, Commerce, Support, and Security Administration mechanisms from effective permissions.
+   - Commerce and Support workspaces exist now; licensing and remote-debug command implementations remain tracked separately.
+
 ## Guardrails
 
 1. No silent escalation.
@@ -189,6 +204,17 @@ Direct travel control is skill-gated via `bossgate_travel_control`.
 - Controllers typically relocate when directed by command policy; rangers can autonomously patrol for remote repair needs.
 - Prime powers can still summon wrapped agents across supported runtime surfaces.
 
+## Sealed Agent Capsule Foundation
+
+- Each agent carries a sealed capsule manifest with encrypted vault descriptors for identity, runner, model, memory, capability, dreams, and BossGate material.
+- The public identity card is intentionally sparse: `name`, `public_id`, `agent_class`, `agent_type`, `rank`, `rarity`, and `availability`.
+- The public card never reveals the BossGate seven-word address, runtime ancestry, skills, sigils, tools, private runner details, model material, memory, dream state, or travel state.
+- RuneForge remains the runtime origin. Descendant capsules seal the gifted runtime template version and direct `runeforge` ancestry inside private capsule metadata.
+- Rarity is assigned at creation and immutable. Rank remains explicit-promotion only.
+- Capsule lifecycle metadata uses validated states and transitions. Full encrypted movement, dream training, and capability evolution are staged follow-up work.
+- Stage 2 adds the BossForgeOS AI runner contract. RuneForge publishes a signed development-integrity gifted runtime template, while descendants receive detached per-agent runner manifests and bootstrap payloads that do not require RuneForge to remain online.
+- Complete physical model-weight copying into each private model vault remains open work and is not implied by the runner metadata contract.
+
 ## Skill Namespace Conventions
 
 - Skilled-only prefixes: `advanced_`, `orchestration_`, `multi_agent_`, `policy_`
@@ -240,6 +266,9 @@ Use this file as the living source of truth for future "you add one, I add one" 
 - Agent type skill/MCP constraints
   - Enforcing module: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`
   - Validation evidence: type-specific required/disallowed skills and MCP name-prefix allowlists
+- Sealed portable-agent capsule foundation
+  - Enforcing module: `core/schemas/agent_capsule.py`, `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `core/agents/model_gateway_agent.py`, `modules/agentforge/service.py`
+  - Validation evidence: sparse public-card tests, capsule manifest validation, AgentForge redaction tests, and Model Gateway capsule metadata tests
 - Incident domain inference and adaptive assignment scoring
   - Enforcing module: `core/schemas/agent_schema.py`
   - Validation evidence: `infer_incident_domains`, `compute_adaptive_priority`, `rank_agents_for_incident`
@@ -249,7 +278,7 @@ Use this file as the living source of truth for future "you add one, I add one" 
 
 ## Policy Versioning
 
-- Current policy version: `v1.9.0`
+- Current policy version: `v1.13.0`
 - Policy changes must update this section with date, summary, and impacted modules.
 
 ### Change Log
@@ -264,9 +293,17 @@ Use this file as the living source of truth for future "you add one, I add one" 
 - v1.7.0 (2026-04-16): added incident-domain tagger and adaptive priority scoring (`urgency`, `risk`, `proximity`, `confidence`) for deterministic, personality-consistent assignment.
 - v1.8.0 (2026-04-16): added rank-based capacity limits for `skills`, `sigils`, and `mcp.servers`; enabled skilled single-sigil specialist path (`sigil_transporter`); clarified that prime tier does not imply leadership.
 - v1.9.0 (2026-04-16): introduced personality behavior overlays across classes (`*_like` patterns), local quiet-ranger mode (`ranger_local`) for host/LAN proactive operations without remote-hunt behavior, and personality interest-affinity routing for passion-aligned job selection.
+- v1.10.0 (2026-06-02): separated mandatory BossGate encryption from reversible AgentForge profile-view disclosure posture; added trusted viewer channels for authenticated proprietary tooling.
+- v1.11.0 (2026-06-02): added persisted human BossGate roles, multi-role permission union, seeded-security-admin governance, agent skill gates, and permission-driven Control Hall workspaces.
+- v1.12.0 (2026-06-02): added the Stage 1 sealed portable-agent capsule foundation: sparse public identity, encrypted vault descriptors, sealed RuneForge runtime lineage, immutable rarity guard, lifecycle metadata, and address-safe AgentForge views.
+- v1.13.0 (2026-06-06): added the Stage 2 gifted portable runner contract: signed neutral template metadata, RuneForge personalized-origin manifest, detached descendant runner manifests, and per-agent runner bootstrap metadata.
 - Impacted modules for v1.0.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`
 - Impacted modules for v1.8.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `ui/control_hall.py`
 - Impacted modules for v1.9.0: `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `core/agents/model_gateway_agent.py`, `ui/control_hall.py`
+- Impacted modules for v1.10.0: `core/agents/model_gateway_agent.py`, `modules/agentforge/service.py`, `modules/agentforge/api_adapter.py`, `ui/control_hall.py`, `core/agents/bossgate_agent.py`
+- Impacted modules for v1.11.0: `core/security/bossgate_authorization.py`, `core/agents/bossgate_agent.py`, `core/agents/model_gateway_agent.py`, `core/utils/bforge.py`, `ui/control_hall.py`
+- Impacted modules for v1.12.0: `core/schemas/agent_capsule.py`, `core/schemas/agent_schema.py`, `core/schemas/bosscrafts_agent.schema.json`, `core/agents/model_gateway_agent.py`, `modules/agentforge/service.py`
+- Impacted modules for v1.13.0: `core/runner/bossforge_ai_runner.py`, `core/schemas/agent_schema.py`, `core/agents/model_gateway_agent.py`, `modules/runeforge_provider/runeforge_agent.profile.json`, `modules/runeforge_provider/provider_manifest.json`
 
 ## TODO
 
