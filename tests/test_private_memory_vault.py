@@ -1,9 +1,14 @@
+import base64
+import hashlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from core.memory_vault import (
+    atomic_write_bytes,
+    atomic_write_json,
     canonical_json,
     decrypt_bytes,
     decrypt_json,
@@ -19,6 +24,130 @@ from core.memory_vault import (
 
 
 class PrivateMemoryCryptoTests(unittest.TestCase):
+    def test_canonical_json_is_sorted_compact_and_ascii_escaped(self) -> None:
+        payload = {"z": "snowman \u2603", "a": {"b": 2, "a": 1}}
+
+        self.assertEqual(
+            canonical_json(payload),
+            b'{"a":{"a":1,"b":2},"z":"snowman \\u2603"}',
+        )
+
+    def test_derive_memory_key_matches_expected_digest(self) -> None:
+        self.assertEqual(
+            derive_memory_key("node-1", "scribe"),
+            hashlib.sha256(b"node-1:scribe:private-memory-v1").digest(),
+        )
+
+    def test_encrypt_bytes_uses_fresh_nonce_and_twelve_byte_nonce(self) -> None:
+        key = derive_memory_key("node-1", "scribe")
+        aad = event_aad(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=1,
+            event_id="event-1",
+            event_type="note",
+            timestamp="2026-06-06T12:00:00+00:00",
+            previous_ciphertext_sha256="",
+        )
+
+        first = encrypt_bytes(b"payload", key, aad)
+        second = encrypt_bytes(b"payload", key, aad)
+
+        self.assertNotEqual(first["nonce_b64"], second["nonce_b64"])
+        self.assertEqual(len(base64.b64decode(first["nonce_b64"])), 12)
+        self.assertEqual(len(base64.b64decode(second["nonce_b64"])), 12)
+
+    def test_event_aad_has_exact_keys_and_values(self) -> None:
+        aad = event_aad(
+            agent_id="scribe",
+            session_id="Session-1",
+            sequence=7,
+            event_id="event-7",
+            event_type="decision",
+            timestamp="2026-06-06T12:00:00+00:00",
+            previous_ciphertext_sha256="prev",
+        )
+        payload = json.loads(aad.decode("utf-8"))
+
+        self.assertEqual(
+            payload,
+            {
+                "agent_id": "scribe",
+                "event_id": "event-7",
+                "event_type": "decision",
+                "previous_ciphertext_sha256": "prev",
+                "sequence": 7,
+                "session_id": "Session-1",
+                "timestamp": "2026-06-06T12:00:00+00:00",
+            },
+        )
+        self.assertEqual(
+            list(payload.keys()),
+            [
+                "agent_id",
+                "event_id",
+                "event_type",
+                "previous_ciphertext_sha256",
+                "sequence",
+                "session_id",
+                "timestamp",
+            ],
+        )
+
+    def test_normalize_memory_event_has_exact_keys(self) -> None:
+        event = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=1,
+            event_type="note",
+            payload={"text": "hello"},
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+
+        self.assertEqual(
+            list(event.keys()),
+            [
+                "schema_version",
+                "event_id",
+                "agent_id",
+                "session_id",
+                "sequence",
+                "event_type",
+                "timestamp",
+                "payload",
+                "search_terms",
+                "topics",
+                "relationships",
+                "importance",
+            ],
+        )
+
+    def test_atomic_write_bytes_replaces_content_and_writes_canonical_json(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "nested" / "memory.json"
+
+            atomic_write_bytes(target, b"first")
+            self.assertEqual(target.read_bytes(), b"first")
+            self.assertTrue(target.parent.exists())
+
+            atomic_write_json(target, {"z": 2, "a": 1})
+            self.assertEqual(target.read_bytes(), b'{"a":1,"z":2}')
+
+    def test_atomic_write_cleanup_on_failure_removes_temp_and_preserves_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "vault" / "memory.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"original")
+
+            with patch.object(Path, "replace", side_effect=RuntimeError("replace failed")):
+                with self.assertRaisesRegex(RuntimeError, "replace failed"):
+                    atomic_write_bytes(target, b"updated")
+
+            self.assertEqual(target.read_bytes(), b"original")
+            self.assertFalse(any(target.parent.glob(f".{target.name}.*")))
+
     def test_event_envelope_requires_matching_aad(self) -> None:
         key = derive_memory_key("node-1", "scribe")
         aad = event_aad(
@@ -35,10 +164,7 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         serialized = canonical_json(envelope)
 
         self.assertNotIn(b"proprietary decision", serialized)
-        self.assertEqual(
-            decrypt_bytes(envelope, key, aad),
-            b"proprietary decision",
-        )
+        self.assertEqual(decrypt_bytes(envelope, key, aad), b"proprietary decision")
         with self.assertRaisesRegex(ValueError, "authentication"):
             decrypt_bytes(
                 envelope,
@@ -191,6 +317,27 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         self.assertIn("alpha", event["search_terms"])
         self.assertIn("anvil", event["search_terms"])
 
+    def test_numeric_payload_values_do_not_enter_search_terms(self) -> None:
+        event = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=11,
+            event_type="note",
+            payload={
+                "text": "Ticket 42 is open",
+                "count": 1234,
+                "enabled": True,
+                "ratio": 2.5,
+            },
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+
+        self.assertIn("ticket", event["search_terms"])
+        self.assertNotIn("42", event["search_terms"])
+        self.assertNotIn("1234", event["search_terms"])
+        self.assertNotIn("true", event["search_terms"])
+        self.assertNotIn("2", event["search_terms"])
+
     def test_session_ids_use_same_strict_path_safe_contract(self) -> None:
         for value in ("", ".", "..", "bad id", "bad/id", "bad\\id", "bad,id", "bad\tid"):
             with self.assertRaisesRegex(ValueError, "session_id"):
@@ -266,18 +413,9 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
             None,
             [],
             {"alg": "AES-256-GCM"},
-            {
-                **envelope,
-                "nonce_b64": "@@@",
-            },
-            {
-                **envelope,
-                "ciphertext_sha256": "0" * 64,
-            },
-            {
-                **envelope,
-                "alg": "AES-128-GCM",
-            },
+            {**envelope, "nonce_b64": "@@@"},
+            {**envelope, "ciphertext_sha256": "0" * 64},
+            {**envelope, "alg": "AES-128-GCM"},
         ]
         for bad in malformed_cases:
             with self.assertRaisesRegex(ValueError, "authentication"):

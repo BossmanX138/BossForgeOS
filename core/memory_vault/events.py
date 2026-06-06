@@ -58,8 +58,6 @@ def _payload_strings(payload: dict[str, Any]) -> list[str]:
             continue
         if isinstance(value, str):
             values.append(value)
-        elif isinstance(value, (int, float, bool)) and not isinstance(value, bool):
-            values.append(str(value))
     return values
 
 
