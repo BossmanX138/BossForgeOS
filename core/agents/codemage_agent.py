@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import py_compile
+import subprocess
 import sys
 import pathlib
 
@@ -309,7 +310,22 @@ class ArchiveApprentice:
 
 class CodeMageAgent:
 
-    def __init__(self, interval_seconds: int = 8, root: Path | None = None) -> None:
+    BOSSGATE_PROPOSAL_PATHS = {
+        "core/connectors/bossgate_connector.py",
+        "core/agents/bossgate_agent.py",
+        "tests/test_bossgate_connector.py",
+        "tests/test_bossgate_agent.py",
+        "docs/bossgate_connector.md",
+        "docs/bossgate_protocol.md",
+        "docs/bossgate_connector_todo.md",
+    }
+
+    def __init__(
+        self,
+        interval_seconds: int = 8,
+        root: Path | None = None,
+        workspace_root: Path | None = None,
+    ) -> None:
         # === BossForgeOS agent infrastructure ===
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(root or resolve_root_from_env())
@@ -317,6 +333,12 @@ class CodeMageAgent:
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "codemage_profile.json"
         self.work_path = self.bus.state / "codemage_work_packets.json"
+        self.command_cursor_path = self.bus.state / "codemage_command_cursor.json"
+        self.workspace_root = Path(workspace_root or PROJECT_ROOT).resolve()
+        self.patch_proposals_dir = self.bus.state / "codemage_patch_proposals"
+        self.patch_proposals_dir.mkdir(parents=True, exist_ok=True)
+        self.patch_rejections_dir = self.bus.state / "codemage_patch_rejections"
+        self.patch_rejections_dir.mkdir(parents=True, exist_ok=True)
         self.work_packets: list[dict[str, Any]] = []
         self._last_scheduled_discovery_key: str | None = None
         self.current_state = "Idle"
@@ -368,6 +390,39 @@ class CodeMageAgent:
 
     def mythic_greet(self):
         print(self.greeting)
+
+    def _load_command_cursor(self) -> str:
+        if not self.command_cursor_path.exists():
+            return ""
+        try:
+            payload = json.loads(self.command_cursor_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return ""
+        return str(payload.get("last_command_file", ""))
+
+    def _save_command_cursor(self, command_file: str) -> None:
+        payload = {
+            "service": "codemage",
+            "last_command_file": str(command_file),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        temp_path = self.command_cursor_path.with_suffix(".tmp")
+        temp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        temp_path.replace(self.command_cursor_path)
+
+    def _process_pending_commands(self) -> None:
+        last_command_file = self._load_command_cursor()
+        for path in sorted(self.bus.commands.glob("*.json")):
+            if path.name <= last_command_file:
+                continue
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                self._save_command_cursor(path.name)
+                continue
+            self.handle_command(payload)
+            self.model_keeper_compat.handle_command(payload)
+            self._save_command_cursor(path.name)
 
     def cinematic_splash(self):
         splash = """
@@ -546,7 +601,12 @@ class CodeMageAgent:
 
         return {"ok": True, "models": models}
 
-    def _invoke_model(self, prompt: str, system: str) -> dict[str, Any]:
+    def _invoke_model(
+        self,
+        prompt: str,
+        system: str,
+        request_overrides: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         cfg = self._model_config()
         url = str(cfg.get("url", "")).strip()
         model = str(cfg.get("model", "")).strip()
@@ -568,6 +628,8 @@ class CodeMageAgent:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        if request_overrides:
+            payload.update(request_overrides)
         headers = {"Content-Type": "application/json"}
         if api_key_env:
             token = os.environ.get(api_key_env, "").strip()
@@ -879,6 +941,268 @@ class CodeMageAgent:
     def list_work_packets(self) -> dict[str, Any]:
         return {"ok": True, "work_packets": self.work_packets}
 
+    def _extract_unified_diff(self, raw: str) -> str:
+        text = str(raw or "").strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:diff|patch)?\s*", "", text, count=1, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text, count=1)
+        marker = text.find("diff --git ")
+        return text[marker:].strip() + "\n" if marker >= 0 else ""
+
+    def _pin_single_context_patch_path(self, patch_text: str, context_files: list[str] | None) -> str:
+        if not context_files or len(context_files) != 1:
+            return patch_text
+        rel = context_files[0]
+        text = re.sub(r"(?m)^diff --git a/\S+ b/\S+$", f"diff --git a/{rel} b/{rel}", patch_text)
+        text = re.sub(r"(?m)^--- a/\S+$", f"--- a/{rel}", text)
+        return re.sub(r"(?m)^\+\+\+ b/\S+$", f"+++ b/{rel}", text)
+
+    def _save_bossgate_patch_rejection(
+        self,
+        todo_id: str,
+        details: str,
+        patch_text: str,
+        reason: str,
+        stderr: str,
+        model: str,
+    ) -> Path:
+        rejection_id = f"{todo_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+        rejection_path = self.patch_rejections_dir / f"{rejection_id}.json"
+        rejection_path.write_text(
+            json.dumps(
+                {
+                    "rejection_id": rejection_id,
+                    "todo_id": todo_id,
+                    "details": details,
+                    "status": "rejected_preflight",
+                    "reason": reason,
+                    "stderr": stderr[-2000:],
+                    "patch": patch_text,
+                    "model": model,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        return rejection_path
+
+    def _validate_bossgate_patch(self, patch_text: str) -> tuple[bool, str, list[str]]:
+        if not patch_text.strip():
+            return False, "model response did not include a unified diff", []
+        touched: list[str] = []
+        for match in re.finditer(r"(?m)^\+\+\+ b/(.+)$", patch_text):
+            rel = match.group(1).strip().replace("\\", "/")
+            if rel == "/dev/null":
+                continue
+            if rel.startswith("/") or ".." in Path(rel).parts:
+                return False, f"unsafe patch path: {rel}", touched
+            if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                return False, f"patch path is outside BossGate proposal scope: {rel}", touched
+            touched.append(rel)
+        if not touched:
+            return False, "patch did not touch an allowlisted BossGate file", []
+        return True, "ok", sorted(set(touched))
+
+    def _bossgate_prompt_context(
+        self,
+        context_files: list[str] | None = None,
+        max_chars: int = 14000,
+        context_ranges: list[tuple[str, int, int]] | None = None,
+    ) -> str:
+        chunks: list[str] = []
+        remaining = max(1, min(int(max_chars), 18000))
+        if context_ranges:
+            for rel, start_line, end_line in context_ranges:
+                path = self.workspace_root / rel
+                if not path.exists() or not path.is_file():
+                    continue
+                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+                snippet = "\n".join(lines[start_line - 1 : end_line])
+                snippet = snippet[: min(len(snippet), remaining)]
+                chunks.append(f"### {rel} lines {start_line}-{end_line}\n{snippet}")
+                remaining -= len(snippet)
+                if remaining <= 0:
+                    break
+            return "\n\n".join(chunks)
+        selected = context_files or sorted(self.BOSSGATE_PROPOSAL_PATHS)
+        for rel in selected:
+            path = self.workspace_root / rel
+            if not path.exists() or not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            snippet = text[: min(len(text), remaining)]
+            chunks.append(f"### {rel}\n{snippet}")
+            remaining -= len(snippet)
+            if remaining <= 0:
+                break
+        return "\n\n".join(chunks)
+
+    def generate_bossgate_patch_proposal(self, args: dict[str, Any]) -> dict[str, Any]:
+        todo_id = str(args.get("todo_id", "")).strip().upper()
+        details = str(args.get("details", "")).strip()
+        if not re.fullmatch(r"BG-\d{3}", todo_id):
+            return {"ok": False, "message": "todo_id must use BG-### format"}
+        context_files: list[str] | None = None
+        requested_files = args.get("context_files")
+        if isinstance(requested_files, list):
+            context_files = []
+            for item in requested_files:
+                rel = str(item).strip().replace("\\", "/")
+                if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                    return {"ok": False, "message": f"context file is outside BossGate proposal scope: {rel}"}
+                if rel not in context_files:
+                    context_files.append(rel)
+        context_ranges: list[tuple[str, int, int]] = []
+        requested_ranges = args.get("context_ranges")
+        if isinstance(requested_ranges, list):
+            for item in requested_ranges:
+                if not isinstance(item, dict):
+                    return {"ok": False, "message": "each context range must be an object"}
+                rel = str(item.get("file", "")).strip().replace("\\", "/")
+                if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                    return {"ok": False, "message": f"context range file is outside BossGate proposal scope: {rel}"}
+                start_line = max(1, int(item.get("start_line", 1)))
+                end_line = max(start_line, int(item.get("end_line", start_line)))
+                context_ranges.append((rel, start_line, min(end_line, start_line + 399)))
+        pin_paths = context_files
+        if not pin_paths and context_ranges:
+            pin_paths = sorted({rel for rel, _, _ in context_ranges})
+        max_context_chars = max(1, min(int(args.get("max_context_chars", 14000)), 18000))
+        max_output_tokens = max(64, min(int(args.get("max_output_tokens", 256)), 512))
+        prompt = (
+            "Create one conservative unified diff for the BossGate task below. "
+            "Return only a git-style unified diff beginning with 'diff --git'. "
+            "Touch only the provided BossGate files. Do not claim tests passed.\n\n"
+            f"Task: {todo_id} {details}\n\n"
+            f"Workspace files:\n{self._bossgate_prompt_context(context_files=context_files, max_chars=max_context_chars, context_ranges=context_ranges)}"
+        )
+        model_out = self._invoke_model(
+            prompt=prompt,
+            system="You are CodeMage's patch apprentice. Produce a minimal reviewable git diff only.",
+            request_overrides={
+                "synthetic_grammar": False,
+                "lore_layer": False,
+                "relationship_protocol": False,
+                "auto_pec": False,
+                "auto_tools": False,
+                "max_tokens": max_output_tokens,
+            },
+        )
+        if not model_out.get("ok"):
+            return {"ok": False, "message": str(model_out.get("message", "model proposal failed"))}
+        patch_text = self._extract_unified_diff(str(model_out.get("text", "")))
+        patch_text = self._pin_single_context_patch_path(patch_text, pin_paths)
+        valid, reason, touched = self._validate_bossgate_patch(patch_text)
+        if not valid:
+            return {"ok": False, "message": reason}
+        check = subprocess.run(
+            ["git", "apply", "--check", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if check.returncode != 0:
+            rejection_path = self._save_bossgate_patch_rejection(
+                todo_id=todo_id,
+                details=details,
+                patch_text=patch_text,
+                reason="git apply --check failed",
+                stderr=check.stderr,
+                model=str(model_out.get("model", "")),
+            )
+            return {
+                "ok": False,
+                "message": "proposal rejected: git apply --check failed",
+                "stderr": check.stderr[-2000:],
+                "rejection_file": str(rejection_path),
+            }
+        proposal_id = f"{todo_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+        proposal_path = self.patch_proposals_dir / f"{proposal_id}.json"
+        proposal = {
+            "proposal_id": proposal_id,
+            "todo_id": todo_id,
+            "details": details,
+            "status": "draft",
+            "touched_files": touched,
+            "patch": patch_text,
+            "model": str(model_out.get("model", "")),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+        self.bus.emit_event("codemage", "bossgate_patch_proposal_created", {"proposal_id": proposal_id, "todo_id": todo_id, "touched_files": touched})
+        return {"ok": True, "proposal_id": proposal_id, "proposal_file": str(proposal_path), "status": "draft", "touched_files": touched}
+
+    def list_bossgate_patch_proposals(self) -> dict[str, Any]:
+        items: list[dict[str, Any]] = []
+        for path in sorted(self.patch_proposals_dir.glob("*.json"), reverse=True):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict):
+                items.append({k: v for k, v in payload.items() if k != "patch"})
+        return {"ok": True, "items": items}
+
+    def apply_bossgate_patch_proposal(self, args: dict[str, Any]) -> dict[str, Any]:
+        proposal_id = str(args.get("proposal_id", "")).strip()
+        if not bool(args.get("confirm", False)):
+            return {"ok": False, "message": "apply requires confirm=true"}
+        proposal_path = self.patch_proposals_dir / f"{proposal_id}.json"
+        if not proposal_path.exists():
+            return {"ok": False, "message": f"proposal not found: {proposal_id}"}
+        proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+        if str(proposal.get("status", "")) != "draft":
+            return {"ok": False, "message": "proposal is not in draft status"}
+        patch_text = str(proposal.get("patch", ""))
+        valid, reason, touched = self._validate_bossgate_patch(patch_text)
+        if not valid:
+            return {"ok": False, "message": reason}
+        check = subprocess.run(
+            ["git", "apply", "--check", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if check.returncode != 0:
+            return {"ok": False, "message": "git apply check failed", "stderr": check.stderr[-2000:]}
+        applied = subprocess.run(
+            ["git", "apply", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if applied.returncode != 0:
+            return {"ok": False, "message": "git apply failed", "stderr": applied.stderr[-2000:]}
+        tests = subprocess.run(
+            [sys.executable, "-m", "unittest", "tests.test_bossgate_agent", "tests.test_bossgate_connector", "-v"],
+            cwd=str(self.workspace_root),
+            capture_output=True,
+            text=True,
+        )
+        if tests.returncode != 0:
+            subprocess.run(
+                ["git", "apply", "-R", "--whitespace=nowarn", "-"],
+                cwd=str(self.workspace_root),
+                input=patch_text,
+                capture_output=True,
+                text=True,
+            )
+            proposal["status"] = "reverted"
+            proposal["test_output"] = (tests.stdout + tests.stderr)[-6000:]
+            proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+            return {"ok": False, "status": "reverted", "message": "focused BossGate tests failed; patch reverted"}
+        proposal["status"] = "verified"
+        proposal["touched_files"] = touched
+        proposal["verified_at"] = datetime.now(timezone.utc).isoformat()
+        proposal["test_output"] = (tests.stdout + tests.stderr)[-6000:]
+        proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+        self.bus.emit_event("codemage", "bossgate_patch_proposal_verified", {"proposal_id": proposal_id, "todo_id": proposal.get("todo_id", ""), "touched_files": touched})
+        return {"ok": True, "proposal_id": proposal_id, "status": "verified", "touched_files": touched}
+
     def _choose_delegate(self, text: str, index: int) -> str:
         lowered = text.lower()
         runeforge_terms = ("model", "runtime", "inference", "rag", "gateway", "container", "deploy")
@@ -961,6 +1285,7 @@ class CodeMageAgent:
         target["model_used"] = bool(model_out.get("ok"))
         if model_out.get("ok"):
             target["model_reply"] = model_out.get("text", "")
+            target.pop("model_error", None)
         else:
             target["model_error"] = model_out.get("message", "")
         target["last_execution_at"] = datetime.now(timezone.utc).isoformat()
@@ -1050,6 +1375,12 @@ class CodeMageAgent:
             result = self.list_work_packets()
         elif command == "execute_work_packet":
             result = self.execute_work_packet(args)
+        elif command == "generate_bossgate_patch_proposal":
+            result = self.generate_bossgate_patch_proposal(args)
+        elif command == "list_bossgate_patch_proposals":
+            result = self.list_bossgate_patch_proposals()
+        elif command == "apply_bossgate_patch_proposal":
+            result = self.apply_bossgate_patch_proposal(args)
         elif command == "set_model_backend":
             result = self.set_model_backend(args)
         else:
@@ -1094,9 +1425,7 @@ class CodeMageAgent:
                     "discovery_mode_active": discovery_mode_active,
                 },
             )
-            for _, payload in self.bus.poll_commands(self.seen_commands):
-                self.handle_command(payload)
-                self.model_keeper_compat.handle_command(payload)
+            self._process_pending_commands()
 
             self.runtime_adapter.auto_complete_discovery(
                 agent_id="codemage",
