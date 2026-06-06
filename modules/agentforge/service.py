@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.schemas.agent_capsule import build_authenticated_profile_view, build_public_identity_card
+
+TRUSTED_VIEWER_CHANNELS = {
+    "bossforgeos": True,
+    "agentforge_standalone": True,
+    "bridgebase_alpha": False,
+}
+
 
 def _gateway() -> Any:
     from core.agents.model_gateway_agent import ModelGatewayAgent
@@ -12,6 +20,40 @@ def _gateway() -> Any:
 def list_agent_profiles() -> dict[str, Any]:
     gateway = _gateway()
     return {"agents": gateway.list_agent_profiles()}
+
+
+def _sealed_summary(name: str, profile: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ok": True,
+        "agent": name,
+        "disclosure_posture": str(profile.get("disclosure_posture", "hidden")).strip().lower() or "hidden",
+        "sealed": True,
+        "public_identity_card": build_public_identity_card(profile),
+    }
+
+
+def view_agent_profile(name: str, viewer_id: str = "", viewer_channel: str = "") -> dict[str, Any]:
+    key = str(name or "").strip().lower()
+    profiles = _gateway().list_agent_profiles()
+    profile = profiles.get(key)
+    if not isinstance(profile, dict):
+        return {"ok": False, "message": f"agent not found: {key}"}
+    summary = _sealed_summary(key, profile)
+    posture = str(profile.get("disclosure_posture", "hidden")).strip().lower()
+    channel = str(viewer_channel or "").strip().lower()
+    if posture != "non_hidden" or not str(viewer_id or "").strip() or not TRUSTED_VIEWER_CHANNELS.get(channel, False):
+        return summary
+    return {
+        "ok": True,
+        "agent": key,
+        "disclosure_posture": posture,
+        "sealed": False,
+        "profile": build_authenticated_profile_view(profile),
+    }
+
+
+def set_agent_disclosure_posture(name: str, posture: str) -> dict[str, Any]:
+    return _gateway().set_agent_disclosure_posture(str(name or "").strip(), str(posture or "").strip())
 
 
 def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
@@ -67,4 +109,3 @@ def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
         state_machine=state_machine,
         custom_icon_path=custom_icon_path,
     )
-
