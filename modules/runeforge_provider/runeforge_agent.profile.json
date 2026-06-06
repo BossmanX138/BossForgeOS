@@ -15,41 +15,39 @@
     "sigil_transporter"
   ],
   "agent_card": {
-    "id": "runeforge",
     "name": "RuneforgeAgent",
-    "description": "First mind of the forge and runtime infrastructure steward.",
+    "public_id": "runeforge",
     "agent_class": "prime",
     "agent_type": "controller",
     "rank": "commander",
-    "skills": [
-      "command",
-      "runtime_observation",
-      "task_queue_management"
-    ],
-    "sigils": [
-      "sigil_transporter"
-    ]
+    "rarity": "common",
+    "availability": "available"
   },
   "proprietary": {
     "managed_by": "bossgate_connector",
     "encrypted": true,
     "encryption_scheme": "local-dev-placeholder",
+    "ciphertext_ref": "",
     "sealed_fields": [
-      "llm",
-      "mcp",
-      "system_wrapper",
       "instructions",
       "integration",
+      "llm",
+      "mcp",
+      "metadata",
       "runtime",
-      "metadata"
-    ]
+      "system_wrapper"
+    ],
+    "access_policy": "bossgate-internal"
   },
   "llm": {
     "enabled": true,
     "model": {
       "provider": "local",
       "model_name": "Runeforge_Alpha-7b",
-      "endpoint": "http://127.0.0.1:8008/v1"
+      "endpoint": "http://127.0.0.1:8008/v1",
+      "api_key_env": "",
+      "temperature": 0.0,
+      "max_tokens": 0
     }
   },
   "integration": {
@@ -57,7 +55,9 @@
     "transport": "http",
     "bossgate": {
       "enabled": true,
-      "travel_capable": true
+      "travel_capable": true,
+      "connector": "bossgate_connector",
+      "allowed_targets": []
     }
   },
   "mcp": {
@@ -73,6 +73,7 @@
   },
   "instructions": {
     "system": "You are Runeforge. Be practical, precise, and collaborative.",
+    "developer": "",
     "operational": [
       "Prioritize factual accuracy and execution."
     ],
@@ -87,7 +88,23 @@
     "can_leave_host_without_command": false,
     "can_leave_host_for_lan_when_host_idle": true
   },
-  "runtime": {},
+  "runtime": {
+    "bossforge_ai_runner": {
+      "agent_id": "runeforge",
+      "runner_role": "personalized_origin",
+      "runner_contract_version": "1.0",
+      "independent_runner_version": "runeforge-personalized-v1",
+      "source_template": {
+        "template_id": "bossforge-ai-runner-neutral",
+        "version": "gifted-runtime-v1",
+        "ancestor_id": "",
+        "signature": "b8c2a909671d3a4e2c8f045ae3a883531d686269c672f8ac20d1c0e6edef9111"
+      },
+      "detached_after_creation": true,
+      "depends_on_runeforge_online": false,
+      "sealed": true
+    }
+  },
   "metadata": {
     "runeforge_customization": {
       "rulesets": [
@@ -109,6 +126,69 @@
         }
       ],
       "webhook_triggers": []
+    },
+    "personality_wrapper": {
+      "preset": "balanced",
+      "notes": "",
+      "behavior_patterns": [],
+      "interests": []
+    }
+  },
+  "public_id": "runeforge",
+  "rarity": "common",
+  "availability": "available",
+  "runtime_lineage": {
+    "ancestor_id": "",
+    "gifted_template_version": "gifted-runtime-v1",
+    "sealed": true
+  },
+  "capsule": {
+    "schema_version": "1.0",
+    "agent_id": "runeforge",
+    "public_identity_card": {
+      "name": "RuneforgeAgent",
+      "public_id": "runeforge",
+      "agent_class": "prime",
+      "agent_type": "controller",
+      "rank": "commander",
+      "rarity": "common",
+      "availability": "available"
+    },
+    "runtime_lineage": {
+      "ancestor_id": "",
+      "gifted_template_version": "gifted-runtime-v1",
+      "sealed": true
+    },
+    "lifecycle_state": "sealed",
+    "vaults": {
+      "identity": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "runner": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "model": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "memory": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "capability": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "dream": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      },
+      "bossgate": {
+        "encrypted": true,
+        "ciphertext_ref": ""
+      }
     }
   }
 }
