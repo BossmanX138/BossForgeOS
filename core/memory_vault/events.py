@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import re
 from typing import Any
@@ -34,7 +35,7 @@ _REASON_EVENT_TYPES = {
     "milestone",
 }
 _REASON_KEYWORDS = {
-    "commitment": {"commitment", "committed", "promise", "promised", "followup", "follow-up"},
+    "commitment": {"commitment", "committed", "promise", "promised", "follow-up promised", "follow up promised"},
     "decision": {"decide", "decided", "decision", "ship", "approved"},
     "relationship_change": {"change", "changed", "contact", "relationship", "reassign"},
     "lifecycle": {"start", "started", "launch", "launched", "end", "ended"},
@@ -59,6 +60,15 @@ def _payload_strings(payload: dict[str, Any]) -> list[str]:
         if isinstance(value, str):
             values.append(value)
     return values
+
+
+def _normalized_payload_text(payload: dict[str, Any]) -> list[str]:
+    return [value.lower() for value in _payload_strings(payload)]
+
+
+def _contains_phrase(texts: list[str], phrase: str) -> bool:
+    phrase = phrase.lower().strip()
+    return any(phrase in text for text in texts)
 
 
 def _relationship_items(payload: dict[str, Any]) -> list[dict[str, str]]:
@@ -118,7 +128,8 @@ def _topics(
 def _classify_reason_codes(event_type: str, payload: dict[str, Any]) -> list[str]:
     normalized_type = str(event_type or "").strip().lower()
     tokens = set(_tokenize(normalized_type))
-    for value in _payload_strings(payload):
+    texts = _normalized_payload_text(payload)
+    for value in texts:
         tokens.update(_tokenize(value))
 
     reasons: set[str] = set()
@@ -126,6 +137,8 @@ def _classify_reason_codes(event_type: str, payload: dict[str, Any]) -> list[str
         reasons.add(normalized_type)
     for reason, keywords in _REASON_KEYWORDS.items():
         if normalized_type == reason or normalized_type.replace("-", "_") == reason:
+            reasons.add(reason)
+        elif any(_contains_phrase(texts, keyword) for keyword in keywords):
             reasons.add(reason)
         elif tokens.intersection(keywords):
             reasons.add(reason)
@@ -155,19 +168,20 @@ def normalize_memory_event(
     normalized_timestamp = str(timestamp or "").strip()
     if not normalized_timestamp:
         raise ValueError("timestamp is required")
+    payload_snapshot = copy.deepcopy(payload)
 
     core = {
         "agent_id": normalized_agent_id,
         "event_type": normalized_event_type,
-        "payload": payload,
+        "payload": payload_snapshot,
         "sequence": int(sequence),
         "session_id": normalized_session_id,
         "timestamp": normalized_timestamp,
     }
     event_id = "event-" + hashlib.sha256(canonical_json(core)).hexdigest()
-    relationships = _relationship_items(payload)
-    reason_codes = _classify_reason_codes(normalized_event_type, payload)
-    manually_marked = bool(payload.get("important"))
+    relationships = _relationship_items(payload_snapshot)
+    reason_codes = _classify_reason_codes(normalized_event_type, payload_snapshot)
+    manually_marked = bool(payload_snapshot.get("important"))
     if manually_marked and "manual" not in reason_codes:
         reason_codes = sorted([*reason_codes, "manual"])
     importance = {
@@ -184,15 +198,15 @@ def normalize_memory_event(
         "sequence": int(sequence),
         "event_type": normalized_event_type,
         "timestamp": normalized_timestamp,
-        "payload": payload,
+        "payload": payload_snapshot,
         "search_terms": _search_terms(
             event_type=normalized_event_type,
-            payload=payload,
+            payload=payload_snapshot,
             relationships=relationships,
         ),
         "topics": _topics(
             event_type=normalized_event_type,
-            payload=payload,
+            payload=payload_snapshot,
             reason_codes=reason_codes,
         ),
         "relationships": relationships,

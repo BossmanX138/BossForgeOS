@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import hmac
 import json
@@ -19,7 +20,8 @@ MEMORY_VAULT_SCHEMA_VERSION = "1.0"
 _MEMORY_KEY_CONTEXT = "private-memory-v1"
 _VALID_AGENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 _VALID_SESSION_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_MEMORY_KEY_ERROR = "memory key must be bytes-like and exactly 32 bytes"
+_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def canonical_json(value: object) -> bytes:
@@ -29,6 +31,18 @@ def canonical_json(value: object) -> bytes:
         separators=(",", ":"),
         ensure_ascii=True,
     ).encode("utf-8")
+
+
+def _coerce_memory_key(key: bytes | bytearray | memoryview) -> bytes:
+    if isinstance(key, memoryview):
+        key_bytes = key.tobytes()
+    elif isinstance(key, (bytes, bytearray)):
+        key_bytes = bytes(key)
+    else:
+        raise ValueError(_MEMORY_KEY_ERROR)
+    if len(key_bytes) != 32:
+        raise ValueError(_MEMORY_KEY_ERROR)
+    return key_bytes
 
 
 def normalize_agent_id(value: str) -> str:
@@ -65,7 +79,7 @@ def derive_memory_key(node_secret: str, agent_id: str) -> bytes:
 
 
 def encrypt_bytes(plaintext: bytes, key: bytes, aad: bytes) -> dict[str, str | int]:
-    aes = AESGCM(key)
+    aes = AESGCM(_coerce_memory_key(key))
     nonce = os.urandom(12)
     ciphertext = aes.encrypt(nonce, plaintext, aad)
     return {
@@ -79,18 +93,29 @@ def encrypt_bytes(plaintext: bytes, key: bytes, aad: bytes) -> dict[str, str | i
 
 def decrypt_bytes(envelope: dict[str, Any], key: bytes, aad: bytes) -> bytes:
     try:
+        aes_key = _coerce_memory_key(key)
         if not isinstance(envelope, Mapping):
+            raise ValueError("memory envelope authentication failed")
+        if int(envelope.get("version", 0)) != 1:
             raise ValueError("memory envelope authentication failed")
         if str(envelope.get("alg", "")) != "AES-256-GCM":
             raise ValueError("unsupported memory envelope algorithm")
         nonce = base64.b64decode(str(envelope["nonce_b64"]), validate=True)
+        if len(nonce) != 12:
+            raise ValueError("memory envelope authentication failed")
         ciphertext = base64.b64decode(str(envelope["ciphertext_b64"]), validate=True)
         digest = str(envelope["ciphertext_sha256"])
+        if not _DIGEST_RE.fullmatch(digest):
+            raise ValueError("memory envelope authentication failed")
         if hashlib.sha256(ciphertext).hexdigest() != digest:
             raise ValueError("memory envelope digest mismatch")
-        plaintext = AESGCM(key).decrypt(nonce, ciphertext, aad)
+        plaintext = AESGCM(aes_key).decrypt(nonce, ciphertext, aad)
         return plaintext
-    except (KeyError, TypeError, ValueError, InvalidTag, base64.binascii.Error) as exc:
+    except ValueError as exc:
+        if str(exc) == _MEMORY_KEY_ERROR:
+            raise
+        raise ValueError("memory envelope authentication failed") from exc
+    except (KeyError, TypeError, InvalidTag, binascii.Error) as exc:
         raise ValueError("memory envelope authentication failed") from exc
 
 

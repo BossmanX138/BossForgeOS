@@ -38,6 +38,24 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
             hashlib.sha256(b"node-1:scribe:private-memory-v1").digest(),
         )
 
+    def test_encrypt_and_decrypt_reject_non_32_byte_keys(self) -> None:
+        key = derive_memory_key("node-1", "scribe")
+        aad = event_aad(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=1,
+            event_id="event-1",
+            event_type="note",
+            timestamp="2026-06-06T12:00:00+00:00",
+            previous_ciphertext_sha256="",
+        )
+
+        for bad_key in (b"a" * 16, b"b" * 24, "not-bytes"):
+            with self.assertRaisesRegex(ValueError, "memory key"):
+                encrypt_bytes(b"payload", bad_key, aad)
+            with self.assertRaisesRegex(ValueError, "memory key"):
+                decrypt_bytes(encrypt_bytes(b"payload", key, aad), bad_key, aad)
+
     def test_encrypt_bytes_uses_fresh_nonce_and_twelve_byte_nonce(self) -> None:
         key = derive_memory_key("node-1", "scribe")
         aad = event_aad(
@@ -93,6 +111,38 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
                 "timestamp",
             ],
         )
+
+    def test_event_aad_and_event_result_snapshot_original_payload(self) -> None:
+        payload = {
+            "text": "We decided to ship Project Anvil.",
+            "project": "Anvil",
+            "meta": {"owner": "Boss", "tags": ["alpha"]},
+        }
+
+        event = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=2,
+            event_type="decision",
+            payload=payload,
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+
+        event_id_before = event["event_id"]
+        search_terms_before = list(event["search_terms"])
+        importance_before = json.loads(json.dumps(event["importance"]))
+        payload["text"] = "mutated"
+        payload["project"] = "Changed"
+        payload["meta"]["owner"] = "Changed"
+        payload["meta"]["tags"].append("beta")
+
+        self.assertEqual(event["event_id"], event_id_before)
+        self.assertEqual(event["search_terms"], search_terms_before)
+        self.assertEqual(event["importance"], importance_before)
+        self.assertEqual(event["payload"]["text"], "We decided to ship Project Anvil.")
+        self.assertEqual(event["payload"]["project"], "Anvil")
+        self.assertEqual(event["payload"]["meta"]["owner"], "Boss")
+        self.assertEqual(event["payload"]["meta"]["tags"], ["alpha"])
 
     def test_normalize_memory_event_has_exact_keys(self) -> None:
         event = normalize_memory_event(
@@ -338,6 +388,40 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         self.assertNotIn("true", event["search_terms"])
         self.assertNotIn("2", event["search_terms"])
 
+    def test_punctuation_keywords_classify_without_broad_will(self) -> None:
+        refusal_cases = ["I can't do that", "I won't do that"]
+        for sequence, text in enumerate(refusal_cases, start=12):
+            event = normalize_memory_event(
+                agent_id="scribe",
+                session_id="session-1",
+                sequence=sequence,
+                event_type="note",
+                payload={"text": text},
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            self.assertIn("refusal", event["importance"]["reason_codes"])
+
+        commitment = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=14,
+            event_type="note",
+            payload={"text": "follow-up promised"},
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+        self.assertIn("commitment", commitment["importance"]["reason_codes"])
+
+        ordinary_future = normalize_memory_event(
+            agent_id="scribe",
+            session_id="session-1",
+            sequence=15,
+            event_type="note",
+            payload={"text": "We will review this tomorrow."},
+            timestamp="2026-06-06T12:00:00+00:00",
+        )
+        self.assertEqual(ordinary_future["importance"]["level"], "normal")
+        self.assertNotIn("commitment", ordinary_future["importance"]["reason_codes"])
+
     def test_session_ids_use_same_strict_path_safe_contract(self) -> None:
         for value in ("", ".", "..", "bad id", "bad/id", "bad\\id", "bad,id", "bad\tid"):
             with self.assertRaisesRegex(ValueError, "session_id"):
@@ -412,8 +496,10 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         malformed_cases = [
             None,
             [],
+            {**envelope, "version": 2},
             {"alg": "AES-256-GCM"},
             {**envelope, "nonce_b64": "@@@"},
+            {**envelope, "nonce_b64": base64.b64encode(b"short").decode("ascii")},
             {**envelope, "ciphertext_sha256": "0" * 64},
             {**envelope, "alg": "AES-128-GCM"},
         ]
