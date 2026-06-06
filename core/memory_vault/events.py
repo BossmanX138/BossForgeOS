@@ -62,13 +62,21 @@ def _payload_strings(payload: dict[str, Any]) -> list[str]:
     return values
 
 
-def _normalized_payload_text(payload: dict[str, Any]) -> list[str]:
-    return [value.lower() for value in _payload_strings(payload)]
+def _token_sequence(value: str) -> list[str]:
+    return [token for token in _TOKEN_RE.findall(value.lower()) if token]
 
 
-def _contains_phrase(texts: list[str], phrase: str) -> bool:
-    phrase = phrase.lower().strip()
-    return any(phrase in text for text in texts)
+def _contains_keyword(text_tokens: list[str], keyword: str) -> bool:
+    keyword_tokens = _token_sequence(keyword)
+    if not keyword_tokens:
+        return False
+    if len(keyword_tokens) == 1:
+        return keyword_tokens[0] in text_tokens
+    window = len(keyword_tokens)
+    for start in range(0, len(text_tokens) - window + 1):
+        if text_tokens[start : start + window] == keyword_tokens:
+            return True
+    return False
 
 
 def _relationship_items(payload: dict[str, Any]) -> list[dict[str, str]]:
@@ -127,10 +135,10 @@ def _topics(
 
 def _classify_reason_codes(event_type: str, payload: dict[str, Any]) -> list[str]:
     normalized_type = str(event_type or "").strip().lower()
-    tokens = set(_tokenize(normalized_type))
-    texts = _normalized_payload_text(payload)
-    for value in texts:
-        tokens.update(_tokenize(value))
+    text_tokens: list[str] = []
+    text_tokens.extend(_token_sequence(normalized_type))
+    for value in _payload_strings(payload):
+        text_tokens.extend(_token_sequence(value))
 
     reasons: set[str] = set()
     if normalized_type in _REASON_EVENT_TYPES:
@@ -138,9 +146,7 @@ def _classify_reason_codes(event_type: str, payload: dict[str, Any]) -> list[str
     for reason, keywords in _REASON_KEYWORDS.items():
         if normalized_type == reason or normalized_type.replace("-", "_") == reason:
             reasons.add(reason)
-        elif any(_contains_phrase(texts, keyword) for keyword in keywords):
-            reasons.add(reason)
-        elif tokens.intersection(keywords):
+        elif any(_contains_keyword(text_tokens, keyword) for keyword in keywords):
             reasons.add(reason)
     if bool(payload.get("important")):
         reasons.add("manual")

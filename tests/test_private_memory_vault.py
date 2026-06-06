@@ -422,6 +422,26 @@ class PrivateMemoryCryptoTests(unittest.TestCase):
         self.assertEqual(ordinary_future["importance"]["level"], "normal")
         self.assertNotIn("commitment", ordinary_future["importance"]["reason_codes"])
 
+    def test_unrelated_words_do_not_trigger_importance_keywords(self) -> None:
+        texts = [
+            "A friendship note for the weekend.",
+            "The insecure layer was updated.",
+            "A profound summary of the incident.",
+            "The terror alert was reviewed.",
+        ]
+
+        for sequence, text in enumerate(texts, start=20):
+            event = normalize_memory_event(
+                agent_id="scribe",
+                session_id="session-1",
+                sequence=sequence,
+                event_type="note",
+                payload={"text": text},
+                timestamp="2026-06-06T12:00:00+00:00",
+            )
+            self.assertEqual(event["importance"]["level"], "normal")
+            self.assertEqual(event["importance"]["reason_codes"], [])
+
     def test_session_ids_use_same_strict_path_safe_contract(self) -> None:
         for value in ("", ".", "..", "bad id", "bad/id", "bad\\id", "bad,id", "bad\tid"):
             with self.assertRaisesRegex(ValueError, "session_id"):
