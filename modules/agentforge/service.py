@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from core.schemas.agent_capsule import build_authenticated_profile_view, build_public_identity_card
+from modules.agentforge.entitlements import (
+    AgentForgeRuntimeContext,
+    DenyByDefaultEntitlementProvider,
+    EntitlementProvider,
+    authorize_creation_request,
+)
 
 TRUSTED_VIEWER_CHANNELS = {
     "bossforgeos": True,
@@ -15,6 +21,10 @@ def _gateway() -> Any:
     from core.agents.model_gateway_agent import ModelGatewayAgent
 
     return ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
+
+
+def _entitlement_provider() -> EntitlementProvider:
+    return DenyByDefaultEntitlementProvider()
 
 
 def list_agent_profiles() -> dict[str, Any]:
@@ -56,7 +66,12 @@ def set_agent_disclosure_posture(name: str, posture: str) -> dict[str, Any]:
     return _gateway().set_agent_disclosure_posture(str(name or "").strip(), str(posture or "").strip())
 
 
-def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
+def create_agent_profile(
+    payload: dict[str, Any],
+    *,
+    runtime_context: AgentForgeRuntimeContext | None = None,
+    entitlement_provider: EntitlementProvider | None = None,
+) -> dict[str, Any]:
     name = str(payload.get("name", "")).strip()
     endpoint = str(payload.get("endpoint", "")).strip()
     system = str(payload.get("system", "You are a helpful specialist agent."))
@@ -86,6 +101,30 @@ def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
     state_machine_raw = payload.get("state_machine")
     state_machine = state_machine_raw if isinstance(state_machine_raw, dict) else None
     custom_icon_path = str(payload.get("custom_icon_path", "")).strip() or None
+    model_source_path = str(payload.get("model_source_path", "")).strip() or None
+    model_base_source_path = str(payload.get("model_base_source_path", "")).strip() or None
+    model_runtime_requirements_raw = payload.get("model_runtime_requirements")
+    model_runtime_requirements = (
+        model_runtime_requirements_raw
+        if isinstance(model_runtime_requirements_raw, dict)
+        else None
+    )
+    travel_capable = bool(payload.get("travel_capable", bossgate_enabled))
+
+    trusted_context = runtime_context or AgentForgeRuntimeContext(
+        mode="standalone",
+        installation_id="local",
+    )
+    try:
+        authorization = authorize_creation_request(
+            context=trusted_context,
+            entitlement_provider=entitlement_provider or _entitlement_provider(),
+            agent_class=agent_class,
+            bossgate_enabled=bossgate_enabled,
+            travel_capable=travel_capable,
+        )
+    except (PermissionError, ValueError) as exc:
+        return {"ok": False, "message": str(exc)}
 
     gateway = _gateway()
     return gateway.create_agent_profile(
@@ -94,9 +133,9 @@ def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
         system,
         temperature,
         max_tokens,
-        agent_class=agent_class,
+        agent_class=str(authorization["agent_class"]),
         has_llm=has_llm,
-        bossgate_enabled=bossgate_enabled,
+        bossgate_enabled=bool(authorization["bossgate_enabled"]),
         encrypt_profile=encrypt_profile,
         agent_type=agent_type,
         rank=rank,
@@ -108,4 +147,7 @@ def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
         instructions=instructions,
         state_machine=state_machine,
         custom_icon_path=custom_icon_path,
+        model_source_path=model_source_path,
+        model_base_source_path=model_base_source_path,
+        model_runtime_requirements=model_runtime_requirements,
     )

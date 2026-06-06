@@ -1766,6 +1766,11 @@ PAGE = """
                         <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Hide proprietary profile details</label>
                         <button onclick="createAgentProfile()">Create/Update</button>
                     </div>
+                    <div class="row">
+                        <input id="maker_model_source_path" placeholder="complete local model source directory" style="min-width:360px;" />
+                        <input id="maker_model_base_source_path" placeholder="adapter base-model directory (optional)" style="min-width:320px;" />
+                    </div>
+                    <div class="muted">AgentForge leaves the Forge source unchanged and immediately creates a complete, independently owned encrypted model package for the new agent.</div>
                     <pre id="maker_validation" class="muted">Role-aware validation ready.</pre>
                 </div>
 
@@ -5356,6 +5361,8 @@ PAGE = """
                 has_llm: !!document.getElementById('maker_has_llm').checked,
                 bossgate_enabled: !!document.getElementById('maker_bossgate_enabled').checked,
                 encrypt_profile: !!document.getElementById('maker_encrypt_profile').checked,
+                model_source_path: (document.getElementById('maker_model_source_path').value || '').trim(),
+                model_base_source_path: (document.getElementById('maker_model_base_source_path').value || '').trim(),
                 dispatch_policy: {
                     autonomous_bus_intake: !!document.getElementById('maker_dispatch_autonomous').checked,
                     proactive_remote_hunt: !!document.getElementById('maker_dispatch_remote_hunt').checked,
@@ -5366,6 +5373,10 @@ PAGE = """
             };
             if (!payload.name || !payload.endpoint) {
                 alert('name and endpoint are required');
+                return;
+            }
+            if (payload.has_llm && !payload.model_source_path) {
+                alert('a complete local model source directory is required for LLM-enabled agents');
                 return;
             }
             const res = await fetch('/api/model/agents/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });

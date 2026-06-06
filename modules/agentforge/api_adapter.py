@@ -9,6 +9,7 @@ from typing import Any
 from werkzeug.utils import secure_filename
 
 from modules.agentforge import service as agentforge_service
+from modules.agentforge.entitlements import AgentForgeRuntimeContext
 from modules.iconforge import service as iconforge_service
 
 
@@ -17,7 +18,13 @@ def list_agent_profiles() -> dict[str, Any]:
 
 
 def create_agent_profile(payload: dict[str, Any]) -> dict[str, Any]:
-    return agentforge_service.create_agent_profile(payload)
+    return agentforge_service.create_agent_profile(
+        payload,
+        runtime_context=AgentForgeRuntimeContext(
+            mode="integrated",
+            installation_id="bossforgeos",
+        ),
+    )
 
 
 def view_agent_profile(name: str, viewer_id: str = "", viewer_channel: str = "") -> dict[str, Any]:
