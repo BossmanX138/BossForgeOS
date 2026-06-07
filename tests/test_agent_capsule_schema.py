@@ -105,6 +105,26 @@ class AgentCapsuleSchemaTests(unittest.TestCase):
             "private_models/wayfinder/pmv-123",
         )
 
+    def test_capsule_memory_vault_binds_private_memory_ciphertext(self) -> None:
+        profile = self._profile()
+        profile["runtime"] = {
+            "private_memory_vault": {
+                "schema_version": "1.0",
+                "owner_agent_id": "wayfinder",
+                "ciphertext_ref": "private_memory/wayfinder/vault.manifest.enc",
+                "attestation_sha256": "b" * 64,
+                "key_ref": "node:test:agent:wayfinder:private-memory-v1",
+                "verified": True,
+            }
+        }
+
+        manifest = build_capsule_manifest(profile)
+
+        self.assertEqual(
+            manifest["vaults"]["memory"]["ciphertext_ref"],
+            "private_memory/wayfinder/vault.manifest.enc",
+        )
+
     def test_authenticated_view_redacts_private_model_package(self) -> None:
         profile = self._profile()
         profile["private_model_package"] = {"package_id": "pmv-secret"}
@@ -112,6 +132,24 @@ class AgentCapsuleSchemaTests(unittest.TestCase):
         view = build_authenticated_profile_view(profile)
 
         self.assertNotIn("private_model_package", view)
+
+    def test_authenticated_view_redacts_nested_private_memory_descriptors(self) -> None:
+        profile = self._profile()
+        profile["runtime"] = {
+            "private_memory_vault": {
+                "ciphertext_ref": "private_memory/wayfinder/vault.manifest.enc",
+            }
+        }
+        profile["runner_bootstrap"] = {
+            "private_memory_vault": {
+                "ciphertext_ref": "private_memory/wayfinder/vault.manifest.enc",
+            }
+        }
+
+        view = build_authenticated_profile_view(profile)
+
+        self.assertNotIn("private_memory_vault", view.get("runtime", {}))
+        self.assertNotIn("private_memory_vault", view.get("runner_bootstrap", {}))
 
     def test_canonical_profile_normalizes_capsule_fields_and_sparse_card(self) -> None:
         profile = normalize_agent_profile("scribe", {"name": "Scribe"})

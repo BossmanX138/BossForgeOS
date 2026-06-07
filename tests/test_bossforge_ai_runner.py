@@ -77,6 +77,26 @@ class BossForgeAIRunnerTests(unittest.TestCase):
         self.assertEqual(bootstrap["private_model_package"], descriptor)
         validate_runner_bootstrap(bootstrap)
 
+    def test_runner_bootstrap_binds_verified_private_memory_vault(self) -> None:
+        manifest = build_agent_runner_manifest("wayfinder")
+        descriptor = {
+            "schema_version": "1.0",
+            "owner_agent_id": "wayfinder",
+            "ciphertext_ref": "private_memory/wayfinder/vault.manifest.enc",
+            "attestation_sha256": "b" * 64,
+            "key_ref": "node:test:agent:wayfinder:private-memory-v1",
+            "verified": True,
+        }
+
+        bootstrap = build_runner_bootstrap(
+            "wayfinder",
+            manifest,
+            private_memory_vault=descriptor,
+        )
+
+        self.assertEqual(bootstrap["private_memory_vault"], descriptor)
+        validate_runner_bootstrap(bootstrap)
+
     def test_runner_bootstrap_rejects_private_model_owned_by_sibling(self) -> None:
         manifest = build_agent_runner_manifest("wayfinder")
         descriptor = {
@@ -92,6 +112,20 @@ class BossForgeAIRunnerTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "owner"):
             build_runner_bootstrap("wayfinder", manifest, descriptor)
+
+    def test_runner_bootstrap_rejects_private_memory_owned_by_sibling(self) -> None:
+        manifest = build_agent_runner_manifest("wayfinder")
+        descriptor = {
+            "schema_version": "1.0",
+            "owner_agent_id": "other-agent",
+            "ciphertext_ref": "private_memory/other-agent/vault.manifest.enc",
+            "attestation_sha256": "b" * 64,
+            "key_ref": "node:test:agent:other-agent:private-memory-v1",
+            "verified": True,
+        }
+
+        with self.assertRaisesRegex(ValueError, "owner"):
+            build_runner_bootstrap("wayfinder", manifest, private_memory_vault=descriptor)
 
     def test_signed_template_declares_development_integrity_scheme(self) -> None:
         template = build_signed_gifted_template()

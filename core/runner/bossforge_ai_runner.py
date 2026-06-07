@@ -6,6 +6,7 @@ import json
 from copy import deepcopy
 from typing import Any
 
+from core.memory_vault import validate_private_memory_descriptor
 from core.model_vault import validate_private_model_descriptor
 
 
@@ -176,6 +177,7 @@ def build_runner_bootstrap(
     agent_id: str,
     manifest: dict[str, Any],
     private_model_package: dict[str, Any] | None = None,
+    private_memory_vault: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     validate_agent_runner_manifest(manifest)
     normalized_id = _text(agent_id).lower()
@@ -200,6 +202,12 @@ def build_runner_bootstrap(
             expected_agent_id=normalized_id,
         )
         bootstrap["private_model_package"] = deepcopy(private_model_package)
+    if private_memory_vault is not None:
+        validate_private_memory_descriptor(
+            private_memory_vault,
+            expected_agent_id=normalized_id,
+        )
+        bootstrap["private_memory_vault"] = deepcopy(private_memory_vault)
     return bootstrap
 
 
@@ -232,5 +240,11 @@ def validate_runner_bootstrap(bootstrap: dict[str, Any]) -> None:
     if private_model_package is not None:
         validate_private_model_descriptor(
             private_model_package,
+            expected_agent_id=agent_id,
+        )
+    private_memory_vault = bootstrap.get("private_memory_vault")
+    if private_memory_vault is not None:
+        validate_private_memory_descriptor(
+            private_memory_vault,
             expected_agent_id=agent_id,
         )

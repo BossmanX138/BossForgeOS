@@ -114,6 +114,9 @@ def build_capsule_manifest(profile: dict[str, Any]) -> dict[str, Any]:
     private_model = runtime_data.get("private_model_package")
     if isinstance(private_model, dict):
         refs["model"] = _text(private_model.get("ciphertext_ref"))
+    private_memory = runtime_data.get("private_memory_vault")
+    if isinstance(private_memory, dict):
+        refs["memory"] = _text(private_memory.get("ciphertext_ref"))
     return {
         "schema_version": CAPSULE_SCHEMA_VERSION,
         "agent_id": _text(profile.get("id") or profile.get("name")).lower(),
@@ -174,8 +177,17 @@ def assert_rarity_unchanged(previous: dict[str, Any], candidate: dict[str, Any])
 
 
 def build_authenticated_profile_view(profile: dict[str, Any]) -> dict[str, Any]:
-    return {
+    view = {
         key: deepcopy(value)
         for key, value in profile.items()
         if key not in _SEALED_PROFILE_VIEW_FIELDS
     }
+    runtime = view.get("runtime")
+    if isinstance(runtime, dict):
+        runtime.pop("private_memory_vault", None)
+        runtime.pop("private_model_package", None)
+    runner_bootstrap = view.get("runner_bootstrap")
+    if isinstance(runner_bootstrap, dict):
+        runner_bootstrap.pop("private_memory_vault", None)
+        runner_bootstrap.pop("private_model_package", None)
+    return view
