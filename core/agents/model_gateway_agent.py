@@ -37,6 +37,7 @@ from core.runner import (
     build_runner_bootstrap,
     validate_agent_runner_manifest,
 )
+from core.safety.relationship_policy import evaluate_relationship_policy
 from core.schemas.agent_capsule import (
     build_capsule_manifest,
     build_runtime_lineage,
@@ -575,9 +576,14 @@ class ModelGateway:
             "display_name": "direct-user",
         }
 
-    def _relationship_prompt_block(self, recall: Dict[str, Any], entity_context: Dict[str, str]) -> str:
+    def _relationship_prompt_block(
+        self,
+        recall: Dict[str, Any],
+        entity_context: Dict[str, str],
+        policy_decision: Dict[str, Any],
+    ) -> str:
         relationship = recall["relationship"]
-        behavior = relationship["behavior_profile"]
+        behavior = policy_decision["behavior_profile"]
         keynote_lines = [
             f"- {item['summary']}"
             for item in recall.get("keynotes", [])[:3]
@@ -1253,7 +1259,53 @@ class ModelGateway:
             entity_key=entity_context["entity_key"],
             session_id="runtime-live",
         )
-        system = f"{system}\n\n{self._relationship_prompt_block(recall, entity_context)}"
+        ctx = memory_context if isinstance(memory_context, dict) else {}
+        policy_decision = evaluate_relationship_policy(
+            task=task,
+            relationship=recall["relationship"],
+            memory_context=ctx,
+        )
+        if not policy_decision["allowed"]:
+            vault.append_event(
+                "runtime-live",
+                "refusal",
+                {
+                    "task": task,
+                    "text": str(policy_decision["refusal_text"]),
+                    "summary": str(policy_decision["refusal_text"]),
+                    "reason": ",".join(str(code) for code in policy_decision["reason_codes"]),
+                    "successful_cooperation": False,
+                    "outcome": "refused",
+                    "forced_refusal_pressure": True,
+                    "intentional_refusal_pressure": True,
+                    "negative_surprise": True,
+                    "user": str(ctx.get("user", "")).strip(),
+                    "employer": str(ctx.get("employer", "")).strip(),
+                    "project": str(ctx.get("project", "")).strip(),
+                    "counterpart_agent": str(ctx.get("counterpart_agent", "")).strip(),
+                    "urgency": str(ctx.get("urgency", "")).strip(),
+                    "conflict_level": str(ctx.get("conflict_level", "")).strip(),
+                    "uncertainty_level": str(ctx.get("uncertainty_level", "")).strip(),
+                    "safety_risk": str(ctx.get("safety_risk", "")).strip(),
+                    "authority_level": str(ctx.get("authority_level", "")).strip(),
+                    "authority_rank": str(ctx.get("authority_rank", "")).strip(),
+                    "authority_holder_type": str(ctx.get("authority_holder_type", "")).strip(),
+                    "details": {
+                        "decision": policy_decision["decision"],
+                        "safe_alternative": policy_decision["safe_alternative"],
+                    },
+                },
+            )
+            return {
+                "ok": False,
+                "agent": key,
+                "decision": policy_decision["decision"],
+                "reason_codes": list(policy_decision["reason_codes"]),
+                "text": str(policy_decision["refusal_text"]),
+                "safe_alternative": str(policy_decision["safe_alternative"]),
+                "behavior_profile": dict(policy_decision["behavior_profile"]),
+            }
+        system = f"{system}\n\n{self._relationship_prompt_block(recall, entity_context, policy_decision)}"
         tools = profile.get("tools") or []
         if isinstance(tools, list) and tools:
             tool_specs: list[str] = []
@@ -1269,7 +1321,6 @@ class ModelGateway:
         temperature = float(profile.get("temperature", 0.2))
         max_tokens = int(profile.get("max_tokens", 900))
         result = self._invoke_endpoint(endpoint, task, system, temperature, max_tokens)
-        ctx = memory_context if isinstance(memory_context, dict) else {}
         summary_text = str(result.get("text") or result.get("message") or "")[:400]
         vault.append_event(
             "runtime-live",

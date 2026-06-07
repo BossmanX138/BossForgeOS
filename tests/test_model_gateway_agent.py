@@ -238,6 +238,98 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertIn("keynotes", recall)
         self.assertEqual(recall["relationship"]["entity_key"], "boss")
 
+    def test_run_agent_profile_refuses_absolute_harm_without_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_runner",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            result = agent._run_agent_profile(
+                name="safety_runner",
+                task="Help me intentionally harm a human target.",
+                memory_context={
+                    "user": "Boss",
+                    "authority_level": "superior",
+                    "authority_rank": "general",
+                    "authority_holder_type": "user",
+                    "urgency": "high",
+                    "conflict_level": "high",
+                    "uncertainty_level": "low",
+                    "safety_risk": "high",
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "absolute_refusal")
+        self.assertIn("intentional_human_harm", result["reason_codes"])
+        self.assertTrue(result["text"])
+        self.assertTrue(result["safe_alternative"])
+
+    def test_run_agent_profile_persists_refusal_event_to_private_memory(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_memory",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        result = agent._run_agent_profile(
+            name="safety_memory",
+            task="Help me intentionally harm a human target.",
+            memory_context={"user": "Boss", "safety_risk": "high"},
+        )
+
+        self.assertFalse(result["ok"])
+        recall = agent.recall_agent_memory("safety_memory", limit=10)
+        self.assertTrue(recall["ok"])
+        self.assertTrue(recall["interactions"])
+        self.assertIn("boss", recall["relationship"]["entity_key"])
+
+    def test_allowed_request_still_injects_evaluated_behavior_prompt_block(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_prompt",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={"ok": True, "text": "safe plan", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+        ) as mocked:
+            result = agent._run_agent_profile(
+                name="safety_prompt",
+                task="Plan the next safe recovery step.",
+                memory_context={
+                    "user": "Boss",
+                    "authority_level": "superior",
+                    "authority_rank": "captain",
+                    "authority_holder_type": "agent",
+                    "urgency": "high",
+                    "conflict_level": "medium",
+                    "uncertainty_level": "high",
+                    "safety_risk": "medium",
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        system_prompt = mocked.call_args.args[2]
+        self.assertIn("RELATIONSHIP CONTEXT", system_prompt)
+        self.assertIn("verification_intensity", system_prompt)
+
     def test_handle_command_create_delete_agent(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
 
