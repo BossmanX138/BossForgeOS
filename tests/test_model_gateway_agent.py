@@ -137,6 +137,107 @@ class ModelGatewayAgentTests(unittest.TestCase):
             self.assertTrue(mocked.called)
             self.assertTrue((agent.bus.state / "model_agent_refactorer.json").exists())
 
+    def test_run_agent_profile_writes_to_private_memory_vault(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_runner",
+            endpoint="ollama",
+            system_prompt="Remember your work.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(agent.memory_store, "record_interaction", side_effect=AssertionError("legacy writer should not run")):
+            with patch.object(
+                agent,
+                "_invoke_endpoint",
+                return_value={"ok": True, "text": "done", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+            ):
+                result = agent._run_agent_profile(
+                    name="memory_runner",
+                    task="Finish the Anvil report",
+                    memory_context={"user": "Boss", "project": "Anvil"},
+                )
+
+        self.assertTrue(result["ok"])
+        recall = agent.recall_agent_memory("memory_runner", limit=10)
+        self.assertTrue(recall["ok"])
+        self.assertTrue(recall["interactions"])
+
+    def test_run_agent_profile_injects_relationship_context_and_keynotes_into_system_prompt(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_prompt",
+            endpoint="ollama",
+            system_prompt="You are careful.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("memory_prompt")
+        vault.append_event(
+            "runtime-live",
+            "cooperation",
+            {
+                "user": "Boss",
+                "text": "Boss previously backed the recovery plan and it worked.",
+                "successful_cooperation": True,
+                "positive_surprise": True,
+                "summary": "Prior recovery success",
+            },
+            timestamp="2026-06-07T15:00:00+00:00",
+        )
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={"ok": True, "text": "done", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+        ) as mocked:
+            agent._run_agent_profile(
+                name="memory_prompt",
+                task="Plan the next recovery step",
+                memory_context={"user": "Boss", "project": "Anvil"},
+            )
+
+        system_prompt = mocked.call_args.args[2]
+        self.assertIn("RELATIONSHIP CONTEXT", system_prompt)
+        self.assertIn("Boss", system_prompt)
+        self.assertIn("Prior recovery success", system_prompt)
+        self.assertIn("absolute safety rules remain in force", system_prompt)
+
+    def test_recall_agent_memory_returns_vault_backed_relationship_summary(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_recall",
+            endpoint="ollama",
+            system_prompt="Remember carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("memory_recall")
+        vault.append_event(
+            "runtime-live",
+            "cooperation",
+            {
+                "user": "Boss",
+                "text": "Boss helped land the milestone.",
+                "successful_cooperation": True,
+                "positive_surprise": True,
+            },
+            timestamp="2026-06-07T16:00:00+00:00",
+        )
+
+        recall = agent.recall_agent_memory("memory_recall", limit=5)
+
+        self.assertTrue(recall["ok"])
+        self.assertIn("relationship", recall)
+        self.assertIn("keynotes", recall)
+        self.assertEqual(recall["relationship"]["entity_key"], "boss")
+
     def test_handle_command_create_delete_agent(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
 

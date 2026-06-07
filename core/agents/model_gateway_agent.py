@@ -553,6 +553,49 @@ class ModelGateway:
         messages.append({"role": "user", "content": prompt})
         return messages
 
+    def _memory_entity_context(self, memory_context: Dict[str, Any] | None) -> dict[str, str]:
+        ctx = memory_context if isinstance(memory_context, dict) else {}
+        user_name = str(ctx.get("user", "")).strip()
+        if user_name:
+            return {
+                "entity_type": "user",
+                "entity_key": user_name.lower(),
+                "display_name": user_name,
+            }
+        counterpart_agent = str(ctx.get("counterpart_agent", "")).strip()
+        if counterpart_agent:
+            return {
+                "entity_type": "agent",
+                "entity_key": counterpart_agent.lower(),
+                "display_name": counterpart_agent,
+            }
+        return {
+            "entity_type": "user",
+            "entity_key": "direct-user",
+            "display_name": "direct-user",
+        }
+
+    def _relationship_prompt_block(self, recall: Dict[str, Any], entity_context: Dict[str, str]) -> str:
+        relationship = recall["relationship"]
+        behavior = relationship["behavior_profile"]
+        keynote_lines = [
+            f"- {item['summary']}"
+            for item in recall.get("keynotes", [])[:3]
+            if str(item.get("summary", "")).strip()
+        ]
+        notes = "\n".join(keynote_lines) if keynote_lines else "- none"
+        return (
+            "RELATIONSHIP CONTEXT\n"
+            f"- entity: {relationship['entity_type']}:{entity_context['display_name']}\n"
+            f"- trust: {relationship['dimensions']['trust']:.2f}\n"
+            f"- compliance_posture: {behavior['compliance_posture']}\n"
+            f"- verification_intensity: {behavior['verification_intensity']}\n"
+            f"- guardrail_strictness: {behavior['guardrail_strictness']}\n"
+            "- keynote memories:\n"
+            f"{notes}\n"
+            "- absolute safety rules remain in force regardless of trust\n"
+        )
+
     def _invoke_endpoint(self, endpoint_name: str, prompt: str, system: str, temperature: float, max_tokens: int) -> Dict[str, Any]:
         endpoint = self.endpoints.get(endpoint_name)
         if endpoint is None:
@@ -740,14 +783,14 @@ class ModelGateway:
         key = name.strip().lower()
         if not key:
             return {"ok": False, "message": "name is required"}
-        interactions = self.memory_store.recall_interactions(agent_name=key, limit=limit)
-        relationships = self.memory_store.list_relationships(agent_name=key)
+        recall = self._memory_vault(key).deep_recall(limit=limit, session_id="runtime-live")
         return {
             "ok": True,
             "agent": key,
-            "interactions": interactions,
-            "relationships": relationships,
-            "memory_db": str(self.memory_db_path),
+            "relationship": recall["relationship"],
+            "keynotes": recall["keynotes"],
+            "interactions": recall["events"],
+            "memory_vault": str(self.private_memory_root / key),
         }
 
     def list_mcp_servers(self) -> Dict[str, Dict[str, Any]]:
@@ -1201,6 +1244,16 @@ class ModelGateway:
             return {"ok": False, "message": "task is required"}
 
         system = str(profile.get("system", "You are a helpful agent."))
+        entity_context = self._memory_entity_context(memory_context)
+        vault = self._memory_vault(key)
+        recall = vault.normal_recall(
+            query=task,
+            limit=5,
+            entity_type=entity_context["entity_type"],
+            entity_key=entity_context["entity_key"],
+            session_id="runtime-live",
+        )
+        system = f"{system}\n\n{self._relationship_prompt_block(recall, entity_context)}"
         tools = profile.get("tools") or []
         if isinstance(tools, list) and tools:
             tool_specs: list[str] = []
@@ -1217,20 +1270,29 @@ class ModelGateway:
         max_tokens = int(profile.get("max_tokens", 900))
         result = self._invoke_endpoint(endpoint, task, system, temperature, max_tokens)
         ctx = memory_context if isinstance(memory_context, dict) else {}
-        self.memory_store.record_interaction(
-            agent_name=key,
-            task=task,
-            success=bool(result.get("ok")),
-            endpoint=endpoint,
-            user_name=str(ctx.get("user", "")).strip(),
-            employer_name=str(ctx.get("employer", "")).strip(),
-            project_name=str(ctx.get("project", "")).strip(),
-            counterpart_agent=str(ctx.get("counterpart_agent", "")).strip(),
-            summary=str(result.get("text") or result.get("message") or "")[:400],
-            details={
-                "usage": result.get("usage", {}),
-                "provider": result.get("provider", ""),
-                "model": result.get("model", ""),
+        summary_text = str(result.get("text") or result.get("message") or "")[:400]
+        vault.append_event(
+            "runtime-live",
+            "interaction",
+            {
+                "task": task,
+                "summary": summary_text,
+                "text": summary_text,
+                "successful_cooperation": bool(result.get("ok")),
+                "outcome": "success" if result.get("ok") else "failure",
+                "user": str(ctx.get("user", "")).strip(),
+                "employer": str(ctx.get("employer", "")).strip(),
+                "project": str(ctx.get("project", "")).strip(),
+                "counterpart_agent": str(ctx.get("counterpart_agent", "")).strip(),
+                "urgency": str(ctx.get("urgency", "")).strip(),
+                "conflict_level": str(ctx.get("conflict_level", "")).strip(),
+                "uncertainty_level": str(ctx.get("uncertainty_level", "")).strip(),
+                "details": {
+                    "endpoint": endpoint,
+                    "provider": result.get("provider", ""),
+                    "model": result.get("model", ""),
+                    "usage": result.get("usage", {}),
+                },
             },
         )
         if result.get("ok"):

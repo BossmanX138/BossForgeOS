@@ -315,6 +315,24 @@ def _find_relationship_info(relationships: dict[str, Any], relationship_type: st
     return None, None
 
 
+def _default_relationship_selection(relationships: dict[str, Any]) -> tuple[str, str]:
+    best_type = "user"
+    best_key = "direct-user"
+    best_score = -1
+    for relationship_type, relationship_map in relationships.items():
+        if not isinstance(relationship_map, dict):
+            continue
+        for relationship_key, info in relationship_map.items():
+            if not isinstance(info, dict):
+                continue
+            score = int(info.get("interaction_count", 0))
+            if score > best_score:
+                best_type = str(relationship_type)
+                best_key = str(relationship_key).strip().lower()
+                best_score = score
+    return best_type, best_key
+
+
 def _validate_state_payload(payload: dict[str, Any], *, owner_agent_id: str, session_id: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("private memory state must be an object")
@@ -786,12 +804,16 @@ class PrivateMemoryVault:
     ) -> dict[str, Any]:
         with self._lock:
             normalized_session_id = self._normalize_session_id(session_id)
+            indexes = self.read_active_indexes(normalized_session_id)
+            selected_type = entity_type
+            selected_key = entity_key
+            if not str(selected_type or "").strip() or not str(selected_key or "").strip():
+                selected_type, selected_key = _default_relationship_selection(indexes["relationships"])
             relationship = self.read_relationship_state(
-                entity_type or "user",
-                entity_key or "direct-user",
+                str(selected_type or "user"),
+                str(selected_key or "direct-user"),
                 session_id=normalized_session_id,
             )
-            indexes = self.read_active_indexes(normalized_session_id)
             keynotes = [
                 {
                     "event_id": event_id,
@@ -833,9 +855,17 @@ class PrivateMemoryVault:
             if token:
                 matched_event_ids.extend(indexes["search"]["terms"].get(token, []))
                 matched_event_ids.extend(indexes["search"]["topics"].get(token, []))
-            ordered_ids = list(
-                dict.fromkeys(recall["relationship"]["keynote_event_ids"] + matched_event_ids)
-            )[: max(0, int(limit))]
+            ordered_ids = list(dict.fromkeys(recall["relationship"]["keynote_event_ids"] + matched_event_ids))
+            if not ordered_ids:
+                ordered_ids = [
+                    event_id
+                    for event_id, _ in sorted(
+                        indexes["search"]["events"].items(),
+                        key=lambda item: int(item[1]["sequence"]),
+                        reverse=True,
+                    )
+                ]
+            ordered_ids = ordered_ids[: max(0, int(limit))]
             recall["events"] = [
                 {
                     "event_id": event_id,
@@ -1088,10 +1118,11 @@ class PrivateMemoryVault:
             )
             if is_important:
                 important_event_ids.append(event_id)
+                explicit_summary = str(event["payload"].get("summary", "")).strip()
                 important_events[event_id] = {
                     "level": event["importance"]["level"],
                     "reason_codes": list(event["importance"]["reason_codes"]),
-                    "summary": _important_summary(event["payload"]),
+                    "summary": _truncate_summary(explicit_summary) if explicit_summary else _important_summary(event["payload"]),
                 }
 
             for relationship in event["relationships"]:
