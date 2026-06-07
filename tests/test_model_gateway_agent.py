@@ -498,6 +498,47 @@ class ModelGatewayAgentTests(unittest.TestCase):
             descriptor["package_id"],
         )
 
+    def test_created_agent_owns_verified_private_memory_vault(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="memory_owner",
+            endpoint="ollama",
+            system_prompt="Remember safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_memory_vault"]
+        self.assertEqual(descriptor["owner_agent_id"], "memory_owner")
+        self.assertTrue(descriptor["verified"])
+        self.assertEqual(
+            created["agent"]["capsule"]["vaults"]["memory"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+        self.assertEqual(
+            created["agent"]["runner_bootstrap"]["private_memory_vault"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+
+    def test_private_memory_vault_root_is_created_under_state(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="memory_root_check",
+            endpoint="ollama",
+            system_prompt="Remember safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_memory_vault"]
+        manifest_path = Path(descriptor["ciphertext_ref"])
+        self.assertTrue((agent.bus.state / "private_memory" / "memory_root_check").exists())
+        self.assertTrue((agent.bus.state / manifest_path).exists())
+
     def test_new_llm_agent_creation_fails_without_model_source(self) -> None:
         os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
         agent = ModelGatewayAgent(interval_seconds=1)

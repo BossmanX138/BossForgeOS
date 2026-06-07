@@ -30,6 +30,7 @@ from core.connectors.bossgate_connector import (
     generate_secure_address,
     is_valid_secure_address,
 )
+from core.memory_vault import PrivateMemoryVault
 from core.model_vault import build_private_model_package
 from core.runner import (
     build_agent_runner_manifest,
@@ -82,6 +83,7 @@ class ModelGateway:
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
         self.agent_gate_dir = self.bus.state / "agent_gates"
         self.private_model_root = self.bus.state / "private_models"
+        self.private_memory_root = self.bus.state / "private_memory"
         self.node_id = self._load_or_create_node_id()
         self.endpoints = self._load_endpoints()
         self.profiles = self._load_profiles()
@@ -89,6 +91,7 @@ class ModelGateway:
         self.agent_profiles = self.profiles
         self.mcp_servers = self._load_mcp_servers()
         self.memory_store = AgentMemoryStore(self.memory_db_path)
+        self._memory_vaults: Dict[str, PrivateMemoryVault] = {}
         self.servers: Dict[str, subprocess.Popen[Any]] = {}
         self.assistance_requests: Dict[str, Dict[str, Any]] = self._load_assistance_requests()
         self.owned_locations: Dict[str, Dict[str, Any]] = self._load_owned_locations()
@@ -100,8 +103,22 @@ class ModelGateway:
         self.bossgate_commands = BossGateCommandAgent(interval_seconds=max(1, int(interval_seconds)), root=self.bus.root)
         self.agent_gate_dir.mkdir(parents=True, exist_ok=True)
         self.private_model_root.mkdir(parents=True, exist_ok=True)
+        self.private_memory_root.mkdir(parents=True, exist_ok=True)
         if enable_presence_broadcast:
             self._start_presence_broadcast()
+
+    def _memory_vault(self, agent_id: str) -> PrivateMemoryVault:
+        key = str(agent_id).strip().lower()
+        vault = self._memory_vaults.get(key)
+        if vault is None:
+            vault = PrivateMemoryVault(
+                vault_root=self.private_memory_root,
+                agent_id=key,
+                node_secret=f"{self.node_id}:{key}:private-memory-v1",
+                key_ref=f"node:{self.node_id}:agent:{key}:private-memory-v1",
+            )
+            self._memory_vaults[key] = vault
+        return vault
 
     def _load_endpoints(self) -> Dict[str, Dict[str, Any]]:
         if self.config_path.exists():
@@ -187,10 +204,12 @@ class ModelGateway:
         runtime["bossforge_ai_runner"] = runner_manifest
         normalized["runtime"] = runtime
         private_model_package = runtime.get("private_model_package")
+        private_memory_vault = runtime.get("private_memory_vault")
         normalized["runner_bootstrap"] = build_runner_bootstrap(
             key,
             runner_manifest,
             private_model_package if isinstance(private_model_package, dict) else None,
+            private_memory_vault if isinstance(private_memory_vault, dict) else None,
         )
 
         normalized["public_id"] = str(normalized.get("public_id", key)).strip() or key
@@ -1108,7 +1127,14 @@ class ModelGateway:
         profile = self._normalize_agent_profile(key, profile)
         package_descriptor: Dict[str, Any] | None = None
         package_path: Path | None = None
+        private_memory_root: Path | None = None
         try:
+            private_memory_descriptor = self._memory_vault(key).initialize()
+            private_memory_root = self.private_memory_root / key
+            runtime = dict(profile.get("runtime", {}))
+            runtime["private_memory_vault"] = private_memory_descriptor
+            profile["runtime"] = runtime
+            profile = self._normalize_agent_profile(key, profile)
             if bool(profile.get("has_llm")):
                 selected_source = str(
                     model_source_path
@@ -1151,6 +1177,8 @@ class ModelGateway:
             return {"ok": True, "agent": profile}
         except Exception as exc:
             self.agent_profiles.pop(key, None)
+            if private_memory_root is not None and private_memory_root.exists():
+                shutil.rmtree(private_memory_root, ignore_errors=True)
             if package_path is not None and package_path.exists():
                 shutil.rmtree(package_path)
             return {"ok": False, "message": f"agent creation failed: {exc}"}
