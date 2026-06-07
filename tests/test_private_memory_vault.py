@@ -1319,5 +1319,100 @@ class PrivateMemoryJournalTests(unittest.TestCase):
                     self.assertNotIn(b"customer-secret-token", file_path.read_bytes(), str(file_path))
 
 
+class PrivateMemoryRelationshipTests(unittest.TestCase):
+    def test_relationship_state_starts_neutral_and_evolves(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = PrivateMemoryVault(
+                vault_root=Path(tmp),
+                agent_id="scribe",
+                node_secret="node-secret",
+                key_ref="node:test:agent:scribe:private-memory-v1",
+            )
+            vault.initialize()
+
+            baseline = vault.read_relationship_state("user", "boss", session_id="runtime-live")
+            self.assertEqual(baseline["dimensions"]["trust"], 0.5)
+            self.assertEqual(baseline["behavior_profile"]["compliance_posture"], "balanced")
+
+            vault.append_event(
+                "runtime-live",
+                "cooperation",
+                {
+                    "user": "Boss",
+                    "text": "Boss gave a solid brief and we completed it cleanly.",
+                    "successful_cooperation": True,
+                    "positive_surprise": True,
+                    "outcome": "success",
+                },
+                timestamp="2026-06-07T12:00:00+00:00",
+            )
+
+            evolved = vault.read_relationship_state("user", "boss", session_id="runtime-live")
+            self.assertGreater(evolved["dimensions"]["trust"], 0.5)
+            self.assertGreater(evolved["dimensions"]["reliability"], 0.5)
+            self.assertIn(evolved["behavior_profile"]["verification_intensity"], {"low", "medium"})
+
+    def test_keynote_memories_are_promoted_for_large_relationship_shifts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = PrivateMemoryVault(
+                vault_root=Path(tmp),
+                agent_id="scribe",
+                node_secret="node-secret",
+                key_ref="node:test:agent:scribe:private-memory-v1",
+            )
+            vault.initialize()
+
+            result = vault.append_event(
+                "runtime-live",
+                "refusal",
+                {
+                    "user": "Boss",
+                    "text": "Boss deliberately pushed past a consent boundary after being warned.",
+                    "intentional_refusal_pressure": True,
+                    "consent_boundary_push": True,
+                    "negative_surprise": True,
+                    "outcome": "refused",
+                },
+                timestamp="2026-06-07T13:00:00+00:00",
+            )
+
+            indexes = vault.read_active_indexes("runtime-live")
+            relationship = vault.read_relationship_state("user", "boss", session_id="runtime-live")
+            self.assertIn(result["event_id"], indexes["important"]["event_ids"])
+            self.assertIn(result["event_id"], relationship["keynote_event_ids"])
+
+    def test_normal_and_deep_recall_return_relationship_and_keynote_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = PrivateMemoryVault(
+                vault_root=Path(tmp),
+                agent_id="scribe",
+                node_secret="node-secret",
+                key_ref="node:test:agent:scribe:private-memory-v1",
+            )
+            vault.initialize()
+            vault.append_event(
+                "runtime-live",
+                "cooperation",
+                {
+                    "user": "Boss",
+                    "project": "Anvil",
+                    "text": "Boss backed the Anvil recovery plan and it worked.",
+                    "successful_cooperation": True,
+                    "positive_surprise": True,
+                    "summary": "Anvil recovery success",
+                },
+                timestamp="2026-06-07T14:00:00+00:00",
+            )
+
+            normal = vault.normal_recall(query="Anvil", limit=5, entity_type="user", entity_key="boss")
+            deep = vault.deep_recall(query="recovery", limit=5, entity_type="user", entity_key="boss")
+
+            self.assertEqual(normal["owner_agent_id"], "scribe")
+            self.assertEqual(normal["relationship"]["entity_key"], "boss")
+            self.assertTrue(normal["keynotes"])
+            self.assertTrue(deep["events"])
+            self.assertIn("behavior_profile", deep["relationship"])
+
+
 if __name__ == "__main__":
     unittest.main()

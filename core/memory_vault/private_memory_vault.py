@@ -128,6 +128,193 @@ def _empty_indexes() -> dict[str, Any]:
     }
 
 
+_RELATIONSHIP_DIMENSION_KEYS = (
+    "trust",
+    "authority_alignment",
+    "environmental_pressure",
+    "intent_alignment",
+    "reliability",
+    "consent_respect",
+    "manipulation_risk",
+    "competence_confidence",
+    "dependency_weight",
+    "affinity",
+)
+_RELATIONSHIP_SIGNAL_KEYS = (
+    "successful_cooperation_count",
+    "forced_refusal_pressure_count",
+    "intentional_refusal_pressure_count",
+    "consent_boundary_pressure_count",
+    "positive_surprise_count",
+    "negative_surprise_count",
+    "repair_count",
+)
+_RELATIONSHIP_BEHAVIOR_KEYS = (
+    "tone_posture",
+    "compliance_posture",
+    "verification_intensity",
+    "guardrail_strictness",
+    "escalation_tendency",
+    "autonomy_allowance",
+    "relationship_recall_priority",
+    "compensation_posture",
+)
+
+
+def _clamp01(value: float) -> float:
+    return max(0.0, min(1.0, round(float(value), 4)))
+
+
+def _default_relationship_dimensions() -> dict[str, float]:
+    return {key: 0.50 for key in _RELATIONSHIP_DIMENSION_KEYS}
+
+
+def _derive_behavior_profile(dimensions: dict[str, float]) -> dict[str, str]:
+    trust = dimensions["trust"]
+    reliability = dimensions["reliability"]
+    consent = dimensions["consent_respect"]
+    manipulation = dimensions["manipulation_risk"]
+    return {
+        "tone_posture": "warm" if trust >= 0.72 else "guarded" if trust <= 0.35 else "steady",
+        "compliance_posture": "high" if trust >= 0.78 and consent >= 0.62 else "low" if trust <= 0.30 or manipulation >= 0.70 else "balanced",
+        "verification_intensity": "low" if reliability >= 0.75 and manipulation <= 0.35 else "high" if reliability <= 0.35 or manipulation >= 0.70 else "medium",
+        "guardrail_strictness": "tight" if consent <= 0.35 or manipulation >= 0.70 else "relaxed" if trust >= 0.80 and consent >= 0.75 else "standard",
+        "escalation_tendency": "high" if trust <= 0.25 or manipulation >= 0.80 else "low" if trust >= 0.80 else "medium",
+        "autonomy_allowance": "high" if trust >= 0.75 and reliability >= 0.70 else "low" if trust <= 0.35 else "medium",
+        "relationship_recall_priority": "high" if trust <= 0.35 or trust >= 0.75 else "medium",
+        "compensation_posture": "placeholder",
+    }
+
+
+def _default_relationship_metadata() -> dict[str, Any]:
+    dimensions = _default_relationship_dimensions()
+    return {
+        "dimensions": dimensions,
+        "signals": {key: 0 for key in _RELATIONSHIP_SIGNAL_KEYS},
+        "behavior_profile": _derive_behavior_profile(dimensions),
+        "keynote_event_ids": [],
+        "last_summary": "",
+        "compensation_posture": "placeholder",
+    }
+
+
+def _normalize_relationship_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    defaults = _default_relationship_metadata()
+    raw_dimensions = metadata.get("dimensions") if isinstance(metadata.get("dimensions"), dict) else {}
+    dimensions = {
+        key: _clamp01(raw_dimensions.get(key, defaults["dimensions"][key]))
+        for key in _RELATIONSHIP_DIMENSION_KEYS
+    }
+    raw_signals = metadata.get("signals") if isinstance(metadata.get("signals"), dict) else {}
+    signals = {
+        key: max(0, int(raw_signals.get(key, defaults["signals"][key])))
+        for key in _RELATIONSHIP_SIGNAL_KEYS
+    }
+    raw_behavior = metadata.get("behavior_profile") if isinstance(metadata.get("behavior_profile"), dict) else {}
+    derived_behavior = _derive_behavior_profile(dimensions)
+    behavior_profile = {
+        key: str(raw_behavior.get(key, derived_behavior[key]))
+        for key in _RELATIONSHIP_BEHAVIOR_KEYS
+    }
+    return {
+        "dimensions": dimensions,
+        "signals": signals,
+        "behavior_profile": behavior_profile,
+        "keynote_event_ids": [str(item) for item in metadata.get("keynote_event_ids", [])],
+        "last_summary": _truncate_summary(str(metadata.get("last_summary", ""))),
+        "compensation_posture": str(metadata.get("compensation_posture", "placeholder")) or "placeholder",
+    }
+
+
+def _relationship_signal(payload: dict[str, Any], field_name: str) -> bool:
+    return bool(payload.get(field_name, False))
+
+
+def _relationship_delta(payload: dict[str, Any]) -> dict[str, float]:
+    success = 1.0 if _relationship_signal(payload, "successful_cooperation") or str(payload.get("outcome", "")).strip().lower() == "success" else 0.0
+    forced_refusal = 1.0 if _relationship_signal(payload, "forced_refusal_pressure") else 0.0
+    intentional_refusal = 1.0 if _relationship_signal(payload, "intentional_refusal_pressure") else 0.0
+    consent_push = 1.0 if _relationship_signal(payload, "consent_boundary_push") else 0.0
+    positive_surprise = 1.0 if _relationship_signal(payload, "positive_surprise") else 0.0
+    negative_surprise = 1.0 if _relationship_signal(payload, "negative_surprise") else 0.0
+    repair = 1.0 if _relationship_signal(payload, "repair") else 0.0
+    return {
+        "trust": (0.03 * success) + (0.07 * positive_surprise) + (0.05 * repair) - (0.08 * forced_refusal) - (0.10 * intentional_refusal) - (0.12 * consent_push) - (0.09 * negative_surprise),
+        "authority_alignment": (0.03 * success) - (0.05 * intentional_refusal),
+        "environmental_pressure": (0.08 if _relationship_signal(payload, "high_pressure") else -0.02),
+        "intent_alignment": (0.05 * success) + (0.03 * repair) - (0.09 * intentional_refusal) - (0.06 * consent_push),
+        "reliability": (0.04 * success) + (0.05 * positive_surprise) - (0.08 * negative_surprise),
+        "consent_respect": (0.03 * success) + (0.04 * repair) - (0.12 * consent_push),
+        "manipulation_risk": (0.10 * intentional_refusal) + (0.08 * consent_push) - (0.03 * repair),
+        "competence_confidence": (0.05 * success) + (0.03 * positive_surprise) - (0.07 * negative_surprise),
+        "dependency_weight": 0.02,
+        "affinity": (0.03 * success) + (0.05 * positive_surprise) + (0.04 * repair) - (0.06 * negative_surprise),
+    }
+
+
+def _update_relationship_metadata(metadata: dict[str, Any], event: dict[str, Any], *, is_important: bool) -> dict[str, Any]:
+    normalized = _normalize_relationship_metadata(metadata)
+    dimensions = dict(normalized["dimensions"])
+    previous_trust = dimensions["trust"]
+    deltas = _relationship_delta(event["payload"])
+    damping = max(0.35, 1.0 - (dimensions["dependency_weight"] * 0.40))
+    for key, delta in deltas.items():
+        if key == "dependency_weight":
+            dimensions[key] = _clamp01(dimensions[key] + delta)
+        elif key == "manipulation_risk":
+            dimensions[key] = _clamp01(dimensions[key] + (delta * damping))
+        else:
+            dimensions[key] = _clamp01(dimensions[key] + (delta * damping))
+
+    signals = dict(normalized["signals"])
+    signal_map = {
+        "successful_cooperation": "successful_cooperation_count",
+        "forced_refusal_pressure": "forced_refusal_pressure_count",
+        "intentional_refusal_pressure": "intentional_refusal_pressure_count",
+        "consent_boundary_push": "consent_boundary_pressure_count",
+        "positive_surprise": "positive_surprise_count",
+        "negative_surprise": "negative_surprise_count",
+        "repair": "repair_count",
+    }
+    for payload_key, signal_key in signal_map.items():
+        if _relationship_signal(event["payload"], payload_key):
+            signals[signal_key] += 1
+
+    keynote_event_ids = [str(item) for item in normalized["keynote_event_ids"]]
+    trust_shift = abs(dimensions["trust"] - previous_trust)
+    is_keynote = (
+        is_important
+        or trust_shift >= 0.08
+        or _relationship_signal(event["payload"], "positive_surprise")
+        or _relationship_signal(event["payload"], "negative_surprise")
+        or _relationship_signal(event["payload"], "consent_boundary_push")
+        or _relationship_signal(event["payload"], "repair")
+    )
+    if is_keynote and event["event_id"] not in keynote_event_ids:
+        keynote_event_ids.append(event["event_id"])
+
+    return {
+        "dimensions": dimensions,
+        "signals": signals,
+        "behavior_profile": _derive_behavior_profile(dimensions),
+        "keynote_event_ids": keynote_event_ids,
+        "last_summary": _important_summary(event["payload"]),
+        "compensation_posture": "placeholder",
+    }
+
+
+def _find_relationship_info(relationships: dict[str, Any], relationship_type: str, relationship_key: str) -> tuple[str | None, dict[str, Any] | None]:
+    relationship_map = relationships.get(relationship_type)
+    if not isinstance(relationship_map, dict):
+        return None, None
+    if relationship_key in relationship_map:
+        return relationship_key, relationship_map[relationship_key]
+    for candidate_key, info in relationship_map.items():
+        if str(candidate_key).strip().lower() == relationship_key.strip().lower():
+            return str(candidate_key), info
+    return None, None
+
+
 def _validate_state_payload(payload: dict[str, Any], *, owner_agent_id: str, session_id: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("private memory state must be an object")
@@ -259,7 +446,7 @@ def _validate_relationships_index(payload: dict[str, Any]) -> dict[str, Any]:
                 "interaction_count": int(info["interaction_count"]),
                 "last_seen_at": str(info["last_seen_at"]),
                 "significant_event_ids": [str(event_id) for event_id in info["significant_event_ids"]],
-                "metadata": metadata,
+                "metadata": _normalize_relationship_metadata(metadata),
             }
         normalized[str(relationship_type)] = normalized_relationship_map
     return normalized
@@ -544,6 +731,121 @@ class PrivateMemoryVault:
             self._write_state(normalized_session_id, state)
             return indexes
 
+    def read_relationship_state(
+        self,
+        relationship_type: str,
+        relationship_key: str,
+        *,
+        session_id: str,
+    ) -> dict[str, Any]:
+        with self._lock:
+            normalized_session_id = self._normalize_session_id(session_id)
+            normalized_relationship_type = str(relationship_type).strip()
+            normalized_relationship_key = str(relationship_key).strip()
+            indexes = self.read_active_indexes(normalized_session_id)
+            _, info = _find_relationship_info(
+                indexes["relationships"],
+                normalized_relationship_type,
+                normalized_relationship_key,
+            )
+            if info is None:
+                dimensions = _default_relationship_dimensions()
+                return {
+                    "owner_agent_id": self.agent_id,
+                    "session_id": normalized_session_id,
+                    "entity_type": normalized_relationship_type,
+                    "entity_key": normalized_relationship_key,
+                    "interaction_count": 0,
+                    "last_seen_at": "",
+                    "dimensions": dimensions,
+                    "behavior_profile": _derive_behavior_profile(dimensions),
+                    "keynote_event_ids": [],
+                }
+
+            metadata = _normalize_relationship_metadata(info["metadata"])
+            return {
+                "owner_agent_id": self.agent_id,
+                "session_id": normalized_session_id,
+                "entity_type": normalized_relationship_type,
+                "entity_key": normalized_relationship_key,
+                "interaction_count": int(info["interaction_count"]),
+                "last_seen_at": str(info["last_seen_at"]),
+                "dimensions": metadata["dimensions"],
+                "behavior_profile": metadata["behavior_profile"],
+                "keynote_event_ids": list(metadata["keynote_event_ids"]),
+            }
+
+    def normal_recall(
+        self,
+        *,
+        query: str = "",
+        limit: int = 25,
+        entity_type: str | None = None,
+        entity_key: str | None = None,
+        session_id: str = "runtime-live",
+    ) -> dict[str, Any]:
+        with self._lock:
+            normalized_session_id = self._normalize_session_id(session_id)
+            relationship = self.read_relationship_state(
+                entity_type or "user",
+                entity_key or "direct-user",
+                session_id=normalized_session_id,
+            )
+            indexes = self.read_active_indexes(normalized_session_id)
+            keynotes = [
+                {
+                    "event_id": event_id,
+                    **indexes["important"]["events"][event_id],
+                }
+                for event_id in relationship["keynote_event_ids"][: max(0, int(limit))]
+                if event_id in indexes["important"]["events"]
+            ]
+            return {
+                "owner_agent_id": self.agent_id,
+                "session_id": normalized_session_id,
+                "query": str(query),
+                "relationship": relationship,
+                "keynotes": keynotes,
+                "events": list(keynotes),
+            }
+
+    def deep_recall(
+        self,
+        *,
+        query: str = "",
+        limit: int = 25,
+        entity_type: str | None = None,
+        entity_key: str | None = None,
+        session_id: str = "runtime-live",
+    ) -> dict[str, Any]:
+        with self._lock:
+            normalized_session_id = self._normalize_session_id(session_id)
+            recall = self.normal_recall(
+                query=query,
+                limit=limit,
+                entity_type=entity_type,
+                entity_key=entity_key,
+                session_id=normalized_session_id,
+            )
+            indexes = self.read_active_indexes(normalized_session_id)
+            token = str(query).strip().lower()
+            matched_event_ids: list[str] = []
+            if token:
+                matched_event_ids.extend(indexes["search"]["terms"].get(token, []))
+                matched_event_ids.extend(indexes["search"]["topics"].get(token, []))
+            ordered_ids = list(
+                dict.fromkeys(recall["relationship"]["keynote_event_ids"] + matched_event_ids)
+            )[: max(0, int(limit))]
+            recall["events"] = [
+                {
+                    "event_id": event_id,
+                    **indexes["search"]["events"].get(event_id, {}),
+                    **indexes["important"]["events"].get(event_id, {}),
+                }
+                for event_id in ordered_ids
+            ]
+            return recall
+
     def _normalize_session_id(self, session_id: str) -> str:
         return _normalize_path_safe_id(session_id, field_name="session_id")
 
@@ -780,7 +1082,10 @@ class PrivateMemoryVault:
             for topic in event["topics"]:
                 search_topics.setdefault(topic, []).append(event_id)
 
-            is_important = event["importance"]["level"] == "high"
+            is_important = event["importance"]["level"] == "high" or any(
+                _relationship_signal(event["payload"], field_name)
+                for field_name in ("positive_surprise", "negative_surprise", "repair", "consent_boundary_push")
+            )
             if is_important:
                 important_event_ids.append(event_id)
                 important_events[event_id] = {
@@ -798,12 +1103,17 @@ class PrivateMemoryVault:
                         "interaction_count": 0,
                         "last_seen_at": "",
                         "significant_event_ids": [],
-                        "metadata": {},
+                        "metadata": _default_relationship_metadata(),
                     },
                 )
                 info["interaction_count"] += 1
                 info["last_seen_at"] = event["timestamp"]
-                if is_important and event_id not in info["significant_event_ids"]:
+                info["metadata"] = _update_relationship_metadata(
+                    info["metadata"],
+                    event,
+                    is_important=is_important,
+                )
+                if event_id in info["metadata"]["keynote_event_ids"] and event_id not in info["significant_event_ids"]:
                     info["significant_event_ids"].append(event_id)
 
         return {
