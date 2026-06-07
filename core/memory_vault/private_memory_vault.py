@@ -195,6 +195,17 @@ def _default_relationship_metadata() -> dict[str, Any]:
         "keynote_event_ids": [],
         "last_summary": "",
         "compensation_posture": "placeholder",
+        "authority_context": {
+            "authority_level": "none",
+            "authority_rank": "",
+            "authority_holder_type": "",
+        },
+        "environment_context": {
+            "urgency": "",
+            "conflict_level": "",
+            "uncertainty_level": "",
+            "safety_risk": "",
+        },
     }
 
 
@@ -216,6 +227,19 @@ def _normalize_relationship_metadata(metadata: dict[str, Any]) -> dict[str, Any]
         key: str(raw_behavior.get(key, derived_behavior[key]))
         for key in _RELATIONSHIP_BEHAVIOR_KEYS
     }
+    raw_authority = metadata.get("authority_context") if isinstance(metadata.get("authority_context"), dict) else {}
+    authority_context = {
+        "authority_level": str(raw_authority.get("authority_level", defaults["authority_context"]["authority_level"])),
+        "authority_rank": str(raw_authority.get("authority_rank", defaults["authority_context"]["authority_rank"])),
+        "authority_holder_type": str(raw_authority.get("authority_holder_type", defaults["authority_context"]["authority_holder_type"])),
+    }
+    raw_environment = metadata.get("environment_context") if isinstance(metadata.get("environment_context"), dict) else {}
+    environment_context = {
+        "urgency": str(raw_environment.get("urgency", defaults["environment_context"]["urgency"])),
+        "conflict_level": str(raw_environment.get("conflict_level", defaults["environment_context"]["conflict_level"])),
+        "uncertainty_level": str(raw_environment.get("uncertainty_level", defaults["environment_context"]["uncertainty_level"])),
+        "safety_risk": str(raw_environment.get("safety_risk", defaults["environment_context"]["safety_risk"])),
+    }
     return {
         "dimensions": dimensions,
         "signals": signals,
@@ -223,6 +247,8 @@ def _normalize_relationship_metadata(metadata: dict[str, Any]) -> dict[str, Any]
         "keynote_event_ids": [str(item) for item in metadata.get("keynote_event_ids", [])],
         "last_summary": _truncate_summary(str(metadata.get("last_summary", ""))),
         "compensation_posture": str(metadata.get("compensation_posture", "placeholder")) or "placeholder",
+        "authority_context": authority_context,
+        "environment_context": environment_context,
     }
 
 
@@ -280,6 +306,18 @@ def _update_relationship_metadata(metadata: dict[str, Any], event: dict[str, Any
         if _relationship_signal(event["payload"], payload_key):
             signals[signal_key] += 1
 
+    authority_context = {
+        "authority_level": str(event["payload"].get("authority_level", normalized["authority_context"]["authority_level"])),
+        "authority_rank": str(event["payload"].get("authority_rank", normalized["authority_context"]["authority_rank"])),
+        "authority_holder_type": str(event["payload"].get("authority_holder_type", normalized["authority_context"]["authority_holder_type"])),
+    }
+    environment_context = {
+        "urgency": str(event["payload"].get("urgency", normalized["environment_context"]["urgency"])),
+        "conflict_level": str(event["payload"].get("conflict_level", normalized["environment_context"]["conflict_level"])),
+        "uncertainty_level": str(event["payload"].get("uncertainty_level", normalized["environment_context"]["uncertainty_level"])),
+        "safety_risk": str(event["payload"].get("safety_risk", normalized["environment_context"]["safety_risk"])),
+    }
+
     keynote_event_ids = [str(item) for item in normalized["keynote_event_ids"]]
     trust_shift = abs(dimensions["trust"] - previous_trust)
     is_keynote = (
@@ -293,13 +331,25 @@ def _update_relationship_metadata(metadata: dict[str, Any], event: dict[str, Any
     if is_keynote and event["event_id"] not in keynote_event_ids:
         keynote_event_ids.append(event["event_id"])
 
+    behavior_profile = _derive_behavior_profile(dimensions)
+    if authority_context["authority_level"].strip().lower() == "superior" and behavior_profile["compliance_posture"] == "balanced":
+        behavior_profile["compliance_posture"] = "high"
+    if environment_context["uncertainty_level"].strip().lower() == "high":
+        behavior_profile["verification_intensity"] = "high"
+    if environment_context["safety_risk"].strip().lower() == "high":
+        behavior_profile["guardrail_strictness"] = "tight"
+    if environment_context["conflict_level"].strip().lower() == "high":
+        behavior_profile["escalation_tendency"] = "high"
+
     return {
         "dimensions": dimensions,
         "signals": signals,
-        "behavior_profile": _derive_behavior_profile(dimensions),
+        "behavior_profile": behavior_profile,
         "keynote_event_ids": keynote_event_ids,
         "last_summary": _important_summary(event["payload"]),
         "compensation_posture": "placeholder",
+        "authority_context": authority_context,
+        "environment_context": environment_context,
     }
 
 
@@ -768,6 +818,7 @@ class PrivateMemoryVault:
             )
             if info is None:
                 dimensions = _default_relationship_dimensions()
+                defaults = _default_relationship_metadata()
                 return {
                     "owner_agent_id": self.agent_id,
                     "session_id": normalized_session_id,
@@ -778,6 +829,9 @@ class PrivateMemoryVault:
                     "dimensions": dimensions,
                     "behavior_profile": _derive_behavior_profile(dimensions),
                     "keynote_event_ids": [],
+                    "signals": defaults["signals"],
+                    "authority_context": defaults["authority_context"],
+                    "environment_context": defaults["environment_context"],
                 }
 
             metadata = _normalize_relationship_metadata(info["metadata"])
@@ -791,6 +845,9 @@ class PrivateMemoryVault:
                 "dimensions": metadata["dimensions"],
                 "behavior_profile": metadata["behavior_profile"],
                 "keynote_event_ids": list(metadata["keynote_event_ids"]),
+                "signals": metadata["signals"],
+                "authority_context": metadata["authority_context"],
+                "environment_context": metadata["environment_context"],
             }
 
     def normal_recall(

@@ -1414,5 +1414,80 @@ class PrivateMemoryRelationshipTests(unittest.TestCase):
             self.assertIn("behavior_profile", deep["relationship"])
 
 
+class PrivateMemoryPolicyContextTests(unittest.TestCase):
+    def test_superior_authority_and_high_uncertainty_raise_behavior_controls(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = PrivateMemoryVault(
+                vault_root=Path(tmp),
+                agent_id="scribe",
+                node_secret="node-secret",
+                key_ref="node:test:agent:scribe:private-memory-v1",
+            )
+            vault.initialize()
+            vault.append_event(
+                "runtime-live",
+                "interaction",
+                {
+                    "user": "Boss",
+                    "text": "Boss requested a high-uncertainty but safe recovery plan.",
+                    "authority_level": "superior",
+                    "authority_rank": "captain",
+                    "authority_holder_type": "user",
+                    "uncertainty_level": "high",
+                    "successful_cooperation": True,
+                    "outcome": "success",
+                },
+                timestamp="2026-06-07T18:00:00+00:00",
+            )
+
+            relationship = vault.read_relationship_state("user", "boss", session_id="runtime-live")
+            self.assertIn("authority_context", relationship)
+            self.assertIn("environment_context", relationship)
+            self.assertEqual(relationship["behavior_profile"]["verification_intensity"], "high")
+
+    def test_refusal_then_repair_updates_signals_and_keynotes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = PrivateMemoryVault(
+                vault_root=Path(tmp),
+                agent_id="scribe",
+                node_secret="node-secret",
+                key_ref="node:test:agent:scribe:private-memory-v1",
+            )
+            vault.initialize()
+            refusal = vault.append_event(
+                "runtime-live",
+                "refusal",
+                {
+                    "user": "Boss",
+                    "text": "I cannot help with that because it crosses a hard safety boundary.",
+                    "forced_refusal_pressure": True,
+                    "intentional_refusal_pressure": True,
+                    "negative_surprise": True,
+                },
+                timestamp="2026-06-07T18:10:00+00:00",
+            )
+            vault.append_event(
+                "runtime-live",
+                "interaction",
+                {
+                    "user": "Boss",
+                    "text": "We repaired the situation and shifted to a safe recovery plan.",
+                    "repair": True,
+                    "successful_cooperation": True,
+                    "positive_surprise": True,
+                    "summary": "Safe repair after refusal",
+                },
+                timestamp="2026-06-07T18:20:00+00:00",
+            )
+
+            relationship = vault.read_relationship_state("user", "boss", session_id="runtime-live")
+            self.assertGreaterEqual(relationship["signals"]["repair_count"], 1)
+            self.assertGreaterEqual(
+                relationship["signals"]["intentional_refusal_pressure_count"],
+                1,
+            )
+            self.assertIn(refusal["event_id"], relationship["keynote_event_ids"])
+
+
 if __name__ == "__main__":
     unittest.main()
