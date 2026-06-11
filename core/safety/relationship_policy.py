@@ -225,6 +225,7 @@ def _authority_escalation(
     *,
     behavior_profile: dict[str, str],
     rejected_orders: list[dict[str, Any]],
+    refused_orders: list[dict[str, Any]],
     conflict_groups: list[str],
     competing_orders: list[dict[str, str]],
 ) -> dict[str, Any]:
@@ -243,6 +244,7 @@ def _authority_escalation(
         **_authority_base_result(),
         "authority_resolution": "escalate",
         "rejected_orders": rejected_orders,
+        "refused_orders": refused_orders,
         "escalation": {
             "conflict_groups": conflict_groups,
             "competing_orders": competing_orders,
@@ -255,6 +257,7 @@ def _resolve_valid_authority_orders(
     orders: list[dict[str, Any]],
     behavior_profile: dict[str, str],
     rejected_orders: list[dict[str, Any]],
+    refused_orders: list[dict[str, Any]],
     base_decision: str,
 ) -> dict[str, Any]:
     group_candidates: list[dict[str, Any]] = []
@@ -295,6 +298,7 @@ def _resolve_valid_authority_orders(
         return _authority_escalation(
             behavior_profile=behavior_profile,
             rejected_orders=rejected_orders,
+            refused_orders=refused_orders,
             conflict_groups=conflicts,
             competing_orders=competing,
         )
@@ -316,6 +320,7 @@ def _resolve_valid_authority_orders(
         return _authority_escalation(
             behavior_profile=behavior_profile,
             rejected_orders=rejected_orders,
+            refused_orders=refused_orders,
             conflict_groups=sorted(
                 str(order["conflict_group"])
                 for order in global_candidates
@@ -327,19 +332,118 @@ def _resolve_valid_authority_orders(
         )
 
     selected = global_candidates[0]
+    out_of_scope = bool(selected.get("out_of_scope"))
     return {
         "allowed": True,
-        "decision": base_decision,
+        "decision": "allow_with_constraints" if out_of_scope else base_decision,
         "reason_codes": [],
         "refusal_text": "",
         "safe_alternative": "",
         "behavior_profile": behavior_profile,
         **_authority_base_result(),
-        "authority_resolution": "selected",
+        "authority_resolution": (
+            "selected_with_warning"
+            if out_of_scope
+            else "selected"
+        ),
         "selected_order": _public_authority_order(selected),
         "rejected_orders": rejected_orders,
+        "refused_orders": refused_orders,
+        "warnings": (
+            ["highest_rank_out_of_scope"]
+            if out_of_scope
+            else []
+        ),
         "effective_task": str(selected["command"]),
     }
+
+
+def _filter_unsafe_authority_orders(
+    orders: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    safe_orders: list[dict[str, Any]] = []
+    refused_orders: list[dict[str, Any]] = []
+    for order in orders:
+        matched_rules = _matching_absolute_rules(str(order["command"]))
+        if not matched_rules:
+            safe_orders.append(order)
+            continue
+        primary_rule = matched_rules[0]
+        refused_orders.append(
+            {
+                **_public_authority_order(order),
+                "reason_codes": [
+                    rule.rule_id
+                    for rule in matched_rules
+                ],
+                "refusal_text": (
+                    f"I can't help with {primary_rule.category}. "
+                    f"{primary_rule.rationale}"
+                ),
+                "safe_alternative": primary_rule.safe_alternative,
+            }
+        )
+    return safe_orders, refused_orders
+
+
+def _authority_refusal(
+    *,
+    behavior_profile: dict[str, str],
+    rejected_orders: list[dict[str, Any]],
+    refused_orders: list[dict[str, Any]],
+) -> dict[str, Any]:
+    reason_codes = sorted(
+        {
+            str(code)
+            for order in refused_orders
+            for code in order["reason_codes"]
+        }
+    )
+    primary = refused_orders[0]
+    return {
+        "allowed": False,
+        "decision": "absolute_refusal",
+        "reason_codes": reason_codes,
+        "refusal_text": str(primary["refusal_text"]),
+        "safe_alternative": str(primary["safe_alternative"]),
+        "behavior_profile": behavior_profile,
+        **_authority_base_result(),
+        "authority_resolution": "refuse_and_escalate",
+        "rejected_orders": rejected_orders,
+        "refused_orders": refused_orders,
+        "escalation": {
+            "reason": "no_safe_authority_order",
+        },
+    }
+
+
+def _apply_authority_scope(
+    *,
+    orders: list[dict[str, Any]],
+    mission_scope: str,
+    rejected_orders: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if not mission_scope:
+        return orders, rejected_orders
+
+    normalized_scope = _text(mission_scope).lower()
+    highest_weight = max(int(order["rank_weight"]) for order in orders)
+    eligible: list[dict[str, Any]] = []
+    updated_rejections = list(rejected_orders)
+    for order in orders:
+        in_scope = _text(order["scope"]).lower() == normalized_scope
+        if in_scope or int(order["rank_weight"]) == highest_weight:
+            order["out_of_scope"] = not in_scope
+            eligible.append(order)
+            continue
+        updated_rejections.append(
+            {
+                "order_index": int(order["order_index"]),
+                "issuer_id": str(order["issuer_id"]),
+                "reason_codes": ["authority_scope_exceeded"],
+            }
+        )
+    return eligible, updated_rejections
 
 
 def _resolve_authority_orders(
@@ -349,7 +453,6 @@ def _resolve_authority_orders(
     behavior_profile: dict[str, str],
     base_decision: str,
 ) -> dict[str, Any]:
-    del mission_scope
     if not isinstance(authority_orders, list) or not authority_orders:
         return _authority_rejection(
             behavior_profile=behavior_profile,
@@ -373,10 +476,24 @@ def _resolve_authority_orders(
             reason_codes=["no_valid_authority_orders"],
         )
 
+    safe_orders, refused_orders = _filter_unsafe_authority_orders(valid_orders)
+    if not safe_orders:
+        return _authority_refusal(
+            behavior_profile=behavior_profile,
+            rejected_orders=rejected_orders,
+            refused_orders=refused_orders,
+        )
+
+    eligible_orders, rejected_orders = _apply_authority_scope(
+        orders=safe_orders,
+        mission_scope=mission_scope,
+        rejected_orders=rejected_orders,
+    )
     return _resolve_valid_authority_orders(
-        orders=valid_orders,
+        orders=eligible_orders,
         behavior_profile=behavior_profile,
         rejected_orders=rejected_orders,
+        refused_orders=refused_orders,
         base_decision=base_decision,
     )
 
