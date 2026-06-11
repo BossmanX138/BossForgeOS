@@ -1,7 +1,7 @@
 # Agent Authority Conflict Resolution Design
 
 Date: 2026-06-11
-Status: Approved design pending written-spec review
+Status: Approved for implementation planning
 
 ## Goal
 
