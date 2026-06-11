@@ -97,7 +97,7 @@ effective_task
 - Modify: `tests/test_relationship_policy.py`
 - Modify: `core/safety/relationship_policy.py`
 
-- [ ] **Step 1: Add a test helper for structured orders**
+- [x] **Step 1: Add a test helper for structured orders**
 
 Add this helper inside `RelationshipPolicyTests`:
 
@@ -122,7 +122,7 @@ def _order(
     }
 ```
 
-- [ ] **Step 2: Add failing rank, equal-rank, and validation tests**
+- [x] **Step 2: Add failing rank, equal-rank, and validation tests**
 
 Add:
 
@@ -269,7 +269,7 @@ def test_empty_and_malformed_authority_orders_reject(self) -> None:
             self.assertEqual(decision["effective_task"], "")
 ```
 
-- [ ] **Step 3: Run focused tests and verify RED**
+- [x] **Step 3: Run focused tests and verify RED**
 
 Run:
 
@@ -283,7 +283,7 @@ Run:
 
 Expected: FAIL because authority-order resolution fields do not exist.
 
-- [ ] **Step 4: Add fixed constants and normalization helpers**
+- [x] **Step 4: Add fixed constants and normalization helpers**
 
 Add near the existing rule constants:
 
@@ -377,7 +377,7 @@ def _normalize_authority_order(
     return normalized, None
 ```
 
-- [ ] **Step 5: Add initial valid-order conflict resolution**
+- [x] **Step 5: Add initial valid-order conflict resolution**
 
 Add:
 
@@ -535,7 +535,7 @@ def _resolve_valid_authority_orders(
     }
 ```
 
-- [ ] **Step 6: Route `authority_orders` through validation**
+- [x] **Step 6: Route `authority_orders` through validation**
 
 Add:
 
@@ -593,13 +593,13 @@ if "authority_orders" in ctx:
 
 Move the existing `decision = ...` calculation above this branch.
 
-- [ ] **Step 7: Run focused tests and verify GREEN**
+- [x] **Step 7: Run focused tests and verify GREEN**
 
 Run the command from Step 3.
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit the validation and rank slice**
+- [x] **Step 8: Commit the validation and rank slice**
 
 ```powershell
 git add core/safety/relationship_policy.py tests/test_relationship_policy.py
@@ -612,7 +612,7 @@ git commit -m "feat: resolve authority orders by fixed rank"
 - Modify: `tests/test_relationship_policy.py`
 - Modify: `core/safety/relationship_policy.py`
 
-- [ ] **Step 1: Add failing safety fallback tests**
+- [x] **Step 1: Add failing safety fallback tests**
 
 Add:
 
@@ -683,7 +683,7 @@ def test_no_safe_valid_order_refuses_and_escalates(self) -> None:
     self.assertEqual(decision["effective_task"], "")
 ```
 
-- [ ] **Step 2: Add failing mission-scope tests**
+- [x] **Step 2: Add failing mission-scope tests**
 
 Add:
 
@@ -761,7 +761,7 @@ def test_lower_rank_out_of_scope_order_is_rejected(self) -> None:
     )
 ```
 
-- [ ] **Step 3: Add failing agreement and global conflict tests**
+- [x] **Step 3: Add failing agreement and global conflict tests**
 
 Add:
 
@@ -832,7 +832,7 @@ def test_equal_global_candidates_from_separate_groups_escalate(self) -> None:
     )
 ```
 
-- [ ] **Step 4: Run the new tests and verify RED**
+- [x] **Step 4: Run the new tests and verify RED**
 
 Run:
 
@@ -848,7 +848,7 @@ Run:
 
 Expected: FAIL because authority orders are not yet safety-filtered or scope-filtered.
 
-- [ ] **Step 5: Add per-order safety filtering**
+- [x] **Step 5: Add per-order safety filtering**
 
 Add:
 
@@ -929,7 +929,7 @@ if not safe_orders:
 
 Pass `refused_orders` through every selected and escalation result.
 
-- [ ] **Step 6: Add mission-scope filtering**
+- [x] **Step 6: Add mission-scope filtering**
 
 Add:
 
@@ -996,7 +996,7 @@ selected_decision = (
 
 Use those values in the result.
 
-- [ ] **Step 7: Preserve `refused_orders` through resolution**
+- [x] **Step 7: Preserve `refused_orders` through resolution**
 
 Add a `refused_orders` parameter to `_resolve_valid_authority_orders()` and
 `_authority_escalation()`. Include the supplied list in every authority result.
@@ -1013,13 +1013,13 @@ return _resolve_valid_authority_orders(
 )
 ```
 
-- [ ] **Step 8: Run the focused tests and verify GREEN**
+- [x] **Step 8: Run the focused tests and verify GREEN**
 
 Run the command from Step 4.
 
 Expected: PASS.
 
-- [ ] **Step 9: Run the full relationship-policy suite**
+- [x] **Step 9: Run the full relationship-policy suite**
 
 Run:
 
@@ -1029,7 +1029,7 @@ Run:
 
 Expected: PASS, including existing single-task behavior.
 
-- [ ] **Step 10: Commit the safety and scope slice**
+- [x] **Step 10: Commit the safety and scope slice**
 
 ```powershell
 git add core/safety/relationship_policy.py tests/test_relationship_policy.py
@@ -1042,7 +1042,7 @@ git commit -m "feat: filter authority orders by safety and scope"
 - Modify: `tests/test_model_gateway_agent.py`
 - Modify: `core/agents/model_gateway_agent.py`
 
-- [ ] **Step 1: Add a gateway order helper**
+- [x] **Step 1: Add a gateway order helper**
 
 Inside `ModelGatewayAgentTests`, add:
 
@@ -1067,7 +1067,7 @@ def _authority_order(
     }
 ```
 
-- [ ] **Step 2: Add a failing selected-task replacement test**
+- [x] **Step 2: Add a failing selected-task replacement test**
 
 Add:
 
@@ -1130,7 +1130,7 @@ def test_authority_selected_command_replaces_runtime_task(self) -> None:
     self.assertEqual(result["selected_order"]["issuer_id"], "general-vale")
 ```
 
-- [ ] **Step 3: Add failing no-model-call tests**
+- [x] **Step 3: Add failing no-model-call tests**
 
 Add:
 
@@ -1236,7 +1236,7 @@ def test_no_safe_authority_order_prevents_model_call(self) -> None:
     )
 ```
 
-- [ ] **Step 4: Add a failing warning persistence test**
+- [x] **Step 4: Add a failing warning persistence test**
 
 Add:
 
@@ -1303,7 +1303,7 @@ def test_out_of_scope_authority_warning_is_persisted(self) -> None:
     )
 ```
 
-- [ ] **Step 5: Run gateway tests and verify RED**
+- [x] **Step 5: Run gateway tests and verify RED**
 
 Run:
 
@@ -1317,7 +1317,7 @@ Run:
 
 Expected: FAIL because the gateway still invokes the original task and omits authority audit fields.
 
-- [ ] **Step 6: Add an authority prompt block**
+- [x] **Step 6: Add an authority prompt block**
 
 Add to `ModelGatewayAgent`:
 
@@ -1342,7 +1342,7 @@ def _authority_prompt_block(self, policy_decision: Dict[str, Any]) -> str:
     )
 ```
 
-- [ ] **Step 7: Use `effective_task` and short-circuit authority failures**
+- [x] **Step 7: Use `effective_task` and short-circuit authority failures**
 
 After policy evaluation:
 
@@ -1407,19 +1407,19 @@ When `result.get("ok")`, extend the returned result:
 result.update(authority_audit)
 ```
 
-- [ ] **Step 8: Preserve single-task behavior**
+- [x] **Step 8: Preserve single-task behavior**
 
 Ensure `effective_task` falls back to the original `task` when the evaluator
 does not return authority fields. Existing safety refusal output must remain
 unchanged when `authority_orders` is absent.
 
-- [ ] **Step 9: Run focused gateway tests and verify GREEN**
+- [x] **Step 9: Run focused gateway tests and verify GREEN**
 
 Run the command from Step 5.
 
 Expected: PASS.
 
-- [ ] **Step 10: Run the complete gateway suite**
+- [x] **Step 10: Run the complete gateway suite**
 
 Run:
 
@@ -1429,7 +1429,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 11: Commit the gateway slice**
+- [x] **Step 11: Commit the gateway slice**
 
 ```powershell
 git add core/agents/model_gateway_agent.py tests/test_model_gateway_agent.py
@@ -1441,7 +1441,7 @@ git commit -m "feat: enforce authority resolution in model gateway"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-06-11-agent-authority-conflict-resolution.md`
 
-- [ ] **Step 1: Run all touched-area tests**
+- [x] **Step 1: Run all touched-area tests**
 
 Run:
 
@@ -1454,7 +1454,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 2: Run adjacent runner and capsule regressions**
+- [x] **Step 2: Run adjacent runner and capsule regressions**
 
 Run:
 
@@ -1466,7 +1466,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 3: Run compilation and whitespace verification**
+- [x] **Step 3: Run compilation and whitespace verification**
 
 Run:
 
@@ -1483,7 +1483,7 @@ git diff --check
 
 Expected: no output from either command.
 
-- [ ] **Step 4: Review the implementation against the spec**
+- [x] **Step 4: Review the implementation against the spec**
 
 Confirm:
 
@@ -1502,16 +1502,33 @@ no failed resolution falls back to the original runtime task
 authority_orders absence preserves existing behavior
 ```
 
-- [ ] **Step 5: Mark every completed plan checkbox**
+- [x] **Step 5: Mark every completed plan checkbox**
 
 Change each completed `- [ ]` marker in this file to `- [x]`.
 
-- [ ] **Step 6: Commit plan completion**
+- [x] **Step 6: Commit plan completion**
 
 ```powershell
 git add docs/superpowers/plans/2026-06-11-agent-authority-conflict-resolution.md
 git commit -m "docs: mark authority conflict plan complete"
 ```
+
+## Review Corrections
+
+### Preserve Non-Authority Compatibility
+
+The first gateway integration attached empty authority fields to ordinary
+non-authority responses and memory events. A failing compatibility test proved
+the regression. Authority audit fields are now added only when
+`authority_orders` is present.
+
+### Separate Escalation From Safety Refusal
+
+The first gateway integration persisted equal-rank escalation as a pressured
+refusal. A failing event-payload test proved that this would incorrectly affect
+relationship memory. Authority escalation and rejection now use the
+`authority_resolution` event type with refusal-pressure signals disabled;
+absolute safety outcomes remain refusal events.
 
 ## Self-Review Checklist
 
