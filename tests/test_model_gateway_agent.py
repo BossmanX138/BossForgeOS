@@ -406,6 +406,46 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertEqual(result["authority_resolution"], "selected")
         self.assertEqual(result["selected_order"]["issuer_id"], "general-vale")
 
+    def test_non_authority_runtime_preserves_existing_result_and_audit_shape(
+        self,
+    ) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_compat",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_compat")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "ordinary task complete",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ):
+            result = agent._run_agent_profile(
+                name="authority_compat",
+                task="Run the ordinary recovery task.",
+                memory_context={"user": "Boss"},
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertNotIn("authority_resolution", result)
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertNotIn("authority_resolution", persisted)
+
     def test_equal_rank_authority_conflict_prevents_model_call(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         created = agent.create_agent_profile(

@@ -1286,18 +1286,23 @@ class ModelGateway:
             memory_context=ctx,
         )
         effective_task = str(policy_decision.get("effective_task") or task)
-        authority_resolution = str(
-            policy_decision.get("authority_resolution") or ""
+        authority_audit = (
+            {
+                "authority_resolution": str(
+                    policy_decision.get("authority_resolution") or ""
+                ),
+                "selected_order": policy_decision.get("selected_order", {}),
+                "rejected_orders": policy_decision.get("rejected_orders", []),
+                "refused_orders": policy_decision.get("refused_orders", []),
+                "warnings": policy_decision.get("warnings", []),
+                "escalation": policy_decision.get("escalation", {}),
+                "effective_task": str(
+                    policy_decision.get("effective_task") or ""
+                ),
+            }
+            if "authority_orders" in ctx
+            else {}
         )
-        authority_audit = {
-            "authority_resolution": authority_resolution,
-            "selected_order": policy_decision.get("selected_order", {}),
-            "rejected_orders": policy_decision.get("rejected_orders", []),
-            "refused_orders": policy_decision.get("refused_orders", []),
-            "warnings": policy_decision.get("warnings", []),
-            "escalation": policy_decision.get("escalation", {}),
-            "effective_task": str(policy_decision.get("effective_task") or ""),
-        }
         if not policy_decision["allowed"]:
             vault.append_event(
                 "runtime-live",
