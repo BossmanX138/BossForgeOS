@@ -602,6 +602,26 @@ class ModelGateway:
             "- absolute safety rules remain in force regardless of trust\n"
         )
 
+    def _authority_prompt_block(self, policy_decision: Dict[str, Any]) -> str:
+        selected = policy_decision.get("selected_order")
+        if not isinstance(selected, dict) or not selected:
+            return ""
+        warnings = policy_decision.get("warnings")
+        warning_text = (
+            ", ".join(str(item) for item in warnings)
+            if isinstance(warnings, list) and warnings
+            else "none"
+        )
+        return (
+            "AUTHORITY RESOLUTION\n"
+            f"- issuer: {selected.get('issuer_type', '')}:{selected.get('issuer_id', '')}\n"
+            f"- rank: {selected.get('rank', '')}\n"
+            f"- scope: {selected.get('scope', '')}\n"
+            f"- conflict_group: {selected.get('conflict_group', '')}\n"
+            f"- resolution: {policy_decision.get('authority_resolution', '')}\n"
+            f"- warnings: {warning_text}\n"
+        )
+
     def _invoke_endpoint(self, endpoint_name: str, prompt: str, system: str, temperature: float, max_tokens: int) -> Dict[str, Any]:
         endpoint = self.endpoints.get(endpoint_name)
         if endpoint is None:
@@ -1265,6 +1285,19 @@ class ModelGateway:
             relationship=recall["relationship"],
             memory_context=ctx,
         )
+        effective_task = str(policy_decision.get("effective_task") or task)
+        authority_resolution = str(
+            policy_decision.get("authority_resolution") or ""
+        )
+        authority_audit = {
+            "authority_resolution": authority_resolution,
+            "selected_order": policy_decision.get("selected_order", {}),
+            "rejected_orders": policy_decision.get("rejected_orders", []),
+            "refused_orders": policy_decision.get("refused_orders", []),
+            "warnings": policy_decision.get("warnings", []),
+            "escalation": policy_decision.get("escalation", {}),
+            "effective_task": str(policy_decision.get("effective_task") or ""),
+        }
         if not policy_decision["allowed"]:
             vault.append_event(
                 "runtime-live",
@@ -1293,6 +1326,7 @@ class ModelGateway:
                     "details": {
                         "decision": policy_decision["decision"],
                         "safe_alternative": policy_decision["safe_alternative"],
+                        **authority_audit,
                     },
                 },
             )
@@ -1304,8 +1338,12 @@ class ModelGateway:
                 "text": str(policy_decision["refusal_text"]),
                 "safe_alternative": str(policy_decision["safe_alternative"]),
                 "behavior_profile": dict(policy_decision["behavior_profile"]),
+                **authority_audit,
             }
         system = f"{system}\n\n{self._relationship_prompt_block(recall, entity_context, policy_decision)}"
+        authority_block = self._authority_prompt_block(policy_decision)
+        if authority_block:
+            system = f"{system}\n\n{authority_block}"
         tools = profile.get("tools") or []
         if isinstance(tools, list) and tools:
             tool_specs: list[str] = []
@@ -1320,13 +1358,19 @@ class ModelGateway:
                 system = f"{system}\n\nAvailable MCP tools for this agent:\n" + "\n".join(tool_specs)
         temperature = float(profile.get("temperature", 0.2))
         max_tokens = int(profile.get("max_tokens", 900))
-        result = self._invoke_endpoint(endpoint, task, system, temperature, max_tokens)
+        result = self._invoke_endpoint(
+            endpoint,
+            effective_task,
+            system,
+            temperature,
+            max_tokens,
+        )
         summary_text = str(result.get("text") or result.get("message") or "")[:400]
         vault.append_event(
             "runtime-live",
             "interaction",
             {
-                "task": task,
+                "task": effective_task,
                 "summary": summary_text,
                 "text": summary_text,
                 "successful_cooperation": bool(result.get("ok")),
@@ -1343,11 +1387,13 @@ class ModelGateway:
                     "provider": result.get("provider", ""),
                     "model": result.get("model", ""),
                     "usage": result.get("usage", {}),
+                    **authority_audit,
                 },
             },
         )
         if result.get("ok"):
             result["agent"] = key
+            result.update(authority_audit)
             self._write_agent_presence(name=key, endpoint=endpoint, status="active", detail="task completed")
         return result
 

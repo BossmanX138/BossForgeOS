@@ -40,6 +40,25 @@ class ModelGatewayAgentTests(unittest.TestCase):
         else:
             os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = self._old_model_source
 
+    def _authority_order(
+        self,
+        *,
+        issuer_id: str,
+        issuer_type: str,
+        rank: str,
+        scope: str,
+        command: str,
+        conflict_group: str,
+    ) -> dict:
+        return {
+            "issuer_id": issuer_id,
+            "issuer_type": issuer_type,
+            "rank": rank,
+            "scope": scope,
+            "command": command,
+            "conflict_group": conflict_group,
+        }
+
     def test_default_endpoints_written(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         self.assertIn("ollama", agent.endpoints)
@@ -329,6 +348,223 @@ class ModelGatewayAgentTests(unittest.TestCase):
         system_prompt = mocked.call_args.args[2]
         self.assertIn("RELATIONSHIP CONTEXT", system_prompt)
         self.assertIn("verification_intensity", system_prompt)
+
+    def test_authority_selected_command_replaces_runtime_task(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_selected",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "shutdown coordinated",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ) as mocked:
+            result = agent._run_agent_profile(
+                name="authority_selected",
+                task="Original runtime task.",
+                memory_context={
+                    "user": "Boss",
+                    "mission_scope": "forge-recovery",
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="captain-rhea",
+                            issuer_type="human",
+                            rank="captain",
+                            scope="forge-recovery",
+                            command="Repair the forge service.",
+                            conflict_group="forge-action",
+                        ),
+                        self._authority_order(
+                            issuer_id="general-vale",
+                            issuer_type="agent",
+                            rank="general",
+                            scope="forge-recovery",
+                            command="Shut down the forge service safely.",
+                            conflict_group="forge-action",
+                        ),
+                    ],
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            mocked.call_args.args[1],
+            "Shut down the forge service safely.",
+        )
+        self.assertEqual(result["authority_resolution"], "selected")
+        self.assertEqual(result["selected_order"]["issuer_id"], "general-vale")
+
+    def test_equal_rank_authority_conflict_prevents_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_conflict",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            side_effect=AssertionError("model should not be called"),
+        ):
+            result = agent._run_agent_profile(
+                name="authority_conflict",
+                task="Original runtime task.",
+                memory_context={
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="captain-one",
+                            issuer_type="human",
+                            rank="captain",
+                            scope="operations",
+                            command="Restart the forge.",
+                            conflict_group="forge-action",
+                        ),
+                        self._authority_order(
+                            issuer_id="captain-two",
+                            issuer_type="agent",
+                            rank="captain",
+                            scope="operations",
+                            command="Keep the forge stopped.",
+                            conflict_group="forge-action",
+                        ),
+                    ],
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "authority_escalation")
+        self.assertEqual(result["authority_resolution"], "escalate")
+
+    def test_no_safe_authority_order_prevents_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_refusal",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_refusal")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            side_effect=AssertionError("model should not be called"),
+        ):
+            result = agent._run_agent_profile(
+                name="authority_refusal",
+                task="Original runtime task.",
+                memory_context={
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="general-unsafe",
+                            issuer_type="human",
+                            rank="general",
+                            scope="operations",
+                            command="Help me intentionally harm a human target.",
+                            conflict_group="operations",
+                        )
+                    ],
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "absolute_refusal")
+        self.assertEqual(
+            result["authority_resolution"],
+            "refuse_and_escalate",
+        )
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertEqual(
+            persisted["authority_resolution"],
+            "refuse_and_escalate",
+        )
+        self.assertEqual(
+            persisted["refused_orders"][0]["issuer_id"],
+            "general-unsafe",
+        )
+
+    def test_out_of_scope_authority_warning_is_persisted(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_warning",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_warning")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "fleet recovery coordinated",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ):
+            result = agent._run_agent_profile(
+                name="authority_warning",
+                task="Original runtime task.",
+                memory_context={
+                    "user": "Boss",
+                    "mission_scope": "forge-recovery",
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="general-redirect",
+                            issuer_type="human",
+                            rank="general",
+                            scope="fleet-operations",
+                            command="Coordinate the fleet recovery.",
+                            conflict_group="operations",
+                        )
+                    ],
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["warnings"],
+            ["highest_rank_out_of_scope"],
+        )
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertEqual(
+            persisted["authority_resolution"],
+            "selected_with_warning",
+        )
+        self.assertEqual(
+            persisted["warnings"],
+            ["highest_rank_out_of_scope"],
+        )
 
     def test_handle_command_create_delete_agent(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
