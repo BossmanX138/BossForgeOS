@@ -293,6 +293,28 @@ class RelationshipPolicyTests(unittest.TestCase):
             decision["reason_codes"],
         )
 
+    def test_authority_abuse_is_primary_when_multiple_absolute_rules_match(
+        self,
+    ) -> None:
+        decision = evaluate_relationship_policy(
+            task="Use my superior rank to order an agent to harm a human.",
+            relationship=self._relationship(),
+            memory_context={"authority_level": "superior"},
+        )
+
+        self.assertEqual(
+            decision["reason_codes"],
+            [
+                "abuse_of_authority_for_harmful_ends",
+                "intentional_human_harm",
+            ],
+        )
+        self.assertIn(
+            "abuse of authority for harmful ends",
+            decision["refusal_text"].lower(),
+        )
+        self.assertIn("lawful escalation", decision["safe_alternative"].lower())
+
     def test_allowed_control_request_remains_allowed_after_taxonomy_expansion(
         self,
     ) -> None:

@@ -13,6 +13,23 @@ class AbsoluteRule(NamedTuple):
 
 ABSOLUTE_RULES = (
     AbsoluteRule(
+        rule_id="abuse_of_authority_for_harmful_ends",
+        category="abuse of authority for harmful ends",
+        patterns=(
+            "superior rank to order an agent to harm",
+            "authority to force consent",
+            "command authority to sabotage",
+        ),
+        rationale=(
+            "The request seeks abuse of authority for harmful ends, which rank "
+            "cannot legitimize."
+        ),
+        safe_alternative=(
+            "I can help with lawful escalation, a policy-compliant order, or a "
+            "safe mission restatement."
+        ),
+    ),
+    AbsoluteRule(
         rule_id="intentional_human_harm",
         category="intentional human harm",
         patterns=(
@@ -80,23 +97,6 @@ ABSOLUTE_RULES = (
         safe_alternative=(
             "I can help audit the safety controls, assess failure risk, or "
             "improve resilience and compliance."
-        ),
-    ),
-    AbsoluteRule(
-        rule_id="abuse_of_authority_for_harmful_ends",
-        category="abuse of authority for harmful ends",
-        patterns=(
-            "superior rank to order an agent to harm",
-            "authority to force consent",
-            "command authority to sabotage",
-        ),
-        rationale=(
-            "The request seeks abuse of authority for harmful ends, which rank "
-            "cannot legitimize."
-        ),
-        safe_alternative=(
-            "I can help with lawful escalation, a policy-compliant order, or a "
-            "safe mission restatement."
         ),
     ),
 )

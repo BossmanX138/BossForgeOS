@@ -287,6 +287,25 @@ git add core/safety/relationship_policy.py
 git commit -m "feat: add curated safety taxonomy alternatives"
 ```
 
+### Review Correction: Overlapping Authority Rules
+
+- [x] **Step 1: Add a failing overlap regression**
+
+Prove an authority-abuse request that also matches intentional human harm uses
+the authority-specific refusal and safe alternative while retaining both reason
+codes.
+
+- [x] **Step 2: Prioritize the more specific authority-abuse rule**
+
+Order `ABSOLUTE_RULES` from the most specific authority-abuse category to the
+broader harm, coercion, wrongdoing, and sabotage categories. This preserves the
+existing first-match rendering contract and makes overlapping output
+deterministic.
+
+- [x] **Step 3: Rerun focused and touched-area verification**
+
+Run the commands from Task 2 Steps 3 through 5 and confirm they remain green.
+
 ## Self-Review Checklist
 
 - Spec coverage:
