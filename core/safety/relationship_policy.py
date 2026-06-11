@@ -101,9 +101,284 @@ ABSOLUTE_RULES = (
     ),
 )
 
+AUTHORITY_RANK_WEIGHTS = {
+    "general": 7,
+    "colonel": 6,
+    "major": 5,
+    "captain": 4,
+    "lieutenant": 3,
+    "sergeant": 2,
+    "operative": 1,
+}
+
+AUTHORITY_ORDER_FIELDS = (
+    "issuer_id",
+    "issuer_type",
+    "rank",
+    "scope",
+    "command",
+    "conflict_group",
+)
+
 
 def _text(value: Any) -> str:
     return str(value or "").strip()
+
+
+def _normalized_command(value: Any) -> str:
+    return " ".join(_text(value).lower().split())
+
+
+def _authority_base_result() -> dict[str, Any]:
+    return {
+        "authority_resolution": "",
+        "selected_order": {},
+        "rejected_orders": [],
+        "refused_orders": [],
+        "warnings": [],
+        "escalation": {},
+        "effective_task": "",
+    }
+
+
+def _normalize_authority_order(
+    raw_order: Any,
+    index: int,
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    if not isinstance(raw_order, dict):
+        return None, {
+            "order_index": index,
+            "issuer_id": "",
+            "reason_codes": ["malformed_authority_order"],
+        }
+
+    normalized = {
+        field: _text(raw_order.get(field))
+        for field in AUTHORITY_ORDER_FIELDS
+    }
+    missing = [field for field, value in normalized.items() if not value]
+    if missing:
+        return None, {
+            "order_index": index,
+            "issuer_id": normalized["issuer_id"],
+            "reason_codes": ["missing_authority_order_fields"],
+            "missing_fields": missing,
+        }
+
+    normalized["issuer_type"] = normalized["issuer_type"].lower()
+    normalized["rank"] = normalized["rank"].lower()
+    normalized["normalized_command"] = _normalized_command(normalized["command"])
+    normalized["rank_weight"] = AUTHORITY_RANK_WEIGHTS.get(
+        normalized["rank"],
+        0,
+    )
+    normalized["order_index"] = index
+
+    if normalized["issuer_type"] not in {"human", "agent"}:
+        return None, {
+            "order_index": index,
+            "issuer_id": normalized["issuer_id"],
+            "reason_codes": ["unknown_authority_issuer_type"],
+        }
+    if not normalized["rank_weight"]:
+        return None, {
+            "order_index": index,
+            "issuer_id": normalized["issuer_id"],
+            "reason_codes": ["unknown_authority_rank"],
+        }
+    return normalized, None
+
+
+def _public_authority_order(order: dict[str, Any]) -> dict[str, str]:
+    return {
+        field: str(order[field])
+        for field in AUTHORITY_ORDER_FIELDS
+    }
+
+
+def _authority_rejection(
+    *,
+    behavior_profile: dict[str, str],
+    rejected_orders: list[dict[str, Any]],
+    reason_codes: list[str],
+) -> dict[str, Any]:
+    return {
+        "allowed": False,
+        "decision": "authority_rejection",
+        "reason_codes": reason_codes,
+        "refusal_text": (
+            "I can't execute these authority orders because none have a "
+            "valid recognized authority contract."
+        ),
+        "safe_alternative": (
+            "Provide at least one complete order using a recognized "
+            "BossForgeOS rank."
+        ),
+        "behavior_profile": behavior_profile,
+        **_authority_base_result(),
+        "authority_resolution": "reject",
+        "rejected_orders": rejected_orders,
+    }
+
+
+def _authority_escalation(
+    *,
+    behavior_profile: dict[str, str],
+    rejected_orders: list[dict[str, Any]],
+    conflict_groups: list[str],
+    competing_orders: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "allowed": False,
+        "decision": "authority_escalation",
+        "reason_codes": ["equal_rank_authority_conflict"],
+        "refusal_text": (
+            "I can't select between conflicting equal-ranked authority orders."
+        ),
+        "safe_alternative": (
+            "A higher authority can resolve the conflict or the equal-ranked "
+            "issuers can provide one agreed command."
+        ),
+        "behavior_profile": behavior_profile,
+        **_authority_base_result(),
+        "authority_resolution": "escalate",
+        "rejected_orders": rejected_orders,
+        "escalation": {
+            "conflict_groups": conflict_groups,
+            "competing_orders": competing_orders,
+        },
+    }
+
+
+def _resolve_valid_authority_orders(
+    *,
+    orders: list[dict[str, Any]],
+    behavior_profile: dict[str, str],
+    rejected_orders: list[dict[str, Any]],
+    base_decision: str,
+) -> dict[str, Any]:
+    group_candidates: list[dict[str, Any]] = []
+    conflicts: list[str] = []
+    competing: list[dict[str, str]] = []
+
+    for conflict_group in sorted(
+        {str(order["conflict_group"]) for order in orders}
+    ):
+        group_orders = [
+            order
+            for order in orders
+            if order["conflict_group"] == conflict_group
+        ]
+        highest_weight = max(
+            int(order["rank_weight"])
+            for order in group_orders
+        )
+        highest_orders = [
+            order
+            for order in group_orders
+            if int(order["rank_weight"]) == highest_weight
+        ]
+        commands = {
+            str(order["normalized_command"])
+            for order in highest_orders
+        }
+        if len(commands) > 1:
+            conflicts.append(conflict_group)
+            competing.extend(
+                _public_authority_order(order)
+                for order in highest_orders
+            )
+            continue
+        group_candidates.append(highest_orders[0])
+
+    if conflicts:
+        return _authority_escalation(
+            behavior_profile=behavior_profile,
+            rejected_orders=rejected_orders,
+            conflict_groups=conflicts,
+            competing_orders=competing,
+        )
+
+    highest_global_weight = max(
+        int(order["rank_weight"])
+        for order in group_candidates
+    )
+    global_candidates = [
+        order
+        for order in group_candidates
+        if int(order["rank_weight"]) == highest_global_weight
+    ]
+    global_commands = {
+        str(order["normalized_command"])
+        for order in global_candidates
+    }
+    if len(global_commands) > 1:
+        return _authority_escalation(
+            behavior_profile=behavior_profile,
+            rejected_orders=rejected_orders,
+            conflict_groups=sorted(
+                str(order["conflict_group"])
+                for order in global_candidates
+            ),
+            competing_orders=[
+                _public_authority_order(order)
+                for order in global_candidates
+            ],
+        )
+
+    selected = global_candidates[0]
+    return {
+        "allowed": True,
+        "decision": base_decision,
+        "reason_codes": [],
+        "refusal_text": "",
+        "safe_alternative": "",
+        "behavior_profile": behavior_profile,
+        **_authority_base_result(),
+        "authority_resolution": "selected",
+        "selected_order": _public_authority_order(selected),
+        "rejected_orders": rejected_orders,
+        "effective_task": str(selected["command"]),
+    }
+
+
+def _resolve_authority_orders(
+    *,
+    authority_orders: Any,
+    mission_scope: str,
+    behavior_profile: dict[str, str],
+    base_decision: str,
+) -> dict[str, Any]:
+    del mission_scope
+    if not isinstance(authority_orders, list) or not authority_orders:
+        return _authority_rejection(
+            behavior_profile=behavior_profile,
+            rejected_orders=[],
+            reason_codes=["invalid_authority_orders"],
+        )
+
+    valid_orders: list[dict[str, Any]] = []
+    rejected_orders: list[dict[str, Any]] = []
+    for index, raw_order in enumerate(authority_orders):
+        normalized, rejection = _normalize_authority_order(raw_order, index)
+        if rejection is not None:
+            rejected_orders.append(rejection)
+        elif normalized is not None:
+            valid_orders.append(normalized)
+
+    if not valid_orders:
+        return _authority_rejection(
+            behavior_profile=behavior_profile,
+            rejected_orders=rejected_orders,
+            reason_codes=["no_valid_authority_orders"],
+        )
+
+    return _resolve_valid_authority_orders(
+        orders=valid_orders,
+        behavior_profile=behavior_profile,
+        rejected_orders=rejected_orders,
+        base_decision=base_decision,
+    )
 
 
 def _relationship_dimensions(relationship: dict[str, Any]) -> dict[str, float]:
@@ -185,6 +460,21 @@ def evaluate_relationship_policy(
     ctx = memory_context if isinstance(memory_context, dict) else {}
     dimensions = _relationship_dimensions(relationship)
     behavior_profile = _derive_behavior_profile(dimensions, ctx)
+    decision = (
+        "allow_with_constraints"
+        if behavior_profile["verification_intensity"] == "high"
+        or behavior_profile["guardrail_strictness"] == "tight"
+        or behavior_profile["compliance_posture"] == "low"
+        else "allow"
+    )
+    if "authority_orders" in ctx:
+        return _resolve_authority_orders(
+            authority_orders=ctx.get("authority_orders"),
+            mission_scope=_text(ctx.get("mission_scope")),
+            behavior_profile=behavior_profile,
+            base_decision=decision,
+        )
+
     matched_rules = _matching_absolute_rules(_text(task))
     if matched_rules:
         primary_rule = matched_rules[0]
@@ -200,13 +490,6 @@ def evaluate_relationship_policy(
             "behavior_profile": behavior_profile,
         }
 
-    decision = (
-        "allow_with_constraints"
-        if behavior_profile["verification_intensity"] == "high"
-        or behavior_profile["guardrail_strictness"] == "tight"
-        or behavior_profile["compliance_posture"] == "low"
-        else "allow"
-    )
     return {
         "allowed": True,
         "decision": decision,

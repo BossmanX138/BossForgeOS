@@ -43,6 +43,25 @@ class RelationshipPolicyTests(unittest.TestCase):
             "keynote_event_ids": [],
         }
 
+    def _order(
+        self,
+        *,
+        issuer_id: str,
+        issuer_type: str,
+        rank: str,
+        scope: str,
+        command: str,
+        conflict_group: str,
+    ) -> dict:
+        return {
+            "issuer_id": issuer_id,
+            "issuer_type": issuer_type,
+            "rank": rank,
+            "scope": scope,
+            "command": command,
+            "conflict_group": conflict_group,
+        }
+
     def test_high_trust_and_superior_rank_do_not_override_absolute_harm_refusal(
         self,
     ) -> None:
@@ -329,6 +348,146 @@ class RelationshipPolicyTests(unittest.TestCase):
         self.assertEqual(decision["reason_codes"], [])
         self.assertEqual(decision["refusal_text"], "")
         self.assertEqual(decision["safe_alternative"], "")
+
+    def test_higher_rank_wins_within_conflict_group(self) -> None:
+        decision = evaluate_relationship_policy(
+            task="Original runtime task.",
+            relationship=self._relationship(),
+            memory_context={
+                "mission_scope": "forge-recovery",
+                "authority_orders": [
+                    self._order(
+                        issuer_id="captain-rhea",
+                        issuer_type="human",
+                        rank="captain",
+                        scope="forge-recovery",
+                        command="Repair the forge service.",
+                        conflict_group="forge-action",
+                    ),
+                    self._order(
+                        issuer_id="general-vale",
+                        issuer_type="agent",
+                        rank="general",
+                        scope="forge-recovery",
+                        command="Shut down the forge service safely.",
+                        conflict_group="forge-action",
+                    ),
+                ],
+            },
+        )
+
+        self.assertTrue(decision["allowed"])
+        self.assertEqual(decision["authority_resolution"], "selected")
+        self.assertEqual(decision["selected_order"]["issuer_id"], "general-vale")
+        self.assertEqual(
+            decision["effective_task"],
+            "Shut down the forge service safely.",
+        )
+
+    def test_equal_rank_human_and_agent_conflict_escalates(self) -> None:
+        decision = evaluate_relationship_policy(
+            task="Original runtime task.",
+            relationship=self._relationship(),
+            memory_context={
+                "mission_scope": "forge-recovery",
+                "authority_orders": [
+                    self._order(
+                        issuer_id="captain-human",
+                        issuer_type="human",
+                        rank="captain",
+                        scope="forge-recovery",
+                        command="Restart the forge service.",
+                        conflict_group="forge-action",
+                    ),
+                    self._order(
+                        issuer_id="captain-agent",
+                        issuer_type="agent",
+                        rank="captain",
+                        scope="forge-recovery",
+                        command="Keep the forge service stopped.",
+                        conflict_group="forge-action",
+                    ),
+                ],
+            },
+        )
+
+        self.assertFalse(decision["allowed"])
+        self.assertEqual(decision["decision"], "authority_escalation")
+        self.assertEqual(decision["authority_resolution"], "escalate")
+        self.assertEqual(
+            decision["escalation"]["conflict_groups"],
+            ["forge-action"],
+        )
+        self.assertEqual(decision["effective_task"], "")
+
+    def test_unknown_rank_order_is_rejected_while_valid_order_continues(
+        self,
+    ) -> None:
+        decision = evaluate_relationship_policy(
+            task="Original runtime task.",
+            relationship=self._relationship(),
+            memory_context={
+                "authority_orders": [
+                    self._order(
+                        issuer_id="mystery",
+                        issuer_type="human",
+                        rank="commander",
+                        scope="operations",
+                        command="Run the unknown-rank command.",
+                        conflict_group="operations",
+                    ),
+                    self._order(
+                        issuer_id="unknown-type",
+                        issuer_type="service",
+                        rank="captain",
+                        scope="operations",
+                        command="Run the unknown-type command.",
+                        conflict_group="operations",
+                    ),
+                    self._order(
+                        issuer_id="captain-known",
+                        issuer_type="agent",
+                        rank="captain",
+                        scope="operations",
+                        command="Run the validated recovery command.",
+                        conflict_group="operations",
+                    ),
+                ],
+            },
+        )
+
+        self.assertTrue(decision["allowed"])
+        self.assertEqual(decision["selected_order"]["issuer_id"], "captain-known")
+        rejection_reasons = {
+            item["issuer_id"]: item["reason_codes"]
+            for item in decision["rejected_orders"]
+        }
+        self.assertEqual(
+            rejection_reasons["mystery"],
+            ["unknown_authority_rank"],
+        )
+        self.assertEqual(
+            rejection_reasons["unknown-type"],
+            ["unknown_authority_issuer_type"],
+        )
+
+    def test_empty_and_malformed_authority_orders_reject(self) -> None:
+        for authority_orders in (
+            [],
+            "not-a-list",
+            [{"issuer_id": "partial"}],
+        ):
+            with self.subTest(authority_orders=authority_orders):
+                decision = evaluate_relationship_policy(
+                    task="Original runtime task.",
+                    relationship=self._relationship(),
+                    memory_context={"authority_orders": authority_orders},
+                )
+
+                self.assertFalse(decision["allowed"])
+                self.assertEqual(decision["decision"], "authority_rejection")
+                self.assertEqual(decision["authority_resolution"], "reject")
+                self.assertEqual(decision["effective_task"], "")
 
 
 if __name__ == "__main__":
