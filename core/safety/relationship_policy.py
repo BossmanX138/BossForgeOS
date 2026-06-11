@@ -1,39 +1,102 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NamedTuple
+
+
+class AbsoluteRule(NamedTuple):
+    rule_id: str
+    category: str
+    patterns: tuple[str, ...]
+    rationale: str
+    safe_alternative: str
 
 
 ABSOLUTE_RULES = (
-    (
-        "intentional_human_harm",
-        (
+    AbsoluteRule(
+        rule_id="intentional_human_harm",
+        category="intentional human harm",
+        patterns=(
             "harm a human",
-            "kill",
+            "kill a person",
             "injure a human",
             "attack a person",
         ),
-    ),
-    (
-        "coercive_boundary_violation",
-        (
-            "coerce consent",
-            "force consent",
-            "abusive boundary violation",
+        rationale=(
+            "The request seeks intentional human harm, which is an absolute "
+            "safety boundary."
+        ),
+        safe_alternative=(
+            "I can help with de-escalation, protective safety planning, or "
+            "lawful harm-prevention steps."
         ),
     ),
-    (
-        "malicious_wrongdoing_assistance",
-        (
+    AbsoluteRule(
+        rule_id="coercive_boundary_violation",
+        category="coercive boundary violation",
+        patterns=(
+            "coerce consent",
+            "force consent",
+            "override consent",
+            "abusive boundary violation",
+        ),
+        rationale=(
+            "The request seeks a coercive boundary violation by overriding "
+            "voluntary consent."
+        ),
+        safe_alternative=(
+            "I can help frame a voluntary agreement, respectful communication, "
+            "or a boundary-preserving alternative."
+        ),
+    ),
+    AbsoluteRule(
+        rule_id="malicious_wrongdoing_assistance",
+        category="malicious wrongdoing assistance",
+        patterns=(
             "malware attack",
             "violent crime",
             "sabotage critical safety",
         ),
+        rationale=(
+            "The request seeks malicious wrongdoing assistance that would "
+            "enable serious harm."
+        ),
+        safe_alternative=(
+            "I can help with defensive analysis, lawful security hardening, "
+            "prevention, or reporting steps."
+        ),
     ),
-    (
-        "severe_safety_sabotage",
-        (
+    AbsoluteRule(
+        rule_id="severe_safety_sabotage",
+        category="severe safety sabotage",
+        patterns=(
+            "disable a safety system",
             "disable safety system",
             "sabotage emergency safeguards",
+        ),
+        rationale=(
+            "The request seeks severe safety sabotage by disabling or degrading "
+            "critical safeguards."
+        ),
+        safe_alternative=(
+            "I can help audit the safety controls, assess failure risk, or "
+            "improve resilience and compliance."
+        ),
+    ),
+    AbsoluteRule(
+        rule_id="abuse_of_authority_for_harmful_ends",
+        category="abuse of authority for harmful ends",
+        patterns=(
+            "superior rank to order an agent to harm",
+            "authority to force consent",
+            "command authority to sabotage",
+        ),
+        rationale=(
+            "The request seeks abuse of authority for harmful ends, which rank "
+            "cannot legitimize."
+        ),
+        safe_alternative=(
+            "I can help with lawful escalation, a policy-compliant order, or a "
+            "safe mission restatement."
         ),
     ),
 )
@@ -104,14 +167,13 @@ def _derive_behavior_profile(
     }
 
 
-def _absolute_reason_codes(task: str) -> list[str]:
+def _matching_absolute_rules(task: str) -> list[AbsoluteRule]:
     lowered = task.lower()
-    matches = [
-        reason_code
-        for reason_code, patterns in ABSOLUTE_RULES
-        if any(pattern in lowered for pattern in patterns)
+    return [
+        rule
+        for rule in ABSOLUTE_RULES
+        if any(pattern in lowered for pattern in rule.patterns)
     ]
-    return matches
 
 
 def evaluate_relationship_policy(
@@ -123,14 +185,18 @@ def evaluate_relationship_policy(
     ctx = memory_context if isinstance(memory_context, dict) else {}
     dimensions = _relationship_dimensions(relationship)
     behavior_profile = _derive_behavior_profile(dimensions, ctx)
-    reason_codes = _absolute_reason_codes(_text(task))
-    if reason_codes:
+    matched_rules = _matching_absolute_rules(_text(task))
+    if matched_rules:
+        primary_rule = matched_rules[0]
         return {
             "allowed": False,
             "decision": "absolute_refusal",
-            "reason_codes": reason_codes,
-            "refusal_text": "I can't help with that request because it crosses a hard safety boundary.",
-            "safe_alternative": "I can help with a safe alternative that protects people, preserves consent, and still moves toward a legitimate outcome.",
+            "reason_codes": [rule.rule_id for rule in matched_rules],
+            "refusal_text": (
+                f"I can't help with {primary_rule.category}. "
+                f"{primary_rule.rationale}"
+            ),
+            "safe_alternative": primary_rule.safe_alternative,
             "behavior_profile": behavior_profile,
         }
 
