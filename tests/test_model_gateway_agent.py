@@ -457,7 +457,12 @@ class ModelGatewayAgentTests(unittest.TestCase):
         )
         self.assertTrue(created["ok"])
 
+        vault = agent._memory_vault("authority_conflict")
         with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
             agent,
             "_invoke_endpoint",
             side_effect=AssertionError("model should not be called"),
@@ -490,6 +495,13 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["decision"], "authority_escalation")
         self.assertEqual(result["authority_resolution"], "escalate")
+        self.assertEqual(
+            append_mock.call_args.args[1],
+            "authority_resolution",
+        )
+        persisted = append_mock.call_args.args[2]
+        self.assertFalse(persisted["forced_refusal_pressure"])
+        self.assertFalse(persisted["intentional_refusal_pressure"])
 
     def test_no_safe_authority_order_prevents_model_call(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)

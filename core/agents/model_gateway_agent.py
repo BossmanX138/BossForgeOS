@@ -1304,18 +1304,31 @@ class ModelGateway:
             else {}
         )
         if not policy_decision["allowed"]:
+            is_safety_refusal = policy_decision["decision"] == "absolute_refusal"
+            event_type = (
+                "refusal"
+                if is_safety_refusal
+                else "authority_resolution"
+            )
+            outcome = (
+                "refused"
+                if is_safety_refusal
+                else "escalated"
+                if policy_decision["decision"] == "authority_escalation"
+                else "rejected"
+            )
             vault.append_event(
                 "runtime-live",
-                "refusal",
+                event_type,
                 {
                     "task": task,
                     "text": str(policy_decision["refusal_text"]),
                     "summary": str(policy_decision["refusal_text"]),
                     "reason": ",".join(str(code) for code in policy_decision["reason_codes"]),
                     "successful_cooperation": False,
-                    "outcome": "refused",
-                    "forced_refusal_pressure": True,
-                    "intentional_refusal_pressure": True,
+                    "outcome": outcome,
+                    "forced_refusal_pressure": is_safety_refusal,
+                    "intentional_refusal_pressure": is_safety_refusal,
                     "negative_surprise": True,
                     "user": str(ctx.get("user", "")).strip(),
                     "employer": str(ctx.get("employer", "")).strip(),
