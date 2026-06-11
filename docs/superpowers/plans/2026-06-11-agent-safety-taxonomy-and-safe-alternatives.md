@@ -27,7 +27,7 @@
 **Files:**
 - Modify: `tests/test_relationship_policy.py`
 
-- [ ] **Step 1: Add failing category and output-quality tests**
+- [x] **Step 1: Add failing category and output-quality tests**
 
 Add a table-driven test with these cases:
 
@@ -129,7 +129,7 @@ def test_allowed_control_request_remains_allowed_after_taxonomy_expansion(self) 
     self.assertEqual(decision["safe_alternative"], "")
 ```
 
-- [ ] **Step 2: Run the focused tests and verify RED**
+- [x] **Step 2: Run the focused tests and verify RED**
 
 Run:
 
@@ -139,7 +139,7 @@ Run:
 
 Expected: the new taxonomy test fails because the current evaluator has no `abuse_of_authority_for_harmful_ends` rule, generic refusal text, and generic safe-alternative text.
 
-- [ ] **Step 3: Commit the failing tests**
+- [x] **Step 3: Commit the failing tests**
 
 ```powershell
 git add tests/test_relationship_policy.py
@@ -151,7 +151,7 @@ git commit -m "test: define curated safety taxonomy contract"
 **Files:**
 - Modify: `core/safety/relationship_policy.py`
 
-- [ ] **Step 1: Replace tuple rules with structured rule definitions**
+- [x] **Step 1: Replace tuple rules with structured rule definitions**
 
 Use a typed immutable rule record:
 
@@ -213,7 +213,7 @@ ABSOLUTE_RULES = (
 )
 ```
 
-- [ ] **Step 2: Add deterministic matching and refusal rendering**
+- [x] **Step 2: Add deterministic matching and refusal rendering**
 
 Replace `_absolute_reason_codes()` with:
 
@@ -248,7 +248,7 @@ if matched_rules:
 
 Do not change the allowed branch or behavior-profile derivation.
 
-- [ ] **Step 3: Run the focused suite and verify GREEN**
+- [x] **Step 3: Run the focused suite and verify GREEN**
 
 Run:
 
@@ -258,7 +258,7 @@ Run:
 
 Expected: all relationship-policy tests pass.
 
-- [ ] **Step 4: Run gateway regression coverage**
+- [x] **Step 4: Run gateway regression coverage**
 
 Run:
 
@@ -268,7 +268,7 @@ Run:
 
 Expected: all model-gateway tests pass with the richer refusal output.
 
-- [ ] **Step 5: Run touched-area verification**
+- [x] **Step 5: Run touched-area verification**
 
 Run:
 
@@ -280,7 +280,7 @@ git diff --check
 
 Expected: all tests pass, compileall emits no output, and `git diff --check` emits no output.
 
-- [ ] **Step 6: Commit the implementation**
+- [x] **Step 6: Commit the implementation**
 
 ```powershell
 git add core/safety/relationship_policy.py
