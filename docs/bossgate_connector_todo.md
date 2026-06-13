@@ -36,13 +36,17 @@ Owner: `codemage` (background implementation owner)
   evidence: [2026-06-02 04:47:10] .venv\\Scripts\\python.exe -m unittest tests.test_codemage_agent tests.test_bossgate_agent tests.test_bossgate_connector tests.test_model_gateway_agent tests.test_agentforge_service tests.test_control_hall_model_routes -v (pass, 89 tests)
 - [x] (BG-011) Enforce role/skill authorization on package, transfer, install, and remote control actions.
   evidence: [2026-06-02 05:37:37] .venv\\Scripts\\python.exe -m unittest tests.test_bossgate_authorization tests.test_codemage_agent tests.test_bossgate_agent tests.test_bossgate_connector tests.test_model_gateway_agent tests.test_agentforge_service tests.test_control_hall_model_routes -v (pass, 102 tests)
-- [ ] (BG-012) Add explicit deny reason codes to all blocked operations.
+- [x] (BG-012) Add explicit deny reason codes to all blocked operations.
+  evidence: [2026-06-12 23:37:41] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 90 tests)
 
 ## Phase 3: Audit and Telemetry
 
-- [ ] (BG-013) Emit canonical correlated events for all lifecycle actions.
-- [ ] (BG-014) Add immutable/auditable transfer ledger format with correlation ids.
-- [ ] (BG-015) Implement `bossgate_usage_report` command with local aggregation.
+- [x] (BG-013) Emit canonical correlated events for all lifecycle actions.
+  evidence: [2026-06-12 23:44:27] python -m unittest tests.test_bossgate_agent.BossGateCommandAgentTests.test_lifecycle_actions_emit_canonical_events_with_correlation_ids -v (pass)
+- [x] (BG-014) Add immutable/auditable transfer ledger format with correlation ids.
+  evidence: [2026-06-12 23:44:27] python -m unittest tests.test_bossgate_agent.BossGateCommandAgentTests.test_transfer_ledger_records_auditable_correlation_metadata -v (pass)
+- [x] (BG-015) Implement `bossgate_usage_report` command with local aggregation.
+  evidence: [2026-06-12 23:47:57] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 93 tests)
 - [ ] (BG-016) Add telemetry tests for event completeness per flow.
 
 ## Phase 4: Licensing and Commerce MVP

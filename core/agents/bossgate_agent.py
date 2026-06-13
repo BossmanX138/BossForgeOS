@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 from urllib import error, request
@@ -46,6 +47,54 @@ class BossGateCommandAgent:
         self._replay_tokens = self._load_replay_tokens()
         self._node_profile = self._load_or_create_node_profile()
         self._last_map_refresh_ts = 0.0
+
+    def _new_correlation_id(self, action: str) -> str:
+        safe_action = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "-" for ch in str(action).strip().lower())
+        return f"bg-{safe_action}-{self.node_id}-{int(time.time() * 1000)}"
+
+    def _emit_lifecycle_event(
+        self,
+        action: str,
+        correlation_id: str,
+        result: Dict[str, Any],
+        **context: Any,
+    ) -> None:
+        payload: Dict[str, Any] = {
+            "correlation_id": correlation_id,
+            "action": action,
+            "ok": bool(result.get("ok", False)),
+            "status": str(result.get("status", "ok" if result.get("ok", False) else "failed")),
+        }
+        payload.update(context)
+        payload.update(result)
+        self.bus.emit_event("bossgate", f"lifecycle:{action}", payload, level="info" if payload["ok"] else "warning")
+
+    def _append_transfer_ledger(self, **record: Any) -> None:
+        entry = {
+            "record_type": "bossgate_transfer_ledger_v1",
+            "schema_version": 1,
+            "timestamp": int(time.time()),
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        entry.update(record)
+        with self.transfer_log_path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(entry, separators=(",", ":")))
+            fp.write("\n")
+
+    def _deny(
+        self,
+        reason_code: str,
+        message: str,
+        **extra: Any,
+    ) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "ok": False,
+            "message": message,
+            "reason_code": str(reason_code).strip(),
+            "reason_codes": [str(reason_code).strip()],
+        }
+        payload.update(extra)
+        return payload
 
     def _load_or_create_node_id(self) -> str:
         if self.node_id_path.exists():
@@ -216,6 +265,7 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("rotate_key")
         authorized, authorization = self._require_authorization(
             operator_id=operator_id,
             scope_id=scope_id,
@@ -223,6 +273,9 @@ class BossGateCommandAgent:
             actor_type=actor_type,
         )
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("rotate_key", correlation_id, authorization)
             return authorization
         key_id = str(new_key_id).strip() or f"k{int(time.time())}"
         secret = str(new_secret_key).strip() or f"{self.node_id}:{key_id}:{int(time.time())}"
@@ -231,7 +284,16 @@ class BossGateCommandAgent:
         self._keyring["keys"] = keys
         self._keyring["active_key_id"] = key_id
         self._save_keyring()
-        return {"ok": True, "active_key_id": key_id, "key_count": len(keys), "authorization": authorization}
+        result = {
+            "ok": True,
+            "active_key_id": key_id,
+            "key_count": len(keys),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+            "status": "key_rotated",
+        }
+        self._emit_lifecycle_event("rotate_key", correlation_id, result)
+        return result
 
     def _require_authorization(
         self,
@@ -248,46 +310,46 @@ class BossGateCommandAgent:
             "actor_type": normalized_actor_type,
         }
         if not authorization["operator_id"] or not authorization["scope_id"]:
-            return False, {
-                "ok": False,
-                "message": "authorization denied: operator_id and scope_id are required",
-                "authorization": authorization,
-            }
+            return False, self._deny(
+                "missing_authorization_context",
+                "authorization denied: operator_id and scope_id are required",
+                authorization=authorization,
+            )
         if normalized_actor_type == "agent":
             profiles = self._load_agent_profiles()
             profile = profiles.get(authorization["operator_id"].lower())
             if not isinstance(profile, dict):
-                return False, {
-                    "ok": False,
-                    "message": f"authorization denied: unknown agent: {authorization['operator_id']}",
-                    "authorization": authorization,
-                }
+                return False, self._deny(
+                    "unknown_agent",
+                    f"authorization denied: unknown agent: {authorization['operator_id']}",
+                    authorization=authorization,
+                )
             skills = {str(item).strip().lower() for item in profile.get("skills", []) if str(item).strip()} if isinstance(profile.get("skills"), list) else set()
             if required_agent_skill and required_agent_skill not in skills:
-                return False, {
-                    "ok": False,
-                    "message": f"authorization denied: agent skill is required: {required_agent_skill}",
-                    "authorization": authorization,
-                }
+                return False, self._deny(
+                    "missing_agent_skill",
+                    f"authorization denied: agent skill is required: {required_agent_skill}",
+                    authorization=authorization,
+                )
             return True, authorization
         if normalized_actor_type != "human":
-            return False, {
-                "ok": False,
-                "message": f"authorization denied: unknown actor_type: {normalized_actor_type}",
-                "authorization": authorization,
-            }
+            return False, self._deny(
+                "unknown_actor_type",
+                f"authorization denied: unknown actor_type: {normalized_actor_type}",
+                authorization=authorization,
+            )
         if not self.authorization_registry.roles_for_user(authorization["operator_id"]):
-            return False, {
-                "ok": False,
-                "message": f"authorization denied: unknown operator: {authorization['operator_id']}",
-                "authorization": authorization,
-            }
+            return False, self._deny(
+                "unknown_operator",
+                f"authorization denied: unknown operator: {authorization['operator_id']}",
+                authorization=authorization,
+            )
         if permission and not self.authorization_registry.has_permission(authorization["operator_id"], permission):
-            return False, {
-                "ok": False,
-                "message": f"authorization denied: permission is required: {permission}",
-                "authorization": authorization,
-            }
+            return False, self._deny(
+                "missing_permission",
+                f"authorization denied: permission is required: {permission}",
+                authorization=authorization,
+            )
         return True, authorization
 
     def discover_targets(
@@ -391,15 +453,19 @@ class BossGateCommandAgent:
                 return authorization
         target = destination.strip()
         if not target:
-            return {"ok": False, "message": "destination is required", "allowed_for_transfer": False}
+            return self._deny(
+                "missing_destination",
+                "destination is required",
+                allowed_for_transfer=False,
+            )
         result = scan_rest_endpoints(target)
         if not isinstance(result, dict):
-            return {
-                "ok": False,
-                "message": "invalid transfer validation result",
-                "allowed_for_transfer": False,
-                "destination": target,
-            }
+            return self._deny(
+                "invalid_target_validation_result",
+                "invalid transfer validation result",
+                allowed_for_transfer=False,
+                destination=target,
+            )
         result.setdefault("destination", target)
         result.setdefault("authorization", authorization)
         return result
@@ -416,6 +482,7 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("package_agent")
         authorized, authorization = self._require_authorization(
             operator_id,
             scope_id,
@@ -424,18 +491,37 @@ class BossGateCommandAgent:
             required_agent_skill="bossgate_coms_officer",
         )
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("package_agent", correlation_id, authorization, agent_name=str(name).strip().lower())
             return authorization
         profiles = self._load_agent_profiles()
         key = name.strip().lower()
         if not key:
-            return {"ok": False, "message": "name is required"}
+            result = self._deny("missing_agent_name", "name is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("package_agent", correlation_id, result, agent_name=key)
+            return result
         profile = profiles.get(key)
         if not isinstance(profile, dict):
-            return {"ok": False, "message": f"agent not found: {key}"}
+            result = self._deny("agent_not_found", f"agent not found: {key}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("package_agent", correlation_id, result, agent_name=key)
+            return result
         if not bool(profile.get("bossgate_enabled", True)):
-            return {"ok": False, "message": f"agent is not bossgate-enabled: {key}"}
+            result = self._deny(
+                "agent_not_bossgate_enabled",
+                f"agent is not bossgate-enabled: {key}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("package_agent", correlation_id, result, agent_name=key)
+            return result
         if not str(target_system_id).strip():
-            return {"ok": False, "message": "target_system_id is required"}
+            result = self._deny(
+                "missing_target_system_id",
+                "target_system_id is required",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("package_agent", correlation_id, result, agent_name=key)
+            return result
 
         secure_address = str(profile.get("secure_address", "")).strip().lower()
         if not is_valid_secure_address(secure_address):
@@ -497,14 +583,18 @@ class BossGateCommandAgent:
         else:
             package_path = self.packages_dir / f"{key}_{int(time.time())}.bossgate.json"
         package_path.write_text(json.dumps(package_doc, indent=2), encoding="utf-8")
-        return {
+        result = {
             "ok": True,
             "agent": key,
             "package_file": str(package_path),
             "target_system_id": str(target_system_id).strip(),
             "visibility_profile": metadata.get("profile", "none"),
             "authorization": authorization,
+            "correlation_id": correlation_id,
+            "status": "package_created",
         }
+        self._emit_lifecycle_event("package_agent", correlation_id, result, agent_name=key)
+        return result
 
     def transfer_agent(
         self,
@@ -516,6 +606,7 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("transfer_agent")
         authorized, authorization = self._require_authorization(
             operator_id,
             scope_id,
@@ -524,28 +615,50 @@ class BossGateCommandAgent:
             required_agent_skill="bossgate_travel_control",
         )
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("transfer_agent", correlation_id, authorization, destination=destination)
             return authorization
         can_initiate, node_target_type = self._can_initiate_travel()
         if not can_initiate:
-            return {
-                "ok": False,
-                "message": "travel initiation denied: only super gates can initiate travel",
-                "node_target_type": node_target_type,
-                "allowed_initiators": sorted(SUPER_GATE_TARGET_TYPES),
-            }
+            result = self._deny(
+                "travel_initiator_not_super_gate",
+                "travel initiation denied: only super gates can initiate travel",
+                node_target_type=node_target_type,
+                allowed_initiators=sorted(SUPER_GATE_TARGET_TYPES),
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("transfer_agent", correlation_id, result, destination=destination, authorization=authorization)
+            return result
         package_path = Path(package_file).expanduser().resolve()
         if not package_path.exists():
-            return {"ok": False, "message": f"package file not found: {package_path}"}
+            result = self._deny(
+                "package_file_not_found",
+                f"package file not found: {package_path}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("transfer_agent", correlation_id, result, destination=destination, authorization=authorization)
+            return result
         package_doc = json.loads(package_path.read_text(encoding="utf-8"))
         package_agent_name = str(package_doc.get("agent_name", "")).strip().lower()
         target_validation = self.scan_target(destination, internal=True)
         if not bool(target_validation.get("allowed_for_transfer", False)):
-            return {
-                "ok": False,
-                "message": "destination is not approved for transfer",
-                "destination": destination,
-                "target_validation": target_validation,
-            }
+            result = self._deny(
+                "target_not_approved_for_transfer",
+                "destination is not approved for transfer",
+                destination=destination,
+                target_validation=target_validation,
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event(
+                "transfer_agent",
+                correlation_id,
+                result,
+                authorization=authorization,
+                package_file=str(package_path),
+                agent_name=package_agent_name,
+            )
+            return result
         transfer_result: dict[str, Any] = {
             "ok": True,
             "status": "validated_only" if dry_run else "queued_for_transport",
@@ -557,49 +670,59 @@ class BossGateCommandAgent:
                 package_path=package_path,
                 destination=destination,
                 resume_from_chunk=resume_from_chunk,
+                correlation_id=correlation_id,
             )
             if not transfer_result.get("ok", False):
-                record = {
-                    "timestamp": int(time.time()),
-                    "node_id": self.node_id,
-                    "package_file": str(package_path),
-                    "destination": destination,
-                    "target_type": str(target_validation.get("target_type", "unknown")),
-                    "dry_run": False,
-                    "status": "transfer_failed",
-                    "error": str(transfer_result.get("message", "")),
-                }
-                with self.transfer_log_path.open("a", encoding="utf-8") as fp:
-                    fp.write(json.dumps(record, separators=(",", ":")))
-                    fp.write("\n")
-                return {
-                    "ok": False,
-                    "destination": destination,
-                    "package_file": str(package_path),
-                    "dry_run": False,
-                    "status": "transfer_failed",
-                    "target_validation": target_validation,
-                    "message": str(transfer_result.get("message", "")),
-                }
+                self._append_transfer_ledger(
+                    node_id=self.node_id,
+                    correlation_id=correlation_id,
+                    action="transfer_agent",
+                    authorization=authorization,
+                    agent_name=package_agent_name,
+                    package_file=str(package_path),
+                    destination=destination,
+                    target_type=str(target_validation.get("target_type", "unknown")),
+                    dry_run=False,
+                    status="transfer_failed",
+                    resume_from_chunk=int(resume_from_chunk),
+                    resume_plan=transfer_result.get("resume_plan", {}),
+                    error=str(transfer_result.get("message", "")),
+                )
+                result = self._deny(
+                    "transfer_request_failed",
+                    str(transfer_result.get("message", "")),
+                    destination=destination,
+                    package_file=str(package_path),
+                    dry_run=False,
+                    status="transfer_failed",
+                    target_validation=target_validation,
+                    authorization=authorization,
+                    correlation_id=correlation_id,
+                )
+                self._emit_lifecycle_event("transfer_agent", correlation_id, result, agent_name=package_agent_name)
+                return result
             retirement = self._retire_local_agent_traces(package_agent_name, package_path)
         else:
             retirement = {"agent": package_agent_name, "profile_removed": False, "files_deleted": []}
 
         record = {
-            "timestamp": int(time.time()),
             "node_id": self.node_id,
+            "correlation_id": correlation_id,
+            "action": "transfer_agent",
+            "authorization": authorization,
+            "agent_name": package_agent_name,
             "package_file": str(package_path),
             "destination": destination,
             "target_type": str(target_validation.get("target_type", "unknown")),
             "dry_run": bool(dry_run),
             "status": str(transfer_result.get("status", "validated_only" if dry_run else "queued_for_transport")),
             "http_status": int(transfer_result.get("http_status", 0) or 0),
+            "resume_from_chunk": int(resume_from_chunk),
             "resume_plan": transfer_result.get("resume_plan", {}),
+            "payload_hash": transfer_result.get("payload_hash", ""),
         }
-        with self.transfer_log_path.open("a", encoding="utf-8") as fp:
-            fp.write(json.dumps(record, separators=(",", ":")))
-            fp.write("\n")
-        return {
+        self._append_transfer_ledger(**record)
+        result = {
             "ok": True,
             "destination": destination,
             "package_file": str(package_path),
@@ -614,25 +737,34 @@ class BossGateCommandAgent:
             },
             "target_validation": target_validation,
             "authorization": authorization,
+            "correlation_id": correlation_id,
         }
+        self._emit_lifecycle_event("transfer_agent", correlation_id, result, agent_name=package_agent_name)
+        return result
 
-    def _send_transfer_package(self, package_path: Path, destination: str, resume_from_chunk: int = 0) -> dict[str, Any]:
+    def _send_transfer_package(
+        self,
+        package_path: Path,
+        destination: str,
+        resume_from_chunk: int = 0,
+        correlation_id: str = "",
+    ) -> dict[str, Any]:
         package_doc = json.loads(package_path.read_text(encoding="utf-8"))
         envelope = package_doc.get("envelope") if isinstance(package_doc, dict) else None
         if not isinstance(envelope, dict):
-            return {"ok": False, "message": "package missing envelope"}
+            return {"ok": False, "message": "package missing envelope", "resume_plan": {}}
         manifest = envelope.get("chunk_manifest")
         chunk_count = int(manifest.get("chunk_count", 0)) if isinstance(manifest, dict) else 0
         safe_resume_from = max(0, int(resume_from_chunk))
         if not isinstance(manifest, dict):
             if safe_resume_from:
-                return {"ok": False, "message": "resume requires a package chunk manifest"}
+                return {"ok": False, "message": "resume requires a package chunk manifest", "resume_plan": {}}
             resume_plan = {}
         else:
             if safe_resume_from > chunk_count:
-                return {"ok": False, "message": "resume_from_chunk exceeds package chunk count"}
+                return {"ok": False, "message": "resume_from_chunk exceeds package chunk count", "resume_plan": {}}
             resume_plan = build_transfer_resume_plan(envelope, completed_chunk_indexes=list(range(safe_resume_from)))
-        correlation_id = f"bg-{self.node_id}-{int(time.time())}"
+        correlation_id = correlation_id or self._new_correlation_id("transfer_agent")
         base = destination.rstrip("/")
         endpoint = base + "/bossgate/transfer"
         body = {
@@ -658,9 +790,9 @@ class BossGateCommandAgent:
                 payload = ex.read().decode("utf-8", errors="replace")
             except Exception:
                 payload = str(ex)
-            return {"ok": False, "message": f"HTTP {ex.code}: {payload}"}
+            return {"ok": False, "message": f"HTTP {ex.code}: {payload}", "resume_plan": resume_plan}
         except Exception as ex:
-            return {"ok": False, "message": str(ex)}
+            return {"ok": False, "message": str(ex), "resume_plan": resume_plan}
 
         try:
             parsed = json.loads(raw) if raw.strip() else {}
@@ -684,6 +816,7 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("install_agent")
         authorized, authorization = self._require_authorization(
             operator_id,
             scope_id,
@@ -692,17 +825,30 @@ class BossGateCommandAgent:
             required_agent_skill="bossgate_coms_officer",
         )
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("install_agent", correlation_id, authorization, package_file=package_file)
             return authorization
         package_path = Path(package_file).expanduser().resolve()
         if not package_path.exists():
-            return {"ok": False, "message": f"package file not found: {package_path}"}
+            result = self._deny(
+                "package_file_not_found",
+                f"package file not found: {package_path}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
+            return result
         try:
             package_doc = json.loads(package_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as ex:
-            return {"ok": False, "message": f"invalid package file: {ex}"}
+            result = self._deny("invalid_package_file", f"invalid package file: {ex}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
+            return result
         envelope = package_doc.get("envelope") if isinstance(package_doc, dict) else None
         if not isinstance(envelope, dict):
-            return {"ok": False, "message": "package missing envelope"}
+            result = self._deny("package_missing_envelope", "package missing envelope", correlation_id=correlation_id)
+            self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
+            return result
         candidate_keys = self._decrypt_keyring(secret_key)
         candidate_replay_tokens = set(self._replay_tokens)
         ok = False
@@ -719,19 +865,106 @@ class BossGateCommandAgent:
                 break
             reason = why
         if not ok:
-            return {"ok": False, "message": f"envelope validation failed: {reason}"}
+            result = self._deny(
+                "envelope_validation_failed",
+                f"envelope validation failed: {reason}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
+            return result
         try:
             payload = decrypt_json_payload(str(envelope.get("encrypted_payload", "")), secret_key=candidate_keys)
         except Exception as ex:
-            return {"ok": False, "message": f"payload decryption failed: {ex}"}
+            result = self._deny(
+                "payload_decryption_failed",
+                f"payload decryption failed: {ex}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
+            return result
         self._replay_tokens = candidate_replay_tokens
         self._save_replay_tokens()
-        return {
+        result = {
             "ok": True,
             "installed_from": str(package_path),
             "message": "envelope validated; install approved",
             "agent_name": str(payload.get("agent_name", "")).strip().lower(),
             "authorization": authorization,
+            "correlation_id": correlation_id,
+            "status": "install_validated",
+        }
+        self._emit_lifecycle_event("install_agent", correlation_id, result)
+        return result
+
+    def usage_report(
+        self,
+        limit: int = 20,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        authorized, authorization = self._require_authorization(
+            operator_id,
+            scope_id,
+            "bossgate.usage.report",
+            actor_type,
+        )
+        if not authorized:
+            return authorization
+
+        entries: list[dict[str, Any]] = []
+        if self.transfer_log_path.exists():
+            try:
+                for raw in self.transfer_log_path.read_text(encoding="utf-8").splitlines():
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    item = json.loads(line)
+                    if isinstance(item, dict):
+                        entries.append(item)
+            except (OSError, json.JSONDecodeError) as ex:
+                return {
+                    "ok": False,
+                    "message": f"failed to read transfer ledger: {ex}",
+                    "authorization": authorization,
+                }
+
+        safe_limit = max(1, int(limit))
+        status_counts: dict[str, int] = {}
+        target_type_counts: dict[str, int] = {}
+        dry_run_count = 0
+        live_transfer_count = 0
+        success_count = 0
+        failure_count = 0
+
+        for item in entries:
+            status = str(item.get("status", "unknown")).strip() or "unknown"
+            target_type = str(item.get("target_type", "unknown")).strip() or "unknown"
+            status_counts[status] = status_counts.get(status, 0) + 1
+            target_type_counts[target_type] = target_type_counts.get(target_type, 0) + 1
+            if bool(item.get("dry_run", False)):
+                dry_run_count += 1
+            else:
+                live_transfer_count += 1
+            if status in {"validated_only", "transfer_posted", "queued_for_transport"}:
+                success_count += 1
+            else:
+                failure_count += 1
+
+        recent_entries = entries[-safe_limit:]
+        return {
+            "ok": True,
+            "authorization": authorization,
+            "summary": {
+                "total_records": len(entries),
+                "dry_run_count": dry_run_count,
+                "live_transfer_count": live_transfer_count,
+                "success_count": success_count,
+                "failure_count": failure_count,
+                "status_counts": status_counts,
+                "target_type_counts": target_type_counts,
+            },
+            "recent_entries": recent_entries,
         }
 
     def handle_command(self, payload: Dict[str, Any]) -> None:
@@ -788,6 +1021,13 @@ class BossGateCommandAgent:
             result = self.rotate_key(
                 new_key_id=str(args.get("key_id", "")).strip(),
                 new_secret_key=str(args.get("secret_key", "")).strip(),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_usage_report":
+            result = self.usage_report(
+                limit=int(args.get("limit", 20) or 20),
                 operator_id=str(args.get("operator_id", "")).strip(),
                 scope_id=str(args.get("scope_id", "")).strip(),
                 actor_type=str(args.get("actor_type", "human")).strip(),

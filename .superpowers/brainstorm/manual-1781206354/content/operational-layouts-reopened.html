@@ -1,0 +1,240 @@
+<style>
+  :root {
+    --bg: #090a0c;
+    --panel: #141417;
+    --panel-2: #1a1b1f;
+    --line: #2c2d33;
+    --gold: #d4a857;
+    --ember: #ff7a2f;
+    --blue: #4da6ff;
+    --text: #eef0f5;
+    --muted: #a9b1c1;
+    --good: #4cc46a;
+    --warn: #ffb84d;
+    --bad: #ff4d4d;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(212,168,87,.13), transparent 32rem),
+      radial-gradient(circle at 90% 0%, rgba(77,166,255,.08), transparent 34rem),
+      var(--bg);
+    color: var(--text);
+    font: 14px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+  .page { max-width: 1520px; margin: auto; padding: 36px; }
+  .eyebrow {
+    color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  h1 { margin: 8px 0 6px; font-size: clamp(28px, 4vw, 48px); letter-spacing: -.04em; }
+  .intro { color: var(--muted); max-width: 760px; margin: 0 0 28px; font-size: 16px; }
+  .layouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .choice {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(20,20,23,.92);
+    cursor: pointer;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .choice:hover { transform: translateY(-3px); border-color: #75613b; }
+  .choice.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(212,168,87,.18), 0 18px 50px rgba(0,0,0,.35);
+  }
+  .choice.selected::after {
+    content: "SELECTED";
+    position: absolute; top: 12px; right: 12px;
+    padding: 5px 8px; border-radius: 999px;
+    background: var(--gold); color: #17130b; font-size: 9px; font-weight: 900; letter-spacing: .12em;
+  }
+  .choice-head { padding: 20px 20px 14px; border-bottom: 1px solid var(--line); }
+  .choice-label { color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: .15em; }
+  h2 { margin: 6px 0 3px; font-size: 22px; }
+  .choice-head p { color: var(--muted); margin: 0; min-height: 42px; }
+
+  .mock {
+    padding: 12px;
+    min-height: 430px;
+    background: #0d0e10;
+    display: grid;
+    gap: 8px;
+  }
+  .topbar { display: flex; justify-content: space-between; align-items: center; height: 30px; }
+  .brand { font-weight: 900; letter-spacing: .08em; font-size: 10px; }
+  .brand span { color: var(--gold); }
+  .live { color: var(--good); font-size: 9px; font-weight: 800; }
+  .box {
+    min-width: 0;
+    border: 1px solid #292a30; border-radius: 8px;
+    background: var(--panel); padding: 9px;
+  }
+  .title { color: #c8ccd6; font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .big { margin-top: 4px; font-size: 19px; font-weight: 800; }
+  .sub { color: #7f8796; font-size: 8px; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .metric { border-left: 2px solid var(--blue); }
+  .metric:nth-child(2) { border-color: var(--good); }
+  .metric:nth-child(3) { border-color: var(--warn); }
+  .metric:nth-child(4) { border-color: var(--ember); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid #25262b; }
+  .row:last-child { border-bottom: 0; }
+  .person { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px rgba(76,196,106,.45); }
+  .dot.warn { background: var(--warn); }
+  .dot.bad { background: var(--bad); }
+  .name { font-size: 10px; font-weight: 750; }
+  .task { color: #8a91a0; font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill { padding: 3px 6px; border-radius: 999px; background: #222c3b; color: #8ec3ff; font-size: 7px; font-weight: 800; white-space: nowrap; }
+  .pill.gold { background: #352b19; color: #f0c975; }
+  .pill.red { background: #351d21; color: #ff8585; }
+  .bar { height: 4px; background: #292a30; border-radius: 99px; overflow: hidden; margin-top: 7px; }
+  .bar::after { content: ""; display: block; height: 100%; width: 72%; background: linear-gradient(90deg, var(--gold), var(--ember)); }
+  .action { color: var(--gold); font-size: 8px; font-weight: 800; }
+  .spark { height: 30px; margin-top: 8px; background: linear-gradient(135deg, transparent 0 12%, rgba(77,166,255,.7) 13% 15%, transparent 16% 29%, rgba(77,166,255,.7) 30% 32%, transparent 33% 47%, rgba(77,166,255,.7) 48% 50%, transparent 51% 63%, rgba(77,166,255,.7) 64% 66%, transparent 67%); opacity: .7; }
+
+  .command { grid-template-rows: 30px auto 1fr; }
+  .command-main { display: grid; grid-template-columns: 1.7fr .9fr; gap: 8px; }
+  .stack { display: grid; gap: 8px; align-content: start; }
+  .priority { border-left: 3px solid var(--ember); }
+
+  .fleet { grid-template-rows: 30px auto 1fr auto; }
+  .fleet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .agent-card { min-height: 90px; }
+  .agent-card .rank { color: var(--gold); font-size: 7px; text-transform: uppercase; letter-spacing: .1em; }
+  .fleet-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .incident { grid-template-rows: 30px auto 1fr; }
+  .incident-main { display: grid; grid-template-columns: 1.45fr .75fr; gap: 8px; }
+  .alert { border-left: 3px solid var(--bad); background: linear-gradient(90deg, rgba(255,77,77,.08), transparent 60%), var(--panel); }
+  .timeline { position: relative; padding-left: 18px; }
+  .timeline::before { content: ""; position: absolute; left: 6px; top: 12px; bottom: 12px; width: 1px; background: #3a3b42; }
+  .event { position: relative; padding: 7px 0 9px; border-bottom: 1px solid #25262b; }
+  .event::before { content: ""; position: absolute; left: -15px; top: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+  .event.critical::before { background: var(--bad); box-shadow: 0 0 8px rgba(255,77,77,.5); }
+
+  .tradeoffs { padding: 16px 20px 20px; color: var(--muted); font-size: 12px; }
+  .tradeoffs strong { color: var(--text); }
+  .recommend {
+    display: inline-block; margin-top: 10px; padding: 5px 8px; border-radius: 6px;
+    background: rgba(212,168,87,.12); color: var(--gold); font-size: 10px; font-weight: 800;
+  }
+  .instruction { margin-top: 24px; padding: 14px 16px; border-left: 3px solid var(--gold); background: rgba(212,168,87,.07); color: #d8dbe3; }
+  @media (max-width: 1050px) {
+    .layouts { grid-template-columns: 1fr; }
+    .choice-head p { min-height: 0; }
+  }
+</style>
+
+<main class="page">
+  <div class="eyebrow">BossForgeOS UI Direction</div>
+  <h1>What should the operator see first?</h1>
+  <p class="intro">All three keep the blackstone command-center identity. The difference is hierarchy: which question the screen answers before you touch anything.</p>
+
+  <section class="layouts">
+    <article class="choice" data-choice="A - Command Deck" onclick="toggleSelect(this)">
+      <header class="choice-head">
+        <div class="choice-label">Direction A</div>
+        <h2>Command Deck</h2>
+        <p>Leads with work requiring your attention, then shows the agents and system context behind it.</p>
+      </header>
+      <div class="mock command">
+        <div class="topbar"><div class="brand"><span>BOSSFORGE</span> / CONTROL HALL</div><div class="live">● SYSTEM LIVE</div></div>
+        <div class="metrics">
+          <div class="box metric"><div class="title">Agents</div><div class="big">12</div><div class="sub">10 active</div></div>
+          <div class="box metric"><div class="title">Running</div><div class="big">08</div><div class="sub">healthy</div></div>
+          <div class="box metric"><div class="title">Awaiting</div><div class="big">03</div><div class="sub">your call</div></div>
+          <div class="box metric"><div class="title">Risk</div><div class="big">01</div><div class="sub">elevated</div></div>
+        </div>
+        <div class="command-main">
+          <div class="stack">
+            <div class="box priority">
+              <div class="title">Needs Your Decision</div>
+              <div class="row"><div><div class="name">Authority conflict detected</div><div class="task">Deploy agent requests elevated file access</div></div><span class="pill red">HIGH</span></div>
+              <div class="row"><div><div class="name">Release candidate ready</div><div class="task">7 checks passed, awaiting promotion</div></div><span class="action">REVIEW →</span></div>
+              <div class="row"><div><div class="name">Two plans overlap</div><div class="task">Select ownership for UI migration</div></div><span class="pill gold">MEDIUM</span></div>
+            </div>
+            <div class="box">
+              <div class="title">Work In Motion</div>
+              <div class="row"><div class="person"><span class="dot"></span><div><div class="name">Forge</div><div class="task">Building dashboard shell</div></div></div><span class="pill">72%</span></div>
+              <div class="row"><div class="person"><span class="dot"></span><div><div class="name">Sentinel</div><div class="task">Verifying authority rules</div></div></div><span class="pill">44%</span></div>
+              <div class="row"><div class="person"><span class="dot warn"></span><div><div class="name">Architect</div><div class="task">Waiting on dependency</div></div></div><span class="pill gold">BLOCKED</span></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="box"><div class="title">System Load</div><div class="big">67%</div><div class="bar"></div><div class="spark"></div></div>
+            <div class="box"><div class="title">Quick Commands</div><div class="row"><span class="name">Create mission</span><span class="action">⌘ N</span></div><div class="row"><span class="name">Dispatch agent</span><span class="action">⌘ D</span></div><div class="row"><span class="name">Open diagnostics</span><span class="action">⌘ /</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tradeoffs"><strong>Best for:</strong> daily operation and fast intervention.<br><strong>Tradeoff:</strong> the full agent fleet is one level less prominent.<div class="recommend">RECOMMENDED START</div></div>
+    </article>
+
+    <article class="choice" data-choice="B - Fleet Board" onclick="toggleSelect(this)">
+      <header class="choice-head">
+        <div class="choice-label">Direction B</div>
+        <h2>Fleet Board</h2>
+        <p>Leads with every agent as a visible unit: identity, rank, health, assignment, and progress.</p>
+      </header>
+      <div class="mock fleet">
+        <div class="topbar"><div class="brand"><span>BOSSFORGE</span> / AGENT FLEET</div><div class="live">● 10 OF 12 ACTIVE</div></div>
+        <div class="metrics">
+          <div class="box metric"><div class="title">Online</div><div class="big">10</div><div class="sub">of 12</div></div>
+          <div class="box metric"><div class="title">Tasks</div><div class="big">18</div><div class="sub">8 running</div></div>
+          <div class="box metric"><div class="title">Blocked</div><div class="big">02</div><div class="sub">needs help</div></div>
+          <div class="box metric"><div class="title">Throughput</div><div class="big">31</div><div class="sub">today</div></div>
+        </div>
+        <div class="fleet-grid">
+          <div class="box agent-card"><div class="rank">Prime Operator</div><div class="row"><div class="person"><span class="dot"></span><div><div class="name">Forge</div><div class="task">Dashboard shell</div></div></div><span class="pill">72%</span></div><div class="bar"></div></div>
+          <div class="box agent-card"><div class="rank">Systems Marshal</div><div class="row"><div class="person"><span class="dot"></span><div><div class="name">Sentinel</div><div class="task">Authority audit</div></div></div><span class="pill">44%</span></div><div class="bar"></div></div>
+          <div class="box agent-card"><div class="rank">Forge Captain</div><div class="row"><div class="person"><span class="dot warn"></span><div><div class="name">Architect</div><div class="task">Awaiting contract</div></div></div><span class="pill gold">HOLD</span></div><div class="bar"></div></div>
+          <div class="box agent-card"><div class="rank">Field Specialist</div><div class="row"><div class="person"><span class="dot"></span><div><div class="name">Scout</div><div class="task">Dependency scan</div></div></div><span class="pill">88%</span></div><div class="bar"></div></div>
+          <div class="box agent-card"><div class="rank">Systems Marshal</div><div class="row"><div class="person"><span class="dot"></span><div><div class="name">Warden</div><div class="task">Policy verification</div></div></div><span class="pill">61%</span></div><div class="bar"></div></div>
+          <div class="box agent-card"><div class="rank">Field Specialist</div><div class="row"><div class="person"><span class="dot bad"></span><div><div class="name">Relay</div><div class="task">Connection lost</div></div></div><span class="pill red">OFFLINE</span></div><div class="bar"></div></div>
+        </div>
+        <div class="fleet-bottom"><div class="box"><div class="title">Mission Queue</div><div class="big">06</div><div class="sub">next dispatches</div></div><div class="box"><div class="title">Fleet Activity</div><div class="spark"></div></div></div>
+      </div>
+      <div class="tradeoffs"><strong>Best for:</strong> supervising identities, roles, and parallel work.<br><strong>Tradeoff:</strong> decisions and urgent exceptions compete with the agent grid.</div>
+    </article>
+
+    <article class="choice" data-choice="C - Incident Watch" onclick="toggleSelect(this)">
+      <header class="choice-head">
+        <div class="choice-label">Direction C</div>
+        <h2>Incident Watch</h2>
+        <p>Leads with risk, authority conflicts, failures, and an event timeline built for response.</p>
+      </header>
+      <div class="mock incident">
+        <div class="topbar"><div class="brand"><span>BOSSFORGE</span> / INCIDENT WATCH</div><div class="live" style="color:var(--warn)">● ELEVATED POSTURE</div></div>
+        <div class="metrics">
+          <div class="box metric"><div class="title">Critical</div><div class="big">01</div><div class="sub">open</div></div>
+          <div class="box metric"><div class="title">Warnings</div><div class="big">04</div><div class="sub">triage</div></div>
+          <div class="box metric"><div class="title">Resolved</div><div class="big">17</div><div class="sub">today</div></div>
+          <div class="box metric"><div class="title">Posture</div><div class="big">L2</div><div class="sub">elevated</div></div>
+        </div>
+        <div class="incident-main">
+          <div class="stack">
+            <div class="box alert"><div class="title">Active Incident</div><div class="big">Authority boundary conflict</div><div class="sub">Deploy agent attempted a protected workspace operation</div><div class="row"><span class="pill red">CONTAINED</span><span class="action">OPEN INCIDENT →</span></div></div>
+            <div class="box timeline">
+              <div class="title">Event Timeline</div>
+              <div class="event critical"><div class="name">Policy engine denied operation</div><div class="task">14:32:08 · Sentinel</div></div>
+              <div class="event"><div class="name">Escalation routed to operator</div><div class="task">14:32:10 · Control Hall</div></div>
+              <div class="event"><div class="name">Agent task suspended</div><div class="task">14:32:11 · Forge</div></div>
+              <div class="event"><div class="name">Diagnostic snapshot captured</div><div class="task">14:32:13 · Warden</div></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="box"><div class="title">Subsystems</div><div class="row"><span class="name">Authority</span><span class="pill gold">DEGRADED</span></div><div class="row"><span class="name">Agents</span><span class="pill">HEALTHY</span></div><div class="row"><span class="name">Events</span><span class="pill">HEALTHY</span></div><div class="row"><span class="name">Storage</span><span class="pill">HEALTHY</span></div></div>
+            <div class="box"><div class="title">Responders</div><div class="row"><div class="person"><span class="dot"></span><span class="name">Sentinel</span></div><span class="task">Lead</span></div><div class="row"><div class="person"><span class="dot"></span><span class="name">Warden</span></div><span class="task">Support</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tradeoffs"><strong>Best for:</strong> security-sensitive or failure-heavy operations.<br><strong>Tradeoff:</strong> routine work feels secondary when the system is healthy.</div>
+    </article>
+  </section>
+
+  <div class="instruction"><strong>Choose the hierarchy, not the tiny details.</strong> Click the direction that best matches how you want to operate BossForgeOS, then leave any changes in the companion feedback box.</div>
+</main>

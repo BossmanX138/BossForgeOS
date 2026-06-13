@@ -1041,6 +1041,17 @@ def cmd_bossgate(args: argparse.Namespace) -> None:
         print(f"command written: {path}")
         return
 
+    if args.sub == "usage-report":
+        payload = {
+            "limit": int(args.limit),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_usage_report", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
     if args.sub == "complete":
         if not todo_path.exists():
             raise SystemExit(f"todo tracker not found: {todo_path}")
@@ -1419,6 +1430,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_bg_rotate.add_argument("--scope-id", required=True)
     p_bg_rotate.add_argument("--actor-type", choices=["human", "agent"], default="human")
     p_bg_rotate.set_defaults(func=cmd_bossgate)
+
+    p_bg_usage = p_bossgate_sub.add_parser("usage-report", help="Queue a BossGate local usage report aggregation")
+    p_bg_usage.add_argument("--limit", type=int, default=20)
+    p_bg_usage.add_argument("--operator-id", required=True)
+    p_bg_usage.add_argument("--scope-id", required=True)
+    p_bg_usage.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_usage.set_defaults(func=cmd_bossgate)
 
     p_bg_complete = p_bossgate_sub.add_parser("complete", help="Mark a BossGate TODO id as completed")
     p_bg_complete.add_argument("todo_id", help="Todo id, e.g. BG-004")

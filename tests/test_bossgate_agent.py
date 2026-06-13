@@ -59,6 +59,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         for result in (discover, scan, transfer, install):
             self.assertFalse(result["ok"])
             self.assertIn("operator_id and scope_id are required", result["message"])
+            self.assertEqual(result["reason_codes"], ["missing_authorization_context"])
 
     def test_authorized_discovery_returns_authorization_context(self) -> None:
         agent = BossGateCommandAgent(interval_seconds=1)
@@ -156,6 +157,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         )
         self.assertFalse(denied["ok"])
         self.assertIn("only super gates can initiate travel", denied["message"])
+        self.assertEqual(denied["reason_codes"], ["travel_initiator_not_super_gate"])
 
     def test_package_agent_assigns_valid_secure_address(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -399,6 +401,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         result = agent.discover_targets(timeout=1, operator_id="unknown-user", scope_id="local-lab")
         self.assertFalse(result["ok"])
         self.assertIn("unknown operator", result["message"])
+        self.assertEqual(result["reason_codes"], ["unknown_operator"])
 
     def test_viewer_role_cannot_package_agent(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -422,6 +425,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         )
         self.assertFalse(denied["ok"])
         self.assertIn("bossgate.package", denied["message"])
+        self.assertEqual(denied["reason_codes"], ["missing_permission"])
 
     def test_agent_package_requires_coms_officer_skill(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -444,6 +448,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         )
         self.assertFalse(denied["ok"])
         self.assertIn("bossgate_coms_officer", denied["message"])
+        self.assertEqual(denied["reason_codes"], ["missing_agent_skill"])
 
     def test_agent_transfer_requires_travel_control_skill(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -467,6 +472,7 @@ class BossGateCommandAgentTests(unittest.TestCase):
         )
         self.assertFalse(denied["ok"])
         self.assertIn("bossgate_travel_control", denied["message"])
+        self.assertEqual(denied["reason_codes"], ["missing_agent_skill"])
 
     def test_agent_install_requires_coms_officer_skill(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -488,6 +494,274 @@ class BossGateCommandAgentTests(unittest.TestCase):
         )
         self.assertFalse(denied["ok"])
         self.assertIn("bossgate_coms_officer", denied["message"])
+        self.assertEqual(denied["reason_codes"], ["missing_agent_skill"])
+
+    def test_transfer_agent_denies_unapproved_target_with_reason_code(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="porter_unapproved",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        packaged = agent.package_agent(
+            name="porter_unapproved",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(
+            agent,
+            "scan_target",
+            return_value={
+                "ok": False,
+                "allowed_for_transfer": False,
+                "target_type": "unknown",
+            },
+        ):
+            denied = agent.transfer_agent(
+                package_file=packaged["package_file"],
+                destination="http://unknown.local",
+                dry_run=True,
+                **self.AUTH,
+            )
+
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["target_not_approved_for_transfer"])
+
+    def test_lifecycle_actions_emit_canonical_events_with_correlation_ids(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="porter_events",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        packaged = agent.package_agent(
+            name="porter_events",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+        package_correlation = packaged.get("correlation_id")
+        self.assertTrue(package_correlation)
+
+        class _Resp:
+            status = 202
+
+            def read(self) -> bytes:
+                return json.dumps({"ok": True, "accepted": True}).encode("utf-8")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        with patch.object(agent, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            with patch("core.agents.bossgate_agent.request.urlopen", return_value=_Resp()):
+                transferred = agent.transfer_agent(
+                    package_file=packaged["package_file"],
+                    destination="http://bridgebase.local",
+                    dry_run=False,
+                    **self.AUTH,
+                )
+        self.assertTrue(transferred["ok"])
+        transfer_correlation = transferred.get("correlation_id")
+        self.assertTrue(transfer_correlation)
+
+        gateway.create_agent_profile(
+            name="porter_install_events",
+            endpoint="ollama",
+            system_prompt="Install specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        packaged_install = agent.package_agent(
+            name="porter_install_events",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            output_file=str(Path(self.tmp.name) / "installable_package.bossgate.json"),
+            **self.AUTH,
+        )
+        self.assertTrue(packaged_install["ok"])
+        installed = agent.install_agent(packaged_install["package_file"], secret_key="pack-key", **self.AUTH)
+        self.assertTrue(installed["ok"])
+        install_correlation = installed.get("correlation_id")
+        self.assertTrue(install_correlation)
+
+        rotated = agent.rotate_key(new_key_id="audit-k2", new_secret_key="audit-secret", **self.AUTH)
+        self.assertTrue(rotated["ok"])
+        rotate_correlation = rotated.get("correlation_id")
+        self.assertTrue(rotate_correlation)
+
+        events = agent.bus.read_latest_events(limit=12)
+        lifecycle = [item for item in events if str(item.get("event", "")).startswith("lifecycle:")]
+        by_event = {item["event"]: item for item in lifecycle}
+
+        self.assertIn("lifecycle:package_agent", by_event)
+        self.assertIn("lifecycle:transfer_agent", by_event)
+        self.assertIn("lifecycle:install_agent", by_event)
+        self.assertIn("lifecycle:rotate_key", by_event)
+
+        self.assertEqual(by_event["lifecycle:package_agent"]["data"]["correlation_id"], package_correlation)
+        self.assertEqual(by_event["lifecycle:transfer_agent"]["data"]["correlation_id"], transfer_correlation)
+        self.assertEqual(by_event["lifecycle:install_agent"]["data"]["correlation_id"], install_correlation)
+        self.assertEqual(by_event["lifecycle:rotate_key"]["data"]["correlation_id"], rotate_correlation)
+        self.assertEqual(by_event["lifecycle:transfer_agent"]["data"]["status"], "transfer_posted")
+
+    def test_transfer_ledger_records_auditable_correlation_metadata(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="porter_ledger",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        packaged = agent.package_agent(
+            name="porter_ledger",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            transferred = agent.transfer_agent(
+                package_file=packaged["package_file"],
+                destination="http://bridgebase.local",
+                dry_run=True,
+                resume_from_chunk=2,
+                **self.AUTH,
+            )
+        self.assertTrue(transferred["ok"])
+
+        records = [
+            json.loads(line)
+            for line in agent.transfer_log_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertEqual(record["record_type"], "bossgate_transfer_ledger_v1")
+        self.assertEqual(record["action"], "transfer_agent")
+        self.assertEqual(record["correlation_id"], transferred["correlation_id"])
+        self.assertEqual(record["status"], "validated_only")
+        self.assertEqual(record["authorization"], {"operator_id": "bossforge-owner", "scope_id": "test-scope", "actor_type": "human"})
+        self.assertEqual(record["resume_from_chunk"], 2)
+        self.assertEqual(record["schema_version"], 1)
+        self.assertTrue(record["timestamp_utc"].endswith("+00:00"))
+
+    def test_usage_report_aggregates_local_transfer_ledger(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="porter_usage",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        packaged = agent.package_agent(
+            name="porter_usage",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            dry_run = agent.transfer_agent(
+                package_file=packaged["package_file"],
+                destination="http://bridgebase.local",
+                dry_run=True,
+                **self.AUTH,
+            )
+        self.assertTrue(dry_run["ok"])
+
+        packaged_live = agent.package_agent(
+            name="porter_usage",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged_live["ok"])
+        with patch.object(agent, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            with patch("core.agents.bossgate_agent.request.urlopen", side_effect=RuntimeError("network down")):
+                failed = agent.transfer_agent(
+                    package_file=packaged_live["package_file"],
+                    destination="http://bridgebase.local",
+                    dry_run=False,
+                    **self.AUTH,
+                )
+        self.assertFalse(failed["ok"])
+
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "finance-analyst", ["commerce_manager"])
+        self.assertTrue(assigned["ok"])
+        report = agent.usage_report(limit=10, operator_id="finance-analyst", scope_id="test-scope")
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["summary"]["total_records"], 2)
+        self.assertEqual(report["summary"]["dry_run_count"], 1)
+        self.assertEqual(report["summary"]["live_transfer_count"], 1)
+        self.assertEqual(report["summary"]["status_counts"]["validated_only"], 1)
+        self.assertEqual(report["summary"]["status_counts"]["transfer_failed"], 1)
+        self.assertEqual(report["summary"]["success_count"], 1)
+        self.assertEqual(report["summary"]["failure_count"], 1)
+        self.assertEqual(report["recent_entries"][0]["status"], "validated_only")
+        self.assertEqual(report["recent_entries"][1]["status"], "transfer_failed")
+
+    def test_operator_telemetry_flows_include_correlation_ids(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=[]):
+            discover = agent.discover_targets(timeout=1, **self.AUTH)
+        self.assertTrue(discover["ok"])
+        self.assertTrue(discover.get("correlation_id"))
+
+        with patch("core.agents.bossgate_agent.scan_rest_endpoints", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            scan = agent.scan_target("http://bridgebase.local", **self.AUTH)
+        self.assertTrue(scan["ok"])
+        self.assertTrue(scan.get("correlation_id"))
+
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "finance-analyst", ["commerce_manager"])
+        self.assertTrue(assigned["ok"])
+        report = agent.usage_report(limit=5, operator_id="finance-analyst", scope_id="test-scope")
+        self.assertTrue(report["ok"])
+        self.assertTrue(report.get("correlation_id"))
+
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=[]):
+            agent.handle_command(
+                {
+                    "target": "bossgate",
+                    "command": "bossgate_discover_targets",
+                    "args": {"timeout": 1, **self.AUTH},
+                }
+            )
+        events = agent.bus.read_latest_events(limit=2)
+        command_event = next(item for item in events if item["event"] == "command:bossgate_discover_targets")
+        self.assertTrue(command_event["data"].get("correlation_id"))
 
 
 if __name__ == "__main__":

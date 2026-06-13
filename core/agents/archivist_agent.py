@@ -78,17 +78,20 @@ class ArchivistAgent:
     TODO_IGNORE_DIR_NAMES = {
         ".git",
         ".continue",
+        ".superpowers",
         ".venv",
         ".venv-xtts",
         ".venv-vllm",
         ".runtime",
         ".models",
+        ".worktrees",
         "__pycache__",
         "node_modules",
         "build",
         "dist",
         "bus",
         "archives",
+        "models",
         "releases",
     }
     TODO_IGNORE_FILE_NAMES = {
@@ -109,6 +112,8 @@ class ArchivistAgent:
         "**/docs/autonomous_todo_backlog.md",
         "**/docs/delegation_notes.md",
         "**/docs/daily_ledger.md",
+        "**/docs/superpowers/plans/**",
+        "**/docs/superpowers/specs/**",
     }
     README_IGNORE_DIR_NAMES = {
         ".git",
@@ -387,13 +392,25 @@ class ArchivistAgent:
             return default
 
         merged = dict(default)
-        for key in [
+        additive_keys = {
             "todo_scan_suffixes",
             "todo_ignore_dir_names",
             "todo_ignore_file_names",
+            "todo_ignore_globs",
             "readme_ignore_dir_names",
+        }
+        override_keys = {
             "todo_patterns",
-        ]:
+        }
+
+        for key in additive_keys:
+            values = self._normalize_list(loaded.get(key))
+            if not values:
+                continue
+            existing = self._normalize_list(default.get(key))
+            merged[key] = sorted({*existing, *values})
+
+        for key in override_keys:
             values = self._normalize_list(loaded.get(key))
             if values:
                 merged[key] = values
@@ -508,6 +525,11 @@ class ArchivistAgent:
             return True
 
         rel_posix = rel.as_posix().lower()
+        if (
+            rel_posix.startswith("docs/superpowers/plans/")
+            or rel_posix.startswith("docs/superpowers/specs/")
+        ):
+            return True
         for pattern in self._todo_ignore_globs():
             p = pattern.strip().lower()
             if not p:

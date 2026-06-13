@@ -131,7 +131,8 @@ These commands are now handled by the BossGate command agent (`target="bossgate"
 4. `bossgate_transfer_agent` (dry-run validation or live transfer POST; supports `resume_from_chunk`; live transfer enforces move semantics by retiring source traces)
 5. `bossgate_install_agent`
 6. `bossgate_rotate_key`
-7. `bossgate_set_node_target_type`
+7. `bossgate_usage_report`
+8. `bossgate_set_node_target_type`
 
 ## CLI Surface (Implemented)
 

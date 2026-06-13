@@ -320,6 +320,72 @@ class ArchivistAgentTests(unittest.TestCase):
             self.assertEqual(len(todos), 1)
             self.assertIn("Implement protocol compatibility checks", str(todos[0].get("text", "")))
 
+    def test_collect_todos_skips_worktree_plan_and_model_noise(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project_noise_sources"
+            src = project / "src"
+            worktree = project / ".worktrees" / "feature-copy" / "src"
+            plans = project / "docs" / "superpowers" / "plans"
+            model_dir = (
+                project
+                / "modules"
+                / "runeforge_provider"
+                / "models"
+                / "Runeforge_Alpha-7b"
+            )
+
+            src.mkdir(parents=True)
+            worktree.mkdir(parents=True)
+            plans.mkdir(parents=True)
+            model_dir.mkdir(parents=True)
+
+            (src / "real_work.py").write_text(
+                "# TODO: implement real backlog task\n",
+                encoding="utf-8",
+            )
+            (worktree / "copy.py").write_text(
+                "# TODO: copied worktree task should be ignored\n",
+                encoding="utf-8",
+            )
+            (plans / "2026-06-12-sample-plan.md").write_text(
+                "## TODO\n\n- [ ] Implement plan step placeholder\n",
+                encoding="utf-8",
+            )
+            (model_dir / "tokenizer.json").write_text(
+                '{"token":"FIXME"}\n',
+                encoding="utf-8",
+            )
+
+            agent = ArchivistAgent(root=root)
+            todos = agent._collect_todos(project)
+
+            self.assertEqual(len(todos), 1)
+            self.assertIn("real backlog task", str(todos[0].get("text", "")).lower())
+
+    def test_policy_keeps_new_default_todo_ignore_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            state_dir = root / "bus" / "state"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            (state_dir / "archivist_policy.json").write_text(
+                json.dumps(
+                    {
+                        "todo_ignore_dir_names": [".git", ".continue"],
+                        "todo_scan_suffixes": [".py", ".md"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            agent = ArchivistAgent(root=root)
+            ignore_dirs = agent._todo_ignore_dir_names()
+
+            self.assertIn(".worktrees", ignore_dirs)
+            self.assertIn(".superpowers", ignore_dirs)
+            self.assertIn("models", ignore_dirs)
+            self.assertIn(".git", ignore_dirs)
+
     def test_on_invoke_writes_curated_actionable_todos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
