@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 from urllib import error, request
+from urllib.parse import urlparse
 import hashlib
 
 from core.connectors.bossgate_connector import (
@@ -35,6 +36,10 @@ class BossGateCommandAgent:
         self.node_id_path = self.bus.state / "bossgate_node_id.txt"
         self.profiles_path = self.bus.state / "model_profiles.json"
         self.packages_dir = self.bus.state / "bossgate_packages"
+        self.licenses_dir = self.bus.state / "bossgate_licenses"
+        self.interface_maps_dir = self.bus.state / "bossgate_interface_maps"
+        self.remote_debug_sessions_path = self.bus.state / "bossgate_remote_debug_sessions.json"
+        self.remote_debug_transcripts_path = self.bus.state / "bossgate_remote_debug_transcripts.jsonl"
         self.transfer_log_path = self.bus.state / "bossgate_transfers.jsonl"
         self.keyring_path = self.bus.state / "bossgate_keys.json"
         self.replay_tokens_path = self.bus.state / "bossgate_replay_tokens.json"
@@ -43,6 +48,8 @@ class BossGateCommandAgent:
         self.authorization_registry = BossGateAuthorizationRegistry(self.bus.state / "bossgate_human_roles.json")
         self.node_id = self._load_or_create_node_id()
         self.packages_dir.mkdir(parents=True, exist_ok=True)
+        self.licenses_dir.mkdir(parents=True, exist_ok=True)
+        self.interface_maps_dir.mkdir(parents=True, exist_ok=True)
         self._keyring = self._load_or_create_keyring()
         self._replay_tokens = self._load_replay_tokens()
         self._node_profile = self._load_or_create_node_profile()
@@ -137,6 +144,32 @@ class BossGateCommandAgent:
         if not isinstance(payload, dict) or not isinstance(payload.get("tokens"), list):
             return set()
         return {str(token).strip() for token in payload["tokens"] if str(token).strip()}
+
+    def _load_remote_debug_sessions(self) -> dict[str, Any]:
+        if not self.remote_debug_sessions_path.exists():
+            return {"version": 1, "sessions": {}}
+        try:
+            payload = json.loads(self.remote_debug_sessions_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {"version": 1, "sessions": {}}
+        if not isinstance(payload, dict):
+            return {"version": 1, "sessions": {}}
+        sessions = payload.get("sessions")
+        payload["sessions"] = sessions if isinstance(sessions, dict) else {}
+        payload.setdefault("version", 1)
+        return payload
+
+    def _save_remote_debug_sessions(self, payload: dict[str, Any]) -> None:
+        self.remote_debug_sessions_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _append_remote_debug_transcript(self, entry: dict[str, Any]) -> None:
+        sanitized = {
+            key: value
+            for key, value in entry.items()
+            if key not in {"session_token", "authorization"}
+        }
+        with self.remote_debug_transcripts_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(sanitized, sort_keys=True) + "\n")
 
     def _save_replay_tokens(self) -> None:
         self.replay_tokens_path.write_text(
@@ -360,8 +393,11 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("discover_targets")
         authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
             return authorization
         safe_timeout = max(1, int(timeout))
         targets = discover_transfer_targets(timeout=safe_timeout, assistance_only=bool(assistance_only))
@@ -372,6 +408,7 @@ class BossGateCommandAgent:
             "targets": targets,
             "policy": "travel_allowed_only_to_bossgate_ass_bossforgeos_bridgebase_alpha",
             "authorization": authorization,
+            "correlation_id": correlation_id,
         }
 
     def refresh_map(self, timeout: int = 2) -> Dict[str, Any]:
@@ -446,10 +483,13 @@ class BossGateCommandAgent:
         actor_type: str = "human",
         internal: bool = False,
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("scan_target")
         authorization: dict[str, Any] = {}
         if not internal:
             authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
             if not authorized:
+                if isinstance(authorization, dict):
+                    authorization = {**authorization, "correlation_id": correlation_id}
                 return authorization
         target = destination.strip()
         if not target:
@@ -457,6 +497,7 @@ class BossGateCommandAgent:
                 "missing_destination",
                 "destination is required",
                 allowed_for_transfer=False,
+                correlation_id=correlation_id,
             )
         result = scan_rest_endpoints(target)
         if not isinstance(result, dict):
@@ -465,10 +506,99 @@ class BossGateCommandAgent:
                 "invalid transfer validation result",
                 allowed_for_transfer=False,
                 destination=target,
+                correlation_id=correlation_id,
             )
         result.setdefault("destination", target)
         result.setdefault("authorization", authorization)
+        result.setdefault("correlation_id", correlation_id)
         return result
+
+    def build_interface_map(
+        self,
+        destination: str,
+        timeout: int = 2,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("build_interface_map")
+        authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+            return authorization
+
+        target = str(destination).strip()
+        if not target:
+            return self._deny("missing_destination", "destination is required", correlation_id=correlation_id)
+
+        safe_timeout = max(1, int(timeout))
+        discovered = discover_transfer_targets(timeout=safe_timeout, assistance_only=False)
+        scanned = self.scan_target(target, internal=True)
+        if not scanned.get("ok"):
+            if "correlation_id" not in scanned:
+                scanned["correlation_id"] = correlation_id
+            scanned.setdefault("authorization", authorization)
+            return scanned
+
+        parsed = urlparse(str(scanned.get("base_url", target)).strip())
+        hostname = (parsed.hostname or "").strip().lower()
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        normalized_base = str(scanned.get("base_url", target)).strip().lower().rstrip("/")
+
+        discovery_matches = []
+        for item in discovered:
+            if not isinstance(item, dict):
+                continue
+            address = str(item.get("address", "")).strip().lower().rstrip("/")
+            address_host = (urlparse(address).hostname or "").strip().lower() if address else ""
+            if address == normalized_base or (hostname and address_host == hostname):
+                discovery_matches.append(dict(item))
+
+        documented_endpoints = []
+        for endpoint in scanned.get("endpoints", []):
+            if not isinstance(endpoint, dict):
+                continue
+            path = str(endpoint.get("path", "")).strip() or "/"
+            methods = sorted(
+                {
+                    str(method).strip().upper()
+                    for method in (endpoint.get("methods") or [])
+                    if str(method).strip()
+                }
+            )
+            documented_endpoints.append({"path": path, "methods": methods})
+        documented_endpoints.sort(key=lambda item: str(item.get("path", "")))
+
+        protocol_features = {"rest_json"}
+        if any(item.get("path") == "/health" for item in documented_endpoints):
+            protocol_features.add("health_endpoint")
+        if any("transfer" in str(item.get("path", "")).lower() for item in documented_endpoints):
+            protocol_features.add("transfer_endpoint")
+        metadata = scanned.get("metadata") if isinstance(scanned.get("metadata"), dict) else {}
+        if metadata.get("title") or metadata.get("description"):
+            protocol_features.add("documented_api")
+
+        slug = "".join(char if char.isalnum() else "-" for char in (hostname or "interface-map")).strip("-") or "interface-map"
+        output_path = self.interface_maps_dir / f"{slug}-{port}.json"
+        payload = {
+            "ok": True,
+            "destination": target,
+            "base_url": str(scanned.get("base_url", target)).strip(),
+            "target_type": str(scanned.get("target_type", "unknown")).strip().lower() or "unknown",
+            "allowed_for_transfer": bool(scanned.get("allowed_for_transfer", False)),
+            "ports": [int(port)],
+            "metadata": metadata,
+            "documented_endpoints": documented_endpoints,
+            "protocol_features": sorted(protocol_features),
+            "discovery_matches": discovery_matches,
+            "generated_at": int(time.time()),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+            "interface_map_file": str(output_path),
+        }
+        output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return payload
 
     def package_agent(
         self,
@@ -903,6 +1033,7 @@ class BossGateCommandAgent:
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("usage_report")
         authorized, authorization = self._require_authorization(
             operator_id,
             scope_id,
@@ -910,6 +1041,8 @@ class BossGateCommandAgent:
             actor_type,
         )
         if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
             return authorization
 
         entries: list[dict[str, Any]] = []
@@ -927,6 +1060,7 @@ class BossGateCommandAgent:
                     "ok": False,
                     "message": f"failed to read transfer ledger: {ex}",
                     "authorization": authorization,
+                    "correlation_id": correlation_id,
                 }
 
         safe_limit = max(1, int(limit))
@@ -955,6 +1089,7 @@ class BossGateCommandAgent:
         return {
             "ok": True,
             "authorization": authorization,
+            "correlation_id": correlation_id,
             "summary": {
                 "total_records": len(entries),
                 "dry_run_count": dry_run_count,
@@ -966,6 +1101,566 @@ class BossGateCommandAgent:
             },
             "recent_entries": recent_entries,
         }
+
+    def issue_license(
+        self,
+        agent_name: str,
+        customer_id: str,
+        license_tier: str = "prototype",
+        expires_in_seconds: int = 0,
+        output_file: str = "",
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("license_issue")
+        authorized, authorization = self._require_authorization(
+            operator_id,
+            scope_id,
+            "bossgate.license.issue",
+            actor_type,
+        )
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("license_issue", correlation_id, authorization, agent_name=str(agent_name).strip().lower())
+            return authorization
+
+        key = str(agent_name).strip().lower()
+        if not key:
+            result = self._deny("missing_agent_name", "agent_name is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_issue", correlation_id, result, authorization=authorization)
+            return result
+        customer = str(customer_id).strip()
+        if not customer:
+            result = self._deny("missing_customer_id", "customer_id is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_issue", correlation_id, result, authorization=authorization, agent_name=key)
+            return result
+
+        profiles = self._load_agent_profiles()
+        if key not in profiles:
+            result = self._deny("agent_not_found", f"agent not found: {key}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_issue", correlation_id, result, authorization=authorization, agent_name=key)
+            return result
+
+        issued_at = int(time.time())
+        safe_expiry = int(expires_in_seconds)
+        expires_at = issued_at + safe_expiry if safe_expiry > 0 else None
+        license_id = f"lic-{key}-{issued_at}"
+        payload = {
+            "license_version": 1,
+            "license_id": license_id,
+            "agent_name": key,
+            "customer_id": customer,
+            "license_tier": str(license_tier).strip() or "prototype",
+            "issuer_node": self.node_id,
+            "issued_at": issued_at,
+            "expires_at": expires_at,
+            "status": "active",
+        }
+        if output_file.strip():
+            license_path = Path(output_file).expanduser().resolve()
+            license_path.parent.mkdir(parents=True, exist_ok=True)
+        else:
+            license_path = self.licenses_dir / f"{license_id}.bossgate.json"
+        license_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        result = {
+            "ok": True,
+            "license_id": license_id,
+            "license_file": str(license_path),
+            "agent_name": key,
+            "customer_id": customer,
+            "license_tier": payload["license_tier"],
+            "expires_at": expires_at,
+            "status": "active",
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+        }
+        self._emit_lifecycle_event("license_issue", correlation_id, result)
+        return result
+
+    def validate_license(
+        self,
+        license_file: str,
+        agent_name: str = "",
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+        internal: bool = False,
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("license_validate")
+        authorization: Dict[str, Any] = {}
+        if not internal:
+            authorized, authorization = self._require_authorization(
+                operator_id,
+                scope_id,
+                "bossgate.license.validate",
+                actor_type,
+            )
+            if not authorized:
+                if isinstance(authorization, dict):
+                    authorization = {**authorization, "correlation_id": correlation_id}
+                    self._emit_lifecycle_event("license_validate", correlation_id, authorization, agent_name=str(agent_name).strip().lower())
+                return authorization
+
+        license_path = Path(license_file).expanduser().resolve()
+        if not license_path.exists():
+            result = self._deny("license_file_not_found", f"license file not found: {license_path}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization)
+            return result
+        try:
+            payload = json.loads(license_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as ex:
+            result = self._deny("invalid_license_file", f"invalid license file: {ex}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization)
+            return result
+        if not isinstance(payload, dict):
+            result = self._deny("invalid_license_file", "invalid license file: expected object payload", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization)
+            return result
+
+        licensed_agent = str(payload.get("agent_name", "")).strip().lower()
+        requested_agent = str(agent_name).strip().lower()
+        if requested_agent and requested_agent != licensed_agent:
+            result = self._deny(
+                "license_agent_mismatch",
+                f"license does not apply to agent: {requested_agent}",
+                correlation_id=correlation_id,
+            )
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization, agent_name=requested_agent)
+            return result
+
+        status = str(payload.get("status", "unknown")).strip().lower() or "unknown"
+        if status == "revoked":
+            result = self._deny("license_revoked", "license has been revoked", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization, agent_name=licensed_agent)
+            return result
+        if status != "active":
+            result = self._deny("license_inactive", f"license is not active: {status}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization, agent_name=licensed_agent)
+            return result
+
+        expires_at_raw = payload.get("expires_at")
+        expires_at = int(expires_at_raw) if isinstance(expires_at_raw, (int, float)) else None
+        now_ts = int(time.time())
+        if expires_at is not None and expires_at < now_ts:
+            result = self._deny("license_expired", "license has expired", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_validate", correlation_id, result, authorization=authorization, agent_name=licensed_agent)
+            return result
+
+        result = {
+            "ok": True,
+            "license_id": str(payload.get("license_id", "")).strip(),
+            "license_file": str(license_path),
+            "agent_name": licensed_agent,
+            "customer_id": str(payload.get("customer_id", "")).strip(),
+            "license_tier": str(payload.get("license_tier", "prototype")).strip() or "prototype",
+            "license_status": status,
+            "issued_at": int(payload.get("issued_at", 0) or 0),
+            "expires_at": expires_at,
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+        }
+        self._emit_lifecycle_event("license_validate", correlation_id, result)
+        return result
+
+    def revoke_license(
+        self,
+        license_file: str,
+        reason: str = "",
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("license_revoke")
+        authorized, authorization = self._require_authorization(
+            operator_id,
+            scope_id,
+            "bossgate.license.issue",
+            actor_type,
+        )
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("license_revoke", correlation_id, authorization)
+            return authorization
+
+        license_path = Path(license_file).expanduser().resolve()
+        if not license_path.exists():
+            result = self._deny("license_file_not_found", f"license file not found: {license_path}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_revoke", correlation_id, result, authorization=authorization)
+            return result
+        try:
+            payload = json.loads(license_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as ex:
+            result = self._deny("invalid_license_file", f"invalid license file: {ex}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_revoke", correlation_id, result, authorization=authorization)
+            return result
+        if not isinstance(payload, dict):
+            result = self._deny("invalid_license_file", "invalid license file: expected object payload", correlation_id=correlation_id)
+            self._emit_lifecycle_event("license_revoke", correlation_id, result, authorization=authorization)
+            return result
+
+        payload["status"] = "revoked"
+        payload["revoked_at"] = int(time.time())
+        payload["revocation_reason"] = str(reason).strip()
+        payload["revoked_by"] = {
+            "operator_id": str(operator_id).strip(),
+            "scope_id": str(scope_id).strip(),
+            "actor_type": str(actor_type).strip() or "human",
+        }
+        license_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        result = {
+            "ok": True,
+            "license_id": str(payload.get("license_id", "")).strip(),
+            "license_file": str(license_path),
+            "agent_name": str(payload.get("agent_name", "")).strip().lower(),
+            "license_status": "revoked",
+            "revocation_reason": str(payload.get("revocation_reason", "")).strip(),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+        }
+        self._emit_lifecycle_event("license_revoke", correlation_id, result)
+        return result
+
+    def remote_debug_open(
+        self,
+        agent_name: str,
+        session_scope: list[str] | None = None,
+        ttl_seconds: int = 900,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("remote_debug_open")
+        authorized, authorization = self._require_authorization(
+            operator_id,
+            scope_id,
+            "bossgate.remote_debug.open",
+            actor_type,
+        )
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("remote_debug_open", correlation_id, authorization, agent_name=str(agent_name).strip().lower())
+            return authorization
+
+        key = str(agent_name).strip().lower()
+        if not key:
+            result = self._deny("missing_agent_name", "agent_name is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("remote_debug_open", correlation_id, result, authorization=authorization)
+            return result
+        profiles = self._load_agent_profiles()
+        if key not in profiles:
+            result = self._deny("agent_not_found", f"agent not found: {key}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("remote_debug_open", correlation_id, result, authorization=authorization, agent_name=key)
+            return result
+
+        normalized_scope = sorted(
+            {
+                str(item).strip().lower()
+                for item in (session_scope or [])
+                if str(item).strip()
+            }
+        )
+        if not normalized_scope:
+            result = self._deny("missing_session_scope", "session_scope is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("remote_debug_open", correlation_id, result, authorization=authorization, agent_name=key)
+            return result
+
+        safe_ttl = max(60, int(ttl_seconds))
+        issued_at = int(time.time())
+        expires_at = issued_at + safe_ttl
+        session_id = f"rdbg-{key}-{int(time.time() * 1000)}"
+        token_seed = f"{session_id}:{operator_id}:{scope_id}:{correlation_id}:{expires_at}"
+        session_token = hashlib.sha256(token_seed.encode("utf-8")).hexdigest()
+
+        sessions_payload = self._load_remote_debug_sessions()
+        sessions = sessions_payload.get("sessions") if isinstance(sessions_payload.get("sessions"), dict) else {}
+        sessions[session_id] = {
+            "session_id": session_id,
+            "session_token": session_token,
+            "agent_name": key,
+            "session_scope": normalized_scope,
+            "issued_at": issued_at,
+            "expires_at": expires_at,
+            "operator_id": str(operator_id).strip(),
+            "scope_id": str(scope_id).strip(),
+            "actor_type": str(actor_type).strip() or "human",
+            "status": "open",
+        }
+        sessions_payload["sessions"] = sessions
+        self._save_remote_debug_sessions(sessions_payload)
+
+        result = {
+            "ok": True,
+            "session_id": session_id,
+            "session_token": session_token,
+            "agent_name": key,
+            "session_scope": normalized_scope,
+            "issued_at": issued_at,
+            "expires_at": expires_at,
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+            "status": "remote_debug_open",
+        }
+        self._append_remote_debug_transcript(
+            {
+                "event": "remote_debug_open",
+                "session_id": session_id,
+                "agent_name": key,
+                "session_scope": normalized_scope,
+                "issued_at": issued_at,
+                "expires_at": expires_at,
+                "operator_id": str(operator_id).strip(),
+                "scope_id": str(scope_id).strip(),
+                "actor_type": str(actor_type).strip() or "human",
+                "status": "open",
+                "correlation_id": correlation_id,
+            }
+        )
+        self._emit_lifecycle_event("remote_debug_open", correlation_id, result)
+        return result
+
+    def remote_debug_close(
+        self,
+        session_id: str = "",
+        agent_name: str = "",
+        emergency_revoke: bool = False,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("remote_debug_close")
+        authorized, authorization = self._require_authorization(
+            operator_id,
+            scope_id,
+            "bossgate.remote_debug.close",
+            actor_type,
+        )
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+                self._emit_lifecycle_event("remote_debug_close", correlation_id, authorization, agent_name=str(agent_name).strip().lower())
+            return authorization
+
+        sessions_payload = self._load_remote_debug_sessions()
+        sessions = sessions_payload.get("sessions") if isinstance(sessions_payload.get("sessions"), dict) else {}
+        now_ts = int(time.time())
+
+        if emergency_revoke:
+            key = str(agent_name).strip().lower()
+            if not key:
+                result = self._deny("missing_agent_name", "agent_name is required", correlation_id=correlation_id)
+                self._emit_lifecycle_event("remote_debug_close", correlation_id, result, authorization=authorization)
+                return result
+            closed_session_ids: list[str] = []
+            for current_id, session in sessions.items():
+                if not isinstance(session, dict):
+                    continue
+                if str(session.get("agent_name", "")).strip().lower() != key:
+                    continue
+                if str(session.get("status", "")).strip().lower() not in {"open", "issued"}:
+                    continue
+                session["status"] = "revoked"
+                session["closed_at"] = now_ts
+                session["revoked_at"] = now_ts
+                session["revoked_by"] = {
+                    "operator_id": str(operator_id).strip(),
+                    "scope_id": str(scope_id).strip(),
+                    "actor_type": str(actor_type).strip() or "human",
+                }
+                closed_session_ids.append(current_id)
+            if not closed_session_ids:
+                result = self._deny("remote_debug_session_not_found", f"no open remote debug sessions found for agent: {key}", correlation_id=correlation_id)
+                self._emit_lifecycle_event("remote_debug_close", correlation_id, result, authorization=authorization, agent_name=key)
+                return result
+            sessions_payload["sessions"] = sessions
+            self._save_remote_debug_sessions(sessions_payload)
+            for closed_session_id in closed_session_ids:
+                closed_session = sessions.get(closed_session_id)
+                if not isinstance(closed_session, dict):
+                    continue
+                self._append_remote_debug_transcript(
+                    {
+                        "event": "remote_debug_close",
+                        "session_id": closed_session_id,
+                        "agent_name": key,
+                        "session_scope": list(closed_session.get("session_scope") or []),
+                        "issued_at": int(closed_session.get("issued_at", 0) or 0),
+                        "expires_at": int(closed_session.get("expires_at", 0) or 0),
+                        "closed_at": now_ts,
+                        "operator_id": str(operator_id).strip(),
+                        "scope_id": str(scope_id).strip(),
+                        "actor_type": str(actor_type).strip() or "human",
+                        "status": "revoked",
+                        "emergency_revoke": True,
+                        "correlation_id": correlation_id,
+                    }
+                )
+            result = {
+                "ok": True,
+                "agent_name": key,
+                "closed_session_ids": sorted(closed_session_ids),
+                "authorization": authorization,
+                "correlation_id": correlation_id,
+                "status": "remote_debug_emergency_revoked",
+            }
+            self._emit_lifecycle_event("remote_debug_close", correlation_id, result)
+            return result
+
+        key = str(session_id).strip()
+        if not key:
+            result = self._deny("missing_session_id", "session_id is required", correlation_id=correlation_id)
+            self._emit_lifecycle_event("remote_debug_close", correlation_id, result, authorization=authorization)
+            return result
+        session = sessions.get(key)
+        if not isinstance(session, dict):
+            result = self._deny("remote_debug_session_not_found", f"remote debug session not found: {key}", correlation_id=correlation_id)
+            self._emit_lifecycle_event("remote_debug_close", correlation_id, result, authorization=authorization)
+            return result
+        session["status"] = "closed"
+        session["closed_at"] = now_ts
+        sessions[key] = session
+        sessions_payload["sessions"] = sessions
+        self._save_remote_debug_sessions(sessions_payload)
+        result = {
+            "ok": True,
+            "session_id": key,
+            "agent_name": str(session.get("agent_name", "")).strip().lower(),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+            "status": "remote_debug_closed",
+        }
+        self._append_remote_debug_transcript(
+            {
+                "event": "remote_debug_close",
+                "session_id": key,
+                "agent_name": str(session.get("agent_name", "")).strip().lower(),
+                "session_scope": list(session.get("session_scope") or []),
+                "issued_at": int(session.get("issued_at", 0) or 0),
+                "expires_at": int(session.get("expires_at", 0) or 0),
+                "closed_at": now_ts,
+                "operator_id": str(operator_id).strip(),
+                "scope_id": str(scope_id).strip(),
+                "actor_type": str(actor_type).strip() or "human",
+                "status": "closed",
+                "emergency_revoke": False,
+                "correlation_id": correlation_id,
+            }
+        )
+        self._emit_lifecycle_event("remote_debug_close", correlation_id, result)
+        return result
+
+    def remote_debug_command(
+        self,
+        session_id: str,
+        session_token: str,
+        command_name: str,
+        requested_scope: str,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("remote_debug_command")
+        key = str(session_id).strip()
+        token = str(session_token).strip()
+        command = str(command_name).strip()
+        scope = str(requested_scope).strip().lower()
+        actor = str(actor_type).strip() or "human"
+
+        if not key:
+            return self._deny("missing_session_id", "session_id is required", correlation_id=correlation_id)
+        if not token:
+            return self._deny("missing_session_token", "session_token is required", correlation_id=correlation_id)
+        if not command:
+            return self._deny("missing_remote_command", "command_name is required", correlation_id=correlation_id)
+        if not scope:
+            return self._deny("missing_requested_scope", "requested_scope is required", correlation_id=correlation_id)
+
+        sessions_payload = self._load_remote_debug_sessions()
+        sessions = sessions_payload.get("sessions") if isinstance(sessions_payload.get("sessions"), dict) else {}
+        session = sessions.get(key)
+        if not isinstance(session, dict):
+            return self._deny("remote_debug_session_not_found", f"remote debug session not found: {key}", correlation_id=correlation_id)
+
+        agent_name = str(session.get("agent_name", "")).strip().lower()
+        transcript_base = {
+            "event": "remote_debug_command",
+            "session_id": key,
+            "agent_name": agent_name,
+            "command_name": command,
+            "requested_scope": scope,
+            "operator_id": str(operator_id).strip(),
+            "scope_id": str(scope_id).strip(),
+            "actor_type": actor,
+            "correlation_id": correlation_id,
+        }
+
+        def deny_with_transcript(reason_code: str, message: str) -> Dict[str, Any]:
+            result = self._deny(reason_code, message, correlation_id=correlation_id)
+            self._append_remote_debug_transcript(
+                {
+                    **transcript_base,
+                    "status": "denied",
+                    "reason_codes": result.get("reason_codes", []),
+                }
+            )
+            self._emit_lifecycle_event("remote_debug_command", correlation_id, result, session_id=key, agent_name=agent_name)
+            return result
+
+        if token != str(session.get("session_token", "")).strip():
+            return deny_with_transcript("remote_debug_invalid_session_token", "remote debug session token is invalid")
+
+        session_status = str(session.get("status", "")).strip().lower()
+        if session_status not in {"open", "issued"}:
+            return deny_with_transcript("remote_debug_session_closed", f"remote debug session is not open: {session_status or 'unknown'}")
+
+        now_ts = int(time.time())
+        expires_at = int(session.get("expires_at", 0) or 0)
+        if expires_at and expires_at < now_ts:
+            session["status"] = "expired"
+            session["closed_at"] = now_ts
+            sessions[key] = session
+            sessions_payload["sessions"] = sessions
+            self._save_remote_debug_sessions(sessions_payload)
+            return deny_with_transcript("remote_debug_session_expired", "remote debug session has expired")
+
+        allowed_scopes = {
+            str(item).strip().lower()
+            for item in (session.get("session_scope") or [])
+            if str(item).strip()
+        }
+        if scope not in allowed_scopes:
+            return deny_with_transcript("remote_debug_scope_denied", f"requested scope is not allowed for session: {scope}")
+
+        if operator_id and str(session.get("operator_id", "")).strip() != str(operator_id).strip():
+            return deny_with_transcript("remote_debug_operator_mismatch", "remote debug session operator does not match")
+        if scope_id and str(session.get("scope_id", "")).strip() != str(scope_id).strip():
+            return deny_with_transcript("remote_debug_scope_context_mismatch", "remote debug session scope context does not match")
+
+        result = {
+            "ok": True,
+            "session_id": key,
+            "agent_name": agent_name,
+            "command_name": command,
+            "requested_scope": scope,
+            "authorization": {
+                "operator_id": str(session.get("operator_id", "")).strip(),
+                "scope_id": str(session.get("scope_id", "")).strip(),
+                "actor_type": str(session.get("actor_type", "")).strip() or "human",
+            },
+            "correlation_id": correlation_id,
+            "status": "remote_debug_command_accepted",
+        }
+        self._append_remote_debug_transcript(
+            {
+                **transcript_base,
+                "status": "accepted",
+            }
+        )
+        self._emit_lifecycle_event("remote_debug_command", correlation_id, result)
+        return result
 
     def handle_command(self, payload: Dict[str, Any]) -> None:
         if payload.get("target") != "bossgate":
@@ -983,6 +1678,14 @@ class BossGateCommandAgent:
         elif command == "bossgate_scan_target":
             result = self.scan_target(
                 str(args.get("destination", "")).strip(),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_build_interface_map":
+            result = self.build_interface_map(
+                destination=str(args.get("destination", "")).strip(),
+                timeout=int(args.get("timeout", 2) or 2),
                 operator_id=str(args.get("operator_id", "")).strip(),
                 scope_id=str(args.get("scope_id", "")).strip(),
                 actor_type=str(args.get("actor_type", "human")).strip(),
@@ -1028,6 +1731,63 @@ class BossGateCommandAgent:
         elif command == "bossgate_usage_report":
             result = self.usage_report(
                 limit=int(args.get("limit", 20) or 20),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_license_issue":
+            result = self.issue_license(
+                agent_name=str(args.get("agent_name", "")).strip(),
+                customer_id=str(args.get("customer_id", "")).strip(),
+                license_tier=str(args.get("license_tier", "prototype")).strip(),
+                expires_in_seconds=int(args.get("expires_in_seconds", 0) or 0),
+                output_file=str(args.get("output_file", "")).strip(),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_license_validate":
+            result = self.validate_license(
+                license_file=str(args.get("license_file", "")).strip(),
+                agent_name=str(args.get("agent_name", "")).strip(),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_license_revoke":
+            result = self.revoke_license(
+                license_file=str(args.get("license_file", "")).strip(),
+                reason=str(args.get("reason", "")).strip(),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_remote_debug_open":
+            raw_scope = args.get("session_scope")
+            scope_items = raw_scope if isinstance(raw_scope, list) else []
+            result = self.remote_debug_open(
+                agent_name=str(args.get("agent_name", "")).strip(),
+                session_scope=[str(item).strip() for item in scope_items if str(item).strip()],
+                ttl_seconds=int(args.get("ttl_seconds", 900) or 900),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_remote_debug_close":
+            result = self.remote_debug_close(
+                session_id=str(args.get("session_id", "")).strip(),
+                agent_name=str(args.get("agent_name", "")).strip(),
+                emergency_revoke=bool(args.get("emergency_revoke", False)),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_remote_debug":
+            result = self.remote_debug_command(
+                session_id=str(args.get("session_id", "")).strip(),
+                session_token=str(args.get("session_token", "")).strip(),
+                command_name=str(args.get("command_name", "")).strip(),
+                requested_scope=str(args.get("requested_scope", "")).strip(),
                 operator_id=str(args.get("operator_id", "")).strip(),
                 scope_id=str(args.get("scope_id", "")).strip(),
                 actor_type=str(args.get("actor_type", "human")).strip(),

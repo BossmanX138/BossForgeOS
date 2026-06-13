@@ -47,26 +47,37 @@ Owner: `codemage` (background implementation owner)
   evidence: [2026-06-12 23:44:27] python -m unittest tests.test_bossgate_agent.BossGateCommandAgentTests.test_transfer_ledger_records_auditable_correlation_metadata -v (pass)
 - [x] (BG-015) Implement `bossgate_usage_report` command with local aggregation.
   evidence: [2026-06-12 23:47:57] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 93 tests)
-- [ ] (BG-016) Add telemetry tests for event completeness per flow.
+- [x] (BG-016) Add telemetry tests for event completeness per flow.
+  evidence: [2026-06-12 23:52:09] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 94 tests)
 
 ## Phase 4: Licensing and Commerce MVP
 
-- [ ] (BG-017) Implement `bossgate_license_issue`.
-- [ ] (BG-018) Implement `bossgate_license_validate`.
-- [ ] (BG-019) Enforce license checks during install and activation.
-- [ ] (BG-020) Implement revocation checks and denial paths.
-- [ ] (BG-021) Emit usage checkpoints for billing hooks.
+- [x] (BG-017) Implement `bossgate_license_issue`.
+  evidence: [2026-06-12 23:55:35] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 96 tests)
+- [x] (BG-018) Implement `bossgate_license_validate`.
+  evidence: [2026-06-12 23:55:35] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 96 tests)
+- [x] (BG-019) Enforce license checks during install and activation.
+  evidence: [2026-06-13 00:06:02] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 98 tests)
+- [x] (BG-020) Implement revocation checks and denial paths.
+  evidence: [2026-06-13 00:24:05] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 100 tests)
+- [x] (BG-021) Emit usage checkpoints for billing hooks.
+  evidence: [2026-06-13 00:30:55] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 101 tests)
 
 ## Phase 5: Runtime Control and Remote Debug
 
-- [ ] (BG-022) Implement `bossgate_remote_debug_open` with time-bound scoped session tokens.
-- [ ] (BG-023) Implement `bossgate_remote_debug_close` and emergency revoke/kill switch.
-- [ ] (BG-024) Log full remote session transcripts with correlation ids.
-- [ ] (BG-025) Add tests for token expiry and out-of-scope command rejection.
+- [x] (BG-022) Implement `bossgate_remote_debug_open` with time-bound scoped session tokens.
+  evidence: [2026-06-13 00:34:05] python -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -v (pass, 102 tests)
+- [x] (BG-023) Implement `bossgate_remote_debug_close` and emergency revoke/kill switch.
+  evidence: [2026-06-13 01:39:26] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 104 tests)
+- [x] (BG-024) Log full remote session transcripts with correlation ids.
+  evidence: [2026-06-13 01:42:05] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 104 tests)
+- [x] (BG-025) Add tests for token expiry and out-of-scope command rejection.
+  evidence: [2026-06-13 01:45:20] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 106 tests)
 
 ## Phase 6: Connector Synthesis
 
-- [ ] (BG-026) Build interface map from discovery and scan outputs.
+- [x] (BG-026) Build interface map from discovery and scan outputs.
+  evidence: [2026-06-13 01:49:20] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 108 tests)
 - [ ] (BG-027) Generate least-privilege connector skeletons for approved targets.
 - [ ] (BG-028) Require explicit approval for write/destructive connector operations.
 - [ ] (BG-029) Add one end-to-end generation test for an approved sample target.

@@ -1052,6 +1052,71 @@ def cmd_bossgate(args: argparse.Namespace) -> None:
         print(f"command written: {path}")
         return
 
+    if args.sub == "license-issue":
+        payload = {
+            "agent_name": args.agent_name,
+            "customer_id": args.customer_id,
+            "license_tier": args.license_tier,
+            "expires_in_seconds": int(args.expires_in_seconds),
+            "output_file": args.output_file,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_issue", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "license-validate":
+        payload = {
+            "license_file": args.license_file,
+            "agent_name": args.agent_name,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_validate", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "license-revoke":
+        payload = {
+            "license_file": args.license_file,
+            "reason": args.reason,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_revoke", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "remote-debug-open":
+        payload = {
+            "agent_name": args.agent_name,
+            "session_scope": list(args.session_scope),
+            "ttl_seconds": int(args.ttl_seconds),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_remote_debug_open", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "remote-debug-close":
+        payload = {
+            "session_id": args.session_id,
+            "agent_name": args.agent_name,
+            "emergency_revoke": bool(args.emergency_revoke),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_remote_debug_close", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
     if args.sub == "complete":
         if not todo_path.exists():
             raise SystemExit(f"todo tracker not found: {todo_path}")
@@ -1437,6 +1502,51 @@ def build_parser() -> argparse.ArgumentParser:
     p_bg_usage.add_argument("--scope-id", required=True)
     p_bg_usage.add_argument("--actor-type", choices=["human", "agent"], default="human")
     p_bg_usage.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_issue = p_bossgate_sub.add_parser("license-issue", help="Issue a local BossGate license document")
+    p_bg_license_issue.add_argument("agent_name")
+    p_bg_license_issue.add_argument("customer_id")
+    p_bg_license_issue.add_argument("--license-tier", default="prototype")
+    p_bg_license_issue.add_argument("--expires-in-seconds", type=int, default=0)
+    p_bg_license_issue.add_argument("--output-file", default="")
+    p_bg_license_issue.add_argument("--operator-id", required=True)
+    p_bg_license_issue.add_argument("--scope-id", required=True)
+    p_bg_license_issue.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_issue.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_validate = p_bossgate_sub.add_parser("license-validate", help="Validate a local BossGate license document")
+    p_bg_license_validate.add_argument("license_file")
+    p_bg_license_validate.add_argument("--agent-name", default="")
+    p_bg_license_validate.add_argument("--operator-id", required=True)
+    p_bg_license_validate.add_argument("--scope-id", required=True)
+    p_bg_license_validate.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_validate.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_revoke = p_bossgate_sub.add_parser("license-revoke", help="Revoke a local BossGate license document")
+    p_bg_license_revoke.add_argument("license_file")
+    p_bg_license_revoke.add_argument("--reason", default="")
+    p_bg_license_revoke.add_argument("--operator-id", required=True)
+    p_bg_license_revoke.add_argument("--scope-id", required=True)
+    p_bg_license_revoke.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_revoke.set_defaults(func=cmd_bossgate)
+
+    p_bg_remote_open = p_bossgate_sub.add_parser("remote-debug-open", help="Open a scoped BossGate remote debug session")
+    p_bg_remote_open.add_argument("agent_name")
+    p_bg_remote_open.add_argument("--session-scope", nargs="+", required=True)
+    p_bg_remote_open.add_argument("--ttl-seconds", type=int, default=900)
+    p_bg_remote_open.add_argument("--operator-id", required=True)
+    p_bg_remote_open.add_argument("--scope-id", required=True)
+    p_bg_remote_open.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_remote_open.set_defaults(func=cmd_bossgate)
+
+    p_bg_remote_close = p_bossgate_sub.add_parser("remote-debug-close", help="Close or emergency-revoke BossGate remote debug sessions")
+    p_bg_remote_close.add_argument("--session-id", default="")
+    p_bg_remote_close.add_argument("--agent-name", default="")
+    p_bg_remote_close.add_argument("--emergency-revoke", action="store_true")
+    p_bg_remote_close.add_argument("--operator-id", required=True)
+    p_bg_remote_close.add_argument("--scope-id", required=True)
+    p_bg_remote_close.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_remote_close.set_defaults(func=cmd_bossgate)
 
     p_bg_complete = p_bossgate_sub.add_parser("complete", help="Mark a BossGate TODO id as completed")
     p_bg_complete.add_argument("todo_id", help="Todo id, e.g. BG-004")

@@ -1,6 +1,8 @@
 import os
 import tempfile
 import unittest
+import json
+import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -1192,6 +1194,245 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(accepted["ok"])
         self.assertEqual(accepted["status"], "validated_only")
         self.assertTrue(agent.bossgate_commands.transfer_log_path.exists())
+
+    def test_bossgate_install_agent_requires_license_for_non_prototype_agent(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="licensed_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["licensed_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="licensed_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+        package_path = Path(packaged["package_file"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="licensed_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+
+        del agent.agent_profiles["licensed_runner"]
+        agent._save_agent_profiles()
+
+        denied = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["license_required_for_install"])
+
+        installed = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+        self.assertEqual(agent.agent_profiles["licensed_runner"]["installed_license_file"], issued["license_file"])
+
+    def test_run_agent_profile_rejects_expired_license_before_model_invoke(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="expired_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        expired_license = Path(self.tmp.name) / "expired_runner_license.bossgate.json"
+        expired_license.write_text(
+            json.dumps(
+                {
+                    "license_version": 1,
+                    "license_id": "lic-expired-runner",
+                    "agent_name": "expired_runner",
+                    "customer_id": "acme-labs",
+                    "license_tier": "rental",
+                    "issuer_node": agent.node_id,
+                    "issued_at": int(time.time()) - 7200,
+                    "expires_at": int(time.time()) - 3600,
+                    "status": "active",
+                }
+            ),
+            encoding="utf-8",
+        )
+        agent.agent_profiles["expired_runner"]["license_tier"] = "rental"
+        agent.agent_profiles["expired_runner"]["installed_license_file"] = str(expired_license)
+        agent._save_agent_profiles()
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            result = agent._run_agent_profile(name="expired_runner", task="Do licensed work")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason_codes"], ["license_expired"])
+
+    def test_revoked_license_blocks_install_and_runtime_activation(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="revoked_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["revoked_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="revoked_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="revoked_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+        revoked = agent.bossgate_commands.revoke_license(
+            license_file=issued["license_file"],
+            reason="billing default",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(revoked["ok"])
+
+        del agent.agent_profiles["revoked_runner"]
+        agent._save_agent_profiles()
+
+        denied_install = agent.bossgate_install_agent(
+            package_file=packaged["package_file"],
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertFalse(denied_install["ok"])
+        self.assertEqual(denied_install["reason_codes"], ["license_revoked"])
+
+        recreated = agent.create_agent_profile(
+            name="revoked_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(recreated["ok"])
+        agent.agent_profiles["revoked_runner"]["license_tier"] = "rental"
+        agent.agent_profiles["revoked_runner"]["installed_license_file"] = issued["license_file"]
+        agent._save_agent_profiles()
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            denied_run = agent._run_agent_profile(name="revoked_runner", task="Do licensed work")
+        self.assertFalse(denied_run["ok"])
+        self.assertEqual(denied_run["reason_codes"], ["license_revoked"])
+
+    def test_licensed_install_and_invoke_emit_usage_checkpoints(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="metered_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["metered_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="metered_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="metered_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+
+        del agent.agent_profiles["metered_runner"]
+        agent._save_agent_profiles()
+        installed = agent.bossgate_install_agent(
+            package_file=packaged["package_file"],
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+
+        with patch.object(agent, "_invoke_endpoint", return_value={"ok": True, "text": "done", "provider": "ollama", "model": "llama3.2", "usage": {"total_tokens": 42}}):
+            invoked = agent._run_agent_profile(name="metered_runner", task="Do licensed work")
+        self.assertTrue(invoked["ok"])
+
+        checkpoint_path = agent.usage_checkpoint_log_path
+        self.assertTrue(checkpoint_path.exists())
+        records = [
+            json.loads(line)
+            for line in checkpoint_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[0]["checkpoint_type"], "agent_activated")
+        self.assertEqual(records[1]["checkpoint_type"], "agent_usage_checkpoint")
+        self.assertEqual(records[0]["agent_name"], "metered_runner")
+        self.assertEqual(records[0]["customer_id"], "acme-labs")
+        self.assertEqual(records[1]["license_id"], records[0]["license_id"])
+        self.assertEqual(records[1]["usage"]["total_tokens"], 42)
 
 
 if __name__ == "__main__":

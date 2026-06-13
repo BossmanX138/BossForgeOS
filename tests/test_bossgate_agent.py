@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import time
 from pathlib import Path
 from unittest.mock import patch
 import json
@@ -248,6 +249,51 @@ class BossGateCommandAgentTests(unittest.TestCase):
         self.assertTrue(transferred["move_semantics"]["source_retired"])
         self.assertTrue(transferred["move_semantics"]["retirement"]["profile_removed"])
         self.assertFalse(Path(packaged["package_file"]).exists())
+
+    def test_build_interface_map_combines_discovery_and_scan_outputs(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        discovered = [
+            {
+                "address": "http://bridgebase.local:8443",
+                "node_id": "node-bridge",
+                "target_type": "bridgebase_alpha",
+                "allowed_for_transfer": True,
+                "agent_name": "dockmaster",
+            }
+        ]
+        scanned = {
+            "ok": True,
+            "allowed_for_transfer": True,
+            "target_type": "bridgebase_alpha",
+            "base_url": "http://bridgebase.local:8443",
+            "endpoints": [
+                {"path": "/api/transfer", "methods": ["post"]},
+                {"path": "/health", "methods": ["get"]},
+            ],
+            "metadata": {
+                "title": "bridgebase_alpha control plane",
+                "description": "BossGate travel node",
+                "x-bossgate-target-type": "bridgebase_alpha",
+            },
+        }
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=discovered):
+            with patch("core.agents.bossgate_agent.scan_rest_endpoints", return_value=scanned):
+                interface_map = agent.build_interface_map(
+                    destination="http://bridgebase.local:8443",
+                    timeout=2,
+                    **self.AUTH,
+                )
+
+        self.assertTrue(interface_map["ok"])
+        self.assertEqual(interface_map["target_type"], "bridgebase_alpha")
+        self.assertEqual(interface_map["ports"], [8443])
+        self.assertEqual(len(interface_map["documented_endpoints"]), 2)
+        self.assertEqual(interface_map["documented_endpoints"][0]["methods"], ["POST"])
+        self.assertEqual(interface_map["discovery_matches"][0]["node_id"], "node-bridge")
+        self.assertIn("rest_json", interface_map["protocol_features"])
+        self.assertIn("transfer_endpoint", interface_map["protocol_features"])
+        self.assertIn("health_endpoint", interface_map["protocol_features"])
+        self.assertTrue(Path(interface_map["interface_map_file"]).exists())
 
     def test_transfer_agent_handles_http_failure(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
@@ -759,9 +805,420 @@ class BossGateCommandAgentTests(unittest.TestCase):
                     "args": {"timeout": 1, **self.AUTH},
                 }
             )
-        events = agent.bus.read_latest_events(limit=2)
-        command_event = next(item for item in events if item["event"] == "command:bossgate_discover_targets")
-        self.assertTrue(command_event["data"].get("correlation_id"))
+        with patch("core.agents.bossgate_agent.scan_rest_endpoints", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            agent.handle_command(
+                {
+                    "target": "bossgate",
+                    "command": "bossgate_scan_target",
+                    "args": {"destination": "http://bridgebase.local", **self.AUTH},
+                }
+            )
+        agent.handle_command(
+            {
+                "target": "bossgate",
+                "command": "bossgate_usage_report",
+                "args": {"limit": 5, "operator_id": "finance-analyst", "scope_id": "test-scope"},
+            }
+        )
+        events = agent.bus.read_latest_events(limit=6)
+        discover_command = next(item for item in events if item["event"] == "command:bossgate_discover_targets")
+        scan_command = next(item for item in events if item["event"] == "command:bossgate_scan_target")
+        usage_command = next(item for item in events if item["event"] == "command:bossgate_usage_report")
+        self.assertTrue(discover_command["data"].get("correlation_id"))
+        self.assertTrue(scan_command["data"].get("correlation_id"))
+        self.assertTrue(usage_command["data"].get("correlation_id"))
+
+    def test_build_interface_map_command_emits_result(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        discovered = [
+            {
+                "address": "http://bridgebase.local:8443",
+                "node_id": "node-bridge",
+                "target_type": "bridgebase_alpha",
+                "allowed_for_transfer": True,
+            }
+        ]
+        scanned = {
+            "ok": True,
+            "allowed_for_transfer": True,
+            "target_type": "bridgebase_alpha",
+            "base_url": "http://bridgebase.local:8443",
+            "endpoints": [{"path": "/api/transfer", "methods": ["post"]}],
+            "metadata": {"title": "bridgebase_alpha control plane"},
+        }
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=discovered):
+            with patch("core.agents.bossgate_agent.scan_rest_endpoints", return_value=scanned):
+                agent.handle_command(
+                    {
+                        "target": "bossgate",
+                        "command": "bossgate_build_interface_map",
+                        "args": {"destination": "http://bridgebase.local:8443", **self.AUTH},
+                    }
+                )
+        event = agent.bus.read_latest_events(limit=1)[0]
+        self.assertEqual(event["event"], "command:bossgate_build_interface_map")
+        self.assertTrue(event["data"]["ok"])
+        self.assertEqual(event["data"]["target_type"], "bridgebase_alpha")
+
+    def test_license_issue_and_validate_roundtrip_for_commerce_manager(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="licensed_agent",
+            endpoint="ollama",
+            system_prompt="Licensable agent.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "finance-analyst", ["commerce_manager"])
+        self.assertTrue(assigned["ok"])
+
+        issued = agent.issue_license(
+            agent_name="licensed_agent",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+        self.assertTrue(issued["correlation_id"])
+        license_path = Path(issued["license_file"])
+        self.assertTrue(license_path.exists())
+
+        payload = json.loads(license_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["agent_name"], "licensed_agent")
+        self.assertEqual(payload["customer_id"], "acme-labs")
+        self.assertEqual(payload["license_tier"], "rental")
+        self.assertEqual(payload["status"], "active")
+
+        validated = agent.validate_license(
+            license_file=str(license_path),
+            agent_name="licensed_agent",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(validated["ok"])
+        self.assertEqual(validated["license_status"], "active")
+        self.assertEqual(validated["agent_name"], "licensed_agent")
+        self.assertTrue(validated["correlation_id"])
+
+    def test_validate_license_rejects_expired_license(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "finance-analyst", ["commerce_manager"])
+        self.assertTrue(assigned["ok"])
+
+        license_path = Path(self.tmp.name) / "expired_license.bossgate.json"
+        license_path.write_text(
+            json.dumps(
+                {
+                    "license_version": 1,
+                    "license_id": "lic-expired-001",
+                    "agent_name": "licensed_agent",
+                    "customer_id": "acme-labs",
+                    "license_tier": "rental",
+                    "issuer_node": "bossforgeos-test",
+                    "issued_at": int(time.time()) - 7200,
+                    "expires_at": int(time.time()) - 3600,
+                    "status": "active",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        denied = agent.validate_license(
+            license_file=str(license_path),
+            agent_name="licensed_agent",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["license_expired"])
+
+    def test_revoke_license_marks_document_and_validation_denies(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="licensed_agent_revoked",
+            endpoint="ollama",
+            system_prompt="Licensable agent.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "finance-analyst", ["commerce_manager"])
+        self.assertTrue(assigned["ok"])
+        issued = agent.issue_license(
+            agent_name="licensed_agent_revoked",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+
+        revoked = agent.revoke_license(
+            license_file=issued["license_file"],
+            reason="billing default",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(revoked["ok"])
+        self.assertEqual(revoked["license_status"], "revoked")
+
+        payload = json.loads(Path(issued["license_file"]).read_text(encoding="utf-8"))
+        self.assertEqual(payload["status"], "revoked")
+        self.assertEqual(payload["revocation_reason"], "billing default")
+
+        denied = agent.validate_license(
+            license_file=issued["license_file"],
+            agent_name="licensed_agent_revoked",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["license_revoked"])
+
+    def test_remote_debug_open_creates_scoped_time_bound_session(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="support_target",
+            endpoint="ollama",
+            system_prompt="Support target.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "support-tech", ["support_engineer"])
+        self.assertTrue(assigned["ok"])
+
+        opened = agent.remote_debug_open(
+            agent_name="support_target",
+            session_scope=["logs.read", "state.inspect"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-42",
+        )
+        self.assertTrue(opened["ok"])
+        self.assertTrue(opened["session_token"])
+        self.assertTrue(opened["session_id"])
+        self.assertEqual(opened["agent_name"], "support_target")
+        self.assertEqual(opened["session_scope"], ["logs.read", "state.inspect"])
+        self.assertEqual(opened["status"], "remote_debug_open")
+        self.assertGreater(opened["expires_at"], opened["issued_at"])
+
+        sessions_path = agent.remote_debug_sessions_path
+        self.assertTrue(sessions_path.exists())
+        payload = json.loads(sessions_path.read_text(encoding="utf-8"))
+        self.assertIn(opened["session_id"], payload["sessions"])
+        stored = payload["sessions"][opened["session_id"]]
+        self.assertEqual(stored["agent_name"], "support_target")
+        self.assertEqual(stored["session_scope"], ["logs.read", "state.inspect"])
+        self.assertEqual(stored["operator_id"], "support-tech")
+
+        events = agent.bus.read_latest_events(limit=6)
+        lifecycle = next(item for item in events if item["event"] == "lifecycle:remote_debug_open")
+        self.assertEqual(lifecycle["data"]["session_id"], opened["session_id"])
+        self.assertEqual(lifecycle["data"]["session_scope"], ["logs.read", "state.inspect"])
+
+    def test_remote_debug_close_marks_session_closed(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="support_target_close",
+            endpoint="ollama",
+            system_prompt="Support target.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "support-tech", ["support_engineer"])
+        self.assertTrue(assigned["ok"])
+        opened = agent.remote_debug_open(
+            agent_name="support_target_close",
+            session_scope=["logs.read"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-43",
+        )
+        self.assertTrue(opened["ok"])
+
+        closed = agent.remote_debug_close(
+            session_id=opened["session_id"],
+            operator_id="support-tech",
+            scope_id="incident-43",
+        )
+        self.assertTrue(closed["ok"])
+        self.assertEqual(closed["status"], "remote_debug_closed")
+        self.assertEqual(closed["session_id"], opened["session_id"])
+
+        payload = json.loads(agent.remote_debug_sessions_path.read_text(encoding="utf-8"))
+        stored = payload["sessions"][opened["session_id"]]
+        self.assertEqual(stored["status"], "closed")
+        self.assertIn("closed_at", stored)
+
+        transcript_path = agent.remote_debug_transcripts_path
+        self.assertTrue(transcript_path.exists())
+        transcript_lines = [
+            json.loads(line)
+            for line in transcript_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(transcript_lines), 2)
+        opened_entry, closed_entry = transcript_lines
+        self.assertEqual(opened_entry["event"], "remote_debug_open")
+        self.assertEqual(closed_entry["event"], "remote_debug_close")
+        self.assertEqual(opened_entry["session_id"], opened["session_id"])
+        self.assertEqual(closed_entry["session_id"], opened["session_id"])
+        self.assertEqual(opened_entry["correlation_id"], opened["correlation_id"])
+        self.assertEqual(closed_entry["correlation_id"], closed["correlation_id"])
+        self.assertEqual(closed_entry["status"], "closed")
+        self.assertEqual(closed_entry["agent_name"], "support_target_close")
+
+    def test_remote_debug_emergency_revoke_force_closes_agent_sessions(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="support_target_revoke",
+            endpoint="ollama",
+            system_prompt="Support target.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "support-tech", ["support_engineer"])
+        self.assertTrue(assigned["ok"])
+        first = agent.remote_debug_open(
+            agent_name="support_target_revoke",
+            session_scope=["logs.read"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-44",
+        )
+        second = agent.remote_debug_open(
+            agent_name="support_target_revoke",
+            session_scope=["state.inspect"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-44",
+        )
+        self.assertTrue(first["ok"])
+        self.assertTrue(second["ok"])
+
+        revoked = agent.remote_debug_close(
+            agent_name="support_target_revoke",
+            emergency_revoke=True,
+            operator_id="support-tech",
+            scope_id="incident-44",
+        )
+        self.assertTrue(revoked["ok"])
+        self.assertEqual(revoked["status"], "remote_debug_emergency_revoked")
+        self.assertEqual(sorted(revoked["closed_session_ids"]), sorted([first["session_id"], second["session_id"]]))
+
+        payload = json.loads(agent.remote_debug_sessions_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["sessions"][first["session_id"]]["status"], "revoked")
+        self.assertEqual(payload["sessions"][second["session_id"]]["status"], "revoked")
+
+        transcript_lines = [
+            json.loads(line)
+            for line in agent.remote_debug_transcripts_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        revoked_entries = [entry for entry in transcript_lines if entry["event"] == "remote_debug_close" and entry["status"] == "revoked"]
+        self.assertEqual(len(revoked_entries), 2)
+        self.assertEqual(
+            sorted(entry["session_id"] for entry in revoked_entries),
+            sorted([first["session_id"], second["session_id"]]),
+        )
+        self.assertTrue(all(entry["correlation_id"] == revoked["correlation_id"] for entry in revoked_entries))
+        self.assertTrue(all(entry["emergency_revoke"] for entry in revoked_entries))
+
+    def test_remote_debug_command_rejects_expired_session_token(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="support_target_expired",
+            endpoint="ollama",
+            system_prompt="Support target.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "support-tech", ["support_engineer"])
+        self.assertTrue(assigned["ok"])
+        opened = agent.remote_debug_open(
+            agent_name="support_target_expired",
+            session_scope=["logs.read"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-45",
+        )
+        self.assertTrue(opened["ok"])
+
+        payload = json.loads(agent.remote_debug_sessions_path.read_text(encoding="utf-8"))
+        payload["sessions"][opened["session_id"]]["expires_at"] = int(time.time()) - 1
+        agent.remote_debug_sessions_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        denied = agent.remote_debug_command(
+            session_id=opened["session_id"],
+            session_token=opened["session_token"],
+            command_name="tail_logs",
+            requested_scope="logs.read",
+            operator_id="support-tech",
+            scope_id="incident-45",
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["remote_debug_session_expired"])
+
+    def test_remote_debug_command_rejects_out_of_scope_command(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="support_target_scope",
+            endpoint="ollama",
+            system_prompt="Support target.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        assigned = agent.authorization_registry.assign_user_roles("bossforge-owner", "support-tech", ["support_engineer"])
+        self.assertTrue(assigned["ok"])
+        opened = agent.remote_debug_open(
+            agent_name="support_target_scope",
+            session_scope=["logs.read"],
+            ttl_seconds=600,
+            operator_id="support-tech",
+            scope_id="incident-46",
+        )
+        self.assertTrue(opened["ok"])
+
+        denied = agent.remote_debug_command(
+            session_id=opened["session_id"],
+            session_token=opened["session_token"],
+            command_name="inspect_state",
+            requested_scope="state.inspect",
+            operator_id="support-tech",
+            scope_id="incident-46",
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["remote_debug_scope_denied"])
 
 
 if __name__ == "__main__":

@@ -82,6 +82,7 @@ class ModelGateway:
         self.locations_path = self.bus.state / "owned_gateway_locations.json"
         self.agent_locations_path = self.bus.state / "owned_agent_locations.json"
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
+        self.usage_checkpoint_log_path = self.bus.state / "bossgate_usage_checkpoints.jsonl"
         self.agent_gate_dir = self.bus.state / "agent_gates"
         self.private_model_root = self.bus.state / "private_models"
         self.private_memory_root = self.bus.state / "private_memory"
@@ -120,6 +121,45 @@ class ModelGateway:
             )
             self._memory_vaults[key] = vault
         return vault
+
+    def _load_license_payload(self, license_file: str) -> Dict[str, Any]:
+        path = Path(license_file).expanduser().resolve()
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else {}
+
+    def _append_usage_checkpoint(
+        self,
+        checkpoint_type: str,
+        agent_name: str,
+        profile: Dict[str, Any],
+        usage: Dict[str, Any] | None = None,
+        detail: str = "",
+    ) -> None:
+        license_tier = str(profile.get("license_tier", "prototype")).strip().lower() or "prototype"
+        if license_tier == "prototype":
+            return
+        license_file = str(profile.get("installed_license_file", "")).strip()
+        if not license_file:
+            return
+        try:
+            license_payload = self._load_license_payload(license_file)
+        except Exception:
+            return
+        record = {
+            "timestamp": int(time.time()),
+            "checkpoint_type": str(checkpoint_type).strip(),
+            "agent_name": str(agent_name).strip().lower(),
+            "license_id": str(license_payload.get("license_id", "")).strip(),
+            "license_tier": str(license_payload.get("license_tier", license_tier)).strip() or license_tier,
+            "customer_id": str(license_payload.get("customer_id", "")).strip(),
+            "node_id": self.node_id,
+            "usage": usage or {},
+            "detail": str(detail).strip(),
+        }
+        with self.usage_checkpoint_log_path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(record, separators=(",", ":")))
+            fp.write("\n")
+        self.bus.emit_event("bossgate", record["checkpoint_type"], record)
 
     def _load_endpoints(self) -> Dict[str, Dict[str, Any]]:
         if self.config_path.exists():
@@ -1014,21 +1054,13 @@ class ModelGateway:
         secret_key: str = "",
         install_name: str = "",
         endpoint_override: str = "",
+        license_file: str = "",
         operator_id: str = "",
         scope_id: str = "",
         actor_type: str = "human",
     ) -> Dict[str, Any]:
         # Compatibility shim: keep legacy install behavior that materializes profile
         # into model_gateway state while still validating through BossGate command agent.
-        validated = self.bossgate_commands.install_agent(
-            package_file=package_file,
-            secret_key=secret_key,
-            operator_id=operator_id,
-            scope_id=scope_id,
-            actor_type=actor_type,
-        )
-        if not validated.get("ok"):
-            return validated
         package_path = Path(package_file).expanduser().resolve()
         package_doc = json.loads(package_path.read_text(encoding="utf-8"))
         envelope = package_doc.get("envelope", {})
@@ -1040,6 +1072,31 @@ class ModelGateway:
         target_name = install_name.strip().lower() or source_name
         if not target_name:
             return {"ok": False, "message": "install name is required"}
+        license_tier = str(profile.get("license_tier", payload.get("license_tier", "prototype"))).strip().lower() or "prototype"
+        if license_tier != "prototype":
+            if not str(license_file).strip():
+                return {
+                    "ok": False,
+                    "message": "license_file is required for non-prototype installs",
+                    "reason_code": "license_required_for_install",
+                    "reason_codes": ["license_required_for_install"],
+                }
+            license_validation = self.bossgate_commands.validate_license(
+                license_file=str(license_file).strip(),
+                agent_name=source_name,
+                internal=True,
+            )
+            if not license_validation.get("ok"):
+                return license_validation
+        validated = self.bossgate_commands.install_agent(
+            package_file=package_file,
+            secret_key=secret_key,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
+        if not validated.get("ok"):
+            return validated
         endpoint = endpoint_override.strip() or str(profile.get("endpoint", "")).strip()
         if endpoint not in self.endpoints:
             return {"ok": False, "message": f"unknown endpoint: {endpoint}"}
@@ -1053,6 +1110,9 @@ class ModelGateway:
         profile["current_node"] = self.node_id
         if not str(profile.get("created_by_node", "")).strip():
             profile["created_by_node"] = self.node_id
+        profile["license_tier"] = license_tier
+        if license_tier != "prototype":
+            profile["installed_license_file"] = str(Path(license_file).expanduser().resolve())
         normalized = self._normalize_agent_profile(target_name, profile)
         normalized = self._ensure_agent_gate_file(normalized)
         self.agent_profiles[target_name] = normalized
@@ -1063,7 +1123,27 @@ class ModelGateway:
             has_llm=bool(normalized.get("has_llm", True)),
         )
         self._write_agent_presence(name=target_name, endpoint=endpoint, status="installed", detail=f"from {package_path.name}")
+        self._append_usage_checkpoint("agent_activated", target_name, normalized, detail=f"installed from {package_path.name}")
         return {"ok": True, "agent": target_name, "installed_from": str(package_path), "source_agent": source_name, "endpoint": endpoint}
+
+    def _validate_agent_runtime_license(self, key: str, profile: Dict[str, Any]) -> Dict[str, Any]:
+        license_tier = str(profile.get("license_tier", "prototype")).strip().lower() or "prototype"
+        if license_tier == "prototype":
+            return {"ok": True}
+        license_file = str(profile.get("installed_license_file", "")).strip()
+        if not license_file:
+            return {
+                "ok": False,
+                "message": "installed agent license file is required",
+                "reason_code": "license_required_for_activation",
+                "reason_codes": ["license_required_for_activation"],
+                "agent": key,
+            }
+        return self.bossgate_commands.validate_license(
+            license_file=license_file,
+            agent_name=key,
+            internal=True,
+        )
 
     def set_mcp_server(self, name: str, command: str, args: list[str] | None = None, env: Dict[str, str] | None = None) -> Dict[str, Any]:
         key = name.strip().lower()
@@ -1263,6 +1343,16 @@ class ModelGateway:
         profile = self.agent_profiles.get(key)
         if profile is None:
             return {"ok": False, "message": f"agent not found: {name}"}
+        license_validation = self._validate_agent_runtime_license(key, profile)
+        if not license_validation.get("ok"):
+            return {
+                "ok": False,
+                "agent": key,
+                "message": str(license_validation.get("message", "license validation failed")),
+                "reason_code": str(license_validation.get("reason_code", "")),
+                "reason_codes": list(license_validation.get("reason_codes", [])),
+                "license_validation": license_validation,
+            }
         endpoint = override_endpoint.strip() or str(profile.get("endpoint", ""))
         if endpoint not in self.endpoints:
             return {"ok": False, "message": f"unknown endpoint: {endpoint}"}
@@ -1413,6 +1503,13 @@ class ModelGateway:
             result["agent"] = key
             result.update(authority_audit)
             self._write_agent_presence(name=key, endpoint=endpoint, status="active", detail="task completed")
+            self._append_usage_checkpoint(
+                "agent_usage_checkpoint",
+                key,
+                profile,
+                usage=result.get("usage", {}) if isinstance(result.get("usage", {}), dict) else {},
+                detail="runtime invocation completed",
+            )
         return result
 
     def handle_command(self, payload: Dict[str, Any]) -> None:
