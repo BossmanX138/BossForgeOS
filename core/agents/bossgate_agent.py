@@ -38,6 +38,8 @@ class BossGateCommandAgent:
         self.packages_dir = self.bus.state / "bossgate_packages"
         self.licenses_dir = self.bus.state / "bossgate_licenses"
         self.interface_maps_dir = self.bus.state / "bossgate_interface_maps"
+        self.connector_skeletons_dir = self.bus.state / "bossgate_connector_skeletons"
+        self.connector_pending_approval_path = self.bus.state / "bossgate_connector_pending_approval.json"
         self.remote_debug_sessions_path = self.bus.state / "bossgate_remote_debug_sessions.json"
         self.remote_debug_transcripts_path = self.bus.state / "bossgate_remote_debug_transcripts.jsonl"
         self.transfer_log_path = self.bus.state / "bossgate_transfers.jsonl"
@@ -50,6 +52,7 @@ class BossGateCommandAgent:
         self.packages_dir.mkdir(parents=True, exist_ok=True)
         self.licenses_dir.mkdir(parents=True, exist_ok=True)
         self.interface_maps_dir.mkdir(parents=True, exist_ok=True)
+        self.connector_skeletons_dir.mkdir(parents=True, exist_ok=True)
         self._keyring = self._load_or_create_keyring()
         self._replay_tokens = self._load_replay_tokens()
         self._node_profile = self._load_or_create_node_profile()
@@ -170,6 +173,24 @@ class BossGateCommandAgent:
         }
         with self.remote_debug_transcripts_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(sanitized, sort_keys=True) + "\n")
+
+    def _load_connector_pending_approval(self) -> dict[str, Any]:
+        if not self.connector_pending_approval_path.exists():
+            return {}
+        try:
+            payload = json.loads(self.connector_pending_approval_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def _save_connector_pending_approval(self, payload: dict[str, Any]) -> None:
+        self.connector_pending_approval_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _clear_connector_pending_approval(self) -> None:
+        try:
+            self.connector_pending_approval_path.unlink(missing_ok=True)
+        except OSError:
+            pass
 
     def _save_replay_tokens(self) -> None:
         self.replay_tokens_path.write_text(
@@ -599,6 +620,241 @@ class BossGateCommandAgent:
         }
         output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
+
+    def generate_connector_skeleton(
+        self,
+        destination: str,
+        timeout: int = 2,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("generate_connector_skeleton")
+        authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+            return authorization
+
+        interface_map = self.build_interface_map(
+            destination=destination,
+            timeout=timeout,
+            operator_id=operator_id,
+            scope_id=scope_id,
+            actor_type=actor_type,
+        )
+        if not interface_map.get("ok"):
+            return interface_map
+        if not bool(interface_map.get("allowed_for_transfer", False)):
+            return self._deny(
+                "target_not_approved",
+                "connector skeleton generation requires an approved target",
+                correlation_id=correlation_id,
+                authorization=authorization,
+            )
+
+        read_only_methods = {"GET", "HEAD", "OPTIONS"}
+        enabled_operations: list[dict[str, Any]] = []
+        approval_required_operations: list[dict[str, Any]] = []
+        for endpoint in interface_map.get("documented_endpoints", []):
+            if not isinstance(endpoint, dict):
+                continue
+            path = str(endpoint.get("path", "")).strip() or "/"
+            methods = sorted(
+                {
+                    str(method).strip().upper()
+                    for method in (endpoint.get("methods") or [])
+                    if str(method).strip()
+                }
+            )
+            if methods and set(methods).issubset(read_only_methods):
+                enabled_operations.append({"path": path, "methods": methods})
+            else:
+                approval_required_operations.append(
+                    {
+                        "path": path,
+                        "methods": methods,
+                        "enabled_by_default": False,
+                        "approval_required": True,
+                    }
+                )
+
+        parsed = urlparse(str(interface_map.get("base_url", destination)).strip())
+        hostname = (parsed.hostname or "").strip().lower()
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        slug = "".join(char if char.isalnum() else "-" for char in (hostname or "connector")).strip("-") or "connector"
+        output_path = self.connector_skeletons_dir / f"{slug}-{port}.json"
+        payload = {
+            "ok": True,
+            "destination": str(interface_map.get("destination", destination)).strip(),
+            "base_url": str(interface_map.get("base_url", destination)).strip(),
+            "target_type": str(interface_map.get("target_type", "unknown")).strip().lower() or "unknown",
+            "default_access": "read_only",
+            "enabled_operations": sorted(enabled_operations, key=lambda item: str(item.get("path", ""))),
+            "approval_required_operations": sorted(approval_required_operations, key=lambda item: str(item.get("path", ""))),
+            "protocol_features": list(interface_map.get("protocol_features", [])),
+            "ports": list(interface_map.get("ports", [])),
+            "interface_map_file": str(interface_map.get("interface_map_file", "")).strip(),
+            "generated_at": int(time.time()),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+            "skeleton_file": str(output_path),
+        }
+        output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return payload
+
+    def enable_connector_operation(
+        self,
+        skeleton_file: str,
+        path: str,
+        methods: list[str] | None = None,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("enable_connector_operation")
+        authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+            return authorization
+
+        skeleton_path = Path(str(skeleton_file).strip()).expanduser().resolve()
+        if not skeleton_path.exists():
+            return self._deny("skeleton_file_not_found", f"skeleton file not found: {skeleton_path}", correlation_id=correlation_id)
+        try:
+            payload = json.loads(skeleton_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as ex:
+            return self._deny("invalid_skeleton_file", f"invalid skeleton file: {ex}", correlation_id=correlation_id)
+        if not isinstance(payload, dict):
+            return self._deny("invalid_skeleton_file", "invalid skeleton file: expected object payload", correlation_id=correlation_id)
+
+        target_path = str(path).strip() or "/"
+        target_methods = sorted({str(item).strip().upper() for item in (methods or []) if str(item).strip()})
+        gated_operations = payload.get("approval_required_operations")
+        if not isinstance(gated_operations, list):
+            gated_operations = []
+        matched_operation = None
+        for item in gated_operations:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("path", "")).strip() != target_path:
+                continue
+            item_methods = sorted({str(method).strip().upper() for method in (item.get("methods") or []) if str(method).strip()})
+            if target_methods and item_methods != target_methods:
+                continue
+            matched_operation = {"path": target_path, "methods": item_methods or target_methods}
+            break
+        if not matched_operation:
+            return self._deny(
+                "connector_operation_not_found",
+                f"connector operation not found for approval: {target_path}",
+                correlation_id=correlation_id,
+            )
+
+        approval_id = f"connop-{int(time.time() * 1000)}"
+        pending = {
+            "approval_id": approval_id,
+            "type": "connector_operation_enable",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "skeleton_file": str(skeleton_path),
+            "path": matched_operation["path"],
+            "methods": matched_operation["methods"],
+            "requested_by": {
+                "operator_id": str(operator_id).strip(),
+                "scope_id": str(scope_id).strip(),
+                "actor_type": str(actor_type).strip() or "human",
+            },
+        }
+        self._save_connector_pending_approval(pending)
+        return {
+            "ok": True,
+            "status": "approval_requested",
+            "approval_id": approval_id,
+            "pending": pending,
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+        }
+
+    def respond_connector_operation_approval(
+        self,
+        approval_id: str,
+        approved: bool,
+        operator_id: str = "",
+        scope_id: str = "",
+        actor_type: str = "human",
+    ) -> Dict[str, Any]:
+        correlation_id = self._new_correlation_id("respond_connector_operation_approval")
+        authorized, authorization = self._require_authorization(operator_id, scope_id, "bossgate.discovery.run", actor_type)
+        if not authorized:
+            if isinstance(authorization, dict):
+                authorization = {**authorization, "correlation_id": correlation_id}
+            return authorization
+
+        pending = self._load_connector_pending_approval()
+        requested_id = str(approval_id).strip()
+        if not pending:
+            return self._deny("approval_not_found", "no pending connector approval found", correlation_id=correlation_id)
+        if requested_id != str(pending.get("approval_id", "")).strip():
+            return self._deny("approval_not_found", f"connector approval not found: {requested_id}", correlation_id=correlation_id)
+
+        if not bool(approved):
+            self._clear_connector_pending_approval()
+            return {
+                "ok": True,
+                "status": "approval_denied",
+                "approval_id": requested_id,
+                "authorization": authorization,
+                "correlation_id": correlation_id,
+            }
+
+        skeleton_path = Path(str(pending.get("skeleton_file", "")).strip()).expanduser().resolve()
+        if not skeleton_path.exists():
+            return self._deny("skeleton_file_not_found", f"skeleton file not found: {skeleton_path}", correlation_id=correlation_id)
+        try:
+            payload = json.loads(skeleton_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as ex:
+            return self._deny("invalid_skeleton_file", f"invalid skeleton file: {ex}", correlation_id=correlation_id)
+        if not isinstance(payload, dict):
+            return self._deny("invalid_skeleton_file", "invalid skeleton file: expected object payload", correlation_id=correlation_id)
+
+        target_path = str(pending.get("path", "")).strip()
+        target_methods = sorted({str(item).strip().upper() for item in (pending.get("methods") or []) if str(item).strip()})
+        gated_operations = payload.get("approval_required_operations")
+        if not isinstance(gated_operations, list):
+            return self._deny("connector_operation_not_found", f"connector operation not found for approval: {target_path}", correlation_id=correlation_id)
+        matched = False
+        for item in gated_operations:
+            if not isinstance(item, dict):
+                continue
+            item_methods = sorted({str(method).strip().upper() for method in (item.get("methods") or []) if str(method).strip()})
+            if str(item.get("path", "")).strip() != target_path or item_methods != target_methods:
+                continue
+            item["enabled"] = True
+            item["enabled_by_default"] = False
+            item["approval_required"] = False
+            item["approved_at"] = datetime.now(timezone.utc).isoformat()
+            item["approved_by"] = {
+                "operator_id": str(operator_id).strip(),
+                "scope_id": str(scope_id).strip(),
+                "actor_type": str(actor_type).strip() or "human",
+            }
+            matched = True
+            break
+        if not matched:
+            return self._deny("connector_operation_not_found", f"connector operation not found for approval: {target_path}", correlation_id=correlation_id)
+
+        payload["approval_required_operations"] = gated_operations
+        skeleton_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        self._clear_connector_pending_approval()
+        return {
+            "ok": True,
+            "status": "operation_enabled",
+            "approval_id": requested_id,
+            "skeleton_file": str(skeleton_path),
+            "authorization": authorization,
+            "correlation_id": correlation_id,
+        }
 
     def package_agent(
         self,
@@ -1686,6 +1942,33 @@ class BossGateCommandAgent:
             result = self.build_interface_map(
                 destination=str(args.get("destination", "")).strip(),
                 timeout=int(args.get("timeout", 2) or 2),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_generate_connector_skeleton":
+            result = self.generate_connector_skeleton(
+                destination=str(args.get("destination", "")).strip(),
+                timeout=int(args.get("timeout", 2) or 2),
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_enable_connector_operation":
+            raw_methods = args.get("methods")
+            method_items = raw_methods if isinstance(raw_methods, list) else []
+            result = self.enable_connector_operation(
+                skeleton_file=str(args.get("skeleton_file", "")).strip(),
+                path=str(args.get("path", "")).strip(),
+                methods=[str(item).strip() for item in method_items if str(item).strip()],
+                operator_id=str(args.get("operator_id", "")).strip(),
+                scope_id=str(args.get("scope_id", "")).strip(),
+                actor_type=str(args.get("actor_type", "human")).strip(),
+            )
+        elif command == "bossgate_respond_connector_operation_approval":
+            result = self.respond_connector_operation_approval(
+                approval_id=str(args.get("approval_id", "")).strip(),
+                approved=bool(args.get("approved", False)),
                 operator_id=str(args.get("operator_id", "")).strip(),
                 scope_id=str(args.get("scope_id", "")).strip(),
                 actor_type=str(args.get("actor_type", "human")).strip(),

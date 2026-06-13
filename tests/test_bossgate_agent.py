@@ -295,6 +295,160 @@ class BossGateCommandAgentTests(unittest.TestCase):
         self.assertIn("health_endpoint", interface_map["protocol_features"])
         self.assertTrue(Path(interface_map["interface_map_file"]).exists())
 
+    def test_generate_connector_skeleton_uses_least_privilege_defaults(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        interface_map = {
+            "ok": True,
+            "destination": "http://bridgebase.local:8443",
+            "base_url": "http://bridgebase.local:8443",
+            "target_type": "bridgebase_alpha",
+            "allowed_for_transfer": True,
+            "ports": [8443],
+            "metadata": {"title": "bridgebase_alpha control plane"},
+            "documented_endpoints": [
+                {"path": "/api/transfer", "methods": ["POST"]},
+                {"path": "/health", "methods": ["GET"]},
+                {"path": "/status", "methods": ["GET", "HEAD"]},
+            ],
+            "protocol_features": ["documented_api", "health_endpoint", "rest_json", "transfer_endpoint"],
+            "discovery_matches": [{"node_id": "node-bridge", "address": "http://bridgebase.local:8443"}],
+            "interface_map_file": str(Path(self.tmp.name) / "bridgebase-map.json"),
+        }
+        with patch.object(agent, "build_interface_map", return_value=interface_map):
+            skeleton = agent.generate_connector_skeleton(
+                destination="http://bridgebase.local:8443",
+                **self.AUTH,
+            )
+
+        self.assertTrue(skeleton["ok"])
+        self.assertEqual(skeleton["target_type"], "bridgebase_alpha")
+        self.assertEqual(skeleton["default_access"], "read_only")
+        self.assertTrue(Path(skeleton["skeleton_file"]).exists())
+        enabled = skeleton["enabled_operations"]
+        gated = skeleton["approval_required_operations"]
+        self.assertEqual([item["path"] for item in enabled], ["/health", "/status"])
+        self.assertEqual(enabled[1]["methods"], ["GET", "HEAD"])
+        self.assertEqual([item["path"] for item in gated], ["/api/transfer"])
+        self.assertFalse(gated[0]["enabled_by_default"])
+        self.assertEqual(gated[0]["methods"], ["POST"])
+
+    def test_write_connector_operation_requires_and_applies_explicit_approval(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        skeleton_path = Path(self.tmp.name) / "bridgebase-skeleton.json"
+        skeleton_path.write_text(
+            json.dumps(
+                {
+                    "ok": True,
+                    "target_type": "bridgebase_alpha",
+                    "default_access": "read_only",
+                    "enabled_operations": [{"path": "/health", "methods": ["GET"]}],
+                    "approval_required_operations": [
+                        {
+                            "path": "/api/transfer",
+                            "methods": ["POST"],
+                            "enabled_by_default": False,
+                            "approval_required": True,
+                        }
+                    ],
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        requested = agent.enable_connector_operation(
+            skeleton_file=str(skeleton_path),
+            path="/api/transfer",
+            methods=["POST"],
+            operator_id="bossforge-owner",
+            scope_id="connector-rollout",
+        )
+        self.assertTrue(requested["ok"])
+        self.assertEqual(requested["status"], "approval_requested")
+        self.assertTrue(requested["approval_id"])
+        self.assertTrue(agent.connector_pending_approval_path.exists())
+
+        approved = agent.respond_connector_operation_approval(
+            approval_id=requested["approval_id"],
+            approved=True,
+            operator_id="bossforge-owner",
+            scope_id="connector-rollout",
+        )
+        self.assertTrue(approved["ok"])
+        self.assertEqual(approved["status"], "operation_enabled")
+
+        payload = json.loads(skeleton_path.read_text(encoding="utf-8"))
+        gated = payload["approval_required_operations"][0]
+        self.assertTrue(gated["enabled"])
+        self.assertFalse(gated["approval_required"])
+        self.assertEqual(gated["approved_by"]["operator_id"], "bossforge-owner")
+
+    def test_end_to_end_connector_generation_for_approved_target(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        discovered = [
+            {
+                "address": "http://bridgebase.local:8443",
+                "node_id": "node-bridge",
+                "target_type": "bridgebase_alpha",
+                "allowed_for_transfer": True,
+                "agent_name": "dockmaster",
+            }
+        ]
+        scanned = {
+            "ok": True,
+            "allowed_for_transfer": True,
+            "target_type": "bridgebase_alpha",
+            "base_url": "http://bridgebase.local:8443",
+            "endpoints": [
+                {"path": "/api/transfer", "methods": ["post"]},
+                {"path": "/health", "methods": ["get"]},
+            ],
+            "metadata": {
+                "title": "bridgebase_alpha control plane",
+                "description": "BossGate travel node",
+                "x-bossgate-target-type": "bridgebase_alpha",
+            },
+        }
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=discovered):
+            with patch("core.agents.bossgate_agent.scan_rest_endpoints", return_value=scanned):
+                interface_map = agent.build_interface_map(
+                    destination="http://bridgebase.local:8443",
+                    timeout=2,
+                    **self.AUTH,
+                )
+                self.assertTrue(interface_map["ok"])
+
+                skeleton = agent.generate_connector_skeleton(
+                    destination="http://bridgebase.local:8443",
+                    timeout=2,
+                    **self.AUTH,
+                )
+                self.assertTrue(skeleton["ok"])
+                self.assertEqual(skeleton["enabled_operations"][0]["path"], "/health")
+                self.assertEqual(skeleton["approval_required_operations"][0]["path"], "/api/transfer")
+
+        requested = agent.enable_connector_operation(
+            skeleton_file=skeleton["skeleton_file"],
+            path="/api/transfer",
+            methods=["POST"],
+            operator_id="bossforge-owner",
+            scope_id="connector-rollout",
+        )
+        self.assertEqual(requested["status"], "approval_requested")
+
+        approved = agent.respond_connector_operation_approval(
+            approval_id=requested["approval_id"],
+            approved=True,
+            operator_id="bossforge-owner",
+            scope_id="connector-rollout",
+        )
+        self.assertEqual(approved["status"], "operation_enabled")
+
+        payload = json.loads(Path(skeleton["skeleton_file"]).read_text(encoding="utf-8"))
+        gated = payload["approval_required_operations"][0]
+        self.assertTrue(gated["enabled"])
+        self.assertFalse(gated["approval_required"])
+
     def test_transfer_agent_handles_http_failure(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
         created = gateway.create_agent_profile(
@@ -859,6 +1013,54 @@ class BossGateCommandAgentTests(unittest.TestCase):
         self.assertEqual(event["event"], "command:bossgate_build_interface_map")
         self.assertTrue(event["data"]["ok"])
         self.assertEqual(event["data"]["target_type"], "bridgebase_alpha")
+
+    def test_generate_connector_skeleton_command_emits_result(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        skeleton = {
+            "ok": True,
+            "target_type": "bridgebase_alpha",
+            "default_access": "read_only",
+            "enabled_operations": [{"path": "/health", "methods": ["GET"]}],
+            "approval_required_operations": [{"path": "/api/transfer", "methods": ["POST"], "enabled_by_default": False}],
+            "skeleton_file": str(Path(self.tmp.name) / "bridgebase-skeleton.json"),
+        }
+        with patch.object(agent, "generate_connector_skeleton", return_value=skeleton):
+            agent.handle_command(
+                {
+                    "target": "bossgate",
+                    "command": "bossgate_generate_connector_skeleton",
+                    "args": {"destination": "http://bridgebase.local:8443", **self.AUTH},
+                }
+            )
+        event = agent.bus.read_latest_events(limit=1)[0]
+        self.assertEqual(event["event"], "command:bossgate_generate_connector_skeleton")
+        self.assertTrue(event["data"]["ok"])
+        self.assertEqual(event["data"]["default_access"], "read_only")
+
+    def test_enable_connector_operation_command_emits_approval_request(self) -> None:
+        agent = BossGateCommandAgent(interval_seconds=1)
+        approval = {
+            "ok": True,
+            "status": "approval_requested",
+            "approval_id": "connop-123",
+        }
+        with patch.object(agent, "enable_connector_operation", return_value=approval):
+            agent.handle_command(
+                {
+                    "target": "bossgate",
+                    "command": "bossgate_enable_connector_operation",
+                    "args": {
+                        "skeleton_file": "state/bridgebase-skeleton.json",
+                        "path": "/api/transfer",
+                        "methods": ["POST"],
+                        **self.AUTH,
+                    },
+                }
+            )
+        event = agent.bus.read_latest_events(limit=1)[0]
+        self.assertEqual(event["event"], "command:bossgate_enable_connector_operation")
+        self.assertTrue(event["data"]["ok"])
+        self.assertEqual(event["data"]["status"], "approval_requested")
 
     def test_license_issue_and_validate_roundtrip_for_commerce_manager(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)

@@ -358,10 +358,16 @@ def build_chunk_manifest(payload: str, chunk_size: int = 65536) -> dict[str, Any
 def validate_chunk_manifest(payload: str, manifest: dict[str, Any]) -> tuple[bool, str]:
     if str(manifest.get("algorithm", "")).strip().upper() != "SHA-256":
         return False, "unsupported chunk checksum algorithm"
-    expected = build_chunk_manifest(payload, chunk_size=int(manifest.get("chunk_size", 0) or 0))
-    if int(manifest.get("payload_size", -1)) != expected["payload_size"]:
+    try:
+        chunk_size = int(manifest.get("chunk_size", 0) or 0)
+        payload_size = int(manifest.get("payload_size", -1))
+        chunk_count = int(manifest.get("chunk_count", -1))
+    except (TypeError, ValueError):
+        return False, "invalid chunk manifest"
+    expected = build_chunk_manifest(payload, chunk_size=chunk_size)
+    if payload_size != expected["payload_size"]:
         return False, "chunk payload size mismatch"
-    if int(manifest.get("chunk_count", -1)) != expected["chunk_count"]:
+    if chunk_count != expected["chunk_count"]:
         return False, "chunk count mismatch"
     chunks = manifest.get("chunks")
     if not isinstance(chunks, list) or len(chunks) != expected["chunk_count"]:
@@ -371,7 +377,11 @@ def validate_chunk_manifest(payload: str, manifest: dict[str, Any]) -> tuple[boo
         if not isinstance(chunk, dict):
             return False, f"invalid chunk metadata at index {index}"
         for field in ("index", "offset", "size"):
-            if int(chunk.get(field, -1)) != expected_chunk[field]:
+            try:
+                value = int(chunk.get(field, -1))
+            except (TypeError, ValueError):
+                return False, "invalid chunk manifest"
+            if value != expected_chunk[field]:
                 return False, f"chunk {field} mismatch at index {index}"
         if not hmac.compare_digest(str(chunk.get("sha256", "")), expected_chunk["sha256"]):
             return False, f"chunk checksum mismatch at index {index}"

@@ -78,9 +78,12 @@ Owner: `codemage` (background implementation owner)
 
 - [x] (BG-026) Build interface map from discovery and scan outputs.
   evidence: [2026-06-13 01:49:20] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 108 tests)
-- [ ] (BG-027) Generate least-privilege connector skeletons for approved targets.
-- [ ] (BG-028) Require explicit approval for write/destructive connector operations.
-- [ ] (BG-029) Add one end-to-end generation test for an approved sample target.
+- [x] (BG-027) Generate least-privilege connector skeletons for approved targets.
+  evidence: [2026-06-13 02:13:41] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 110 tests)
+- [x] (BG-028) Require explicit approval for write/destructive connector operations.
+  evidence: [2026-06-13 02:16:37] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 112 tests)
+- [x] (BG-029) Add one end-to-end generation test for an approved sample target.
+  evidence: [2026-06-13 02:17:50] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 113 tests)
 
 ## Phase 7: Hardening and Release Readiness
 

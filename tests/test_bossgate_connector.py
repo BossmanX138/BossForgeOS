@@ -208,6 +208,23 @@ class BossGateProtocolPrimitivesTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("chunk checksum mismatch at index 1", reason)
 
+    def test_transfer_envelope_fuzz_rejects_malformed_chunk_manifest_fields(self) -> None:
+        envelope = build_transfer_envelope(
+            agent_id="agent-1",
+            agent_version="1.0.0",
+            issuer="bossforge-node",
+            target_system_id="bridgebase-alpha-01",
+            encrypted_payload="abcdefghij",
+            policy_ref="policy/default",
+            secret_key="super-secret",
+            chunk_size=4,
+        )
+        envelope["chunk_manifest"]["chunk_size"] = "NaN"
+        envelope["chunk_manifest"]["chunks"][0]["index"] = "oops"
+        ok, reason = validate_transfer_envelope(envelope, secret_key="super-secret")
+        self.assertFalse(ok)
+        self.assertIn("invalid chunk manifest", reason)
+
     def test_transfer_envelope_accepts_legacy_envelope_without_chunk_manifest(self) -> None:
         envelope = build_transfer_envelope(
             agent_id="agent-1",
@@ -332,6 +349,10 @@ class BossGateProtocolPrimitivesTests(unittest.TestCase):
         encrypted = encrypt_json_payload(payload, secret_key="k1")
         with self.assertRaises(Exception):
             decrypt_json_payload(encrypted, secret_key="k2")
+
+    def test_decrypt_json_payload_fuzz_rejects_malformed_blob(self) -> None:
+        with self.assertRaises(ValueError):
+            decrypt_json_payload("not-base64!!", secret_key="k1")
 
 
 if __name__ == "__main__":

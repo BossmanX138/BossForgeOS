@@ -138,8 +138,11 @@ These commands are now handled by the BossGate command agent (`target="bossgate"
 11. `bossgate_remote_debug_close`
 12. `bossgate_remote_debug`
 13. `bossgate_build_interface_map`
-14. `bossgate_usage_report`
-15. `bossgate_set_node_target_type`
+14. `bossgate_generate_connector_skeleton`
+15. `bossgate_enable_connector_operation`
+16. `bossgate_respond_connector_operation_approval`
+17. `bossgate_usage_report`
+18. `bossgate_set_node_target_type`
 
 ## CLI Surface (Implemented)
 
