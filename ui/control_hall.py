@@ -1,4 +1,5 @@
 import atexit
+import base64
 import json
 import os
 import re
@@ -6144,9 +6145,95 @@ PAGE = """
 """
 
 
+def _read_ass_session_handoff() -> dict:
+    encoded = str(os.environ.get("ASS_SESSION_HANDOFF_B64", "") or "").strip()
+    if not encoded:
+        return {}
+    try:
+        raw = base64.b64decode(encoded)
+        payload = json.loads(raw.decode("utf-8"))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _build_launch_ticket_bootstrap_script() -> str:
+    launch_ticket = str(request.args.get("launch_ticket", "") or "").strip()
+    target_app = str(request.args.get("target_app", "") or "").strip()
+    launcher = str(request.args.get("launcher", "") or "").strip()
+    if not launch_ticket or not target_app or launcher.lower() != "ass":
+        return ""
+
+    payload = json.dumps(
+        {
+            "ticketId": launch_ticket,
+            "targetApp": target_app,
+        }
+    )
+    return f"""
+<script>
+(() => {{
+  const launchTicketPayload = {payload};
+  window.__bossforgeLaunchTicket = launchTicketPayload;
+  window.__bossforgeLaunchSession = {{ ok: false, pending: true }};
+  fetch('/api/auth/launch-ticket/exchange', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify(launchTicketPayload),
+  }})
+    .then((response) => response.json())
+    .then((data) => {{
+      window.__bossforgeLaunchSession = data;
+      try {{
+        sessionStorage.setItem('bossforge_launch_session', JSON.stringify(data));
+      }} catch (_err) {{}}
+    }})
+    .catch((error) => {{
+      window.__bossforgeLaunchSession = {{
+        ok: false,
+        message: error && error.message ? error.message : 'Launch ticket exchange failed.',
+      }};
+    }});
+}})();
+</script>
+"""
+
+
 @app.get("/")
 def index():
+    bootstrap = _build_launch_ticket_bootstrap_script()
+    if bootstrap:
+        return render_template_string(PAGE.replace("</body>", bootstrap + "\n</body>"))
     return render_template_string(PAGE)
+
+
+@app.post("/api/auth/launch-ticket/exchange")
+def auth_launch_ticket_exchange():
+    payload = request.get_json(force=True, silent=True) or {}
+    ticket_id = str(payload.get("ticketId", "") or payload.get("launchTicketId", "")).strip()
+    target_app = str(payload.get("targetApp", "")).strip().lower()
+    handoff = _read_ass_session_handoff()
+
+    if not ticket_id or not target_app:
+        return jsonify({"ok": False, "message": "ticketId and targetApp are required."}), 400
+    if not handoff:
+        return jsonify({"ok": False, "message": "No A.S.S. launch handoff is available."}), 401
+
+    expected_ticket = str(handoff.get("launchTicketId", "")).strip()
+    expected_target = str(handoff.get("targetApp", "")).strip().lower()
+    if ticket_id != expected_ticket or target_app != expected_target:
+        return jsonify({"ok": False, "message": "Launch ticket mismatch."}), 403
+
+    session = {
+        "userId": str(handoff.get("userId", "")).strip(),
+        "username": str(handoff.get("username", "")).strip(),
+        "roles": handoff.get("roles") if isinstance(handoff.get("roles"), list) else [],
+        "targetApp": expected_target,
+        "launchTicketId": expected_ticket,
+        "issuedAt": handoff.get("ts"),
+        "source": "ass",
+    }
+    return jsonify({"ok": True, "session": session})
 
 
 @app.get("/api/assets/icons/<path:filename>")
