@@ -176,6 +176,7 @@ def _parse_presence_packet(data: bytes, sender_ip: str) -> dict[str, Any] | None
 def broadcast_presence(
     node_id: str,
     agents_provider: Callable[[], list[dict]] | None = None,
+    target_type: str = "bossgate_connector",
     interval_seconds: float = 2.0,
     stop_event: threading.Event | None = None,
 ) -> None:
@@ -184,16 +185,20 @@ def broadcast_presence(
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while stop_event is None or not stop_event.is_set():
             agents = agents_provider() if callable(agents_provider) else []
-            packet = _build_presence_packet(node_id=node_id, agents=agents, target_type="bossgate_connector")
+            packet = _build_presence_packet(node_id=node_id, agents=agents, target_type=target_type)
             s.sendto(packet, ('<broadcast>', BOSSGATE_PORT))
             time.sleep(max(0.2, float(interval_seconds)))
     finally:
         s.close()
 
 
-def broadcast_beacon(node_id: str | None = None, agents_provider: Callable[[], list[dict]] | None = None):
+def broadcast_beacon(
+    node_id: str | None = None,
+    agents_provider: Callable[[], list[dict]] | None = None,
+    target_type: str = "bossgate_connector",
+):
     node_name = (node_id or socket.gethostname() or "unknown-node").strip()
-    broadcast_presence(node_id=node_name, agents_provider=agents_provider)
+    broadcast_presence(node_id=node_name, agents_provider=agents_provider, target_type=target_type)
 
 
 def listen_for_beacons(timeout=5):

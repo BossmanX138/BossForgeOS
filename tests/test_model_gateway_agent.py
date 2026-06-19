@@ -66,6 +66,17 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertIn("ollama", agent.endpoints)
         self.assertTrue(agent.config_path.exists())
 
+    @patch("core.agents.model_gateway_agent.threading.Thread")
+    def test_presence_broadcast_uses_node_profile_target_type(self, mock_thread) -> None:
+        os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
+        thread_instance = mock_thread.return_value
+        thread_instance.is_alive.return_value = False
+
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        self.assertTrue(mock_thread.called)
+        self.assertEqual(mock_thread.call_args.kwargs["kwargs"]["target_type"], "bossforgeos")
+
     def test_list_endpoints_command_emits_event(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.handle_command({"target": "model_gateway", "command": "list_endpoints", "args": {}})

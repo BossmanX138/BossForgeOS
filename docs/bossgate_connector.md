@@ -4,6 +4,11 @@
 
 BossGate is the secure transport and interoperability layer for BossCrafts agents.
 
+Primary operator reference:
+
+1. `docs/bossgate_operator_runbook.md`
+2. `docs/release_notes_2026-06-13_bossgate_connector_milestone.md`
+
 Every BossCrafts agent is expected to carry a BossGate capability module that can:
 
 1. Move agents between approved systems and networks.

@@ -134,6 +134,21 @@ class BossGateCommandAgentTests(unittest.TestCase):
         installed_old = agent.install_agent(package_file=first_pkg["package_file"], **self.AUTH)
         self.assertTrue(installed_old["ok"])
 
+    def test_keyring_loader_migrates_legacy_flat_keyring(self) -> None:
+        legacy_path = Path(self.tmp.name) / "bus" / "state" / "bossgate_keys.json"
+        legacy_path.parent.mkdir(parents=True, exist_ok=True)
+        legacy_path.write_text(json.dumps({"default": "legacy-seed", "k2": "rotated-secret"}, indent=2), encoding="utf-8")
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+
+        self.assertEqual(agent._keyring["active_key_id"], "default")
+        self.assertEqual(agent._keyring["keys"]["default"], "legacy-seed")
+        self.assertEqual(agent._keyring["keys"]["k2"], "rotated-secret")
+
+        persisted = json.loads(legacy_path.read_text(encoding="utf-8"))
+        self.assertEqual(persisted["active_key_id"], "default")
+        self.assertEqual(sorted(persisted["keys"].keys()), ["default", "k2"])
+
     def test_non_super_gate_cannot_initiate_travel(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)
         created = gateway.create_agent_profile(
@@ -569,6 +584,30 @@ class BossGateCommandAgentTests(unittest.TestCase):
         replayed = restarted_agent.install_agent(packaged["package_file"], secret_key="pack-key", **self.AUTH)
         self.assertFalse(replayed["ok"])
         self.assertIn("replay detected", replayed["message"])
+
+    def test_install_agent_accepts_legacy_package_without_wrapper(self) -> None:
+        gateway = ModelGatewayAgent(interval_seconds=1)
+        created = gateway.create_agent_profile(
+            name="legacy_wrapped_agent",
+            endpoint="ollama",
+            system_prompt="Legacy package test.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        agent = BossGateCommandAgent(interval_seconds=1)
+        packaged = agent.package_agent(name="legacy_wrapped_agent", target_system_id="bridgebase-alpha-01", secret_key="legacy-wrap-key", **self.AUTH)
+        self.assertTrue(packaged["ok"])
+
+        package_path = Path(packaged["package_file"])
+        package_doc = json.loads(package_path.read_text(encoding="utf-8"))
+        package_path.write_text(json.dumps(dict(package_doc["envelope"]), indent=2), encoding="utf-8")
+
+        installed = agent.install_agent(package_file=str(package_path), secret_key="legacy-wrap-key", **self.AUTH)
+        self.assertTrue(installed["ok"])
+        self.assertEqual(installed["agent_name"], "legacy_wrapped_agent")
 
     def test_package_agent_keeps_metadata_hidden_for_non_hidden_agent(self) -> None:
         gateway = ModelGatewayAgent(interval_seconds=1)

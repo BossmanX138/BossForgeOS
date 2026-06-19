@@ -226,8 +226,11 @@ class BossGateCommandAgent:
             "travel_initiation_allowed": normalized in SUPER_GATE_TARGET_TYPES,
         }
 
+    def get_node_target_type(self) -> str:
+        return str(self._node_profile.get("target_type", "bossforgeos")).strip().lower() or "bossforgeos"
+
     def _can_initiate_travel(self) -> tuple[bool, str]:
-        target_type = str(self._node_profile.get("target_type", "bossforgeos")).strip().lower() or "bossforgeos"
+        target_type = self.get_node_target_type()
         return target_type in SUPER_GATE_TARGET_TYPES, target_type
 
     def _best_effort_secure_delete(self, path: Path) -> None:
@@ -272,7 +275,21 @@ class BossGateCommandAgent:
                 data = json.loads(self.keyring_path.read_text(encoding="utf-8"))
                 if isinstance(data, dict) and isinstance(data.get("keys"), dict):
                     data.setdefault("active_key_id", "default")
+                    self.keyring_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
                     return data
+                if isinstance(data, dict):
+                    legacy_keys = {
+                        str(key).strip(): str(value).strip()
+                        for key, value in data.items()
+                        if str(key).strip() and str(value).strip()
+                    }
+                    if legacy_keys:
+                        migrated = {
+                            "active_key_id": "default" if "default" in legacy_keys else next(iter(legacy_keys.keys())),
+                            "keys": legacy_keys,
+                        }
+                        self.keyring_path.write_text(json.dumps(migrated, indent=2), encoding="utf-8")
+                        return migrated
             except (OSError, json.JSONDecodeError):
                 pass
         seed = f"{self.node_id}:default"
@@ -1230,7 +1247,12 @@ class BossGateCommandAgent:
             result = self._deny("invalid_package_file", f"invalid package file: {ex}", correlation_id=correlation_id)
             self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)
             return result
-        envelope = package_doc.get("envelope") if isinstance(package_doc, dict) else None
+        envelope = None
+        if isinstance(package_doc, dict):
+            if isinstance(package_doc.get("envelope"), dict):
+                envelope = package_doc.get("envelope")
+            elif "encrypted_payload" in package_doc and "signature" in package_doc:
+                envelope = package_doc
         if not isinstance(envelope, dict):
             result = self._deny("package_missing_envelope", "package missing envelope", correlation_id=correlation_id)
             self._emit_lifecycle_event("install_agent", correlation_id, result, authorization=authorization)

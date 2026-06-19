@@ -87,7 +87,11 @@ Owner: `codemage` (background implementation owner)
 
 ## Phase 7: Hardening and Release Readiness
 
-- [ ] (BG-030) Add fuzz tests for malformed envelopes and payloads.
-- [ ] (BG-031) Add migration tests for keyring and package format upgrades.
-- [ ] (BG-032) Publish operator runbook and rollback steps.
-- [ ] (BG-033) Prepare release notes and acceptance checklist.
+- [x] (BG-030) Add fuzz tests for malformed envelopes and payloads.
+  evidence: [2026-06-13 02:19:55] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 115 tests)
+- [x] (BG-031) Add migration tests for keyring and package format upgrades.
+  evidence: [2026-06-13 02:28:29] python -W error::ResourceWarning -m unittest tests.test_bossgate_agent tests.test_bossgate_connector tests.test_bossgate_authorization tests.test_model_gateway_agent -q (pass, 117 tests)
+- [x] (BG-032) Publish operator runbook and rollback steps.
+  evidence: [2026-06-13 02:30:01] added docs/bossgate_operator_runbook.md and linked it from docs/bossgate_connector.md
+- [x] (BG-033) Prepare release notes and acceptance checklist.
+  evidence: [2026-06-13 02:30:48] added docs/release_notes_2026-06-13_bossgate_connector_milestone.md and linked it from docs/bossgate_connector.md

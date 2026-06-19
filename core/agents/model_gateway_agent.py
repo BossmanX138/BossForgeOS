@@ -891,6 +891,7 @@ class ModelGateway:
             kwargs={
                 "node_id": self.node_id,
                 "agents_provider": self._presence_agents_snapshot,
+                "target_type": self.bossgate_commands.get_node_target_type(),
                 "interval_seconds": 2.0,
                 "stop_event": self._presence_stop_event,
             },
