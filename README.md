@@ -490,11 +490,15 @@ Launcher options:
 ## Package Release Bundle
 
 - Create versioned release package and desktop shortcut:
-  - `powershell -ExecutionPolicy Bypass -File .\package_release.ps1 -Version 0.1.0`
+  - `powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1 -Version 0.1.0`
 - Release output folder:
   - `releases\\v0.1.0`
 - Packaged executable name:
-  - `BossForgeLauncher-v0.1.0.exe`
+  - `BossForgeLauncher-v0.1.0-YYYYMMDD-HHMMSS.exe`
+- Latest alias:
+  - `releases\\latest\\BossForgeLauncher-latest.exe`
+- Latest manifest:
+  - `releases\\latest\\release_manifest.json`
 
 ## Bus Root
 

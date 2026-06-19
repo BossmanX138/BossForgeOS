@@ -6,11 +6,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $root
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectRoot = (Resolve-Path (Join-Path $scriptRoot "..")).Path
+Set-Location $projectRoot
 
 if ([string]::IsNullOrWhiteSpace($PythonExe)) {
-    $venvPython = Join-Path $root ".venv\Scripts\python.exe"
+    $venvPython = Join-Path $projectRoot ".venv\Scripts\python.exe"
     if (Test-Path $venvPython) {
         $PythonExe = $venvPython
     } else {
@@ -33,9 +34,9 @@ function Invoke-Step {
 }
 
 if ($Clean) {
-    if (Test-Path "$root\build") { Remove-Item "$root\build" -Recurse -Force }
-    if (Test-Path "$root\dist") { Remove-Item "$root\dist" -Recurse -Force }
-    if (Test-Path "$root\BossForgeLauncher.spec") { Remove-Item "$root\BossForgeLauncher.spec" -Force }
+    if (Test-Path "$projectRoot\build") { Remove-Item "$projectRoot\build" -Recurse -Force }
+    if (Test-Path "$projectRoot\dist") { Remove-Item "$projectRoot\dist" -Recurse -Force }
+    if (Test-Path "$projectRoot\BossForgeLauncher.spec") { Remove-Item "$projectRoot\BossForgeLauncher.spec" -Force }
 }
 
 Invoke-Step -Command $PythonExe -Arguments @("-m", "pip", "install", "--upgrade", "pip")
@@ -43,10 +44,18 @@ Invoke-Step -Command $PythonExe -Arguments @("-m", "pip", "install", "pyinstalle
 
 
 # Resolve absolute path to bossforge_launcher.py
-$launcherPath = Join-Path $root "..\launcher\bossforge_launcher.py" | Resolve-Path -ErrorAction Stop
-Invoke-Step -Command $PythonExe -Arguments @("-m", "PyInstaller", "--onefile", "--name", "BossForgeLauncher", $launcherPath)
+$launcherPath = Join-Path $projectRoot "launcher\bossforge_launcher.py" | Resolve-Path -ErrorAction Stop
+Invoke-Step -Command $PythonExe -Arguments @(
+    "-m", "PyInstaller",
+    "--onefile",
+    "--name", "BossForgeLauncher",
+    "--distpath", (Join-Path $projectRoot "dist"),
+    "--workpath", (Join-Path $projectRoot "build"),
+    "--specpath", $projectRoot,
+    $launcherPath
+)
 
-$exePath = Join-Path $root "dist\BossForgeLauncher.exe"
+$exePath = Join-Path $projectRoot "dist\BossForgeLauncher.exe"
 if (!(Test-Path $exePath)) {
     throw "Build finished without expected output: $exePath"
 }
