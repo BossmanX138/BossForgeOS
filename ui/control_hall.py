@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,6 +39,9 @@ from modules.ui_runtime import api_adapter as ui_runtime_api
 from modules.onboarding import api_adapter as onboarding_api
 from modules.ops_runtime import api_adapter as ops_runtime_api
 from modules.ops_runtime import agent_state_adapter as agent_state_api
+
+_ASS_HANDOFF_MAX_AGE_SECONDS = 600
+_ASS_CONSUMED_LAUNCH_TICKETS: set[str] = set()
 from modules.ops_runtime import task_tracker_adapter as task_tracker_api
 from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
@@ -6157,6 +6161,38 @@ def _read_ass_session_handoff() -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
+def _validate_ass_session_handoff(handoff: dict, *, expected_ticket: str, expected_target: str) -> str:
+    if not handoff:
+        return "No A.S.S. launch handoff is available."
+
+    user_id = str(handoff.get("userId", "") or "").strip()
+    username = str(handoff.get("username", "") or "").strip()
+    if not user_id or not username:
+        return "A.S.S. launch handoff is missing required identity."
+
+    issued_at_raw = handoff.get("ts")
+    try:
+        issued_at = int(issued_at_raw)
+    except (TypeError, ValueError):
+        return "A.S.S. launch handoff is missing a valid issued timestamp."
+
+    now = int(time.time())
+    if issued_at <= 0 or issued_at > now + 30:
+        return "A.S.S. launch handoff has an invalid issued timestamp."
+    if now - issued_at > _ASS_HANDOFF_MAX_AGE_SECONDS:
+        return "A.S.S. launch handoff has expired."
+
+    actual_ticket = str(handoff.get("launchTicketId", "") or "").strip()
+    actual_target = str(handoff.get("targetApp", "") or "").strip().lower()
+    if actual_ticket != expected_ticket or actual_target != expected_target:
+        return "Launch ticket mismatch."
+
+    if expected_ticket in _ASS_CONSUMED_LAUNCH_TICKETS:
+        return "Launch ticket has already been used."
+
+    return ""
+
+
 def _build_launch_ticket_bootstrap_script() -> str:
     launch_ticket = str(request.args.get("launch_ticket", "") or "").strip()
     target_app = str(request.args.get("target_app", "") or "").strip()
@@ -6216,23 +6252,25 @@ def auth_launch_ticket_exchange():
 
     if not ticket_id or not target_app:
         return jsonify({"ok": False, "message": "ticketId and targetApp are required."}), 400
-    if not handoff:
-        return jsonify({"ok": False, "message": "No A.S.S. launch handoff is available."}), 401
-
-    expected_ticket = str(handoff.get("launchTicketId", "")).strip()
-    expected_target = str(handoff.get("targetApp", "")).strip().lower()
-    if ticket_id != expected_ticket or target_app != expected_target:
-        return jsonify({"ok": False, "message": "Launch ticket mismatch."}), 403
+    validation_error = _validate_ass_session_handoff(
+        handoff,
+        expected_ticket=ticket_id,
+        expected_target=target_app,
+    )
+    if validation_error:
+        status = 403 if validation_error == "Launch ticket mismatch." else 409 if "already been used" in validation_error else 401
+        return jsonify({"ok": False, "message": validation_error}), status
 
     session = {
         "userId": str(handoff.get("userId", "")).strip(),
         "username": str(handoff.get("username", "")).strip(),
         "roles": handoff.get("roles") if isinstance(handoff.get("roles"), list) else [],
-        "targetApp": expected_target,
-        "launchTicketId": expected_ticket,
+        "targetApp": target_app,
+        "launchTicketId": ticket_id,
         "issuedAt": handoff.get("ts"),
         "source": "ass",
     }
+    _ASS_CONSUMED_LAUNCH_TICKETS.add(ticket_id)
     return jsonify({"ok": True, "session": session})
 
 
