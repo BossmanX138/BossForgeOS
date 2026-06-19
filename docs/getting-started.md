@@ -100,21 +100,13 @@ Example API recall:
    - Validate profiles using standard JSON schema tools.
    - Example profiles: `voices/codemage/profile.json`, `voices/runeforge/profile.json`
 
-## Build a Windows EXE
+## Launch BossForgeOS
 
-1. Build executable launcher:
-   - powershell -ExecutionPolicy Bypass -File .\build_launcher_exe.ps1
-2. Run executable:
-   - .\dist\BossForgeLauncher.exe
-
-## Package a Versioned Release
-
-1. Build and package a release bundle:
-   - powershell -ExecutionPolicy Bypass -File .\package_release.ps1 -Version 0.1.0
-2. Find release artifact:
-   - .\releases\v0.1.0\BossForgeLauncher-v0.1.0.exe
-3. Desktop shortcut created:
-   - BossForge Launcher.lnk
+1. Start Control Hall only:
+   - .\scripts\start_control_hall.cmd
+2. Start the full local orchestrator:
+   - .\scripts\start_bossforge.cmd
+3. For the intended user-facing flow, launch BossForgeOS from A.S.S. after CBCAA login.
 
 ## Use CLI
 

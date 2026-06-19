@@ -480,25 +480,14 @@ Launcher options:
 - Plugin guide:
   - `docs/plugins.md`
 
-## Build Windows EXE
+## Launch BossForgeOS
 
-- Build one-file launcher executable:
-  - `powershell -ExecutionPolicy Bypass -File .\build_launcher_exe.ps1`
-- Output path:
-  - `dist\\BossForgeLauncher.exe`
-
-## Package Release Bundle
-
-- Create versioned release package and desktop shortcut:
-  - `powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1 -Version 0.1.0`
-- Release output folder:
-  - `releases\\v0.1.0`
-- Packaged executable name:
-  - `BossForgeLauncher-v0.1.0-YYYYMMDD-HHMMSS.exe`
-- Latest alias:
-  - `releases\\latest\\BossForgeLauncher-latest.exe`
-- Latest manifest:
-  - `releases\\latest\\release_manifest.json`
+- Launch Control Hall directly during local development:
+  - `.\scripts\start_control_hall.cmd`
+- Launch the full local orchestrator:
+  - `.\scripts\start_bossforge.cmd`
+- Preferred human-facing launch path:
+  - launch `BossForgeOS` from `A.S.S.` after CBCAA authentication and launch-ticket handoff
 
 ## Bus Root
 
