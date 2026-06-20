@@ -273,6 +273,13 @@ PAGE = """
             background: rgba(12, 14, 20, 0.76);
             padding: 10px;
         }
+        .bossgate-presence-layout {
+            display: grid;
+            gap: 10px;
+        }
+        .bossgate-presence-stage {
+            position: relative;
+        }
         .topology-graph {
             width: 100%;
             min-height: 320px;
@@ -280,6 +287,84 @@ PAGE = """
             border-radius: 8px;
             background: radial-gradient(circle at 50% 50%, rgba(77,166,255,0.06), rgba(10,12,18,0.8));
         }
+        .bossgate-presence-card {
+            border: 1px solid #2b2f3a;
+            border-radius: 12px;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(15,19,28,0.98), rgba(8,11,17,0.98));
+            display: grid;
+            gap: 8px;
+        }
+        .bossgate-presence-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #edf4ff;
+        }
+        .bossgate-presence-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .bossgate-presence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+        .bossgate-presence-grid-item {
+            border: 1px solid #243042;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: rgba(10,14,20,0.72);
+        }
+        .bossgate-presence-grid-item strong {
+            display: block;
+            font-size: 11px;
+            color: #8ea0b8;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+        .bossgate-radial-menu {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            pointer-events: none;
+        }
+        .bossgate-radial-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            border: 1px solid #6ea8ff;
+            background: radial-gradient(circle at 40% 35%, rgba(20,39,70,0.98), rgba(8,14,24,0.98));
+            color: #edf4ff;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 0 26px rgba(77,166,255,0.24);
+        }
+        .bossgate-radial-action {
+            position: absolute;
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            border: 1px solid #395374;
+            background: radial-gradient(circle at 40% 35%, rgba(23,36,56,0.98), rgba(9,14,22,0.98));
+            color: #dbeafe;
+            font-size: 11px;
+            line-height: 1.2;
+            padding: 8px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .bossgate-color-green { border-color: #4CC46A; box-shadow: 0 0 18px rgba(76,196,106,0.16); }
+        .bossgate-color-blue { border-color: #4DA6FF; box-shadow: 0 0 18px rgba(77,166,255,0.16); }
+        .bossgate-color-red { border-color: #FF6262; box-shadow: 0 0 18px rgba(255,98,98,0.16); }
+        .bossgate-color-grey { border-color: #94a3b8; box-shadow: 0 0 18px rgba(148,163,184,0.12); }
         .topology-legend {
             margin-top: 6px;
             color: var(--muted);
@@ -2446,12 +2531,109 @@ PAGE = """
             }
         }
 
+        const bossGatePresenceState = {
+            nodes: [],
+            agents: [],
+            selected: null,
+        };
+
+        function _bossGatePresenceKey(kind, id) {
+            return `${String(kind || '')}:${String(id || '')}`;
+        }
+
+        function renderBossGatePresenceCard(presence) {
+            if (!presence || typeof presence !== 'object') {
+                return '<div class="topology-empty">Select a BossGate presence to inspect it.</div>';
+            }
+            if (presence.presence_kind === 'agent') {
+                const card = presence.model_card && typeof presence.model_card === 'object' ? presence.model_card : {};
+                return `
+                    <div class="bossgate-presence-card bossgate-color-${escapeHtml(presence.color || 'grey')}">
+                        <div class="bossgate-presence-title">${escapeHtml(presence.agent_name || 'unknown agent')}</div>
+                        <div class="bossgate-presence-subtitle">Model card only while abroad. Return to the origin forge for full inspection.</div>
+                        <div class="bossgate-presence-grid">
+                            <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'unknown')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Class</strong>${escapeHtml(card.agent_class || presence.public_identity_card?.agent_class || 'n/a')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Type</strong>${escapeHtml(card.agent_type || presence.public_identity_card?.agent_type || 'n/a')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Rank</strong>${escapeHtml(card.rank || presence.public_identity_card?.rank || 'n/a')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (presence.discovery_state === 'unrevealed_beacon') {
+                return `
+                    <div class="bossgate-presence-card bossgate-color-grey">
+                        <div class="bossgate-presence-title">Unrevealed Beacon</div>
+                        <div class="bossgate-presence-subtitle">Neutral or unaffiliated presence. Identity remains hidden until an actual visit resolves it.</div>
+                        <div class="bossgate-presence-grid">
+                            <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'neutral_unaffiliated')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Status</strong>Beacon only</div>
+                            <div class="bossgate-presence-grid-item"><strong>Reveal</strong>Visit required</div>
+                        </div>
+                    </div>
+                `;
+            }
+            return `
+                <div class="bossgate-presence-card bossgate-color-${escapeHtml(presence.color || 'grey')}">
+                    <div class="bossgate-presence-title">${escapeHtml(presence.display_name || presence.node_id || 'node')}</div>
+                    <div class="bossgate-presence-subtitle">${escapeHtml(presence.public_summary || 'Known node presence')}</div>
+                    <div class="bossgate-presence-grid">
+                        <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'unknown')}</div>
+                        <div class="bossgate-presence-grid-item"><strong>Type</strong>${escapeHtml(presence.node_type || 'unknown')}</div>
+                        <div class="bossgate-presence-grid-item"><strong>Discovery</strong>${escapeHtml(presence.discovery_state || 'revealed')}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBossGateRadialMenu(presence, x, y) {
+            if (!presence) return '';
+            const actions = presence.presence_kind === 'agent'
+                ? ['Send Message', 'Recall Home', 'Route Orders', 'View Model Card', 'Hold / Quarantine', 'Trade History']
+                : (presence.discovery_state === 'unrevealed_beacon'
+                    ? ['Visit Beacon', 'Allow Unknown Messaging']
+                    : ['Send Message', 'Open Node Card', 'Trade History']);
+            const angleStep = (Math.PI * 2) / Math.max(actions.length, 1);
+            const radius = 74;
+            const buttons = actions.map((label, idx) => {
+                const angle = (-Math.PI / 2) + (idx * angleStep);
+                const left = 110 + (radius * Math.cos(angle)) - 37;
+                const top = 110 + (radius * Math.sin(angle)) - 37;
+                return `<button class="bossgate-radial-action" style="left:${left}px; top:${top}px;">${escapeHtml(label)}</button>`;
+            }).join('');
+            const centerLabel = presence.presence_kind === 'agent'
+                ? escapeHtml(presence.agent_name || 'agent')
+                : escapeHtml(presence.display_name || presence.node_id || 'beacon');
+            return `
+                <div class="bossgate-radial-menu" style="left:${x}px; top:${y}px;">
+                    ${buttons}
+                    <div class="bossgate-radial-center bossgate-color-${escapeHtml(presence.color || 'grey')}">${centerLabel}</div>
+                </div>
+            `;
+        }
+
+        function selectBossGatePresence(kind, id, x, y) {
+            const key = _bossGatePresenceKey(kind, id);
+            const all = [
+                ...bossGatePresenceState.nodes,
+                ...bossGatePresenceState.agents,
+            ];
+            const presence = all.find((item) => _bossGatePresenceKey(item.presence_kind, item.node_id || item.agent_name || item.agent_id) === key) || null;
+            bossGatePresenceState.selected = presence;
+            const card = document.getElementById('bossgate_presence_card');
+            const overlay = document.getElementById('bossgate_topology_overlay');
+            if (card) card.innerHTML = renderBossGatePresenceCard(presence);
+            if (overlay) overlay.innerHTML = renderBossGateRadialMenu(presence, x, y);
+        }
+
         function renderBossGateTopology(map, transfers = []) {
             const root = document.getElementById('bossgate_topology');
             if (!root) return;
             const gates = Array.isArray(map && map.gates) ? map.gates : [];
             const travelable = Array.isArray(map && map.travelable_gates) ? map.travelable_gates : [];
-            const agents = map && map.agents && typeof map.agents === 'object' ? map.agents : {};
+            const agents = Array.isArray(map && map.agents) ? map.agents : [];
+            const nodePresences = Array.isArray(map && map.node_presences) ? map.node_presences : [];
+            const agentPresences = Array.isArray(map && map.agent_presences) ? map.agent_presences : [];
             const travelableSet = new Set(travelable.map((item) => String(item && (item.address || item.destination || item.endpoint || '')).trim()).filter(Boolean));
 
             if (!gates.length) {
@@ -2460,17 +2642,19 @@ PAGE = """
             }
 
             const byGate = {};
-            for (const [name, agent] of Object.entries(agents)) {
+            for (const agent of agents) {
                 if (!agent || typeof agent !== 'object') continue;
+                const name = String(agent.agent_name || '').trim().toLowerCase();
                 const node = String(agent.current_node || agent.node_id || '').trim();
                 if (!node) continue;
                 if (!byGate[node]) byGate[node] = [];
-                byGate[node].push(String(name));
+                byGate[node].push(name);
             }
             const nodes = gates.map((gate) => {
                 const nodeId = String(gate && (gate.node_id || gate.name || gate.id || 'unknown')).trim() || 'unknown';
                 const address = String(gate && (gate.address || gate.endpoint || '')).trim();
                 const type = String(gate && gate.target_type || 'bossgate_connector').trim();
+                const nodePresence = nodePresences.find((item) => String(item && item.node_id || '').trim() === nodeId) || null;
                 return {
                     id: nodeId,
                     label: nodeId,
@@ -2480,11 +2664,14 @@ PAGE = """
                     travelable: !!(address && travelableSet.has(address)),
                     agents: byGate[nodeId] || [],
                     external: false,
+                    presence: nodePresence,
                 };
             });
             const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
             const nodeByAddress = Object.fromEntries(nodes.filter((n) => n.address).map((n) => [n.address, n]));
             const nodeByHost = Object.fromEntries(nodes.filter((n) => n.host).map((n) => [n.host, n]));
+            bossGatePresenceState.nodes = nodePresences;
+            bossGatePresenceState.agents = agentPresences;
 
             const edgeItems = [];
             for (const t of transfers) {
@@ -2558,14 +2745,31 @@ PAGE = """
             const nodeSvg = nodes.map((n) => {
                 const p = pos[n.id];
                 if (!p) return '';
-                const fill = n.external ? "#2a2f3a" : (n.travelable ? "#1f3b2a" : "#2a2230");
-                const stroke = n.external ? "#7f8ca3" : (n.travelable ? "#4CC46A" : "#D4A857");
+                const color = String(n.presence?.color || '').trim().toLowerCase();
+                const fill = color === 'green' ? "#183923" : color === 'blue' ? "#132d4f" : color === 'red' ? "#4a1717" : "#343b48";
+                const stroke = color === 'green' ? "#4CC46A" : color === 'blue' ? "#4DA6FF" : color === 'red' ? "#FF6262" : "#94a3b8";
                 const agentText = n.agents.length ? ` | ${n.agents.slice(0, 2).join(",")}` : "";
+                const px = Number(p.x.toFixed(1));
+                const py = Number(p.y.toFixed(1));
                 return `
                     <g>
-                        <circle cx="${p.x}" cy="${p.y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="2" />
+                        <circle cx="${p.x}" cy="${p.y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="2" onclick="selectBossGatePresence('node', '${escapeHtml(n.id)}', ${px}, ${py})" style="cursor:pointer;" />
                         <text x="${p.x}" y="${p.y - 30}" text-anchor="middle" fill="#e6ddcb" font-size="12">${escapeHtml(n.label)}</text>
                         <text x="${p.x}" y="${p.y + 42}" text-anchor="middle" fill="#a9b1c1" font-size="11">${escapeHtml(n.type + agentText)}</text>
+                    </g>
+                `;
+            }).join('');
+
+            const agentSvg = agentPresences.map((presence, idx) => {
+                const anchor = pos[String(presence.current_node_id || presence.origin_node_id || '').trim()];
+                if (!anchor) return '';
+                const offsetAngle = (idx % 6) * (Math.PI / 3);
+                const ax = anchor.x + 34 * Math.cos(offsetAngle);
+                const ay = anchor.y + 34 * Math.sin(offsetAngle);
+                const stroke = presence.color === 'green' ? "#4CC46A" : presence.color === 'blue' ? "#4DA6FF" : presence.color === 'red' ? "#FF6262" : "#94a3b8";
+                return `
+                    <g>
+                        <circle cx="${ax}" cy="${ay}" r="9" fill="#0b121d" stroke="${stroke}" stroke-width="2" onclick="selectBossGatePresence('agent', '${escapeHtml(presence.agent_name || presence.agent_id)}', ${Number(ax.toFixed(1))}, ${Number(ay.toFixed(1))})" style="cursor:pointer;" />
                     </g>
                 `;
             }).join('');
@@ -2578,17 +2782,24 @@ PAGE = """
             }).join('');
 
             root.innerHTML = `
-                <svg class="topology-graph" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <marker id="bg_arrow" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto">
-                            <polygon points="0 0, 7 3.5, 0 7" fill="#D4A857"></polygon>
-                        </marker>
-                    </defs>
-                    ${edgeSvg}
-                    ${nodeSvg}
-                </svg>
-                <div class="topology-legend">Green edge: posted transfer. Blue dashed edge: dry-run validation. Red edge: failed transfer.</div>
-                <div class="topology-edge-list">${edgeList || '<div class="topology-empty">No recent transfer edges.</div>'}</div>
+                <div class="bossgate-presence-layout">
+                    <div id="bossgate_presence_card">${renderBossGatePresenceCard(bossGatePresenceState.selected || nodePresences[0] || agentPresences[0] || null)}</div>
+                    <div class="bossgate-presence-stage">
+                        <svg class="topology-graph" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="bg_arrow" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 7 3.5, 0 7" fill="#D4A857"></polygon>
+                                </marker>
+                            </defs>
+                            ${edgeSvg}
+                            ${nodeSvg}
+                            ${agentSvg}
+                        </svg>
+                        <div id="bossgate_topology_overlay">${renderBossGateRadialMenu(bossGatePresenceState.selected || nodePresences[0] || agentPresences[0] || null, cx, cy)}</div>
+                    </div>
+                    <div class="topology-legend">Green edge: posted transfer. Blue dashed edge: dry-run validation. Red edge: failed transfer. Green markers: your forge. Blue markers: trade-linked. Red markers: revealed unknowns. Grey markers: unresolved beacons.</div>
+                    <div class="topology-edge-list">${edgeList || '<div class="topology-empty">No recent transfer edges.</div>'}</div>
+                </div>
             `;
         }
 
