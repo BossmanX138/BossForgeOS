@@ -56,27 +56,40 @@ class AgentForgeServiceTests(unittest.TestCase):
         result = service.view_agent_profile("viewer", viewer_id="owner-1", viewer_channel="bossforgeos")
         self.assertTrue(result["ok"])
         self.assertTrue(result["sealed"])
+        self.assertEqual(result["view_policy"], "model_card_only_outside_origin_forge")
+        self.assertEqual(
+            result["message"],
+            "Model card only. Full profile view is restricted to the forge of creation.",
+        )
+        self.assertTrue(result["full_view_available_at_origin_forge"])
         self.assertNotIn("profile", result)
         self.assertNotIn("secure_address", result)
+        self.assertIn("model_card", result)
         self.assertEqual(
             set(result["public_identity_card"]),
             {"name", "public_id", "agent_class", "agent_type", "rank", "rarity", "availability"},
         )
 
-    def test_non_hidden_agent_view_requires_enabled_authenticated_channel(self) -> None:
+    def test_non_hidden_agent_view_only_opens_at_forge_of_creation(self) -> None:
         service.set_agent_disclosure_posture("viewer", "non_hidden")
 
         bossforge = service.view_agent_profile("viewer", viewer_id="owner-1", viewer_channel="bossforgeos")
         standalone = service.view_agent_profile("viewer", viewer_id="owner-1", viewer_channel="agentforge_standalone")
         unauthenticated = service.view_agent_profile("viewer", viewer_id="", viewer_channel="bossforgeos")
         bridgebase = service.view_agent_profile("viewer", viewer_id="owner-1", viewer_channel="bridgebase_alpha")
+        self.gateway.node_id = "remote-node"
+        remote = service.view_agent_profile("viewer", viewer_id="owner-1", viewer_channel="bossforgeos")
 
         self.assertFalse(bossforge["sealed"])
         self.assertEqual(bossforge["profile"]["system"], "Proprietary instructions.")
         self.assertFalse(standalone["sealed"])
         self.assertTrue(unauthenticated["sealed"])
         self.assertTrue(bridgebase["sealed"])
+        self.assertTrue(remote["sealed"])
+        self.assertEqual(remote["view_policy"], "model_card_only_outside_origin_forge")
+        self.assertIn("forge of creation", remote["message"])
         self.assertNotIn("profile", bridgebase)
+        self.assertIn("model_card", remote)
 
     def test_authenticated_non_hidden_view_still_redacts_gate_and_lineage(self) -> None:
         service.set_agent_disclosure_posture("viewer", "non_hidden")

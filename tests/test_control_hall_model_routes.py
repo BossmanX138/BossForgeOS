@@ -186,6 +186,16 @@ class ControlHallModelRouteTests(unittest.TestCase):
             roles=["commerce_manager", "support_engineer"],
         )
 
+    @patch.object(control_hall.model_gateway_api, "bossgate_map_snapshot")
+    @patch.object(control_hall.model_gateway_api, "bossgate_presence_policy")
+    def test_control_hall_policy_and_map_routes_can_coexist(self, mock_policy, mock_map) -> None:
+        mock_map.return_value = {"ok": True, "map": {"node_presences": [], "agent_presences": []}}
+        mock_policy.return_value = {"ok": True, "policy": {"accept_unknown_messages": False}}
+        map_res = self.client.get("/api/model/travel/map")
+        policy_res = self.client.get("/api/bossgate/access/policy")
+        self.assertEqual(map_res.status_code, 200)
+        self.assertEqual(policy_res.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
