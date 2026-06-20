@@ -3000,6 +3000,7 @@ PAGE = """
         async function refreshBossGateAccess() {
             const user = bossGateCurrentUser();
             const data = await fetchJsonWithTimeout('/api/bossgate/access/capabilities?user_id=' + encodeURIComponent(user));
+            const policy = await fetchJsonWithTimeout('/api/bossgate/access/policy');
             const permissions = new Set(Array.isArray(data?.permissions) ? data.permissions : []);
             const panels = data?.panels || {};
             document.querySelectorAll('[data-bossgate-permission]').forEach((el) => {
@@ -3009,7 +3010,7 @@ PAGE = """
                 el.style.display = panels[el.dataset.bossgatePanel] ? '' : 'none';
             });
             const summary = document.getElementById('bossgate_access_summary');
-            if (summary) summary.textContent = JSON.stringify(data, null, 2);
+            if (summary) summary.textContent = JSON.stringify({ ...data, policy: policy?.policy || {} }, null, 2);
             const commerce = document.getElementById('bossgate_commerce_summary');
             if (commerce) commerce.textContent = JSON.stringify({ enabled: !!panels.commerce, permissions: [...permissions].filter((item) => item.includes('license') || item.includes('usage') || item.includes('commerce')) }, null, 2);
             const support = document.getElementById('bossgate_support_summary');
@@ -6785,6 +6786,20 @@ def agentforge_agent_disclosure(name: str):
 def bossgate_access_capabilities():
     user_id = str(request.args.get("user_id", "")).strip()
     return jsonify(_bossgate_authorization().capabilities_for_user(user_id))
+
+
+@app.get("/api/bossgate/access/policy")
+def bossgate_access_policy():
+    return jsonify(model_gateway_api.bossgate_presence_policy())
+
+
+@app.post("/api/bossgate/access/policy")
+def bossgate_access_policy_update():
+    payload = request.get_json(force=True, silent=True) or {}
+    result = model_gateway_api.set_bossgate_presence_policy(
+        accept_unknown_messages=bool(payload.get("accept_unknown_messages", False))
+    )
+    return jsonify(result), (200 if result.get("ok") else 400)
 
 
 @app.post("/api/bossgate/access/roles")

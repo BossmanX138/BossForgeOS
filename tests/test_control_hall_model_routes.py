@@ -140,6 +140,20 @@ class ControlHallModelRouteTests(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         registry.capabilities_for_user.assert_called_once_with("bossforge-owner")
 
+    @patch.object(control_hall.model_gateway_api, "bossgate_presence_policy")
+    def test_bossgate_access_policy_reads_gateway_policy(self, mock_policy) -> None:
+        mock_policy.return_value = {"ok": True, "policy": {"accept_unknown_messages": False}}
+        res = self.client.get("/api/bossgate/access/policy")
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.get_json()["policy"]["accept_unknown_messages"])
+
+    @patch.object(control_hall.model_gateway_api, "set_bossgate_presence_policy")
+    def test_bossgate_access_policy_update_forwards_toggle(self, mock_policy) -> None:
+        mock_policy.return_value = {"ok": True, "policy": {"accept_unknown_messages": True}}
+        res = self.client.post("/api/bossgate/access/policy", json={"accept_unknown_messages": True})
+        self.assertEqual(res.status_code, 200)
+        mock_policy.assert_called_once_with(accept_unknown_messages=True)
+
     @patch("ui.control_hall._bossgate_authorization")
     def test_bossgate_access_role_create_forwards_security_admin(self, mock_registry_factory) -> None:
         registry = Mock()
