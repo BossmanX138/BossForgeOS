@@ -61,12 +61,23 @@ class ControlHallModelRouteTests(unittest.TestCase):
 
     @patch.object(control_hall.model_gateway_api, "bossgate_map_snapshot")
     def test_model_travel_map_uses_adapter(self, mock_snapshot) -> None:
-        mock_snapshot.return_value = {"ok": True, "map": {"gates": [], "travelable_gates": [], "agents": {}}}
+        mock_snapshot.return_value = {
+            "ok": True,
+            "map": {
+                "gates": [],
+                "travelable_gates": [],
+                "agents": {},
+                "node_presences": [{"presence_kind": "node", "color": "grey"}],
+                "agent_presences": [{"presence_kind": "agent", "color": "green"}],
+            },
+        }
         res = self.client.get("/api/model/travel/map?refresh=true&timeout=3")
         self.assertEqual(res.status_code, 200)
         payload = res.get_json()
         self.assertTrue(payload.get("ok"))
         self.assertIn("map", payload)
+        self.assertIn("node_presences", payload["map"])
+        self.assertIn("agent_presences", payload["map"])
         mock_snapshot.assert_called_once_with(refresh=True, timeout=3)
 
     @patch.object(control_hall.model_gateway_api, "discover_travel_targets")
@@ -101,12 +112,23 @@ class ControlHallModelRouteTests(unittest.TestCase):
 
     @patch("ui.control_hall._read_bossgate_transfers")
     def test_model_travel_transfers_reads_transfer_log(self, mock_read_transfers) -> None:
-        mock_read_transfers.return_value = {"ok": True, "items": [{"node_id": "bossforgeos", "destination": "http://bridgebase.local"}]}
+        mock_read_transfers.return_value = {
+            "ok": True,
+            "items": [
+                {
+                    "node_id": "bossforgeos",
+                    "destination": "http://bridgebase.local",
+                    "presence_color": "green",
+                    "agent_name": "promethius",
+                }
+            ],
+        }
         res = self.client.get("/api/model/travel/transfers?limit=7")
         self.assertEqual(res.status_code, 200)
         payload = res.get_json()
         self.assertTrue(payload.get("ok"))
         self.assertIn("items", payload)
+        self.assertEqual(payload["items"][0]["presence_color"], "green")
         mock_read_transfers.assert_called_once_with(limit=7)
 
     @patch("ui.control_hall._bossgate_authorization")

@@ -30,6 +30,7 @@ from core.connectors.bossgate_connector import (
     generate_secure_address,
     is_valid_secure_address,
 )
+from core.bossgate.presence_view import build_agent_presence, build_node_presence
 from core.security.agent_profile_store import (
     load_agent_profiles_store,
     save_agent_profiles_store,
@@ -1020,7 +1021,35 @@ class ModelGateway:
         )
 
     def bossgate_map_snapshot(self, refresh: bool = False, timeout: int = 2) -> Dict[str, Any]:
-        return self.bossgate_commands.map_snapshot(refresh=bool(refresh), timeout=max(1, int(timeout)))
+        raw = self.bossgate_commands.map_snapshot(refresh=bool(refresh), timeout=max(1, int(timeout)))
+        if not isinstance(raw, dict):
+            return {"ok": False, "message": "invalid BossGate map payload"}
+        if not raw.get("ok"):
+            return raw
+
+        gates = raw.get("gates") if isinstance(raw.get("gates"), list) else []
+        agents = raw.get("agents") if isinstance(raw.get("agents"), list) else []
+        node_presences = [
+            build_node_presence(gate if isinstance(gate, dict) else {}, current_node_id=self.node_id)
+            for gate in gates
+        ]
+        agent_presences = []
+        for item in agents:
+            if not isinstance(item, dict):
+                continue
+            agent_name = str(item.get("agent_name", "")).strip().lower()
+            if not agent_name:
+                continue
+            profile = self.agent_profiles.get(agent_name) if isinstance(self.agent_profiles.get(agent_name), dict) else {}
+            merged = {**item, **profile}
+            agent_presences.append(
+                build_agent_presence(agent_name, merged, current_node_id=self.node_id)
+            )
+
+        map_payload = dict(raw)
+        map_payload["node_presences"] = node_presences
+        map_payload["agent_presences"] = agent_presences
+        return {"ok": True, "map": map_payload}
 
     def validate_transfer_target(self, destination: str, operator_id: str = "", scope_id: str = "", actor_type: str = "human") -> Dict[str, Any]:
         return self.bossgate_commands.scan_target(destination, operator_id=operator_id, scope_id=scope_id, actor_type=actor_type)

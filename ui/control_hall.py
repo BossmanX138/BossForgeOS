@@ -1780,9 +1780,10 @@ PAGE = """
                 </div>
 
                 <div class="row">
-                    <select id="maker_agent_select"></select>
+                    <select id="maker_agent_select" onchange="inspectSelectedAgentProfile()"></select>
                     <input id="maker_task" placeholder="task for selected agent" />
                     <select id="maker_override_endpoint"></select>
+                    <button onclick="inspectSelectedAgentProfile()">Inspect</button>
                     <button onclick="runAgentProfile()">Run</button>
                     <button onclick="deleteAgentProfile()">Delete</button>
                 </div>
@@ -1809,6 +1810,20 @@ PAGE = """
                         <button onclick="runIncidentTriage()">Tag + Rank Agents</button>
                     </div>
                     <pre id="triage_result">No triage run yet.</pre>
+                </div>
+                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0; background:linear-gradient(180deg, rgba(16,20,28,0.98), rgba(10,13,19,0.98));">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                        <strong style="color:#8fd3ff; letter-spacing:0.04em;">Selected Agent View</strong>
+                        <span id="maker_agent_policy_badge" style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid #4b5563; color:#cbd5e1; font-size:12px;">Awaiting selection</span>
+                    </div>
+                    <div id="maker_agent_policy" class="muted" style="margin-bottom:8px;">Select an agent to inspect its sealed status or authenticated forge view.</div>
+                    <div id="maker_agent_summary" style="border:1px solid #263041; border-radius:12px; padding:12px; margin-bottom:10px; background:radial-gradient(circle at top, rgba(71,118,230,0.14), rgba(8,12,18,0.96));">
+                        <div id="maker_agent_summary_title" style="font-size:15px; font-weight:700; color:#dbeafe; margin-bottom:4px;">No agent selected</div>
+                        <div id="maker_agent_summary_subtitle" class="muted" style="margin-bottom:10px;">Choose an agent to reveal its package status.</div>
+                        <div id="maker_agent_summary_chips" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+                        <div id="maker_agent_summary_grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px;"></div>
+                    </div>
+                    <pre id="maker_agent_view">No agent selected.</pre>
                 </div>
                 <pre id="maker_result">No agent operation yet.</pre>
             </section>
@@ -5296,7 +5311,128 @@ PAGE = """
                 sel.innerHTML = names.map((n) => `<option value="${n}">${n}</option>`).join('');
                 if (current && names.includes(current)) sel.value = current;
             }
+            await inspectSelectedAgentProfile();
             syncAdvancedPolicyAwareness();
+        }
+
+        function renderSelectedAgentProfile(data) {
+            const policyRoot = document.getElementById('maker_agent_policy');
+            const badge = document.getElementById('maker_agent_policy_badge');
+            const detail = document.getElementById('maker_agent_view');
+            const summaryTitle = document.getElementById('maker_agent_summary_title');
+            const summarySubtitle = document.getElementById('maker_agent_summary_subtitle');
+            const summaryChips = document.getElementById('maker_agent_summary_chips');
+            const summaryGrid = document.getElementById('maker_agent_summary_grid');
+            if (!policyRoot || !badge || !detail || !summaryTitle || !summarySubtitle || !summaryChips || !summaryGrid) return;
+
+            function chip(label, color) {
+                return `<span style="display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px; border:1px solid ${color}; color:${color}; font-size:12px; letter-spacing:0.02em;">${label}</span>`;
+            }
+
+            function gridItem(label, value) {
+                return `<div style="border:1px solid #243042; border-radius:10px; padding:8px 10px; background:rgba(10,14,20,0.72);">
+                    <div style="font-size:11px; color:#8ea0b8; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">${label}</div>
+                    <div style="font-size:13px; color:#e5eefc; word-break:break-word;">${value || 'n/a'}</div>
+                </div>`;
+            }
+
+            if (!data || !data.ok) {
+                badge.textContent = 'Unavailable';
+                badge.style.borderColor = '#7f1d1d';
+                badge.style.color = '#fca5a5';
+                policyRoot.textContent = (data && data.message) ? String(data.message) : 'Unable to inspect agent profile.';
+                summaryTitle.textContent = 'Inspection unavailable';
+                summarySubtitle.textContent = 'The forge could not retrieve a readable profile payload.';
+                summaryChips.innerHTML = chip('inspection failed', '#fca5a5');
+                summaryGrid.innerHTML = gridItem('Status', 'Unavailable');
+                detail.textContent = JSON.stringify(data || { ok: false, message: 'No response returned.' }, null, 2);
+                return;
+            }
+
+            if (data.sealed) {
+                const identity = (data.public_identity_card && typeof data.public_identity_card === 'object') ? data.public_identity_card : {};
+                const modelCard = (data.model_card && typeof data.model_card === 'object') ? data.model_card : {};
+                badge.textContent = 'Sealed Asset';
+                badge.style.borderColor = '#7c3aed';
+                badge.style.color = '#c4b5fd';
+                const policy = String(data.view_policy || 'model_card_only_outside_origin_forge').replaceAll('_', ' ');
+                const message = String(data.message || 'Model card only.');
+                policyRoot.textContent = `${message} Policy: ${policy}.`;
+                summaryTitle.textContent = `${String(data.agent || identity.name || 'Unknown Agent')} is sealed`;
+                summarySubtitle.textContent = 'This package is armored outside its forge of creation. Only its public identity and model card are exposed here.';
+                summaryChips.innerHTML = [
+                    chip('sealed package', '#c4b5fd'),
+                    chip(`posture: ${String(data.disclosure_posture || 'hidden')}`, '#93c5fd'),
+                    chip('model card visible', '#67e8f9'),
+                ].join('');
+                summaryGrid.innerHTML = [
+                    gridItem('Public Name', String(identity.name || data.agent || 'n/a')),
+                    gridItem('Public ID', String(identity.public_id || data.agent || 'n/a')),
+                    gridItem('Class', String(identity.agent_class || modelCard.agent_class || 'n/a')),
+                    gridItem('Type', String(identity.agent_type || modelCard.agent_type || 'n/a')),
+                    gridItem('Rank', String(identity.rank || modelCard.rank || 'n/a')),
+                    gridItem('Origin Forge View', data.full_view_available_at_origin_forge ? 'Available at creation forge' : 'Not advertised'),
+                ].join('');
+                detail.textContent = JSON.stringify({
+                    agent: data.agent,
+                    disclosure_posture: data.disclosure_posture,
+                    full_view_available_at_origin_forge: !!data.full_view_available_at_origin_forge,
+                    public_identity_card: data.public_identity_card || {},
+                    model_card: data.model_card || {},
+                }, null, 2);
+                return;
+            }
+
+            badge.textContent = 'Origin Forge View';
+            badge.style.borderColor = '#14532d';
+            badge.style.color = '#86efac';
+            policyRoot.textContent = 'Authenticated origin-forge access granted. Full profile view is available on this forge.';
+            const profile = (data.profile && typeof data.profile === 'object') ? data.profile : {};
+            summaryTitle.textContent = `${String(data.agent || profile.name || 'Selected agent')} opened on origin forge`;
+            summarySubtitle.textContent = 'This forge created the package and is allowed to view beyond the public armor.';
+            summaryChips.innerHTML = [
+                chip('origin forge access', '#86efac'),
+                chip(`posture: ${String(data.disclosure_posture || 'non_hidden')}`, '#93c5fd'),
+                chip('full profile visible', '#fcd34d'),
+            ].join('');
+            summaryGrid.innerHTML = [
+                gridItem('Name', String(profile.name || data.agent || 'n/a')),
+                gridItem('Endpoint', String(profile.endpoint || 'n/a')),
+                gridItem('Class', String(profile.agent_class || 'n/a')),
+                gridItem('Type', String(profile.agent_type || 'n/a')),
+                gridItem('Rank', String(profile.rank || 'n/a')),
+                gridItem('BossGate Enabled', profile.bossgate_enabled ? 'Yes' : 'No'),
+            ].join('');
+            detail.textContent = JSON.stringify(data.profile || data, null, 2);
+        }
+
+        async function inspectSelectedAgentProfile() {
+            const sel = document.getElementById('maker_agent_select');
+            const detail = document.getElementById('maker_agent_view');
+            const policyRoot = document.getElementById('maker_agent_policy');
+            const badge = document.getElementById('maker_agent_policy_badge');
+            const name = (sel && sel.value) ? String(sel.value).trim() : '';
+            if (!detail || !policyRoot || !badge) return;
+            if (!name) {
+                badge.textContent = 'Awaiting selection';
+                badge.style.borderColor = '#4b5563';
+                badge.style.color = '#cbd5e1';
+                policyRoot.textContent = 'Select an agent to inspect its sealed status or authenticated forge view.';
+                const summaryTitle = document.getElementById('maker_agent_summary_title');
+                const summarySubtitle = document.getElementById('maker_agent_summary_subtitle');
+                const summaryChips = document.getElementById('maker_agent_summary_chips');
+                const summaryGrid = document.getElementById('maker_agent_summary_grid');
+                if (summaryTitle) summaryTitle.textContent = 'No agent selected';
+                if (summarySubtitle) summarySubtitle.textContent = 'Choose an agent to reveal its package status.';
+                if (summaryChips) summaryChips.innerHTML = '';
+                if (summaryGrid) summaryGrid.innerHTML = '';
+                detail.textContent = 'No agent selected.';
+                return;
+            }
+            policyRoot.textContent = `Inspecting ${name}...`;
+            detail.textContent = 'Loading agent view...';
+            const data = await fetchJsonWithTimeout(`/api/agentforge/agents/${encodeURIComponent(name)}/view?viewer_id=control-hall&viewer_channel=bossforgeos`);
+            renderSelectedAgentProfile(data);
         }
 
         async function createAgentProfile() {
@@ -7283,7 +7419,17 @@ def _read_bossgate_transfers(limit: int = 20) -> dict:
     except OSError as ex:
         return {"ok": False, "message": str(ex), "items": []}
     lim = max(1, int(limit))
-    return {"ok": True, "items": entries[-lim:]}
+    normalized = []
+    for item in entries[-lim:]:
+        normalized.append(
+            {
+                **item,
+                "presence_color": str(item.get("presence_color", "")).strip() or "grey",
+                "agent_name": str(item.get("agent_name", "")).strip(),
+                "discovery_state": str(item.get("discovery_state", "")).strip() or "revealed",
+            }
+        )
+    return {"ok": True, "items": normalized}
 
 
 def _default_scheduler_state() -> dict:

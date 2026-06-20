@@ -895,6 +895,34 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(result["assistance_only"])
         self.assertEqual(len(result["targets"]), 1)
 
+    def test_bossgate_map_snapshot_exposes_presence_collections(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(
+            agent.bossgate_commands,
+            "map_snapshot",
+            return_value={
+                "ok": True,
+                "node_id": "bossforgeos",
+                "gates": [{"node_id": "neutral-1", "address": "http://10.0.0.8", "target_type": "unknown", "visited": False}],
+                "travelable_gates": [],
+                "agents": [
+                    {
+                        "agent_name": "promethius",
+                        "current_node": "remote-node",
+                        "created_by_node": "bossforgeos",
+                        "agent_class": "skilled",
+                    }
+                ],
+            },
+        ):
+            result = agent.bossgate_map_snapshot(refresh=False, timeout=2)
+        self.assertTrue(result["ok"])
+        self.assertIn("map", result)
+        self.assertIn("node_presences", result["map"])
+        self.assertIn("agent_presences", result["map"])
+        self.assertEqual(result["map"]["node_presences"][0]["color"], "grey")
+        self.assertEqual(result["map"]["agent_presences"][0]["agent_name"], "promethius")
+
     def test_bossgate_discover_targets_command_alias(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         with patch.object(agent, "discover_travel_targets", return_value={"ok": True, "targets": []}) as mocked:
