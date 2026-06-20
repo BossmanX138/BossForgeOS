@@ -30,6 +30,11 @@ from core.connectors.bossgate_connector import (
     generate_secure_address,
     is_valid_secure_address,
 )
+from core.security.agent_profile_store import (
+    load_agent_profiles_store,
+    save_agent_profiles_store,
+)
+from core.security.bossgate_presence_policy import BossGatePresencePolicyStore
 from core.memory_vault import PrivateMemoryVault
 from core.model_vault import build_private_model_package
 from core.runner import (
@@ -81,6 +86,7 @@ class ModelGateway:
         self.assistance_path = self.bus.state / "gateway_assistance_requests.json"
         self.locations_path = self.bus.state / "owned_gateway_locations.json"
         self.agent_locations_path = self.bus.state / "owned_agent_locations.json"
+        self.presence_policy_path = self.bus.state / "bossgate_presence_policy.json"
         self.memory_db_path = self.bus.state / "gateway_memory.sqlite3"
         self.usage_checkpoint_log_path = self.bus.state / "bossgate_usage_checkpoints.jsonl"
         self.agent_gate_dir = self.bus.state / "agent_gates"
@@ -261,26 +267,22 @@ class ModelGateway:
         return normalized
 
     def _load_profiles(self) -> Dict[str, Dict[str, Any]]:
-        if self.profiles_path.exists():
-            try:
-                raw = json.loads(self.profiles_path.read_text(encoding="utf-8"))
-                if isinstance(raw, dict):
-                    out: Dict[str, Dict[str, Any]] = {}
-                    for k, v in raw.items():
-                        if not isinstance(v, dict):
-                            continue
-                        key = str(k).strip().lower()
-                        if not key:
-                            continue
-                        out[key] = self._normalize_profile(key, dict(v))
-                    return out
-            except (OSError, json.JSONDecodeError):
-                pass
-        self.profiles_path.write_text("{}", encoding="utf-8")
+        profiles, requires_migration = load_agent_profiles_store(self.profiles_path, self.node_id)
+        if profiles:
+            normalized = {
+                key: self._normalize_profile(key, dict(value))
+                for key, value in profiles.items()
+            }
+            if requires_migration:
+                self.profiles = normalized
+                self._save_profiles()
+            return normalized
+        if not self.profiles_path.exists():
+            save_agent_profiles_store(self.profiles_path, {}, self.node_id)
         return {}
 
     def _save_profiles(self) -> None:
-        self.profiles_path.write_text(json.dumps(self.profiles, indent=2), encoding="utf-8")
+        save_agent_profiles_store(self.profiles_path, self.profiles, self.node_id)
 
     # Compatibility aliases for older/newer call-sites.
     def _normalize_agent_profile(self, key: str, profile: Dict[str, Any]) -> Dict[str, Any]:
@@ -365,7 +367,7 @@ class ModelGateway:
         return {
             "schema_version": 1,
             "endpoints": self.endpoints,
-            "profiles": self.profiles,
+            "profiles": {},
             "mcp_servers": self.mcp_servers,
         }
 
@@ -399,7 +401,15 @@ class ModelGateway:
         target = Path(file_path).expanduser().resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
-        return {"ok": True, "file": str(target), "format": format_name}
+        omitted_profiles = sorted(self.profiles.keys())
+        return {
+            "ok": True,
+            "file": str(target),
+            "format": format_name,
+            "profiles_exported": 0,
+            "omitted_profiles": omitted_profiles,
+            "message": "Agent profiles are sealed assets and are never exported through config files.",
+        }
 
     def import_config(self, file_path: str, format_hint: str = "", merge: bool = False) -> Dict[str, Any]:
         format_name = self._detect_format(file_path, format_hint)
@@ -419,20 +429,18 @@ class ModelGateway:
         if not isinstance(imported_endpoints, dict) or not isinstance(imported_profiles, dict) or not isinstance(imported_mcp, dict):
             return {"ok": False, "message": "endpoints, profiles, and mcp_servers must be objects"}
 
+        if imported_profiles:
+            return {
+                "ok": False,
+                "message": "Agent profiles cannot be imported from config files. Use sealed package install at the forge instead.",
+            }
+
         if merge:
             self.endpoints.update({str(k): dict(v) for k, v in imported_endpoints.items() if isinstance(v, dict)})
-            self.profiles.update({str(k): dict(v) for k, v in imported_profiles.items() if isinstance(v, dict)})
             self.mcp_servers.update({str(k): dict(v) for k, v in imported_mcp.items() if isinstance(v, dict)})
         else:
             self.endpoints = {str(k): dict(v) for k, v in imported_endpoints.items() if isinstance(v, dict)}
-            self.profiles = {str(k): dict(v) for k, v in imported_profiles.items() if isinstance(v, dict)}
             self.mcp_servers = {str(k): dict(v) for k, v in imported_mcp.items() if isinstance(v, dict)}
-
-        for key, profile in list(self.profiles.items()):
-            if not isinstance(profile, dict):
-                self.profiles.pop(key, None)
-                continue
-            self.profiles[key] = self._normalize_profile(key, profile)
 
         self._save_endpoints()
         self._save_profiles()
@@ -984,6 +992,16 @@ class ModelGateway:
             "owner_node": self.node_id,
             "agents": dict(self.owned_agent_locations),
         }
+
+    def bossgate_presence_policy(self) -> Dict[str, Any]:
+        policy = BossGatePresencePolicyStore(self.presence_policy_path).read()
+        return {"ok": True, "policy": policy}
+
+    def set_bossgate_presence_policy(self, *, accept_unknown_messages: bool) -> Dict[str, Any]:
+        policy = BossGatePresencePolicyStore(self.presence_policy_path).write(
+            accept_unknown_messages=accept_unknown_messages
+        )
+        return {"ok": True, "policy": policy}
 
     def discover_travel_targets(
         self,

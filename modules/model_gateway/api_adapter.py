@@ -90,6 +90,16 @@ def bossgate_map_snapshot(refresh: bool = False, timeout: int = 2) -> dict[str, 
     return _gateway().bossgate_map_snapshot(refresh=bool(refresh), timeout=int(timeout))
 
 
+def bossgate_presence_policy() -> dict[str, Any]:
+    return _gateway().bossgate_presence_policy()
+
+
+def set_bossgate_presence_policy(*, accept_unknown_messages: bool) -> dict[str, Any]:
+    return _gateway().set_bossgate_presence_policy(
+        accept_unknown_messages=bool(accept_unknown_messages)
+    )
+
+
 def validate_transfer_target(destination: str, operator_id: str = "", scope_id: str = "", actor_type: str = "human") -> dict[str, Any]:
     return _gateway().validate_transfer_target(
         destination=str(destination or "").strip(),

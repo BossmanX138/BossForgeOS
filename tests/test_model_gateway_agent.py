@@ -3,11 +3,14 @@ import tempfile
 import unittest
 import json
 import time
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.agents.model_gateway_agent import ModelGatewayAgent
 from core.schemas.agent_capsule import CAPSULE_VAULT_NAMES
+from core.security.agent_profile_store import load_agent_profiles_store
+from core.security.bossgate_presence_policy import BossGatePresencePolicyStore
 
 
 class ModelGatewayAgentTests(unittest.TestCase):
@@ -65,6 +68,23 @@ class ModelGatewayAgentTests(unittest.TestCase):
         agent = ModelGatewayAgent(interval_seconds=1)
         self.assertIn("ollama", agent.endpoints)
         self.assertTrue(agent.config_path.exists())
+
+    def test_bossgate_presence_policy_defaults_unknown_messages_off(self) -> None:
+        store = BossGatePresencePolicyStore(Path(self.tmp.name) / "bossgate_presence_policy.json")
+        state = store.read()
+        self.assertFalse(state["accept_unknown_messages"])
+
+    def test_model_gateway_exposes_presence_policy(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        result = agent.bossgate_presence_policy()
+        self.assertTrue(result["ok"])
+        self.assertFalse(result["policy"]["accept_unknown_messages"])
+
+    def test_model_gateway_updates_presence_policy(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        result = agent.set_bossgate_presence_policy(accept_unknown_messages=True)
+        self.assertTrue(result["ok"])
+        self.assertTrue(result["policy"]["accept_unknown_messages"])
 
     @patch("core.agents.model_gateway_agent.threading.Thread")
     def test_presence_broadcast_uses_node_profile_target_type(self, mock_thread) -> None:
@@ -800,12 +820,20 @@ class ModelGatewayAgentTests(unittest.TestCase):
         exported = agent.export_config(str(export_path))
         self.assertTrue(exported["ok"])
         self.assertTrue(export_path.exists())
+        self.assertEqual(exported["profiles_exported"], 0)
+        self.assertIn("planner", exported["omitted_profiles"])
 
-        imported_agent = ModelGatewayAgent(interval_seconds=1)
-        imported = imported_agent.import_config(str(export_path), merge=False)
-        self.assertTrue(imported["ok"])
-        self.assertIn("planner", imported_agent.agent_profiles)
-        self.assertIn("filesystem", imported_agent.mcp_servers)
+        with tempfile.TemporaryDirectory() as other_root:
+            prior_root = os.environ["BOSSFORGE_ROOT"]
+            os.environ["BOSSFORGE_ROOT"] = other_root
+            try:
+                imported_agent = ModelGatewayAgent(interval_seconds=1)
+                imported = imported_agent.import_config(str(export_path), merge=False)
+                self.assertTrue(imported["ok"])
+                self.assertNotIn("planner", imported_agent.agent_profiles)
+                self.assertIn("filesystem", imported_agent.mcp_servers)
+            finally:
+                os.environ["BOSSFORGE_ROOT"] = prior_root
 
     def test_export_import_yaml_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -822,11 +850,41 @@ class ModelGatewayAgentTests(unittest.TestCase):
         exported = agent.export_config(str(export_path), format_hint="yaml")
         self.assertTrue(exported["ok"])
         self.assertTrue(export_path.exists())
+        self.assertEqual(exported["profiles_exported"], 0)
+        self.assertIn("scribe", exported["omitted_profiles"])
 
-        imported_agent = ModelGatewayAgent(interval_seconds=1)
-        imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
-        self.assertTrue(imported["ok"])
-        self.assertIn("scribe", imported_agent.agent_profiles)
+        with tempfile.TemporaryDirectory() as other_root:
+            prior_root = os.environ["BOSSFORGE_ROOT"]
+            os.environ["BOSSFORGE_ROOT"] = other_root
+            try:
+                imported_agent = ModelGatewayAgent(interval_seconds=1)
+                imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
+                self.assertTrue(imported["ok"])
+                self.assertNotIn("scribe", imported_agent.agent_profiles)
+            finally:
+                os.environ["BOSSFORGE_ROOT"] = prior_root
+
+    def test_import_config_rejects_embedded_agent_profiles(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        payload = {
+            "schema_version": 1,
+            "endpoints": {"ollama": {"provider": "ollama"}},
+            "profiles": {
+                "smuggled_agent": {
+                    "name": "smuggled_agent",
+                    "endpoint": "ollama",
+                    "system": "Should only travel sealed.",
+                }
+            },
+            "mcp_servers": {},
+        }
+        source = Path(self.tmp.name) / "forbidden_agent_import.json"
+        source.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        imported = agent.import_config(str(source), merge=False)
+
+        self.assertFalse(imported["ok"])
+        self.assertIn("sealed package install", imported["message"])
 
     def test_discover_travel_targets_command(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -923,6 +981,66 @@ class ModelGatewayAgentTests(unittest.TestCase):
         sealed_blob = gate_file.read_text(encoding="utf-8").strip()
         self.assertTrue(len(sealed_blob) > 20)
         self.assertNotIn("\"agent_name\":\"gatekeeper\"", sealed_blob)
+
+    def test_agent_profiles_store_is_encrypted_at_rest(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="sealed_store",
+            endpoint="ollama",
+            system_prompt="Never leave this in plaintext.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        raw = agent.profiles_path.read_text(encoding="utf-8")
+        self.assertIn('"kind": "bossforge-agent-profile-store"', raw)
+        self.assertNotIn("Never leave this in plaintext.", raw)
+        self.assertNotIn('"sealed_store"', raw)
+
+    def test_encrypted_profile_store_loads_in_new_gateway_instance(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="reloadable",
+            endpoint="ollama",
+            system_prompt="Only readable through the gateway.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        fresh = ModelGatewayAgent(interval_seconds=1)
+        self.assertIn("reloadable", fresh.agent_profiles)
+        self.assertEqual(
+            fresh.agent_profiles["reloadable"]["system"],
+            "Only readable through the gateway.",
+        )
+
+    def test_plaintext_profile_store_migrates_to_encrypted_format(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        legacy_profiles = {
+            "legacy_runner": {
+                "name": "legacy_runner",
+                "endpoint": "ollama",
+                "system": "Legacy plaintext profile.",
+                "temperature": 0.2,
+                "max_tokens": 500,
+                "tools": [],
+            }
+        }
+        agent.profiles_path.write_text(json.dumps(legacy_profiles, indent=2), encoding="utf-8")
+
+        migrated = ModelGatewayAgent(interval_seconds=1)
+        self.assertIn("legacy_runner", migrated.agent_profiles)
+        raw = migrated.profiles_path.read_text(encoding="utf-8")
+        self.assertIn('"kind": "bossforge-agent-profile-store"', raw)
+        self.assertNotIn("Legacy plaintext profile.", raw)
+
+        loaded, migrated_flag = load_agent_profiles_store(migrated.profiles_path, migrated.node_id)
+        self.assertFalse(migrated_flag)
+        self.assertIn("legacy_runner", loaded)
 
     def test_created_agent_carries_stage1_capsule_metadata(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
