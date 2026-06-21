@@ -19,6 +19,7 @@ modules/runeforge_provider/models/
 build/
 dist/
 releases/
+installer/payload/
 *.spec
 obj/
 bin/
