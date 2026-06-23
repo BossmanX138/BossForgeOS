@@ -461,13 +461,15 @@ class RuneforgeAgent(PrimeAgent):
         # Confirmation is required, but command code is not.
         return {"close_app", "set_volume"}
 
+    def _bosskey_plus_command_code_action_types(self) -> set[str]:
+        return set()
+
+    def _bosskey_required_action_types(self) -> set[str]:
+        return set()
+
     def _command_code_required_action_types(self) -> set[str]:
         configured = set(self._high_risk_action_types())
-        # Explicit carve-out: close_app only needs confirmation, not command code.
-        configured.discard("close_app")
-        # Volume changes are confirmation-level, not command-code level.
-        configured.discard("set_volume")
-        # Secret/privileged scopes should require command code.
+        configured.difference_update(self._confirmation_only_action_types())
         configured.update({
             "grant_permission",
             "revoke_permission",
@@ -985,6 +987,7 @@ class RuneforgeAgent(PrimeAgent):
         if not action_type:
             return {"ok": False, "message": "action_type is required"}
 
+        requires_bosskey = bool(args.get("requires_bosskey", action_type in self._bosskey_required_action_types()))
         requires_command_code = bool(args.get("requires_command_code", action_type in self._command_code_required_action_types()))
         pending = {
             "type": "os_action",
@@ -992,6 +995,7 @@ class RuneforgeAgent(PrimeAgent):
             "action": action,
             "spoken_text": str(args.get("spoken_text", "")).strip(),
             "source": str(args.get("source", "voice")).strip() or "voice",
+            "requires_bosskey": requires_bosskey,
             "requires_command_code": requires_command_code,
         }
         self._save_pending_approval(pending)
@@ -1394,11 +1398,30 @@ class RuneforgeAgent(PrimeAgent):
 
         action_type = str(action.get("action_type", "")).strip()
         confirmed = bool(args.get("approved", False) or args.get("confirmed", False))
+        requires_bosskey = False
+        requires_command_code = action_type in self._command_code_required_action_types()
         if not confirmed:
-            if action_type in self._command_code_required_action_types():
-                return self.request_os_action_approval({"action": action, "source": "command", "requires_command_code": True})
+            if requires_bosskey or requires_command_code:
+                return self.request_os_action_approval(
+                    {
+                        "action": action,
+                        "source": "command",
+                        "requires_bosskey": requires_bosskey,
+                        "requires_command_code": requires_command_code,
+                    }
+                )
             if action_type in self._confirmation_only_action_types():
                 return self.request_os_action_approval({"action": action, "source": "command", "requires_command_code": False})
+
+        if requires_command_code and not command_code:
+            return self.request_os_action_approval(
+                {
+                    "action": action,
+                    "source": "command",
+                    "requires_bosskey": requires_bosskey,
+                    "requires_command_code": True,
+                }
+            )
 
         cli_args = ["--action-json", json.dumps(action), "--agent", "runeforge"]
         if command_code:

@@ -6616,6 +6616,7 @@ def auth_launch_ticket_exchange():
         "targetApp": target_app,
         "launchTicketId": ticket_id,
         "issuedAt": handoff.get("ts"),
+        "bosskey": handoff.get("bosskey") if isinstance(handoff.get("bosskey"), dict) else {},
         "source": "ass",
     }
     _ASS_CONSUMED_LAUNCH_TICKETS.add(ticket_id)

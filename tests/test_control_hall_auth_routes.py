@@ -68,6 +68,29 @@ class ControlHallAuthRouteTests(unittest.TestCase):
         self.assertFalse(payload["ok"])
         self.assertIn("already been used", payload["message"])
 
+    def test_launch_ticket_exchange_preserves_bosskey_authorization(self) -> None:
+        handoff = _encode_handoff(
+            {
+                "userId": "boss",
+                "username": "boss",
+                "roles": ["launcher.user"],
+                "launchTicketId": "ticket-123",
+                "targetApp": "bossforgeos",
+                "ts": int(time.time()),
+                "bosskey": {"packageId": "pkg-1", "authorizedAt": int(time.time()), "proofScope": "operational"},
+            }
+        )
+
+        with patch.dict("os.environ", {"ASS_SESSION_HANDOFF_B64": handoff}, clear=False):
+            res = self.client.post(
+                "/api/auth/launch-ticket/exchange",
+                json={"ticketId": "ticket-123", "targetApp": "bossforgeos"},
+            )
+
+        self.assertEqual(res.status_code, 200)
+        payload = res.get_json()
+        self.assertEqual(payload["session"]["bosskey"]["packageId"], "pkg-1")
+
     def test_launch_ticket_exchange_rejects_missing_identity(self) -> None:
         handoff = _encode_handoff(
             {
