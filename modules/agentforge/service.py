@@ -33,25 +33,35 @@ def list_agent_profiles() -> dict[str, Any]:
 
 
 def _sealed_summary(name: str, profile: dict[str, Any]) -> dict[str, Any]:
+    model_card = profile.get("agent_card") if isinstance(profile.get("agent_card"), dict) else build_public_identity_card(profile)
     return {
         "ok": True,
         "agent": name,
         "disclosure_posture": str(profile.get("disclosure_posture", "hidden")).strip().lower() or "hidden",
         "sealed": True,
+        "view_policy": "model_card_only_outside_origin_forge",
+        "message": "Model card only. Full profile view is restricted to the forge of creation.",
+        "full_view_available_at_origin_forge": True,
         "public_identity_card": build_public_identity_card(profile),
+        "model_card": model_card,
     }
 
 
 def view_agent_profile(name: str, viewer_id: str = "", viewer_channel: str = "") -> dict[str, Any]:
     key = str(name or "").strip().lower()
-    profiles = _gateway().list_agent_profiles()
+    gateway = _gateway()
+    profiles = gateway.list_agent_profiles()
     profile = profiles.get(key)
     if not isinstance(profile, dict):
         return {"ok": False, "message": f"agent not found: {key}"}
     summary = _sealed_summary(key, profile)
-    posture = str(profile.get("disclosure_posture", "hidden")).strip().lower()
+    posture = str(profile.get("disclosure_posture", "hidden")).strip().lower() or "hidden"
+    if posture != "non_hidden":
+        return summary
     channel = str(viewer_channel or "").strip().lower()
-    if posture != "non_hidden" or not str(viewer_id or "").strip() or not TRUSTED_VIEWER_CHANNELS.get(channel, False):
+    created_by_node = str(profile.get("created_by_node", "")).strip()
+    forge_of_creation = created_by_node and created_by_node == getattr(gateway, "node_id", "")
+    if not str(viewer_id or "").strip() or not TRUSTED_VIEWER_CHANNELS.get(channel, False) or not forge_of_creation:
         return summary
     return {
         "ok": True,

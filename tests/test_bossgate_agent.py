@@ -8,6 +8,7 @@ import json
 
 from core.agents.bossgate_agent import BossGateCommandAgent
 from core.agents.model_gateway_agent import ModelGatewayAgent
+from core.security.agent_profile_store import load_agent_profiles_store
 
 
 class BossGateCommandAgentTests(unittest.TestCase):
@@ -191,7 +192,10 @@ class BossGateCommandAgentTests(unittest.TestCase):
         self.assertTrue(packaged["ok"])
         package_doc = json.loads(Path(packaged["package_file"]).read_text(encoding="utf-8"))
         self.assertIn("envelope", package_doc)
-        profiles = json.loads((Path(self.tmp.name) / "bus" / "state" / "model_profiles.json").read_text(encoding="utf-8"))
+        profiles, _ = load_agent_profiles_store(
+            Path(self.tmp.name) / "bus" / "state" / "model_profiles.json",
+            gateway.node_id,
+        )
         secure_address = str(profiles["addrcheck"].get("secure_address", ""))
         self.assertTrue(secure_address.startswith("*") and secure_address.endswith("*"))
 

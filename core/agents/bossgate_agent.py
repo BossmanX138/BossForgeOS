@@ -24,6 +24,10 @@ from core.connectors.bossgate_connector import (
 )
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 from core.security.bossgate_authorization import BossGateAuthorizationRegistry
+from core.security.agent_profile_store import (
+    load_agent_profiles_store,
+    save_agent_profiles_store,
+)
 
 SUPER_GATE_TARGET_TYPES = {"bridgebase_alpha", "ass", "bossforgeos"}
 
@@ -119,23 +123,13 @@ class BossGateCommandAgent:
         return generated
 
     def _load_agent_profiles(self) -> Dict[str, Dict[str, Any]]:
-        if not self.profiles_path.exists():
-            return {}
-        try:
-            raw = json.loads(self.profiles_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-        if not isinstance(raw, dict):
-            return {}
-        out: Dict[str, Dict[str, Any]] = {}
-        for k, v in raw.items():
-            if isinstance(v, dict):
-                out[str(k).strip().lower()] = dict(v)
-        return out
+        profiles, requires_migration = load_agent_profiles_store(self.profiles_path, self.node_id)
+        if requires_migration:
+            self._save_agent_profiles(profiles)
+        return profiles
 
     def _save_agent_profiles(self, profiles: Dict[str, Dict[str, Any]]) -> None:
-        self.profiles_path.parent.mkdir(parents=True, exist_ok=True)
-        self.profiles_path.write_text(json.dumps(profiles, indent=2), encoding="utf-8")
+        save_agent_profiles_store(self.profiles_path, profiles, self.node_id)
 
     def _load_replay_tokens(self) -> set[str]:
         if not self.replay_tokens_path.exists():
