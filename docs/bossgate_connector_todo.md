@@ -14,6 +14,9 @@ Owner: `codemage` (background implementation owner)
 - [ ] (BG-001) Align protocol/connector docs (`bossgate_protocol.md` + `bossgate_connector.md`) with one canonical command and feature matrix.
 - [ ] (BG-002) Add protocol version table (`v1-prototype`, `v1-pilot`) and compatibility notes.
 - [ ] (BG-003) Add a command-to-test mapping section for all BossGate commands.
+- [ ] (BG-034) Finalize and publish the BossGate-native platform contract (`bossgate_v1_platform_requirements.md`) across protocol, connector, and roadmap references.
+- [ ] (BG-035) Define the protected-action policy matrix for BossForgeOS, A.S.S., Runeforge, and Control Hall, including `bosskey_only` versus `bosskey_plus_command_code`.
+- [ ] (BG-036) Define the required BossGate runtime module contract and forge compliance checklist for `bossgate_native`, `bossgate_connected`, and `bossgate_observable` targets.
 
 ## Phase 1: Secure Transfer End-to-End
 

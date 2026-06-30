@@ -8,6 +8,12 @@ Primary operator reference:
 
 1. `docs/bossgate_operator_runbook.md`
 2. `docs/release_notes_2026-06-13_bossgate_connector_milestone.md`
+3. `docs/bossgate_v1_platform_requirements.md`
+
+The platform-level definition of what it means for a forge or system to
+"speak BossGate" is maintained in:
+
+1. [docs/bossgate_v1_platform_requirements.md](./bossgate_v1_platform_requirements.md)
 
 Every BossCrafts agent is expected to carry a BossGate capability module that can:
 
@@ -104,6 +110,7 @@ Current implementation status is prototype-level.
    - Expanded package metadata disclosure policies beyond the enforced `none` default
    - Rental/sale license flow and billing integration
    - Agent runtime attestation + full audit stream
+   - Frozen cross-forge BossGate-native compliance contract
 
 ## Canonical Completion Tracker
 

@@ -4,6 +4,11 @@
 
 This document defines a draft protocol shape for BossGate secure transport and connector orchestration.
 
+The broader platform contract for deciding whether a forge or system truly
+"speaks BossGate" is defined in:
+
+1. [docs/bossgate_v1_platform_requirements.md](./bossgate_v1_platform_requirements.md)
+
 Execution and completion tracking for protocol implementation is maintained in:
 
 1. [docs/bossgate_connector_todo.md](./bossgate_connector_todo.md)
