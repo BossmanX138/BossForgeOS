@@ -1,0 +1,30 @@
+---
+name: My Config
+version: 1.0.0
+schema: v1
+models:
+  - name: devstral
+    provider: lmstudio
+    model: mistralai/devstral-small-2-2512
+    apiBase: http://192.168.4.115:1234/v1
+    apiKey: not-needed
+    roles:
+      - chat
+      - autocomplete
+      - edit
+      - apply
+  - name: Embeddings Auto
+    provider: openai
+    model: qwen2.5-embeddings
+    apiBase: http://localhost:12434/engines/v1
+    apiKey: not-needed
+    roles:
+      - embeddings
+
+  - name: LM Studio - Auto Embeddings
+    provider: openai
+    model: auto
+    apiBase: http://localhost:1234/v1
+    apiKey: lm-studio
+    roles:
+      - embeddings
