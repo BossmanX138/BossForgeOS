@@ -1,0 +1,138 @@
+<style>
+  :root {
+    --bg:#090a0c; --panel:#141417; --line:#2c2d33; --gold:#d4a857;
+    --amber:#ffb84d; --red:#ff4d4d; --green:#39ff88; --text:#eef0f5; --muted:#a9b1c1;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; color:var(--text);
+    font:14px/1.45 Inter,ui-sans-serif,system-ui,sans-serif;
+    background:radial-gradient(circle at 12% 0,rgba(212,168,87,.14),transparent 32rem),var(--bg);
+  }
+  .page { max-width:1360px; margin:auto; padding:36px; }
+  .eyebrow { color:var(--gold); font-size:11px; font-weight:850; letter-spacing:.18em; text-transform:uppercase; }
+  h1 { margin:7px 0; font-size:clamp(28px,4vw,46px); letter-spacing:-.04em; }
+  .intro { max-width:850px; margin:0 0 26px; color:var(--muted); font-size:16px; }
+  .deck {
+    padding:14px; border:1px solid #25262b; border-radius:18px; background:#0c0d0f;
+    box-shadow:0 24px 80px rgba(0,0,0,.36);
+  }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:4px 3px 14px; }
+  .brand { font-size:11px; font-weight:900; letter-spacing:.1em; }
+  .brand span { color:var(--gold); }
+  .live { color:var(--amber); font-size:10px; font-weight:850; }
+  .states { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .panel {
+    position:relative; min-height:330px; padding:16px;
+    border:1px solid var(--line); border-left:9px solid var(--gold); border-radius:10px;
+    background:var(--panel);
+    transition:transform 160ms ease,box-shadow 160ms ease,border-color 120ms ease;
+  }
+  .panel:hover {
+    border-top-color:var(--green); border-right-color:var(--green); border-bottom-color:var(--green);
+    transform:translateY(-3px) scale(1.012);
+    box-shadow:0 16px 32px rgba(0,0,0,.38),0 0 18px rgba(57,255,136,.16);
+  }
+  .panel.stale { border-top-color:var(--amber); border-right-color:var(--amber); border-bottom-color:var(--amber); }
+  .panel.failed {
+    border-top-color:var(--red); border-right-color:var(--red); border-bottom-color:var(--red);
+    background:linear-gradient(110deg,rgba(255,77,77,.07),transparent 55%),var(--panel);
+  }
+  .label { color:#bdc2ce; font-size:9px; font-weight:850; letter-spacing:.13em; text-transform:uppercase; }
+  .head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  h2 { margin:6px 0 2px; font-size:21px; }
+  .sub { color:#858c99; font-size:10px; }
+  .badge {
+    padding:5px 7px; border-radius:999px; white-space:nowrap;
+    font-size:8px; font-weight:900; letter-spacing:.08em;
+  }
+  .badge.amber { color:#ffd17a; background:#392e19; }
+  .badge.neutral { color:#c5cad4; background:#292a30; }
+  .badge.red { color:#ff9a9a; background:#3a1f23; }
+  .value { margin:22px 0 2px; font-size:44px; font-weight:900; letter-spacing:-.04em; }
+  .frozen { color:#bbb6a7; }
+  .empty { color:#858c99; font-size:24px; }
+  .message {
+    margin-top:18px; padding:11px; border:1px solid #303138; border-radius:8px;
+    background:#101115; color:#c7cbd4; font-size:11px;
+  }
+  .message strong { display:block; margin-bottom:4px; color:var(--text); }
+  .timestamp { display:flex; align-items:center; justify-content:space-between; margin-top:14px; color:#8d94a2; font-size:10px; }
+  .actions { display:flex; gap:8px; margin-top:18px; }
+  .button {
+    flex:1; padding:9px 10px; border:1px solid #484a52; border-radius:7px;
+    background:#1c1d22; color:var(--text); font-size:10px; font-weight:800; text-align:center;
+  }
+  .button.primary { border-color:#8e7139; background:#312817; color:#edc570; }
+  .rule {
+    display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:start;
+    margin-top:20px; padding:14px 16px; border-left:9px solid var(--gold); background:rgba(212,168,87,.07);
+  }
+  .rule strong { color:var(--gold); }
+  @media (max-width:900px) { .states { grid-template-columns:1fr; } }
+</style>
+
+<main class="page">
+  <div class="eyebrow">Command Deck · Data Reliability</div>
+  <h1>Three states that should never look the same.</h1>
+  <p class="intro">The dashboard keeps useful context when possible, but every panel states exactly what happened in text. Hover still turns the three thin edges neon green without changing the permanent gold identity rail.</p>
+
+  <section class="deck">
+    <div class="topbar">
+      <div class="brand"><span>BOSSFORGE</span> / CONTROL HALL</div>
+      <div class="live">● 2 DATA SOURCES NEED ATTENTION</div>
+    </div>
+
+    <div class="states">
+      <article class="panel stale">
+        <div class="head">
+          <div><div class="label">System Load</div><h2>Last valid reading</h2></div>
+          <span class="badge amber">STALE</span>
+        </div>
+        <div class="value frozen">67%</div>
+        <div class="sub">Value retained for context, not presented as current</div>
+        <div class="message">
+          <strong>Updates are delayed</strong>
+          The metrics feed missed two refresh intervals. The last trustworthy value remains visible.
+        </div>
+        <div class="timestamp"><span>Last updated</span><strong>4 min ago</strong></div>
+        <div class="actions"><div class="button primary">Retry now</div><div class="button">Diagnostics</div></div>
+      </article>
+
+      <article class="panel">
+        <div class="head">
+          <div><div class="label">Mission Queue</div><h2>No matching data</h2></div>
+          <span class="badge neutral">NO DATA</span>
+        </div>
+        <div class="value empty">No queued missions</div>
+        <div class="sub">The request succeeded and returned an empty result</div>
+        <div class="message">
+          <strong>Nothing is broken</strong>
+          No missions currently match this panel's active filters.
+        </div>
+        <div class="timestamp"><span>Checked</span><strong>12 sec ago</strong></div>
+        <div class="actions"><div class="button primary">Clear filters</div><div class="button">Refresh</div></div>
+      </article>
+
+      <article class="panel failed">
+        <div class="head">
+          <div><div class="label">Agent Network</div><h2>Connection lost</h2></div>
+          <span class="badge red">FAILED</span>
+        </div>
+        <div class="value empty" style="color:#ff8f8f">Unavailable</div>
+        <div class="sub">Current agent state cannot be verified</div>
+        <div class="message">
+          <strong>Agent gateway did not respond</strong>
+          Live status is unavailable. No previous values are shown because they could imply unsafe availability.
+        </div>
+        <div class="timestamp"><span>Failed at</span><strong>16:24:08</strong></div>
+        <div class="actions"><div class="button primary">Reconnect</div><div class="button">Diagnostics</div></div>
+      </article>
+    </div>
+  </section>
+
+  <div class="rule">
+    <strong>Proposed rule</strong>
+    <span><b>Stale</b> retains the last valid value with age attached. <b>No data</b> explains that the query worked but returned nothing. <b>Failed</b> withholds misleading values and provides recovery actions.</span>
+  </div>
+</main>

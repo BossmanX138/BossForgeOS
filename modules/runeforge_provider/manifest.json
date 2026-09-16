@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "module_id": "runeforge_provider",
+  "display_name": "Runeforge Provider",
+  "version": "1.0.0",
+  "standalone_entrypoint": "powershell -NoProfile -ExecutionPolicy Bypass -File modules/runeforge_provider/start_runeforge_server.ps1",
+  "orchestrator_connector": {
+    "command": [
+      "python",
+      "-m",
+      "modules.runeforge_provider.register_with_agentforge"
+    ],
+    "health_endpoint": "http://127.0.0.1:8008/health",
+    "event_channel": "runeforge_provider.events"
+  },
+  "capabilities": [
+    "inference.chat",
+    "inference.completion",
+    "inference.voice",
+    "inference.tools",
+    "agent.profile"
+  ],
+  "notes": "Official local inference provider for BossForgeOS and AgentForge."
+}

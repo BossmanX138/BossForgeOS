@@ -13,12 +13,16 @@ __pycache__/
 
 # Local model payloads and caches
 .models/
+modules/runeforge_provider/models/
 
 # Build and packaging outputs
 build/
 dist/
 releases/
+installer/payload/
 *.spec
+obj/
+bin/
 
 # Local bus/state/event artifacts
 bus/
@@ -31,12 +35,41 @@ archivist_onboarded_projects.json
 # Logs
 *.log
 build_exe.log
+zicorp-ai-logs.json
+modules/runeforge_provider/logs/*.jsonl
+modules/runeforge_provider/runeforge_memory_store.json
+
+# VS/VSCode and workspace noise
+.vscode/
+*.code-workspace
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.recipe
+*.tlog
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
+**/build_vs/
+**/x64/
+**/Release/
+**/Debug/
+
+# DataForge generated artifacts
+modules/DataForge/.continue/
+modules/DataForge/ignorelogs/
+modules/DataForge/combined_mlnet.csv
+modules/DataForge/*.csv
 
 # OS/editor noise
 .DS_Store
 Thumbs.db
+docs/*.code-workspace
 
 # Shippable agent voice assets (intentionally versioned)
 !*_voice.wav
 !voices/
 !voices/**
+
+# Local Superpowers worktrees
+.worktrees/

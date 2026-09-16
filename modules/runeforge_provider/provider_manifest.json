@@ -1,0 +1,27 @@
+{
+  "provider_id": "runeforge_local",
+  "display_name": "Runeforge Official Local Provider",
+  "version": "1.0.0",
+  "base_url": "http://127.0.0.1:8008/v1",
+  "health_url": "http://127.0.0.1:8008/health",
+  "capabilities_endpoint": "/v1/provider/capabilities",
+  "auth": {
+    "type": "x-api-key",
+    "header": "x-api-key"
+  },
+  "compatibility": {
+    "api_style": "openai-compatible",
+    "chat_completions": "/v1/chat/completions",
+    "completions": "/v1/completions",
+    "models": "/v1/models"
+  },
+  "gifted_runtime_template": {
+    "template_id": "bossforge-ai-runner-neutral",
+    "version": "gifted-runtime-v1",
+    "gifted_by": "runeforge",
+    "runner_kind": "bossforge_ai_runner",
+    "contract_version": "1.0",
+    "signature_scheme": "bossforge-runner-template-dev-integrity-v1",
+    "signature": "b8c2a909671d3a4e2c8f045ae3a883531d686269c672f8ac20d1c0e6edef9111"
+  }
+}

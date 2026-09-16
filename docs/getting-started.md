@@ -8,7 +8,31 @@
 ## Install
 
 1. Install dependencies:
-   - pip install -r requirements.txt
+   - `pip install -r docs/requirements.txt`
+
+## Reproducible Dev Runtime (Windows)
+
+Use this when global `python`/`pip` setup is inconsistent.
+
+1. Create isolated runtime:
+   - `C:\Users\%USERNAME%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m venv .runtime\devpy`
+2. Upgrade packaging tools:
+   - `.runtime\devpy\Scripts\python.exe -m pip install --upgrade pip setuptools wheel`
+3. Install minimum runtime/test dependencies:
+   - `.runtime\devpy\Scripts\python.exe -m pip install flask werkzeug psutil pyyaml pandas duckdb requests msal oauthlib`
+4. Quick import verification:
+   - `.runtime\devpy\Scripts\python.exe -c "import flask, werkzeug, psutil, yaml, pandas, duckdb, requests, msal, oauthlib; print('ok')"`
+
+## Verification Commands
+
+1. DataForge module smoke:
+   - `.runtime\devpy\Scripts\python.exe -m modules.DataForge.main`
+2. Launcher help smoke:
+   - `.runtime\devpy\Scripts\python.exe -m launcher.bossforge_launcher --help`
+3. Full tests:
+   - `.runtime\devpy\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -q`
+4. Strict warning-clean tests:
+   - `.runtime\devpy\Scripts\python.exe -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q`
 
 ## Launch Services
 
@@ -76,21 +100,13 @@ Example API recall:
    - Validate profiles using standard JSON schema tools.
    - Example profiles: `voices/codemage/profile.json`, `voices/runeforge/profile.json`
 
-## Build a Windows EXE
+## Launch BossForgeOS
 
-1. Build executable launcher:
-   - powershell -ExecutionPolicy Bypass -File .\build_launcher_exe.ps1
-2. Run executable:
-   - .\dist\BossForgeLauncher.exe
-
-## Package a Versioned Release
-
-1. Build and package a release bundle:
-   - powershell -ExecutionPolicy Bypass -File .\package_release.ps1 -Version 0.1.0
-2. Find release artifact:
-   - .\releases\v0.1.0\BossForgeLauncher-v0.1.0.exe
-3. Desktop shortcut created:
-   - BossForge Launcher.lnk
+1. Start Control Hall only:
+   - .\scripts\start_control_hall.cmd
+2. Start the full local orchestrator:
+   - .\scripts\start_bossforge.cmd
+3. For the intended user-facing flow, launch BossForgeOS from A.S.S. after CBCAA login.
 
 ## Use CLI
 

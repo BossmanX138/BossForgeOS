@@ -2,9 +2,17 @@ import socket
 import json
 import threading
 import time
+import secrets
+import hashlib
+import hmac
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from urllib.parse import urlparse
 from urllib import request
+import re
+import base64
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 BOSSGATE_PORT = 50505
 BOSSGATE_BEACON = b'BOSSGATE-ASS-PAIRING'
@@ -26,7 +34,7 @@ TARGET_SIGNATURES = {
     "ass": (
         "a.s.s",
         "ass",
-        "autonomous security system",
+        "anvil secured shuttle",
     ),
     "bossforgeos": (
         "bossforgeos",
@@ -37,6 +45,23 @@ TARGET_SIGNATURES = {
         "bridgebase alpha",
     ),
 }
+
+METADATA_VISIBILITY_LEVELS = {
+    "none",
+    "id_card_only",
+    "model_card_only",
+    "id_and_model_card",
+}
+
+SECURE_ADDRESS_WORDLIST = (
+    "anvil", "arc", "atlas", "axiom", "beacon", "blaze", "bridge", "cipher",
+    "codemage", "comet", "core", "delta", "ember", "forge", "gate", "glint",
+    "haven", "helix", "ion", "jade", "keystone", "lumen", "matrix", "nova",
+    "onyx", "orbit", "phoenix", "pulse", "quartz", "quill", "raven", "rune",
+    "saber", "sentinel", "shuttle", "sigma", "spark", "spoke", "star", "titan",
+    "trace", "vector", "vertex", "warden", "zenith",
+)
+SECURE_ADDRESS_PATTERN = re.compile(r"^\*(?:[a-z]+(?:\*[a-z]+){6})\*$")
 
 
 def _normalize_url_for_scan(raw_url: str) -> str:
@@ -151,39 +176,50 @@ def _parse_presence_packet(data: bytes, sender_ip: str) -> dict[str, Any] | None
 def broadcast_presence(
     node_id: str,
     agents_provider: Callable[[], list[dict]] | None = None,
+    target_type: str = "bossgate_connector",
     interval_seconds: float = 2.0,
     stop_event: threading.Event | None = None,
 ) -> None:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    while stop_event is None or not stop_event.is_set():
-        agents = agents_provider() if callable(agents_provider) else []
-        packet = _build_presence_packet(node_id=node_id, agents=agents, target_type="bossgate_connector")
-        s.sendto(packet, ('<broadcast>', BOSSGATE_PORT))
-        time.sleep(max(0.2, float(interval_seconds)))
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        while stop_event is None or not stop_event.is_set():
+            agents = agents_provider() if callable(agents_provider) else []
+            packet = _build_presence_packet(node_id=node_id, agents=agents, target_type=target_type)
+            s.sendto(packet, ('<broadcast>', BOSSGATE_PORT))
+            time.sleep(max(0.2, float(interval_seconds)))
+    finally:
+        s.close()
 
 
-def broadcast_beacon(node_id: str | None = None, agents_provider: Callable[[], list[dict]] | None = None):
+def broadcast_beacon(
+    node_id: str | None = None,
+    agents_provider: Callable[[], list[dict]] | None = None,
+    target_type: str = "bossgate_connector",
+):
     node_name = (node_id or socket.gethostname() or "unknown-node").strip()
-    broadcast_presence(node_id=node_name, agents_provider=agents_provider)
+    broadcast_presence(node_id=node_name, agents_provider=agents_provider, target_type=target_type)
 
 
 def listen_for_beacons(timeout=5):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    s.bind(('', BOSSGATE_PORT))
-    s.settimeout(timeout)
-    found: dict[tuple[str, str], dict[str, Any]] = {}
-    start = time.time()
-    while time.time() - start < timeout:
-        try:
-            data, addr = s.recvfrom(4096)
-            parsed = _parse_presence_packet(data=data, sender_ip=addr[0])
-            if parsed is not None:
-                found[(parsed["address"], parsed["node_id"])] = parsed
-        except socket.timeout:
-            break
-    return list(found.values())
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.bind(('', BOSSGATE_PORT))
+        s.settimeout(timeout)
+        found: dict[tuple[str, str], dict[str, Any]] = {}
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                data, addr = s.recvfrom(4096)
+                parsed = _parse_presence_packet(data=data, sender_ip=addr[0])
+                if parsed is not None:
+                    found[(parsed["address"], parsed["node_id"])] = parsed
+            except socket.timeout:
+                break
+        return list(found.values())
+    finally:
+        s.close()
 
 
 def discover_transfer_targets(timeout=5, assistance_only: bool = False):
@@ -259,8 +295,358 @@ def _http_options_headers(url: str, timeout: float = 2.0):
     return status, headers
 
 
-# --- REST Endpoint Scanning ---
-def scan_rest_endpoints(base_url):
+def generate_secure_address(wordlist: tuple[str, ...] | list[str] | None = None) -> str:
+    words = tuple(str(w).strip().lower() for w in (wordlist or SECURE_ADDRESS_WORDLIST) if str(w).strip())
+    if len(words) < 7:
+        raise ValueError("wordlist must contain at least 7 words")
+    selected = [secrets.choice(words) for _ in range(7)]
+    return "*" + "*".join(selected) + "*"
+
+
+def is_valid_secure_address(address: str) -> bool:
+    return bool(SECURE_ADDRESS_PATTERN.match((address or "").strip().lower()))
+
+
+def apply_metadata_visibility_profile(
+    profile: str | None,
+    agent_id_card: dict[str, Any] | None = None,
+    model_card_snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    normalized_profile = str(profile or "none").strip().lower()
+    if normalized_profile not in METADATA_VISIBILITY_LEVELS:
+        normalized_profile = "none"
+
+    result: dict[str, Any] = {
+        "profile": normalized_profile,
+        "agent_id_card": None,
+        "model_card_snapshot": None,
+    }
+    if normalized_profile in {"id_card_only", "id_and_model_card"}:
+        result["agent_id_card"] = dict(agent_id_card or {})
+    if normalized_profile in {"model_card_only", "id_and_model_card"}:
+        result["model_card_snapshot"] = dict(model_card_snapshot or {})
+    return result
+
+
+def _json_hash(payload: dict[str, Any]) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _derive_aes256_key(secret_key: str) -> bytes:
+    return hashlib.sha256(str(secret_key).encode("utf-8")).digest()
+
+
+def build_chunk_manifest(payload: str, chunk_size: int = 65536) -> dict[str, Any]:
+    encoded = str(payload).encode("utf-8")
+    safe_chunk_size = max(1, int(chunk_size))
+    chunks = []
+    for index, offset in enumerate(range(0, len(encoded), safe_chunk_size)):
+        chunk = encoded[offset : offset + safe_chunk_size]
+        chunks.append(
+            {
+                "index": index,
+                "offset": offset,
+                "size": len(chunk),
+                "sha256": hashlib.sha256(chunk).hexdigest(),
+            }
+        )
+    return {
+        "algorithm": "SHA-256",
+        "chunk_size": safe_chunk_size,
+        "chunk_count": len(chunks),
+        "payload_size": len(encoded),
+        "chunks": chunks,
+    }
+
+
+def validate_chunk_manifest(payload: str, manifest: dict[str, Any]) -> tuple[bool, str]:
+    if str(manifest.get("algorithm", "")).strip().upper() != "SHA-256":
+        return False, "unsupported chunk checksum algorithm"
+    try:
+        chunk_size = int(manifest.get("chunk_size", 0) or 0)
+        payload_size = int(manifest.get("payload_size", -1))
+        chunk_count = int(manifest.get("chunk_count", -1))
+    except (TypeError, ValueError):
+        return False, "invalid chunk manifest"
+    expected = build_chunk_manifest(payload, chunk_size=chunk_size)
+    if payload_size != expected["payload_size"]:
+        return False, "chunk payload size mismatch"
+    if chunk_count != expected["chunk_count"]:
+        return False, "chunk count mismatch"
+    chunks = manifest.get("chunks")
+    if not isinstance(chunks, list) or len(chunks) != expected["chunk_count"]:
+        return False, "invalid chunk manifest"
+    for index, expected_chunk in enumerate(expected["chunks"]):
+        chunk = chunks[index]
+        if not isinstance(chunk, dict):
+            return False, f"invalid chunk metadata at index {index}"
+        for field in ("index", "offset", "size"):
+            try:
+                value = int(chunk.get(field, -1))
+            except (TypeError, ValueError):
+                return False, "invalid chunk manifest"
+            if value != expected_chunk[field]:
+                return False, f"chunk {field} mismatch at index {index}"
+        if not hmac.compare_digest(str(chunk.get("sha256", "")), expected_chunk["sha256"]):
+            return False, f"chunk checksum mismatch at index {index}"
+    return True, "ok"
+
+
+def build_transfer_resume_plan(
+    envelope: dict[str, Any],
+    completed_chunk_indexes: list[int] | tuple[int, ...] | None = None,
+) -> dict[str, Any]:
+    manifest = envelope.get("chunk_manifest")
+    if not isinstance(manifest, dict):
+        raise ValueError("resume requires a chunk manifest")
+    chunk_count = int(manifest.get("chunk_count", -1))
+    if chunk_count < 0:
+        raise ValueError("resume requires a valid chunk count")
+    completed = sorted({int(index) for index in (completed_chunk_indexes or [])})
+    if any(index < 0 or index >= chunk_count for index in completed):
+        raise ValueError("completed chunk checkpoint is out of range")
+    pending = [index for index in range(chunk_count) if index not in completed]
+    return {
+        "version": 1,
+        "payload_hash": str(envelope.get("payload_hash", "")),
+        "chunk_count": chunk_count,
+        "completed_chunk_indexes": completed,
+        "pending_chunk_indexes": pending,
+        "next_chunk_index": pending[0] if pending else None,
+        "complete": len(pending) == 0,
+    }
+
+
+def validate_transfer_resume_plan(envelope: dict[str, Any], resume_plan: dict[str, Any]) -> tuple[bool, str]:
+    if int(resume_plan.get("version", 0) or 0) != 1:
+        return False, "unsupported resume plan version"
+    if str(resume_plan.get("payload_hash", "")) != str(envelope.get("payload_hash", "")):
+        return False, "resume payload hash mismatch"
+    try:
+        expected = build_transfer_resume_plan(
+            envelope,
+            completed_chunk_indexes=list(resume_plan.get("completed_chunk_indexes", [])),
+        )
+    except (TypeError, ValueError):
+        return False, "invalid resume chunk checkpoint"
+    for field in ("chunk_count", "completed_chunk_indexes", "pending_chunk_indexes", "next_chunk_index", "complete"):
+        if resume_plan.get(field) != expected[field]:
+            return False, f"resume {field} mismatch"
+    return True, "ok"
+
+
+def build_transfer_replay_token(envelope: dict[str, Any]) -> str:
+    encrypted_payload = str(envelope.get("encrypted_payload", ""))
+    nonce_source = encrypted_payload
+    try:
+        raw = base64.b64decode(encrypted_payload.encode("ascii"))
+        blob = json.loads(raw.decode("utf-8"))
+        if isinstance(blob, dict) and str(blob.get("nonce_b64", "")).strip():
+            nonce_source = str(blob.get("nonce_b64", "")).strip()
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        pass
+    return _json_hash(
+        {
+            "issuer": str(envelope.get("issuer", "")).strip(),
+            "nonce": nonce_source,
+        }
+    )
+
+
+def encrypt_json_payload(payload: dict[str, Any], secret_key: str, key_id: str = "") -> str:
+    key = _derive_aes256_key(secret_key)
+    aes = AESGCM(key)
+    nonce = secrets.token_bytes(12)
+    plaintext = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ciphertext = aes.encrypt(nonce, plaintext, associated_data=None)
+    blob = {
+        "version": 1,
+        "alg": "AES-256-GCM",
+        "key_id": str(key_id).strip() or "default",
+        "nonce_b64": base64.b64encode(nonce).decode("ascii"),
+        "ciphertext_b64": base64.b64encode(ciphertext).decode("ascii"),
+    }
+    return base64.b64encode(json.dumps(blob, separators=(",", ":")).encode("utf-8")).decode("ascii")
+
+
+def decrypt_json_payload(encoded_payload: str, secret_key: str | dict[str, str]) -> dict[str, Any]:
+    raw = base64.b64decode(str(encoded_payload).encode("ascii"))
+    blob = json.loads(raw.decode("utf-8"))
+    if not isinstance(blob, dict):
+        raise ValueError("encrypted payload blob must be an object")
+    if str(blob.get("alg", "")).strip().upper() != "AES-256-GCM":
+        raise ValueError("unsupported payload encryption algorithm")
+
+    nonce = base64.b64decode(str(blob.get("nonce_b64", "")).encode("ascii"))
+    ciphertext = base64.b64decode(str(blob.get("ciphertext_b64", "")).encode("ascii"))
+    key_id = str(blob.get("key_id", "default")).strip() or "default"
+    if isinstance(secret_key, dict):
+        resolved = str(secret_key.get(key_id, "")).strip() or str(secret_key.get("default", "")).strip()
+        if not resolved:
+            raise ValueError(f"no key available for key_id='{key_id}'")
+        key = _derive_aes256_key(resolved)
+    else:
+        key = _derive_aes256_key(secret_key)
+    aes = AESGCM(key)
+    plaintext = aes.decrypt(nonce, ciphertext, associated_data=None)
+    payload = json.loads(plaintext.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("decrypted payload must be an object")
+    return payload
+
+
+def build_transfer_envelope(
+    *,
+    agent_id: str,
+    agent_version: str,
+    issuer: str,
+    target_system_id: str,
+    encrypted_payload: str,
+    policy_ref: str,
+    secret_key: str,
+    expires_in_seconds: int = 300,
+    envelope_version: int = 1,
+    chunk_size: int = 65536,
+) -> dict[str, Any]:
+    created_at = datetime.now(timezone.utc)
+    expires_at = created_at + timedelta(seconds=max(1, int(expires_in_seconds)))
+
+    base = {
+        "envelope_version": int(envelope_version),
+        "agent_id": str(agent_id).strip(),
+        "agent_version": str(agent_version).strip(),
+        "issuer": str(issuer).strip(),
+        "target_system_id": str(target_system_id).strip(),
+        "created_at": created_at.isoformat(),
+        "expires_at": expires_at.isoformat(),
+        "cipher_suite": "AES-256-GCM",
+        "encrypted_payload": str(encrypted_payload),
+        "policy_ref": str(policy_ref).strip(),
+        "chunk_manifest": build_chunk_manifest(str(encrypted_payload), chunk_size=chunk_size),
+    }
+    base["payload_hash"] = _json_hash({"encrypted_payload": base["encrypted_payload"]})
+    message = _json_hash(base).encode("utf-8")
+    base["signature"] = hmac.new(str(secret_key).encode("utf-8"), message, hashlib.sha256).hexdigest()
+    return base
+
+
+def validate_transfer_envelope(
+    envelope: dict[str, Any],
+    secret_key: str,
+    replay_tokens: set[str] | None = None,
+) -> tuple[bool, str]:
+    required = {
+        "envelope_version", "agent_id", "agent_version", "issuer", "target_system_id",
+        "created_at", "expires_at", "cipher_suite", "encrypted_payload", "payload_hash",
+        "signature", "policy_ref",
+    }
+    missing = [field for field in required if field not in envelope]
+    if missing:
+        return False, f"missing fields: {', '.join(sorted(missing))}"
+
+    if str(envelope.get("cipher_suite", "")).strip().upper() != "AES-256-GCM":
+        return False, "unsupported cipher suite"
+
+    expected_hash = _json_hash({"encrypted_payload": str(envelope.get("encrypted_payload", ""))})
+    if str(envelope.get("payload_hash", "")) != expected_hash:
+        return False, "payload hash mismatch"
+
+    chunk_manifest = envelope.get("chunk_manifest")
+    if chunk_manifest is not None:
+        if not isinstance(chunk_manifest, dict):
+            return False, "invalid chunk manifest"
+        chunks_ok, chunks_reason = validate_chunk_manifest(str(envelope.get("encrypted_payload", "")), chunk_manifest)
+        if not chunks_ok:
+            return False, chunks_reason
+
+    signing_payload = {k: v for k, v in envelope.items() if k != "signature"}
+    expected_sig = hmac.new(
+        str(secret_key).encode("utf-8"),
+        _json_hash(signing_payload).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(str(envelope.get("signature", "")), expected_sig):
+        return False, "signature mismatch"
+
+    try:
+        expires_at = datetime.fromisoformat(str(envelope.get("expires_at", "")))
+    except ValueError:
+        return False, "invalid expires_at"
+    if datetime.now(timezone.utc) >= expires_at.astimezone(timezone.utc):
+        return False, "envelope expired"
+
+    if replay_tokens is not None:
+        replay_token = build_transfer_replay_token(envelope)
+        if replay_token in replay_tokens:
+            return False, "replay detected: encrypted payload nonce was already consumed"
+        replay_tokens.add(replay_token)
+
+    return True, "ok"
+
+
+# --- Secure Address and Communication ---
+#
+# Top-Tier Security Requirements:
+# - All address ledgers must be encrypted at rest using AES-256-GCM or equivalent.
+# - Encryption keys must be unique per BossGate, never hardcoded, and support rotation (integrate with secure key vaults if possible).
+# - All direct communications (encrypted or not) must use TLS 1.3+ with mutual authentication for encrypted comms.
+# - Secure address generation: each 7-word address must be generated using cryptographically secure random word selection, ensuring uniqueness and unpredictability.
+# - Tamper-evidence: ledgers should be protected with HMAC or digital signatures to detect unauthorized modification.
+# - Secure deletion and rotation: support for securely deleting addresses/keys and rotating them as needed (e.g., on agent retirement or compromise).
+# - Privacy boundaries: foreign agents/gates only contribute their own address, never their full ledger.
+# - All address lists are encrypted at rest and never transmitted in bulk.
+#
+# TODO: Implement AES-256-GCM encryption/decryption for ledger files.
+# TODO: Integrate with a secure key vault for key management and rotation.
+# TODO: Use TLS 1.3+ with mutual authentication for all encrypted direct comms.
+# TODO: Use os.urandom or secrets module for cryptographically secure address generation.
+# TODO: Add HMAC or digital signature to each ledger entry for tamper-evidence.
+# TODO: Implement secure deletion (e.g., file shredding) for retired addresses/keys.
+#
+# Address Ledger Protocol:
+# - Every BossGate keeps its own encrypted list of addresses it has traveled to or communicated with.
+# - Each home BossForge or Bridgebase has a BossGate with its own unique address.
+# - Prime BossGates (at BossForge or Bridgebase) maintain a master list, compiled from all agents/connections made by BossGates created at that location, plus addresses of foreign agents/gates encountered.
+# - When connecting to a foreign agent/gate, only the foreign address is added—never the full list of known addresses from the foreign side (privacy boundary).
+# - All address lists are encrypted at rest.
+# - Foreign agents/gates only contribute their own address, not their full ledger.
+# Every BossGate instance must have a secure address in the following format:
+#   *word1*word2*word3*word4*word5*word6*word7*
+# Each word is an English-language word (e.g., *codemage*star*fox*bravo*king*ice*executioner*).
+# The address is derived from the agent connector and serves as the point of origin.
+# All direct (encrypted or non-encrypted) communications must include this address for traceability.
+# This enables the system to track who sent each message and from where.
+#
+# Example (to be enforced in future implementations):
+#   agent_secure_address = '*codemage*star*fox*bravo*king*ice*executioner*'
+#   message = {
+#       'from': agent_secure_address,
+#       'to': destination_address,
+#       'payload': ...
+#   }
+# Each BossGate instance must have a secure address for encrypted direct communication.
+# Two skills gate communication:
+#   - 'bossgate_coms_officer': required for encrypted comms (TLS, mutual auth, etc.)
+#   - 'bossgate_coms_array': required for non-encrypted comms (plain TCP/UDP)
+# Future direct agent-to-agent or agent-to-forge communication must check these skills.
+#
+# Example usage (to be implemented):
+#   if 'bossgate_coms_officer' in agent_skills:
+#       # Allow encrypted comms
+#   elif 'bossgate_coms_array' in agent_skills:
+#       # Allow non-encrypted comms
+def scan_rest_endpoints(base_url, agent_skills=None):
+    """
+    Skill-gated: Requires 'bossgate_scanning' in agent_skills to proceed.
+    """
+    if agent_skills is not None and "bossgate_scanning" not in agent_skills:
+        return {
+            "ok": False,
+            "reason": "Agent lacks the Bossgate Scanning Skill.",
+            "base_url": base_url,
+            "endpoints": [],
+        }
     base_url = _normalize_url_for_scan(base_url)
     if not base_url:
         return {

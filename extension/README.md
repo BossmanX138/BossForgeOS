@@ -6,7 +6,9 @@ This extension is an active BossForgeOS editor integration surface.
 
 - [Commands](#commands)
 - [Behavior](#behavior)
+- [Current State](#current-state)
 - [Next Steps](#next-steps)
+- [TODO](#todo)
 
 ## Commands
 

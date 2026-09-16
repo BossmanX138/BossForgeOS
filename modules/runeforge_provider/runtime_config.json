@@ -1,0 +1,21 @@
+{
+  "host": "0.0.0.0",
+  "port": 8008,
+  "fast_mode": true,
+  "fast_max_new_tokens": 192,
+  "pec_enabled": true,
+  "pec_runtime_mode": "auto",
+  "tts_enabled": true,
+  "tts_default_voice_hint": "zira",
+  "tts_default_rate": 185,
+  "model_registry": {
+    "default": {
+      "model_path": "//BOSSCRAFTS-MSI/BossCrafts/Bosscrafts/BossForgeOS/modules/runeforge_provider/models/runeforge-mk0-7b",
+      "pec_mode": "auto"
+    },
+    "runeforge-mk0-7b": {
+      "model_path": "//BOSSCRAFTS-MSI/BossCrafts/Bosscrafts/BossForgeOS/modules/runeforge_provider/models/runeforge-mk0-7b",
+      "pec_mode": "auto"
+    }
+  }
+}

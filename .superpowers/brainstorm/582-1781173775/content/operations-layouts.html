@@ -1,0 +1,99 @@
+<style>
+  .layout-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:22px; }
+  .layout-card { background:#0c0d11; border:1px solid rgba(212,168,87,.25); border-radius:18px; overflow:hidden; cursor:pointer; transition:.2s ease; }
+  .layout-card:hover,.layout-card.selected { transform:translateY(-4px); border-color:#d4a857; box-shadow:0 18px 50px rgba(0,0,0,.4),0 0 22px rgba(255,122,47,.12); }
+  .screen { height:350px; display:grid; grid-template-columns:46px 1fr; background:radial-gradient(circle at 88% 12%,rgba(77,166,255,.08),transparent 32%),#08090c; color:#d9d5cc; }
+  .rail { border-right:1px solid #252831; padding:10px 7px; display:grid; align-content:start; gap:9px; background:#0c0d11; }
+  .logo { width:30px;height:30px;border:1px solid #d4a857;border-radius:9px;display:grid;place-items:center;color:#d4a857;font:800 8px sans-serif; }
+  .nav { width:30px;height:26px;border-radius:7px;background:#171920;border:1px solid #262a32; }
+  .nav.on { border-color:#ff7a2f; box-shadow:inset 3px 0 #ff7a2f; }
+  .main { padding:12px; min-width:0; }
+  .top { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
+  .title { font:800 12px/1 sans-serif;letter-spacing:.06em;color:#eee2ca; }
+  .live { color:#4cc46a;font:800 7px sans-serif;letter-spacing:.1em; }
+  .metrics { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:7px; }
+  .metric,.panel,.agent,.incident,.action { border:1px solid #282b34;background:linear-gradient(180deg,#171920,#111217);border-radius:8px; }
+  .metric { height:45px;padding:7px; }
+  .metric b { display:block;color:#d4a857;font:800 13px/1 sans-serif; }
+  .metric span { color:#7f8795;font:700 6px sans-serif;text-transform:uppercase; }
+  .body-grid { display:grid;gap:7px;height:245px; }
+  .panel { padding:8px;min-width:0; }
+  .label { color:#8d95a3;font:800 6px sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px; }
+  .line { height:6px;border-radius:4px;background:#292d36;margin-bottom:6px; }
+  .line.gold { background:linear-gradient(90deg,#d4a857 0 68%,#292d36 68%); }
+  .line.blue { background:linear-gradient(90deg,#4da6ff 0 48%,#292d36 48%); }
+  .line.green { background:linear-gradient(90deg,#4cc46a 0 82%,#292d36 82%); }
+  .line.red { background:linear-gradient(90deg,#ff4d4d 0 36%,#292d36 36%); }
+  .agent { padding:6px;margin-bottom:5px;display:grid;grid-template-columns:18px 1fr 38px;gap:6px;align-items:center; }
+  .avatar { width:18px;height:18px;border-radius:6px;background:#241d11;border:1px solid #d4a857; }
+  .tag { padding:3px;border-radius:4px;text-align:center;background:#12301d;color:#4cc46a;font:800 5px sans-serif; }
+  .tag.warn { background:#38280d;color:#ffb84d; }
+  .tag.bad { background:#351315;color:#ff7777; }
+  .incident { padding:7px;margin-bottom:6px;border-left:3px solid #ffb84d; }
+  .incident.bad { border-left-color:#ff4d4d; }
+  .action { height:29px;padding:7px;margin-bottom:5px;color:#aeb5c0;font:700 6px sans-serif; }
+  .command .body-grid { grid-template-columns:1.35fr .65fr; grid-template-rows:1fr 82px; }
+  .command .primary { grid-row:1 / 3; }
+  .fleet .body-grid { grid-template-columns:.82fr 1.18fr; grid-template-rows:1fr 84px; }
+  .fleet .agents { grid-row:1 / 3; }
+  .incident-layout .body-grid { grid-template-columns:1fr .8fr; grid-template-rows:105px 1fr; }
+  .incident-layout .incidents { grid-column:1 / 3; }
+  .copy { padding:15px;min-height:168px; }
+  .copy h3 { margin:0 0 7px;color:#eee2ca; }
+  .copy p { margin:0;color:#9aa2af;font-size:13px;line-height:1.5; }
+  .recommended { display:inline-block;background:#d4a857;color:#090a0d;padding:4px 7px;border-radius:999px;font:900 8px sans-serif;letter-spacing:.08em;margin-bottom:8px; }
+  @media(max-width:900px){.layout-grid{grid-template-columns:1fr;}}
+</style>
+
+<h2>Choose the operational dashboard hierarchy</h2>
+<p class="subtitle">All three use BossForge Blackstone styling. The difference is what receives the operator's attention first.</p>
+
+<div class="layout-grid">
+  <div class="layout-card command" data-choice="command-first" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="rail"><div class="logo">BF</div><div class="nav on"></div><div class="nav"></div><div class="nav"></div><div class="nav"></div></div>
+      <div class="main">
+        <div class="top"><div class="title">COMMAND OVERVIEW</div><div class="live">LIVE / 07:42</div></div>
+        <div class="metrics"><div class="metric"><b>07</b><span>online</span></div><div class="metric"><b>03</b><span>active</span></div><div class="metric"><b>12</b><span>queued</span></div><div class="metric"><b>01</b><span>alert</span></div></div>
+        <div class="body-grid">
+          <div class="panel primary"><div class="label">Active work</div><div class="agent"><div class="avatar"></div><div><div class="line gold"></div><div class="line" style="width:62%"></div></div><div class="tag">RUNNING</div></div><div class="agent"><div class="avatar"></div><div><div class="line blue"></div><div class="line" style="width:74%"></div></div><div class="tag warn">VERIFY</div></div><div class="agent"><div class="avatar"></div><div><div class="line green"></div><div class="line" style="width:55%"></div></div><div class="tag">READY</div></div><div class="label" style="margin-top:12px">Throughput</div><div class="line green"></div><div class="line blue"></div><div class="line gold"></div></div>
+          <div class="panel"><div class="label">Needs you</div><div class="incident bad"><div class="line red"></div><div class="line" style="width:68%"></div></div><div class="incident"><div class="line gold"></div><div class="line" style="width:52%"></div></div></div>
+          <div class="panel"><div class="label">Quick actions</div><div class="action">Dispatch command</div><div class="action">Resolve conflict</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="copy"><span class="recommended">RECOMMENDED</span><h3>A. Command-first</h3><p>Active work dominates. Alerts and interventions stay visible but secondary. Best for daily orchestration and fast decisions.</p></div>
+  </div>
+
+  <div class="layout-card fleet" data-choice="fleet-first" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="rail"><div class="logo">BF</div><div class="nav on"></div><div class="nav"></div><div class="nav"></div><div class="nav"></div></div>
+      <div class="main">
+        <div class="top"><div class="title">AGENT FLEET</div><div class="live">7 / 7 ONLINE</div></div>
+        <div class="metrics"><div class="metric"><b>96%</b><span>health</span></div><div class="metric"><b>84%</b><span>capacity</span></div><div class="metric"><b>4m</b><span>latency</span></div><div class="metric"><b>02</b><span>blocked</span></div></div>
+        <div class="body-grid">
+          <div class="panel agents"><div class="label">Agents</div><div class="agent"><div class="avatar"></div><div><div class="line gold"></div><div class="line" style="width:58%"></div></div><div class="tag">ACTIVE</div></div><div class="agent"><div class="avatar"></div><div><div class="line blue"></div><div class="line" style="width:68%"></div></div><div class="tag">ACTIVE</div></div><div class="agent"><div class="avatar"></div><div><div class="line"></div><div class="line" style="width:51%"></div></div><div class="tag warn">IDLE</div></div><div class="agent"><div class="avatar"></div><div><div class="line red"></div><div class="line" style="width:61%"></div></div><div class="tag bad">BLOCKED</div></div></div>
+          <div class="panel"><div class="label">Selected agent</div><div class="line gold"></div><div class="line"></div><div class="line blue"></div><div class="line"></div><div class="line green"></div></div>
+          <div class="panel"><div class="label">Work distribution</div><div class="line green"></div><div class="line gold"></div><div class="line blue"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="copy"><h3>B. Fleet-first</h3><p>Agents are the primary objects. Strong for inspecting personalities, health, memory, location, and workload one agent at a time.</p></div>
+  </div>
+
+  <div class="layout-card incident-layout" data-choice="incident-first" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="rail"><div class="logo">BF</div><div class="nav on"></div><div class="nav"></div><div class="nav"></div><div class="nav"></div></div>
+      <div class="main">
+        <div class="top"><div class="title">OPERATIONS WATCH</div><div class="live">1 ACTION REQUIRED</div></div>
+        <div class="metrics"><div class="metric"><b>01</b><span>critical</span></div><div class="metric"><b>02</b><span>warning</span></div><div class="metric"><b>09</b><span>stable</span></div><div class="metric"><b>37s</b><span>response</span></div></div>
+        <div class="body-grid">
+          <div class="panel incidents"><div class="label">Decision queue</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div class="incident bad"><div class="line red"></div><div class="line" style="width:62%"></div></div><div class="incident"><div class="line gold"></div><div class="line" style="width:72%"></div></div></div></div>
+          <div class="panel"><div class="label">System state</div><div class="line green"></div><div class="line blue"></div><div class="line"></div><div class="line gold"></div></div>
+          <div class="panel"><div class="label">Event stream</div><div class="line"></div><div class="line red"></div><div class="line"></div><div class="line blue"></div><div class="line"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="copy"><h3>C. Incident-first</h3><p>Exceptions dominate the screen. Excellent under failure or conflict, but calmer everyday operation can feel sparse or alarm-heavy.</p></div>
+  </div>
+</div>

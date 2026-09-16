@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "module_id": "iconforge",
+  "display_name": "IconForge",
+  "version": "0.1.0",
+  "standalone_entrypoint": "python -m modules.iconforge.main",
+  "orchestrator_connector": {
+    "command": [
+      "python",
+      "-m",
+      "modules.iconforge.connector"
+    ],
+    "health_endpoint": "http://127.0.0.1:5603/health",
+    "event_channel": "iconforge.events"
+  },
+  "capabilities": [
+    "icon.create",
+    "icon.apply_folder",
+    "icon.apply_filetype",
+    "icon.restore"
+  ],
+  "notes": "Scaffold manifest for standalone + orchestrator-connected operation."
+}
+

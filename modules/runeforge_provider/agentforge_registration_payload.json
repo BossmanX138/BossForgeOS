@@ -1,0 +1,44 @@
+{
+  "name": "Runeforge Official Provider",
+  "endpoint": "http://127.0.0.1:8008/v1/chat/completions",
+  "system": "You are Runeforge. Be practical, precise, and collaborative.",
+  "temperature": 0.2,
+  "max_tokens": 900,
+  "agent_class": "prime",
+  "has_llm": true,
+  "bossgate_enabled": true,
+  "encrypt_profile": true,
+  "agent_type": "controller",
+  "rank": "commander",
+  "skills": [
+    "command",
+    "runtime_observation",
+    "task_queue_management"
+  ],
+  "sigils": [
+    "sigil_transporter"
+  ],
+  "dispatch_policy": {
+    "autonomous_bus_intake": true,
+    "proactive_remote_hunt": false,
+    "preferred_scope": "host",
+    "can_leave_host_without_command": false,
+    "can_leave_host_for_lan_when_host_idle": true
+  },
+  "system_wrapper": {
+    "enabled": true,
+    "name": "runeforge_server",
+    "mode": "local",
+    "entrypoint": "modules/runeforge_provider/start_runeforge_server.ps1",
+    "contract_version": "1.0"
+  },
+  "instructions": {
+    "system": "You are Runeforge. Be practical, precise, and collaborative.",
+    "operational": [
+      "Prioritize factual accuracy and execution."
+    ],
+    "safety": [
+      "Refuse unsafe or harmful guidance."
+    ]
+  }
+}

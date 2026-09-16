@@ -13,13 +13,13 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 - [CLI & Plugin System](#cli-plugin-system)
 - [Onboarding, Scheduler, CI/CD, Collaboration](#onboarding-scheduler-cicd-collaboration)
 - [AgentForge README](#agentforge-readme)
-- [Documentation & Further Reading](#documentation--further-reading)
+- [Documentation & Further Reading](#documentation-further-reading)
 - [Test Sentinel Agent](#test-sentinel-agent)
 - [Internal vLLM (Runeforge Core)](#internal-vllm-runeforge-core)
 - [Archivist Agent](#archivist-agent)
 - [Windows Context Menus](#windows-context-menus)
 - [Model Gateway Agent (Ollama, vLLM, LM Studio)](#model-gateway-agent-ollama-vllm-lm-studio)
-- [IconForge (Windows Icon Creator & Replacement)](#iconforge-windows-icon-creator--replacement)
+- [IconForge (Windows Icon Creator & Replacement)](#iconforge-windows-icon-creator-replacement)
 - [CodeMage Model Backing (vLLM)](#codemage-model-backing-vllm)
 - [Security Sentinel Agent](#security-sentinel-agent)
 - [Runeforge Voice Commands](#runeforge-voice-commands)
@@ -52,7 +52,7 @@ BossForgeOS is a modular, local-first command-and-control operating layer for or
 
 ## SoundForge Engine
 
-See [core/soundstage/BossForgeOS_SoundStage/README.md](core/soundstage/BossForgeOS_SoundStage/README.md) and [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
+See [modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README.md) and [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md) for full details.
 
 SoundForge is the renamed module surface for the legacy SoundStage engine. Existing legacy paths and API routes remain available for compatibility.
 
@@ -72,7 +72,7 @@ SoundForge is the renamed module surface for the legacy SoundStage engine. Exist
 ## VS Code Extension
 
 - Sidebar panel with onboarding wizard, agent builder, event streaming, import/export, collaborative editing, CLI integration, analytics dashboard
-- REST API integration with Control Hall and SoundStage
+- REST API integration with Control Hall and SoundForge (legacy SoundStage compatibility routes retained)
 - Status bar, command palette, extension settings
 - See `extension/README.md` for usage
 
@@ -121,16 +121,16 @@ SoundForge is the renamed module surface for the legacy SoundStage engine. Exist
 - [docs/AgentForge_readme.md](docs/AgentForge_readme.md): Requirements and guardrails for forging Prime and normalized agents
 - [docs/bossgate_connector.md](docs/bossgate_connector.md): BossGate connector purpose and roadmap
 - [docs/bossgate_protocol.md](docs/bossgate_protocol.md): BossGate transport/protocol draft
-- [core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](core/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/ARCHITECTURE.md): SoundStage architecture
 - [docs/gui_coverage_audit.md](docs/gui_coverage_audit.md): GUI feature audit
 - [docs/todos.md](docs/todos.md): Actionable todos and feature backlog
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): Changelog
 - [docs/decisions.md](docs/decisions.md): Decision log
 - [docs/archivistREADME.md](docs/archivistREADME.md): Archivist stewardship
-- [core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](core/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
+- [modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md](modules/soundforge/soundstage/BossForgeOS_SoundStage/README-soundstage-daemon.md): SoundStage daemon
 
 ---
-For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `core/soundstage/BossForgeOS_SoundStage/` directories.
+For onboarding, advanced configuration, and developer notes, see the full documentation in the `docs/` and `modules/soundforge/soundstage/BossForgeOS_SoundStage/` directories.
 
 - `bforge os snapshot`
 
@@ -480,21 +480,14 @@ Launcher options:
 - Plugin guide:
   - `docs/plugins.md`
 
-## Build Windows EXE
+## Launch BossForgeOS
 
-- Build one-file launcher executable:
-  - `powershell -ExecutionPolicy Bypass -File .\build_launcher_exe.ps1`
-- Output path:
-  - `dist\\BossForgeLauncher.exe`
-
-## Package Release Bundle
-
-- Create versioned release package and desktop shortcut:
-  - `powershell -ExecutionPolicy Bypass -File .\package_release.ps1 -Version 0.1.0`
-- Release output folder:
-  - `releases\\v0.1.0`
-- Packaged executable name:
-  - `BossForgeLauncher-v0.1.0.exe`
+- Launch Control Hall directly during local development:
+  - `.\scripts\start_control_hall.cmd`
+- Launch the full local orchestrator:
+  - `.\scripts\start_bossforge.cmd`
+- Preferred human-facing launch path:
+  - launch `BossForgeOS` from `A.S.S.` after CBCAA authentication and launch-ticket handoff
 
 ## Bus Root
 

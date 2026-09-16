@@ -3,14 +3,19 @@ import ctypes
 import importlib.util
 import json
 import os
+import re
+import signal
+import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Any, Dict
 
-from core.archivist_agent import ArchivistAgent
-from core.icons import IconForge
-from core.rune_bus import RuneBus, resolve_root_from_env
-from modules.os_snapshot import snapshot_all
+from core.agents.archivist_agent import ArchivistAgent
+from modules.iconforge import service as iconforge_service
+from core.orchestrator.module_registry import ModuleRegistry, ModuleValidationError
+from core.rune.rune_bus import RuneBus, resolve_root_from_env
 
 
 AGENTS = {
@@ -26,6 +31,8 @@ AGENTS = {
     "codemage": "codemage",
     "runeforge": "runeforge",
     "devlot": "devlot",
+    "bossgate": "bossgate",
+    "bg": "bossgate",
     "model-keeper": "model_keeper",  # CLI alias for compatibility layer
     "speaker": "speaker",
     "model_keeper": "model_keeper",
@@ -48,7 +55,7 @@ def _plugin_dirs() -> list[Path]:
     return [repo_plugins, user_plugins]
 
 
-def _load_plugins(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> list[dict[str, str]]:
+def _load_plugins(subparsers: argparse._SubParsersAction) -> list[dict[str, str]]:
     loaded: list[dict[str, str]] = []
     seen_paths: set[str] = set()
 
@@ -100,10 +107,11 @@ def cmd_status(_: argparse.Namespace) -> None:
     pretty(out)
 
 
-    # Model-Keeper compatibility alias
-    p_model_keeper = subparsers.add_parser("model-keeper", help="Model-Keeper compatibility commands")
-    p_model_keeper.add_argument("action", choices=["status"], help="Action to perform")
-    p_model_keeper.set_defaults(func=cmd_model_keeper)
+def cmd_model_keeper(args: argparse.Namespace) -> None:
+    if args.action == "status":
+        cmd_status(args)
+        return
+    raise SystemExit("unknown model-keeper action")
 
 def cmd_tail(args: argparse.Namespace) -> None:
     bus = RuneBus(resolve_root_from_env())
@@ -124,6 +132,8 @@ def cmd_agent(args: argparse.Namespace) -> None:
 def cmd_os(args: argparse.Namespace) -> None:
     bus = RuneBus(resolve_root_from_env())
     if args.sub == "snapshot":
+        from modules.os_snapshot import snapshot_all
+
         pretty(snapshot_all())
         return
 
@@ -397,6 +407,255 @@ def cmd_security(args: argparse.Namespace) -> None:
     raise SystemExit("unknown security command")
 
 
+def cmd_module(args: argparse.Namespace) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    registry = ModuleRegistry(repo_root=repo_root)
+
+    if args.sub == "list":
+        pretty({"ok": True, "modules": registry.summarize()})
+        return
+
+    if args.sub == "show":
+        item = registry.get(args.module_id)
+        if item is None:
+            raise SystemExit(f"module not found: {args.module_id}")
+        pretty({"ok": True, "module": item})
+        return
+
+    if args.sub == "validate":
+        try:
+            out = registry.validate()
+        except ModuleValidationError as ex:
+            pretty({"ok": False, "error": str(ex)})
+            raise SystemExit(2)
+        pretty(out)
+        return
+
+    runtime_path = _module_runtime_path()
+    runtime = _load_module_runtime(runtime_path)
+
+    if args.sub == "doctor":
+        report: dict[str, Any] = {"ok": True, "validation": {}, "runtime": {}, "smoke": {}}
+        try:
+            report["validation"] = registry.validate()
+        except ModuleValidationError as ex:
+            report["ok"] = False
+            report["validation"] = {"ok": False, "error": str(ex)}
+
+        runtime_rows: list[dict[str, Any]] = []
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = runtime.get(module_id, {})
+            pid = int(entry.get("pid", 0) or 0)
+            running = _pid_alive(pid)
+            runtime_rows.append(
+                {
+                    "module_id": module_id,
+                    "pid": pid,
+                    "running": running,
+                    "started_at": entry.get("started_at", ""),
+                }
+            )
+        report["runtime"] = {"ok": True, "modules": runtime_rows}
+
+        smoke_rows: list[dict[str, Any]] = []
+        include_external = bool(getattr(args, "include_external", False))
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = str(item.get("standalone_entrypoint", "")).strip()
+            row = {"module_id": module_id, "ok": True, "status": "passed", "detail": ""}
+            if entry.lower().startswith("python -m "):
+                module_name = entry[len("python -m ") :].strip()
+                try:
+                    proc = subprocess.run(
+                        [sys.executable, "-m", module_name, "--once"],
+                        cwd=str(repo_root),
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        timeout=20,
+                    )
+                    if proc.returncode != 0:
+                        row["ok"] = False
+                        row["status"] = "failed"
+                        row["detail"] = (proc.stderr or proc.stdout or "").strip()[:400]
+                except Exception as ex:
+                    row["ok"] = False
+                    row["status"] = "error"
+                    row["detail"] = str(ex)
+            else:
+                if include_external and entry:
+                    try:
+                        proc = subprocess.run(
+                            entry.split(),
+                            cwd=str(repo_root),
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                            timeout=20,
+                        )
+                        if proc.returncode != 0:
+                            row["ok"] = False
+                            row["status"] = "failed"
+                            row["detail"] = (proc.stderr or proc.stdout or "").strip()[:400]
+                    except Exception as ex:
+                        row["ok"] = False
+                        row["status"] = "error"
+                        row["detail"] = str(ex)
+                else:
+                    row["status"] = "skipped"
+                    row["detail"] = "standalone entrypoint is not python -m; pass --include-external to attempt it"
+            smoke_rows.append(row)
+        if any(not bool(row.get("ok")) for row in smoke_rows):
+            report["ok"] = False
+        report["smoke"] = {"ok": all(bool(row.get("ok")) for row in smoke_rows), "modules": smoke_rows}
+        if bool(getattr(args, "json", False)):
+            print(json.dumps(report, separators=(",", ":")))
+        else:
+            pretty(report)
+        if not report["ok"]:
+            raise SystemExit(2)
+        return
+
+    if args.sub == "status":
+        module_rows = []
+        for item in registry.summarize():
+            module_id = str(item.get("module_id", ""))
+            entry = runtime.get(module_id, {})
+            pid = int(entry.get("pid", 0) or 0)
+            module_rows.append(
+                {
+                    **item,
+                    "pid": pid,
+                    "running": _pid_alive(pid),
+                    "started_at": entry.get("started_at", ""),
+                    "log_file": entry.get("log_file", ""),
+                }
+            )
+        pretty({"ok": True, "modules": module_rows})
+        return
+
+    if args.sub == "start":
+        item = registry.get(args.module_id)
+        if item is None:
+            raise SystemExit(f"module not found: {args.module_id}")
+        module_id = str(item.get("module_id", ""))
+        existing = runtime.get(module_id, {})
+        existing_pid = int(existing.get("pid", 0) or 0)
+        if _pid_alive(existing_pid):
+            pretty({"ok": True, "message": "module already running", "module_id": module_id, "pid": existing_pid})
+            return
+
+        cmd = item.get("connector_command", [])
+        if bool(getattr(args, "standalone", False)):
+            entry = str(item.get("standalone_entrypoint", "")).strip()
+            if not entry:
+                raise SystemExit(f"module {module_id} has no standalone entrypoint")
+            if entry.lower().startswith("python -m "):
+                module_name = entry[len("python -m ") :].strip()
+                cmd = ["python", "-m", module_name]
+            else:
+                cmd = entry.split()
+        if not isinstance(cmd, list) or not cmd:
+            raise SystemExit(f"module {module_id} has invalid connector command")
+
+        # Prefer the currently running interpreter when manifests specify `python`.
+        if cmd and str(cmd[0]).strip().lower() in {"python", "python3", "py"}:
+            cmd = [sys.executable, *cmd[1:]]
+        elif cmd and str(cmd[0]).strip().lower() == "powershell":
+            pwsh = shutil.which("powershell") or r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+            cmd = [pwsh, *cmd[1:]]
+
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(repo_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        runtime[module_id] = {
+            "pid": proc.pid,
+            "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "log_file": "",
+            "command": cmd,
+        }
+        _save_module_runtime(runtime_path, runtime)
+        pretty({"ok": True, "module_id": module_id, "pid": proc.pid, "log_file": ""})
+        return
+
+    if args.sub == "stop":
+        module_id = str(args.module_id).strip()
+        entry = runtime.get(module_id)
+        if not isinstance(entry, dict):
+            raise SystemExit(f"module not tracked in runtime state: {module_id}")
+        pid = int(entry.get("pid", 0) or 0)
+        if not _pid_alive(pid):
+            runtime.pop(module_id, None)
+            _save_module_runtime(runtime_path, runtime)
+            pretty({"ok": True, "message": "module already stopped", "module_id": module_id, "pid": pid})
+            return
+        try:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], check=False, capture_output=True)
+            else:
+                os.kill(pid, signal.SIGTERM)
+        except OSError as ex:
+            raise SystemExit(f"failed to stop module {module_id} pid={pid}: {ex}") from ex
+        runtime.pop(module_id, None)
+        _save_module_runtime(runtime_path, runtime)
+        pretty({"ok": True, "module_id": module_id, "pid": pid, "stopped": True})
+        return
+
+    raise SystemExit("unknown module command")
+
+
+def _module_runtime_path() -> Path:
+    bus = RuneBus(resolve_root_from_env())
+    return bus.state / "module_runtime.json"
+
+
+def _load_module_runtime(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for key, value in payload.items():
+        if isinstance(value, dict):
+            out[str(key)] = value
+    return out
+
+
+def _save_module_runtime(path: Path, payload: dict[str, dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        if os.name == "nt":
+            proc = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            stdout = (proc.stdout or "").strip()
+            if not stdout or "No tasks are running" in stdout:
+                return False
+            return f'"{pid}"' in stdout
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def _resolve_project_path(path_arg: str | None) -> Path:
     raw = path_arg.strip() if path_arg else os.getcwd()
     target = Path(raw).expanduser().resolve()
@@ -656,8 +915,244 @@ def cmd_model(args: argparse.Namespace) -> None:
     raise SystemExit("unknown model command")
 
 
+def cmd_bossgate(args: argparse.Namespace) -> None:
+    bus = RuneBus(resolve_root_from_env())
+    todo_path = Path(__file__).resolve().parents[2] / "docs" / "bossgate_connector_todo.md"
+
+    if args.sub == "status":
+        state_path = bus.state / "bossgate.json"
+        state_payload: Dict[str, Any] = {}
+        if state_path.exists():
+            try:
+                loaded = json.loads(state_path.read_text(encoding="utf-8"))
+                if isinstance(loaded, dict):
+                    state_payload = loaded
+            except (OSError, json.JSONDecodeError):
+                state_payload = {"ok": False, "message": "failed to read bossgate state"}
+        recent = [
+            item
+            for item in bus.read_latest_events(limit=max(1, int(args.limit)))
+            if str(item.get("source", "")).strip().lower() == "bossgate"
+        ]
+        pretty(
+            {
+                "ok": True,
+                "state_file": str(state_path),
+                "state": state_payload,
+                "recent_events": recent,
+            }
+        )
+        return
+
+    if args.sub == "tail":
+        limit = max(1, int(args.limit))
+        recent = [
+            item
+            for item in bus.read_latest_events(limit=max(50, limit * 4))
+            if str(item.get("source", "")).strip().lower() == "bossgate"
+        ][:limit]
+        for event in recent:
+            print(f"[{event.get('timestamp')}] {event.get('source')} -> {event.get('event')} | {event.get('data')}")
+        return
+
+    if args.sub == "discover":
+        payload = {
+            "timeout": args.timeout,
+            "assistance_only": bool(args.assistance_only),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_discover_targets", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "map":
+        payload = {
+            "refresh": bool(args.refresh),
+            "timeout": int(args.timeout),
+        }
+        path = bus.emit_command("bossgate", "bossgate_map_snapshot", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "scan":
+        payload = {
+            "destination": args.destination,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_scan_target", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "package":
+        payload = {
+            "name": args.name,
+            "target_system_id": args.target_system_id,
+            "visibility_profile": args.visibility_profile,
+            "policy_ref": args.policy_ref,
+            "secret_key": args.secret_key,
+            "output_file": args.output_file,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_package_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "transfer":
+        payload = {
+            "package_file": args.package_file,
+            "destination": args.destination,
+            "dry_run": bool(args.dry_run),
+            "resume_from_chunk": int(args.resume_from_chunk),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_transfer_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "install":
+        payload = {
+            "package_file": args.package_file,
+            "secret_key": args.secret_key,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_install_agent", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "rotate-key":
+        payload = {
+            "key_id": args.key_id,
+            "secret_key": args.secret_key,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_rotate_key", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "usage-report":
+        payload = {
+            "limit": int(args.limit),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_usage_report", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "license-issue":
+        payload = {
+            "agent_name": args.agent_name,
+            "customer_id": args.customer_id,
+            "license_tier": args.license_tier,
+            "expires_in_seconds": int(args.expires_in_seconds),
+            "output_file": args.output_file,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_issue", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "license-validate":
+        payload = {
+            "license_file": args.license_file,
+            "agent_name": args.agent_name,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_validate", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "license-revoke":
+        payload = {
+            "license_file": args.license_file,
+            "reason": args.reason,
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_license_revoke", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "remote-debug-open":
+        payload = {
+            "agent_name": args.agent_name,
+            "session_scope": list(args.session_scope),
+            "ttl_seconds": int(args.ttl_seconds),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_remote_debug_open", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "remote-debug-close":
+        payload = {
+            "session_id": args.session_id,
+            "agent_name": args.agent_name,
+            "emergency_revoke": bool(args.emergency_revoke),
+            "operator_id": args.operator_id,
+            "scope_id": args.scope_id,
+            "actor_type": args.actor_type,
+        }
+        path = bus.emit_command("bossgate", "bossgate_remote_debug_close", payload, issued_by="bforge")
+        print(f"command written: {path}")
+        return
+
+    if args.sub == "complete":
+        if not todo_path.exists():
+            raise SystemExit(f"todo tracker not found: {todo_path}")
+        todo_id = str(args.todo_id).strip().upper()
+        lines = todo_path.read_text(encoding="utf-8").splitlines()
+        target_idx = -1
+        pat = re.compile(rf"^- \[(?P<mark>[ xX])\] \({re.escape(todo_id)}\) ")
+        for i, line in enumerate(lines):
+            if pat.match(line):
+                target_idx = i
+                break
+        if target_idx < 0:
+            raise SystemExit(f"todo id not found: {todo_id}")
+
+        if lines[target_idx].startswith("- [ ]"):
+            lines[target_idx] = lines[target_idx].replace("- [ ]", "- [x]", 1)
+
+        evidence = str(args.evidence or "").strip()
+        if evidence:
+            stamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            evidence_line = f"  evidence: [{stamp}] {evidence}"
+            insert_at = target_idx + 1
+            while insert_at < len(lines) and (lines[insert_at].startswith("  ") or not lines[insert_at].strip()):
+                insert_at += 1
+            lines.insert(insert_at, evidence_line)
+
+        todo_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        bus.emit_event("bforge", "bossgate:todo_completed", {"todo_id": todo_id, "evidence": evidence})
+        pretty({"ok": True, "todo_id": todo_id, "todo_path": str(todo_path), "evidence_added": bool(evidence)})
+        return
+
+    raise SystemExit("unknown bossgate command")
+
+
 def cmd_icons(args: argparse.Namespace) -> None:
-    forge = IconForge(resolve_root_from_env())
+    forge = iconforge_service.get_forge(resolve_root_from_env())
 
     if args.sub == "create-from-image":
         sizes = [int(item.strip()) for item in (args.sizes or "").split(",") if item.strip()]
@@ -750,6 +1245,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status")
     p_status.set_defaults(func=cmd_status)
+
+    p_model_keeper = sub.add_parser("model-keeper", help="Model-Keeper compatibility commands")
+    p_model_keeper.add_argument("action", choices=["status"], help="Action to perform")
+    p_model_keeper.set_defaults(func=cmd_model_keeper)
 
     p_tail = sub.add_parser("tail")
     p_tail.add_argument("--limit", type=int, default=20)
@@ -923,6 +1422,137 @@ def build_parser() -> argparse.ArgumentParser:
     p_model_stop_all = p_model_sub.add_parser("stop-all", help="Stop all tracked model servers")
     p_model_stop_all.set_defaults(func=cmd_model)
 
+    p_bossgate = sub.add_parser("bossgate", help="Queue BossGate command agent requests")
+    p_bossgate_sub = p_bossgate.add_subparsers(dest="sub")
+
+    p_bg_status = p_bossgate_sub.add_parser("status", help="Show current BossGate state and recent events")
+    p_bg_status.add_argument("--limit", type=int, default=10)
+    p_bg_status.set_defaults(func=cmd_bossgate)
+
+    p_bg_tail = p_bossgate_sub.add_parser("tail", help="Tail recent BossGate events")
+    p_bg_tail.add_argument("--limit", type=int, default=20)
+    p_bg_tail.set_defaults(func=cmd_bossgate)
+
+    p_bg_discover = p_bossgate_sub.add_parser("discover", help="Discover BossGate transfer targets")
+    p_bg_discover.add_argument("--timeout", type=int, default=5)
+    p_bg_discover.add_argument("--assistance-only", action="store_true")
+    p_bg_discover.add_argument("--operator-id", required=True)
+    p_bg_discover.add_argument("--scope-id", required=True)
+    p_bg_discover.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_discover.set_defaults(func=cmd_bossgate)
+
+    p_bg_map = p_bossgate_sub.add_parser("map", help="Build/read BossGate beacon map snapshot")
+    p_bg_map.add_argument("--refresh", action="store_true")
+    p_bg_map.add_argument("--timeout", type=int, default=2)
+    p_bg_map.set_defaults(func=cmd_bossgate)
+
+    p_bg_scan = p_bossgate_sub.add_parser("scan", help="Validate a destination as a transfer target")
+    p_bg_scan.add_argument("destination")
+    p_bg_scan.add_argument("--operator-id", required=True)
+    p_bg_scan.add_argument("--scope-id", required=True)
+    p_bg_scan.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_scan.set_defaults(func=cmd_bossgate)
+
+    p_bg_package = p_bossgate_sub.add_parser("package", help="Package an agent for BossGate transfer")
+    p_bg_package.add_argument("name")
+    p_bg_package.add_argument("--target-system-id", required=True)
+    p_bg_package.add_argument(
+        "--visibility-profile",
+        default="none",
+        choices=["none", "id_card_only", "model_card_only", "id_and_model_card"],
+    )
+    p_bg_package.add_argument("--policy-ref", default="policy/default")
+    p_bg_package.add_argument("--secret-key", default="")
+    p_bg_package.add_argument("--output-file", default="")
+    p_bg_package.add_argument("--operator-id", required=True)
+    p_bg_package.add_argument("--scope-id", required=True)
+    p_bg_package.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_package.set_defaults(func=cmd_bossgate)
+
+    p_bg_transfer = p_bossgate_sub.add_parser("transfer", help="Queue a BossGate transfer intent")
+    p_bg_transfer.add_argument("package_file")
+    p_bg_transfer.add_argument("destination")
+    p_bg_transfer.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
+    p_bg_transfer.add_argument("--no-dry-run", dest="dry_run", action="store_false")
+    p_bg_transfer.add_argument("--resume-from-chunk", type=int, default=0)
+    p_bg_transfer.add_argument("--operator-id", required=True)
+    p_bg_transfer.add_argument("--scope-id", required=True)
+    p_bg_transfer.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_transfer.set_defaults(func=cmd_bossgate)
+
+    p_bg_install = p_bossgate_sub.add_parser("install", help="Install/validate a BossGate package")
+    p_bg_install.add_argument("package_file")
+    p_bg_install.add_argument("--secret-key", default="")
+    p_bg_install.add_argument("--operator-id", required=True)
+    p_bg_install.add_argument("--scope-id", required=True)
+    p_bg_install.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_install.set_defaults(func=cmd_bossgate)
+
+    p_bg_rotate = p_bossgate_sub.add_parser("rotate-key", help="Rotate BossGate active encryption key")
+    p_bg_rotate.add_argument("--key-id", default="")
+    p_bg_rotate.add_argument("--secret-key", default="")
+    p_bg_rotate.add_argument("--operator-id", required=True)
+    p_bg_rotate.add_argument("--scope-id", required=True)
+    p_bg_rotate.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_rotate.set_defaults(func=cmd_bossgate)
+
+    p_bg_usage = p_bossgate_sub.add_parser("usage-report", help="Queue a BossGate local usage report aggregation")
+    p_bg_usage.add_argument("--limit", type=int, default=20)
+    p_bg_usage.add_argument("--operator-id", required=True)
+    p_bg_usage.add_argument("--scope-id", required=True)
+    p_bg_usage.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_usage.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_issue = p_bossgate_sub.add_parser("license-issue", help="Issue a local BossGate license document")
+    p_bg_license_issue.add_argument("agent_name")
+    p_bg_license_issue.add_argument("customer_id")
+    p_bg_license_issue.add_argument("--license-tier", default="prototype")
+    p_bg_license_issue.add_argument("--expires-in-seconds", type=int, default=0)
+    p_bg_license_issue.add_argument("--output-file", default="")
+    p_bg_license_issue.add_argument("--operator-id", required=True)
+    p_bg_license_issue.add_argument("--scope-id", required=True)
+    p_bg_license_issue.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_issue.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_validate = p_bossgate_sub.add_parser("license-validate", help="Validate a local BossGate license document")
+    p_bg_license_validate.add_argument("license_file")
+    p_bg_license_validate.add_argument("--agent-name", default="")
+    p_bg_license_validate.add_argument("--operator-id", required=True)
+    p_bg_license_validate.add_argument("--scope-id", required=True)
+    p_bg_license_validate.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_validate.set_defaults(func=cmd_bossgate)
+
+    p_bg_license_revoke = p_bossgate_sub.add_parser("license-revoke", help="Revoke a local BossGate license document")
+    p_bg_license_revoke.add_argument("license_file")
+    p_bg_license_revoke.add_argument("--reason", default="")
+    p_bg_license_revoke.add_argument("--operator-id", required=True)
+    p_bg_license_revoke.add_argument("--scope-id", required=True)
+    p_bg_license_revoke.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_license_revoke.set_defaults(func=cmd_bossgate)
+
+    p_bg_remote_open = p_bossgate_sub.add_parser("remote-debug-open", help="Open a scoped BossGate remote debug session")
+    p_bg_remote_open.add_argument("agent_name")
+    p_bg_remote_open.add_argument("--session-scope", nargs="+", required=True)
+    p_bg_remote_open.add_argument("--ttl-seconds", type=int, default=900)
+    p_bg_remote_open.add_argument("--operator-id", required=True)
+    p_bg_remote_open.add_argument("--scope-id", required=True)
+    p_bg_remote_open.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_remote_open.set_defaults(func=cmd_bossgate)
+
+    p_bg_remote_close = p_bossgate_sub.add_parser("remote-debug-close", help="Close or emergency-revoke BossGate remote debug sessions")
+    p_bg_remote_close.add_argument("--session-id", default="")
+    p_bg_remote_close.add_argument("--agent-name", default="")
+    p_bg_remote_close.add_argument("--emergency-revoke", action="store_true")
+    p_bg_remote_close.add_argument("--operator-id", required=True)
+    p_bg_remote_close.add_argument("--scope-id", required=True)
+    p_bg_remote_close.add_argument("--actor-type", choices=["human", "agent"], default="human")
+    p_bg_remote_close.set_defaults(func=cmd_bossgate)
+
+    p_bg_complete = p_bossgate_sub.add_parser("complete", help="Mark a BossGate TODO id as completed")
+    p_bg_complete.add_argument("todo_id", help="Todo id, e.g. BG-004")
+    p_bg_complete.add_argument("--evidence", default="", help="Optional evidence note (test command, commit, etc.)")
+    p_bg_complete.set_defaults(func=cmd_bossgate)
+
     p_icons = sub.add_parser("icons", help="IconForge: create icons and apply Windows icon overrides")
     p_icons_sub = p_icons.add_subparsers(dest="sub")
 
@@ -1042,6 +1672,48 @@ def build_parser() -> argparse.ArgumentParser:
     p_policy_check.add_argument("agent")
     p_policy_check.add_argument("action")
     p_policy_check.set_defaults(func=cmd_security)
+
+    p_module = sub.add_parser("module", help="Standalone module registry commands")
+    p_module_sub = p_module.add_subparsers(dest="sub")
+
+    p_module_list = p_module_sub.add_parser("list", help="List registered module manifests")
+    p_module_list.set_defaults(func=cmd_module)
+
+    p_module_show = p_module_sub.add_parser("show", help="Show one module manifest summary")
+    p_module_show.add_argument("module_id")
+    p_module_show.set_defaults(func=cmd_module)
+
+    p_module_validate = p_module_sub.add_parser("validate", help="Validate all module manifests")
+    p_module_validate.set_defaults(func=cmd_module)
+
+    p_module_status = p_module_sub.add_parser("status", help="Show module runtime status")
+    p_module_status.set_defaults(func=cmd_module)
+
+    p_module_start = p_module_sub.add_parser("start", help="Start module connector process")
+    p_module_start.add_argument("module_id")
+    p_module_start.add_argument(
+        "--standalone",
+        action="store_true",
+        help="Start module standalone entrypoint instead of connector command",
+    )
+    p_module_start.set_defaults(func=cmd_module)
+
+    p_module_stop = p_module_sub.add_parser("stop", help="Stop module connector process")
+    p_module_stop.add_argument("module_id")
+    p_module_stop.set_defaults(func=cmd_module)
+
+    p_module_doctor = p_module_sub.add_parser("doctor", help="Run module registry/runtime/smoke diagnostics")
+    p_module_doctor.add_argument(
+        "--include-external",
+        action="store_true",
+        help="Attempt smoke runs for non `python -m` standalone entrypoints",
+    )
+    p_module_doctor.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit compact JSON for machine parsing",
+    )
+    p_module_doctor.set_defaults(func=cmd_module)
 
     global PLUGIN_LOAD_STATE
     PLUGIN_LOAD_STATE = _load_plugins(sub)

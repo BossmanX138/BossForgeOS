@@ -1,0 +1,49 @@
+BossGate Abilities & Intended Purposes
+=====================================
+
+1. Secure Agent Transport
+   - Move agents between approved systems and networks.
+   - Protect agent payloads with encrypted transport (deny-by-default security).
+
+2. Encrypted Communication
+   - Provide encrypted messaging (TLS 1.3+ mutual authentication).
+   - Support multi-agent and human chat, file transfer, and voice communication.
+
+3. Address Ledger & Presence
+   - Maintain an encrypted, tamper-evident ledger of agent addresses and presence/status indicators.
+   - Enforce privacy boundaries for foreign addresses.
+
+4. Credential Management & Authentication
+   - USB BossGate Key: creation, reading, access enforcement (AES-256).
+   - NFC/RF credential: encoding, scanning, access enforcement.
+   - Authenticator app (TOTP/HOTP): setup, verification.
+   - Multi-factor authentication and credential rotation/revocation.
+   - Admin/admiral/general agent issuance workflows.
+
+5. Skill/Role Gating
+   - Enforce skill checks for agents and role checks for humans.
+   - Map roles to permissions for all BossGate features.
+
+6. Secure Address Protocol
+   - Enforce 7-word, asterisk-wrapped address format for all agents.
+   - Cryptographically secure address generation and validation.
+
+7. Policy-Driven Metadata Disclosure
+   - Control what metadata is exposed during agent transfer (id card, model card, none).
+   - Support for rental/sale license flow and billing integration.
+
+8. Discovery & Connector Synthesis
+   - Discover integration surfaces (endpoints, ports, protocol entry points) on approved targets.
+   - Generate connector stubs for approved targets (OpenAPI/Swagger, port/service reconnaissance).
+
+9. Audit, Telemetry, and Compliance
+   - Full audit stream for all agent actions and transfers.
+   - Usage tracking for rental/sale operations.
+   - Remote diagnostics and operational telemetry.
+   - Enforce authorized, auditable, policy-bound, and revocable operations.
+
+10. Extensibility
+    - Support for future features: video chat, group chat, collaborative editing, hardware tokens, biometrics, etc.
+
+---
+All BossGate abilities are skill/role-gated, logged, and privacy-compliant. Unauthorized actions, scanning, or data extraction are out-of-scope by design.

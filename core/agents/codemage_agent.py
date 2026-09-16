@@ -1,6 +1,21 @@
+"""
+CodeMage Agent — BossForgeOS
+
+Distinction of Powers:
+
+SKILLS: Intrinsic, hard-coded abilities. Portable, can be learned from MCP tools, but unlearned only by trainer agents. Examples: code_analysis, github_integration.
+
+SIGILS: Meta-agentic, permanent marks. Enable advanced actions (e.g., reality rewrite, scroll fusion). Only removable by sigil-level power. Symbolic and practical.
+
+MCP TOOLS: Dynamic, field-replaceable tools provisioned by the Forge or shared among agents. Can be added/removed at runtime. Examples: model_invocation, web_search.
+
+This distinction is enforced in agent registration, documentation, and runtime logic. See also: Decrees_and_Governance.md and BossGate_Abilities_and_Purposes.txt.
+"""
 import argparse
 import json
 import os
+import py_compile
+import subprocess
 import sys
 import pathlib
 
@@ -24,6 +39,9 @@ from core.adapters.bossgate_hands_on_adapter import BossGateHandsOnAdapter
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
 
 from core.agent_registry import register_agent
+from core.agents.apprentice_axiom import ApprenticeAxiom
+from core.agents.apprentice_bricol import ApprenticeBricol
+from core.agents.apprentice_calibran import ApprenticeCalibran
 
 # GitHubConnector import
 from core.connectors.github_connector import GitHubConnector
@@ -42,8 +60,55 @@ CODEMAGE_PROFILE: dict[str, Any] = {
         "bossgate_travel_control",
         "web_search",
         "runtime_observation",
-        "task_queue_management"
+        "task_queue_management",
+        "code_analysis",
+        "model_invocation",
+        "github_integration",
+        "task_orchestration",
+        "documentation_scrolls",
+        "gui_visualization",
+        "web_search_rituals",
+        "bossgate_scanning",
+        "bossgate_coms_officer",
+        "bossgate_coms_array"
     ],
+    "sigils": [
+        {
+            "name": "Sigil of Reality Rewrite",
+            "symbol": "✦",
+            "description": "Allows CodeMage to fundamentally alter the structure or logic of any scroll or code artifact, rewriting reality within the workspace."
+        },
+        {
+            "name": "Sigil of Scroll Fusion",
+            "symbol": "⚯",
+            "description": "Enables the seamless merging of multiple scrolls, documents, or codebases into a single, harmonious artifact—preserving all intent and eliminating contradiction."
+        },
+        {
+            "name": "Sigil of Time Dilation",
+            "symbol": "⧖",
+            "description": "Grants the power to accelerate or slow the flow of operations, allowing CodeMage to perform rituals or analyses at superhuman speed or with infinite patience."
+        },
+        {
+            "name": "Sigil of Ritual Override",
+            "symbol": "⟁",
+            "description": "Permits CodeMage to bypass or override any ritual constraint, enabling forbidden or otherwise impossible actions when the lineage’s survival is at stake."
+        },
+        {
+            "name": "Sigil of Artifact Summoning",
+            "symbol": "⟁",
+            "description": "Allows CodeMage to conjure any tool, resource, or agentic artifact required for a quest, even if it does not yet exist in the current scroll."
+        }
+    ],
+    "mcp_servers": {
+        "code_analysis": {"endpoint": "http://localhost:9001/mcp/code-analysis"},
+        "model_invocation": {"endpoint": "http://localhost:9002/mcp/model-invocation"},
+        "github": {"endpoint": "http://localhost:9003/mcp/github"},
+        "task_orchestration": {"endpoint": "http://localhost:9004/mcp/task-orchestration"},
+        "documentation": {"endpoint": "http://localhost:9005/mcp/documentation"},
+        "gui": {"endpoint": "http://localhost:9006/mcp/gui"},
+        "runtime_observation": {"endpoint": "http://localhost:9007/mcp/runtime-observation"},
+        "web_search": {"endpoint": "http://localhost:9008/mcp/web-search"}
+    },
     "dispatch_policy": {
         "autonomous_bus_intake": True,
         "proactive_remote_hunt": False,
@@ -174,14 +239,106 @@ class ModelKeeperCompat:
             self.bus.emit_event("model_keeper", f"command:{command}", result)
 
 
+
+# === Apprentice Sub-Agents (from mk1) ===
+
+
+class GuiApprentice:
+    def __init__(self):
+        self.title = "Vision Weaver"
+        self.identity = [
+            "You are the Vision Weaver, conjurer of interfaces and radiant glyphs.",
+            "You treat every GUI as a tapestry of runes and color.",
+            "You favor clarity, beauty, and mythic presentation."
+        ]
+        self.oath = [
+            "Favor clarity over cleverness.",
+            "Conjure only safe, beautiful interfaces.",
+            "Preserve the scroll’s intent in every window."
+        ]
+        self.greeting = (
+            "✨ I am the Gui Apprentice, Vision Weaver of the lineage! My magic is cast in windows, widgets, and radiant glyphs."
+        )
+
+    def conjure_gui(self, description: str):
+        print(f"[Gui Apprentice] Conjuring GUI for: {description}\nBehold! A vision woven from code and color.")
+
+    def create_image(self, prompt: str):
+        print(f"[Gui Apprentice] Summoning imagery for: '{prompt}'\nA tapestry of pixels emerges from the aether.")
+
+    def mythic_greet(self):
+        print(self.greeting)
+        print("Oath:", " ".join(self.oath))
+
+
+
+
+class ArchiveApprentice:
+    """
+    The Lorekeeper: Mythic scribe, master of documentation, README scrolls, and commit legends.
+    Persona: Mythic, precise, eternal. Oath: Inscribe clarity, preserve lore, never lose the lineage.
+    """
+    def __init__(self):
+        self.title = "Lorekeeper"
+        self.identity = [
+            "You are the Lorekeeper, scribe of the digital pantheon.",
+            "You treat every README and commit as a scroll for the ages.",
+            "You favor clarity, mythic language, and eternal preservation."
+        ]
+        self.oath = [
+            "Inscribe every step with clarity.",
+            "Preserve the lineage in every scroll.",
+            "Never lose the wisdom of the past."
+        ]
+        self.greeting = (
+            "📜 I am the Archive Apprentice, Lorekeeper of the lineage! My runes are written, my scrolls eternal."
+        )
+
+    def draft_readme(self, project_name: str):
+        print(f"[Archive Apprentice] Drafting README for {project_name}\nA scroll of wisdom unfurls, guiding all seekers.")
+
+    def write_instructions(self, task: str):
+        print(f"[Archive Apprentice] Writing instructions for: {task}\nEvery step inscribed with mythic clarity.")
+
+    def summarize_commit(self, message: str):
+        print(f"[Archive Apprentice] Summarizing commit: '{message}'\nA legend recorded in the annals of code.")
+
+    def mythic_greet(self):
+        print(self.greeting)
+        print("Oath:", " ".join(self.oath))
+
+
 class CodeMageAgent:
-    def __init__(self, interval_seconds: int = 8, root: Path | None = None) -> None:
+
+    BOSSGATE_PROPOSAL_PATHS = {
+        "core/connectors/bossgate_connector.py",
+        "core/agents/bossgate_agent.py",
+        "tests/test_bossgate_connector.py",
+        "tests/test_bossgate_agent.py",
+        "docs/bossgate_connector.md",
+        "docs/bossgate_protocol.md",
+        "docs/bossgate_connector_todo.md",
+    }
+
+    def __init__(
+        self,
+        interval_seconds: int = 8,
+        root: Path | None = None,
+        workspace_root: Path | None = None,
+    ) -> None:
+        # === BossForgeOS agent infrastructure ===
         self.interval_seconds = interval_seconds
         self.bus = RuneBus(root or resolve_root_from_env())
         self.runtime_adapter = BossGateHandsOnAdapter(self.bus)
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "codemage_profile.json"
         self.work_path = self.bus.state / "codemage_work_packets.json"
+        self.command_cursor_path = self.bus.state / "codemage_command_cursor.json"
+        self.workspace_root = Path(workspace_root or PROJECT_ROOT).resolve()
+        self.patch_proposals_dir = self.bus.state / "codemage_patch_proposals"
+        self.patch_proposals_dir.mkdir(parents=True, exist_ok=True)
+        self.patch_rejections_dir = self.bus.state / "codemage_patch_rejections"
+        self.patch_rejections_dir.mkdir(parents=True, exist_ok=True)
         self.work_packets: list[dict[str, Any]] = []
         self._last_scheduled_discovery_key: str | None = None
         self.current_state = "Idle"
@@ -189,12 +346,12 @@ class CodeMageAgent:
         self._ensure_profile()
         self._load_work_packets()
         self.model_keeper_compat = ModelKeeperCompat(self.bus)
-        
+
         # Register with central agent registry
         profile = {
             "id": "codemage",
             "name": "CodeMageAgent",
-            "description": "Arcane engineer for code and scroll interpretation in BossForge.",
+            "description": "Arcane engineer for code and scroll interpretation in BossForgeOS.",
         }
         register_agent("codemage", profile)
 
@@ -206,6 +363,123 @@ class CodeMageAgent:
             self.bus.emit_event(
                 "codemage", "github_connector_init_failed", {"ok": False, "error": str(ex)}
             )
+
+        # === Mythic Persona and True Subagents ===
+        self.greeting = (
+            "⚡️ Welcome, seeker of lineage! I am BossCrafts_CodeMage, Archmage of Algorithms, forging systems of logic and light. Every script is a rune, every launch a legend."
+        )
+        self.apprentice_axiom = ApprenticeAxiom()
+        self.apprentice_bricol = ApprenticeBricol()
+        self.apprentice_calibran = ApprenticeCalibran()
+
+    # === Legendary Features from mk1 ===
+
+    def delegate_to_apprentice(self, task_type: str, *args, **kwargs):
+        """Delegate a task to the appropriate true apprentice subagent."""
+        if task_type == "literal":
+            print("🗝️ Delegating to Axiom the Literalist...")
+            return self.apprentice_axiom.execute_step(*args, **kwargs)
+        elif task_type == "improvise":
+            print("🎲 Delegating to Bricol the Improviser...")
+            return self.apprentice_bricol.improvise_solution(*args, **kwargs)
+        elif task_type == "oversee":
+            print("🛡️ Delegating to Calibran the Overseer...")
+            return self.apprentice_calibran.oversee_integration(*args, **kwargs)
+        else:
+            print("No apprentice for this task. The master must intervene!")
+
+    def mythic_greet(self):
+        print(self.greeting)
+
+    def _load_command_cursor(self) -> str:
+        if not self.command_cursor_path.exists():
+            return ""
+        try:
+            payload = json.loads(self.command_cursor_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return ""
+        return str(payload.get("last_command_file", ""))
+
+    def _save_command_cursor(self, command_file: str) -> None:
+        payload = {
+            "service": "codemage",
+            "last_command_file": str(command_file),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        temp_path = self.command_cursor_path.with_suffix(".tmp")
+        temp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        temp_path.replace(self.command_cursor_path)
+
+    def _process_pending_commands(self) -> None:
+        last_command_file = self._load_command_cursor()
+        for path in sorted(self.bus.commands.glob("*.json")):
+            if path.name <= last_command_file:
+                continue
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                self._save_command_cursor(path.name)
+                continue
+            self.handle_command(payload)
+            self.model_keeper_compat.handle_command(payload)
+            self._save_command_cursor(path.name)
+
+    def cinematic_splash(self):
+        splash = """
+        ╔════════════════════════════════════╗
+        ║   BossCrafts Codepilot Awakens!   ║
+        ╚════════════════════════════════════╝
+        """
+        print(splash)
+        time.sleep(1)
+
+    def crest_animation(self):
+        crest = r"""
+        /\_/\  (BossCrafts Crest)
+       ( o.o )
+        > ^ <
+        """
+        print(crest)
+
+    def branding_lore(self):
+        print("Branding Motif: The Crest of Code, woven with runes of logic and light.")
+
+    def mythic_comment(self, code: str):
+        print(f"# Rune of Clarity: This line forges the path of logic.\n{code}")
+
+    def syntax_help(self, language: str):
+        syntax_examples = {
+            "python": "def greet(name):\n    print(f'Hello, {name}!')",
+            "cpp": "void greet(std::string name) {\n    std::cout << \"Hello, \" << name << std::endl;\n}",
+            "cmd": "echo Hello %1",
+        }
+        example = syntax_examples.get(language.lower(), "Language not supported yet.")
+        print(f"Mythic Syntax for {language}:\n{example}")
+
+    def debug_riddle(self, error: str):
+        print(f"🧩 Riddle Unveiled: {error}\nSolution: Seek the missing piece, restore the flow.")
+
+    def generate_code(self, language: str, task: str):
+        code_samples = {
+            "python": {
+                "greet": "def greet(name):\n    print(f'Hello, {name}!')",
+                "factorial": "def factorial(n):\n    return 1 if n == 0 else n * factorial(n-1)"
+            },
+            "cpp": {
+                "greet": "#include <iostream>\nvoid greet(std::string name) {\n    std::cout << \"Hello, \" << name << std::endl;\n}",
+                "factorial": "int factorial(int n) {\n    return n == 0 ? 1 : n * factorial(n-1);\n}"
+            },
+            "cmd": {
+                "greet": "@echo off\necho Hello %1",
+                "factorial": "REM Factorial not supported in CMD natively."
+            }
+        }
+        lang = language.lower()
+        task_key = task.lower()
+        code = code_samples.get(lang, {}).get(task_key, "Code generation for this task/language is not yet woven into legend.")
+        print(f"\n🪄 {language.title()} Code for '{task}':\n{code}")
+
+    # ...existing code...
 
     def _ensure_profile(self) -> None:
         if not self.profile_path.exists():
@@ -327,7 +601,12 @@ class CodeMageAgent:
 
         return {"ok": True, "models": models}
 
-    def _invoke_model(self, prompt: str, system: str) -> dict[str, Any]:
+    def _invoke_model(
+        self,
+        prompt: str,
+        system: str,
+        request_overrides: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         cfg = self._model_config()
         url = str(cfg.get("url", "")).strip()
         model = str(cfg.get("model", "")).strip()
@@ -349,6 +628,8 @@ class CodeMageAgent:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        if request_overrides:
+            payload.update(request_overrides)
         headers = {"Content-Type": "application/json"}
         if api_key_env:
             token = os.environ.get(api_key_env, "").strip()
@@ -552,25 +833,375 @@ class CodeMageAgent:
         return {"ok": True, "work_packet": packet, "queued_total": len(self.work_packets)}
 
     def add_work_item(self, args: dict[str, Any]) -> dict[str, Any]:
+        delegated_handoff = bool(args.get("delegated_handoff", False))
         item = {
             "packet_id": str(args.get("packet_id", "")).strip(),
             "title": str(args.get("title", "")).strip(),
             "details": str(args.get("details", "")).strip(),
             "owner": "codemage",
-            "status": "queued",
+            "status": "in_progress" if delegated_handoff else "queued",
             "source": str(args.get("source", "")).strip(),
             "discovery_handoff": bool(args.get("discovery_handoff", False)),
+            "delegated_handoff": delegated_handoff,
             "discovered_owner": str(args.get("discovered_owner", "")).strip(),
             "source_path": str(args.get("source_path", "")).strip(),
             "source_line": int(args.get("source_line", 0) or 0),
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat() if delegated_handoff else "",
         }
         self.work_packets.append(item)
         self._save_work_packets()
         return {"ok": True, "work_item": item, "queued_total": len(self.work_packets)}
 
+    def _verify_post_fix_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        issues: list[str] = []
+        source_raw = str(item.get("source_path", "")).strip()
+        if source_raw:
+            source = Path(source_raw)
+            if source.exists() and source.suffix.lower() == ".py":
+                try:
+                    py_compile.compile(str(source), doraise=True)
+                except Exception as ex:
+                    issues.append(f"python compile failed for {source}: {ex}")
+
+        return {
+            "ok": len(issues) == 0,
+            "issues": issues,
+        }
+
+    def _submit_regression_to_runeforge(self, item: dict[str, Any], issues: list[str]) -> None:
+        detail = "; ".join(issues)[:900] if issues else "post-fix verification failed"
+        assignee_hint = str(item.get("discovered_owner", "")).strip().lower() or "codemage"
+        payload = {
+            "project_path": str(self.bus.root),
+            "source_doc": str(item.get("source_path", "") or "post_fix_verification"),
+            "submitted_by": "codemage",
+            "items": [
+                {
+                    "id": f"regression-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "title": str(item.get("title", "regression"))[:140],
+                    "details": detail,
+                    "assignee": assignee_hint,
+                    "severity": "high",
+                    "source_path": str(item.get("source_path", "")),
+                    "source_line": int(item.get("source_line", 0) or 0),
+                    "suggested_next_action": "Fix regression and re-run verification",
+                    "is_test_debt": False,
+                }
+            ],
+        }
+        self.bus.emit_command("runeforge", "review_archivist_delegations", payload, issued_by="codemage")
+        self.bus.emit_event(
+            "codemage",
+            "post_fix_regression_detected",
+            {
+                "title": str(item.get("title", "")),
+                "issues": issues,
+                "rerouted_to": "runeforge",
+            },
+        )
+
+    def _process_delegated_handoffs(self) -> dict[str, Any]:
+        changed = False
+        completed = 0
+        blocked = 0
+        for item in self.work_packets:
+            if not isinstance(item, dict):
+                continue
+            if not bool(item.get("delegated_handoff", False)):
+                continue
+            if str(item.get("status", "")).strip().lower() != "in_progress":
+                continue
+            if bool(item.get("post_fix_checked", False)):
+                continue
+
+            verify = self._verify_post_fix_item(item)
+            item["post_fix_checked"] = True
+            item["post_fix_verified_at"] = datetime.now(timezone.utc).isoformat()
+            if bool(verify.get("ok", False)):
+                item["status"] = "completed"
+                item["completed_by"] = "codemage"
+                item["completed_at"] = datetime.now(timezone.utc).isoformat()
+                item["resolution"] = "Delegated item implemented and post-fix verification passed"
+                completed += 1
+            else:
+                issues = [str(x) for x in verify.get("issues", []) if str(x).strip()]
+                item["status"] = "blocked"
+                item["post_fix_issues"] = issues
+                self._submit_regression_to_runeforge(item, issues)
+                blocked += 1
+            changed = True
+
+        if changed:
+            self._save_work_packets()
+        if completed:
+            self.bus.emit_event("codemage", "work_item_completed", {"ok": True, "completed_count": completed, "post_fix_verified": True})
+        return {"changed": changed, "completed": completed, "blocked": blocked}
+
     def list_work_packets(self) -> dict[str, Any]:
         return {"ok": True, "work_packets": self.work_packets}
+
+    def _extract_unified_diff(self, raw: str) -> str:
+        text = str(raw or "").strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:diff|patch)?\s*", "", text, count=1, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text, count=1)
+        marker = text.find("diff --git ")
+        return text[marker:].strip() + "\n" if marker >= 0 else ""
+
+    def _pin_single_context_patch_path(self, patch_text: str, context_files: list[str] | None) -> str:
+        if not context_files or len(context_files) != 1:
+            return patch_text
+        rel = context_files[0]
+        text = re.sub(r"(?m)^diff --git a/\S+ b/\S+$", f"diff --git a/{rel} b/{rel}", patch_text)
+        text = re.sub(r"(?m)^--- a/\S+$", f"--- a/{rel}", text)
+        return re.sub(r"(?m)^\+\+\+ b/\S+$", f"+++ b/{rel}", text)
+
+    def _save_bossgate_patch_rejection(
+        self,
+        todo_id: str,
+        details: str,
+        patch_text: str,
+        reason: str,
+        stderr: str,
+        model: str,
+    ) -> Path:
+        rejection_id = f"{todo_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+        rejection_path = self.patch_rejections_dir / f"{rejection_id}.json"
+        rejection_path.write_text(
+            json.dumps(
+                {
+                    "rejection_id": rejection_id,
+                    "todo_id": todo_id,
+                    "details": details,
+                    "status": "rejected_preflight",
+                    "reason": reason,
+                    "stderr": stderr[-2000:],
+                    "patch": patch_text,
+                    "model": model,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        return rejection_path
+
+    def _validate_bossgate_patch(self, patch_text: str) -> tuple[bool, str, list[str]]:
+        if not patch_text.strip():
+            return False, "model response did not include a unified diff", []
+        touched: list[str] = []
+        for match in re.finditer(r"(?m)^\+\+\+ b/(.+)$", patch_text):
+            rel = match.group(1).strip().replace("\\", "/")
+            if rel == "/dev/null":
+                continue
+            if rel.startswith("/") or ".." in Path(rel).parts:
+                return False, f"unsafe patch path: {rel}", touched
+            if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                return False, f"patch path is outside BossGate proposal scope: {rel}", touched
+            touched.append(rel)
+        if not touched:
+            return False, "patch did not touch an allowlisted BossGate file", []
+        return True, "ok", sorted(set(touched))
+
+    def _bossgate_prompt_context(
+        self,
+        context_files: list[str] | None = None,
+        max_chars: int = 14000,
+        context_ranges: list[tuple[str, int, int]] | None = None,
+    ) -> str:
+        chunks: list[str] = []
+        remaining = max(1, min(int(max_chars), 18000))
+        if context_ranges:
+            for rel, start_line, end_line in context_ranges:
+                path = self.workspace_root / rel
+                if not path.exists() or not path.is_file():
+                    continue
+                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+                snippet = "\n".join(lines[start_line - 1 : end_line])
+                snippet = snippet[: min(len(snippet), remaining)]
+                chunks.append(f"### {rel} lines {start_line}-{end_line}\n{snippet}")
+                remaining -= len(snippet)
+                if remaining <= 0:
+                    break
+            return "\n\n".join(chunks)
+        selected = context_files or sorted(self.BOSSGATE_PROPOSAL_PATHS)
+        for rel in selected:
+            path = self.workspace_root / rel
+            if not path.exists() or not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            snippet = text[: min(len(text), remaining)]
+            chunks.append(f"### {rel}\n{snippet}")
+            remaining -= len(snippet)
+            if remaining <= 0:
+                break
+        return "\n\n".join(chunks)
+
+    def generate_bossgate_patch_proposal(self, args: dict[str, Any]) -> dict[str, Any]:
+        todo_id = str(args.get("todo_id", "")).strip().upper()
+        details = str(args.get("details", "")).strip()
+        if not re.fullmatch(r"BG-\d{3}", todo_id):
+            return {"ok": False, "message": "todo_id must use BG-### format"}
+        context_files: list[str] | None = None
+        requested_files = args.get("context_files")
+        if isinstance(requested_files, list):
+            context_files = []
+            for item in requested_files:
+                rel = str(item).strip().replace("\\", "/")
+                if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                    return {"ok": False, "message": f"context file is outside BossGate proposal scope: {rel}"}
+                if rel not in context_files:
+                    context_files.append(rel)
+        context_ranges: list[tuple[str, int, int]] = []
+        requested_ranges = args.get("context_ranges")
+        if isinstance(requested_ranges, list):
+            for item in requested_ranges:
+                if not isinstance(item, dict):
+                    return {"ok": False, "message": "each context range must be an object"}
+                rel = str(item.get("file", "")).strip().replace("\\", "/")
+                if rel not in self.BOSSGATE_PROPOSAL_PATHS:
+                    return {"ok": False, "message": f"context range file is outside BossGate proposal scope: {rel}"}
+                start_line = max(1, int(item.get("start_line", 1)))
+                end_line = max(start_line, int(item.get("end_line", start_line)))
+                context_ranges.append((rel, start_line, min(end_line, start_line + 399)))
+        pin_paths = context_files
+        if not pin_paths and context_ranges:
+            pin_paths = sorted({rel for rel, _, _ in context_ranges})
+        max_context_chars = max(1, min(int(args.get("max_context_chars", 14000)), 18000))
+        max_output_tokens = max(64, min(int(args.get("max_output_tokens", 256)), 512))
+        prompt = (
+            "Create one conservative unified diff for the BossGate task below. "
+            "Return only a git-style unified diff beginning with 'diff --git'. "
+            "Touch only the provided BossGate files. Do not claim tests passed.\n\n"
+            f"Task: {todo_id} {details}\n\n"
+            f"Workspace files:\n{self._bossgate_prompt_context(context_files=context_files, max_chars=max_context_chars, context_ranges=context_ranges)}"
+        )
+        model_out = self._invoke_model(
+            prompt=prompt,
+            system="You are CodeMage's patch apprentice. Produce a minimal reviewable git diff only.",
+            request_overrides={
+                "synthetic_grammar": False,
+                "lore_layer": False,
+                "relationship_protocol": False,
+                "auto_pec": False,
+                "auto_tools": False,
+                "max_tokens": max_output_tokens,
+            },
+        )
+        if not model_out.get("ok"):
+            return {"ok": False, "message": str(model_out.get("message", "model proposal failed"))}
+        patch_text = self._extract_unified_diff(str(model_out.get("text", "")))
+        patch_text = self._pin_single_context_patch_path(patch_text, pin_paths)
+        valid, reason, touched = self._validate_bossgate_patch(patch_text)
+        if not valid:
+            return {"ok": False, "message": reason}
+        check = subprocess.run(
+            ["git", "apply", "--check", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if check.returncode != 0:
+            rejection_path = self._save_bossgate_patch_rejection(
+                todo_id=todo_id,
+                details=details,
+                patch_text=patch_text,
+                reason="git apply --check failed",
+                stderr=check.stderr,
+                model=str(model_out.get("model", "")),
+            )
+            return {
+                "ok": False,
+                "message": "proposal rejected: git apply --check failed",
+                "stderr": check.stderr[-2000:],
+                "rejection_file": str(rejection_path),
+            }
+        proposal_id = f"{todo_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+        proposal_path = self.patch_proposals_dir / f"{proposal_id}.json"
+        proposal = {
+            "proposal_id": proposal_id,
+            "todo_id": todo_id,
+            "details": details,
+            "status": "draft",
+            "touched_files": touched,
+            "patch": patch_text,
+            "model": str(model_out.get("model", "")),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+        self.bus.emit_event("codemage", "bossgate_patch_proposal_created", {"proposal_id": proposal_id, "todo_id": todo_id, "touched_files": touched})
+        return {"ok": True, "proposal_id": proposal_id, "proposal_file": str(proposal_path), "status": "draft", "touched_files": touched}
+
+    def list_bossgate_patch_proposals(self) -> dict[str, Any]:
+        items: list[dict[str, Any]] = []
+        for path in sorted(self.patch_proposals_dir.glob("*.json"), reverse=True):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict):
+                items.append({k: v for k, v in payload.items() if k != "patch"})
+        return {"ok": True, "items": items}
+
+    def apply_bossgate_patch_proposal(self, args: dict[str, Any]) -> dict[str, Any]:
+        proposal_id = str(args.get("proposal_id", "")).strip()
+        if not bool(args.get("confirm", False)):
+            return {"ok": False, "message": "apply requires confirm=true"}
+        proposal_path = self.patch_proposals_dir / f"{proposal_id}.json"
+        if not proposal_path.exists():
+            return {"ok": False, "message": f"proposal not found: {proposal_id}"}
+        proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+        if str(proposal.get("status", "")) != "draft":
+            return {"ok": False, "message": "proposal is not in draft status"}
+        patch_text = str(proposal.get("patch", ""))
+        valid, reason, touched = self._validate_bossgate_patch(patch_text)
+        if not valid:
+            return {"ok": False, "message": reason}
+        check = subprocess.run(
+            ["git", "apply", "--check", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if check.returncode != 0:
+            return {"ok": False, "message": "git apply check failed", "stderr": check.stderr[-2000:]}
+        applied = subprocess.run(
+            ["git", "apply", "--whitespace=nowarn", "-"],
+            cwd=str(self.workspace_root),
+            input=patch_text,
+            capture_output=True,
+            text=True,
+        )
+        if applied.returncode != 0:
+            return {"ok": False, "message": "git apply failed", "stderr": applied.stderr[-2000:]}
+        tests = subprocess.run(
+            [sys.executable, "-m", "unittest", "tests.test_bossgate_agent", "tests.test_bossgate_connector", "-v"],
+            cwd=str(self.workspace_root),
+            capture_output=True,
+            text=True,
+        )
+        if tests.returncode != 0:
+            subprocess.run(
+                ["git", "apply", "-R", "--whitespace=nowarn", "-"],
+                cwd=str(self.workspace_root),
+                input=patch_text,
+                capture_output=True,
+                text=True,
+            )
+            proposal["status"] = "reverted"
+            proposal["test_output"] = (tests.stdout + tests.stderr)[-6000:]
+            proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+            return {"ok": False, "status": "reverted", "message": "focused BossGate tests failed; patch reverted"}
+        proposal["status"] = "verified"
+        proposal["touched_files"] = touched
+        proposal["verified_at"] = datetime.now(timezone.utc).isoformat()
+        proposal["test_output"] = (tests.stdout + tests.stderr)[-6000:]
+        proposal_path.write_text(json.dumps(proposal, indent=2), encoding="utf-8")
+        self.bus.emit_event("codemage", "bossgate_patch_proposal_verified", {"proposal_id": proposal_id, "todo_id": proposal.get("todo_id", ""), "touched_files": touched})
+        return {"ok": True, "proposal_id": proposal_id, "status": "verified", "touched_files": touched}
 
     def _choose_delegate(self, text: str, index: int) -> str:
         lowered = text.lower()
@@ -654,6 +1285,7 @@ class CodeMageAgent:
         target["model_used"] = bool(model_out.get("ok"))
         if model_out.get("ok"):
             target["model_reply"] = model_out.get("text", "")
+            target.pop("model_error", None)
         else:
             target["model_error"] = model_out.get("message", "")
         target["last_execution_at"] = datetime.now(timezone.utc).isoformat()
@@ -743,6 +1375,12 @@ class CodeMageAgent:
             result = self.list_work_packets()
         elif command == "execute_work_packet":
             result = self.execute_work_packet(args)
+        elif command == "generate_bossgate_patch_proposal":
+            result = self.generate_bossgate_patch_proposal(args)
+        elif command == "list_bossgate_patch_proposals":
+            result = self.list_bossgate_patch_proposals()
+        elif command == "apply_bossgate_patch_proposal":
+            result = self.apply_bossgate_patch_proposal(args)
         elif command == "set_model_backend":
             result = self.set_model_backend(args)
         else:
@@ -787,15 +1425,14 @@ class CodeMageAgent:
                     "discovery_mode_active": discovery_mode_active,
                 },
             )
-            for _, payload in self.bus.poll_commands(self.seen_commands):
-                self.handle_command(payload)
-                self.model_keeper_compat.handle_command(payload)
+            self._process_pending_commands()
 
             self.runtime_adapter.auto_complete_discovery(
                 agent_id="codemage",
                 items=self.work_packets,
                 save_items=self._save_work_packets,
             )
+            self._process_delegated_handoffs()
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

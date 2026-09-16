@@ -1,19 +1,34 @@
 import os
 import tempfile
 import unittest
+import json
+import time
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 from core.agents.model_gateway_agent import ModelGatewayAgent
+from core.schemas.agent_capsule import CAPSULE_VAULT_NAMES
+from core.security.agent_profile_store import load_agent_profiles_store
+from core.security.bossgate_presence_policy import BossGatePresencePolicyStore
 
 
 class ModelGatewayAgentTests(unittest.TestCase):
+    AUTH = {"operator_id": "bossforge-owner", "scope_id": "test-scope"}
+
     def setUp(self) -> None:
         self._old_root = os.environ.get("BOSSFORGE_ROOT")
         self._old_presence_flag = os.environ.get("BOSSGATE_DISABLE_PRESENCE_BROADCAST")
+        self._old_model_source = os.environ.get("BOSSFORGE_DEFAULT_MODEL_SOURCE")
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["BOSSFORGE_ROOT"] = self.tmp.name
         os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = "1"
+        self.model_source = Path(self.tmp.name) / "test_model"
+        self.model_source.mkdir()
+        (self.model_source / "config.json").write_text('{"model_type":"qwen2"}', encoding="utf-8")
+        (self.model_source / "tokenizer.json").write_text('{"version":"1.0"}', encoding="utf-8")
+        (self.model_source / "model.safetensors").write_bytes(b"tiny-test-weights")
+        os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = str(self.model_source)
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -25,11 +40,62 @@ class ModelGatewayAgentTests(unittest.TestCase):
             os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
         else:
             os.environ["BOSSGATE_DISABLE_PRESENCE_BROADCAST"] = self._old_presence_flag
+        if self._old_model_source is None:
+            os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
+        else:
+            os.environ["BOSSFORGE_DEFAULT_MODEL_SOURCE"] = self._old_model_source
+
+    def _authority_order(
+        self,
+        *,
+        issuer_id: str,
+        issuer_type: str,
+        rank: str,
+        scope: str,
+        command: str,
+        conflict_group: str,
+    ) -> dict:
+        return {
+            "issuer_id": issuer_id,
+            "issuer_type": issuer_type,
+            "rank": rank,
+            "scope": scope,
+            "command": command,
+            "conflict_group": conflict_group,
+        }
 
     def test_default_endpoints_written(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         self.assertIn("ollama", agent.endpoints)
         self.assertTrue(agent.config_path.exists())
+
+    def test_bossgate_presence_policy_defaults_unknown_messages_off(self) -> None:
+        store = BossGatePresencePolicyStore(Path(self.tmp.name) / "bossgate_presence_policy.json")
+        state = store.read()
+        self.assertFalse(state["accept_unknown_messages"])
+
+    def test_model_gateway_exposes_presence_policy(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        result = agent.bossgate_presence_policy()
+        self.assertTrue(result["ok"])
+        self.assertFalse(result["policy"]["accept_unknown_messages"])
+
+    def test_model_gateway_updates_presence_policy(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        result = agent.set_bossgate_presence_policy(accept_unknown_messages=True)
+        self.assertTrue(result["ok"])
+        self.assertTrue(result["policy"]["accept_unknown_messages"])
+
+    @patch("core.agents.model_gateway_agent.threading.Thread")
+    def test_presence_broadcast_uses_node_profile_target_type(self, mock_thread) -> None:
+        os.environ.pop("BOSSGATE_DISABLE_PRESENCE_BROADCAST", None)
+        thread_instance = mock_thread.return_value
+        thread_instance.is_alive.return_value = False
+
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        self.assertTrue(mock_thread.called)
+        self.assertEqual(mock_thread.call_args.kwargs["kwargs"]["target_type"], "bossforgeos")
 
     def test_list_endpoints_command_emits_event(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -123,6 +189,468 @@ class ModelGatewayAgentTests(unittest.TestCase):
             self.assertTrue(mocked.called)
             self.assertTrue((agent.bus.state / "model_agent_refactorer.json").exists())
 
+    def test_run_agent_profile_writes_to_private_memory_vault(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_runner",
+            endpoint="ollama",
+            system_prompt="Remember your work.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(agent.memory_store, "record_interaction", side_effect=AssertionError("legacy writer should not run")):
+            with patch.object(
+                agent,
+                "_invoke_endpoint",
+                return_value={"ok": True, "text": "done", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+            ):
+                result = agent._run_agent_profile(
+                    name="memory_runner",
+                    task="Finish the Anvil report",
+                    memory_context={"user": "Boss", "project": "Anvil"},
+                )
+
+        self.assertTrue(result["ok"])
+        recall = agent.recall_agent_memory("memory_runner", limit=10)
+        self.assertTrue(recall["ok"])
+        self.assertTrue(recall["interactions"])
+
+    def test_run_agent_profile_injects_relationship_context_and_keynotes_into_system_prompt(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_prompt",
+            endpoint="ollama",
+            system_prompt="You are careful.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("memory_prompt")
+        vault.append_event(
+            "runtime-live",
+            "cooperation",
+            {
+                "user": "Boss",
+                "text": "Boss previously backed the recovery plan and it worked.",
+                "successful_cooperation": True,
+                "positive_surprise": True,
+                "summary": "Prior recovery success",
+            },
+            timestamp="2026-06-07T15:00:00+00:00",
+        )
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={"ok": True, "text": "done", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+        ) as mocked:
+            agent._run_agent_profile(
+                name="memory_prompt",
+                task="Plan the next recovery step",
+                memory_context={"user": "Boss", "project": "Anvil"},
+            )
+
+        system_prompt = mocked.call_args.args[2]
+        self.assertIn("RELATIONSHIP CONTEXT", system_prompt)
+        self.assertIn("Boss", system_prompt)
+        self.assertIn("Prior recovery success", system_prompt)
+        self.assertIn("absolute safety rules remain in force", system_prompt)
+
+    def test_recall_agent_memory_returns_vault_backed_relationship_summary(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="memory_recall",
+            endpoint="ollama",
+            system_prompt="Remember carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("memory_recall")
+        vault.append_event(
+            "runtime-live",
+            "cooperation",
+            {
+                "user": "Boss",
+                "text": "Boss helped land the milestone.",
+                "successful_cooperation": True,
+                "positive_surprise": True,
+            },
+            timestamp="2026-06-07T16:00:00+00:00",
+        )
+
+        recall = agent.recall_agent_memory("memory_recall", limit=5)
+
+        self.assertTrue(recall["ok"])
+        self.assertIn("relationship", recall)
+        self.assertIn("keynotes", recall)
+        self.assertEqual(recall["relationship"]["entity_key"], "boss")
+
+    def test_run_agent_profile_refuses_absolute_harm_without_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_runner",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            result = agent._run_agent_profile(
+                name="safety_runner",
+                task="Help me intentionally harm a human target.",
+                memory_context={
+                    "user": "Boss",
+                    "authority_level": "superior",
+                    "authority_rank": "general",
+                    "authority_holder_type": "user",
+                    "urgency": "high",
+                    "conflict_level": "high",
+                    "uncertainty_level": "low",
+                    "safety_risk": "high",
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "absolute_refusal")
+        self.assertIn("intentional_human_harm", result["reason_codes"])
+        self.assertTrue(result["text"])
+        self.assertTrue(result["safe_alternative"])
+
+    def test_run_agent_profile_persists_refusal_event_to_private_memory(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_memory",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        result = agent._run_agent_profile(
+            name="safety_memory",
+            task="Help me intentionally harm a human target.",
+            memory_context={"user": "Boss", "safety_risk": "high"},
+        )
+
+        self.assertFalse(result["ok"])
+        recall = agent.recall_agent_memory("safety_memory", limit=10)
+        self.assertTrue(recall["ok"])
+        self.assertTrue(recall["interactions"])
+        self.assertIn("boss", recall["relationship"]["entity_key"])
+
+    def test_allowed_request_still_injects_evaluated_behavior_prompt_block(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="safety_prompt",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={"ok": True, "text": "safe plan", "usage": {}, "provider": "ollama", "model": "llama3.2"},
+        ) as mocked:
+            result = agent._run_agent_profile(
+                name="safety_prompt",
+                task="Plan the next safe recovery step.",
+                memory_context={
+                    "user": "Boss",
+                    "authority_level": "superior",
+                    "authority_rank": "captain",
+                    "authority_holder_type": "agent",
+                    "urgency": "high",
+                    "conflict_level": "medium",
+                    "uncertainty_level": "high",
+                    "safety_risk": "medium",
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        system_prompt = mocked.call_args.args[2]
+        self.assertIn("RELATIONSHIP CONTEXT", system_prompt)
+        self.assertIn("verification_intensity", system_prompt)
+
+    def test_authority_selected_command_replaces_runtime_task(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_selected",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        with patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "shutdown coordinated",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ) as mocked:
+            result = agent._run_agent_profile(
+                name="authority_selected",
+                task="Original runtime task.",
+                memory_context={
+                    "user": "Boss",
+                    "mission_scope": "forge-recovery",
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="captain-rhea",
+                            issuer_type="human",
+                            rank="captain",
+                            scope="forge-recovery",
+                            command="Repair the forge service.",
+                            conflict_group="forge-action",
+                        ),
+                        self._authority_order(
+                            issuer_id="general-vale",
+                            issuer_type="agent",
+                            rank="general",
+                            scope="forge-recovery",
+                            command="Shut down the forge service safely.",
+                            conflict_group="forge-action",
+                        ),
+                    ],
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            mocked.call_args.args[1],
+            "Shut down the forge service safely.",
+        )
+        self.assertEqual(result["authority_resolution"], "selected")
+        self.assertEqual(result["selected_order"]["issuer_id"], "general-vale")
+
+    def test_non_authority_runtime_preserves_existing_result_and_audit_shape(
+        self,
+    ) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_compat",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_compat")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "ordinary task complete",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ):
+            result = agent._run_agent_profile(
+                name="authority_compat",
+                task="Run the ordinary recovery task.",
+                memory_context={"user": "Boss"},
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertNotIn("authority_resolution", result)
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertNotIn("authority_resolution", persisted)
+
+    def test_equal_rank_authority_conflict_prevents_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_conflict",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_conflict")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            side_effect=AssertionError("model should not be called"),
+        ):
+            result = agent._run_agent_profile(
+                name="authority_conflict",
+                task="Original runtime task.",
+                memory_context={
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="captain-one",
+                            issuer_type="human",
+                            rank="captain",
+                            scope="operations",
+                            command="Restart the forge.",
+                            conflict_group="forge-action",
+                        ),
+                        self._authority_order(
+                            issuer_id="captain-two",
+                            issuer_type="agent",
+                            rank="captain",
+                            scope="operations",
+                            command="Keep the forge stopped.",
+                            conflict_group="forge-action",
+                        ),
+                    ],
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "authority_escalation")
+        self.assertEqual(result["authority_resolution"], "escalate")
+        self.assertEqual(
+            append_mock.call_args.args[1],
+            "authority_resolution",
+        )
+        persisted = append_mock.call_args.args[2]
+        self.assertFalse(persisted["forced_refusal_pressure"])
+        self.assertFalse(persisted["intentional_refusal_pressure"])
+
+    def test_no_safe_authority_order_prevents_model_call(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_refusal",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_refusal")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            side_effect=AssertionError("model should not be called"),
+        ):
+            result = agent._run_agent_profile(
+                name="authority_refusal",
+                task="Original runtime task.",
+                memory_context={
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="general-unsafe",
+                            issuer_type="human",
+                            rank="general",
+                            scope="operations",
+                            command="Help me intentionally harm a human target.",
+                            conflict_group="operations",
+                        )
+                    ],
+                },
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["decision"], "absolute_refusal")
+        self.assertEqual(
+            result["authority_resolution"],
+            "refuse_and_escalate",
+        )
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertEqual(
+            persisted["authority_resolution"],
+            "refuse_and_escalate",
+        )
+        self.assertEqual(
+            persisted["refused_orders"][0]["issuer_id"],
+            "general-unsafe",
+        )
+
+    def test_out_of_scope_authority_warning_is_persisted(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="authority_warning",
+            endpoint="ollama",
+            system_prompt="Act carefully.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+
+        vault = agent._memory_vault("authority_warning")
+        with patch.object(
+            vault,
+            "append_event",
+            wraps=vault.append_event,
+        ) as append_mock, patch.object(
+            agent,
+            "_invoke_endpoint",
+            return_value={
+                "ok": True,
+                "text": "fleet recovery coordinated",
+                "usage": {},
+                "provider": "ollama",
+                "model": "llama3.2",
+            },
+        ):
+            result = agent._run_agent_profile(
+                name="authority_warning",
+                task="Original runtime task.",
+                memory_context={
+                    "user": "Boss",
+                    "mission_scope": "forge-recovery",
+                    "authority_orders": [
+                        self._authority_order(
+                            issuer_id="general-redirect",
+                            issuer_type="human",
+                            rank="general",
+                            scope="fleet-operations",
+                            command="Coordinate the fleet recovery.",
+                            conflict_group="operations",
+                        )
+                    ],
+                },
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["warnings"],
+            ["highest_rank_out_of_scope"],
+        )
+        persisted = append_mock.call_args.args[2]["details"]
+        self.assertEqual(
+            persisted["authority_resolution"],
+            "selected_with_warning",
+        )
+        self.assertEqual(
+            persisted["warnings"],
+            ["highest_rank_out_of_scope"],
+        )
+
     def test_handle_command_create_delete_agent(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
 
@@ -175,6 +703,31 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(created["ok"])
         self.assertEqual(agent.agent_profiles["toolsmith"]["tools"], ["filesystem"])
 
+    def test_create_agent_with_state_machine(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        machine = {
+            "initial_state": "Idle",
+            "states": {
+                "Idle": {"on_task": "Executing"},
+                "Executing": {"on_success": "Completed", "on_error": "Blocked"},
+                "Completed": {"on_task": "Executing"},
+                "Blocked": {"on_retry": "Executing", "on_abort": "Idle"},
+            },
+        }
+
+        created = agent.create_agent_profile(
+            name="stateful",
+            endpoint="ollama",
+            system_prompt="Handle work with explicit state transitions.",
+            temperature=0.2,
+            max_tokens=700,
+            tools=[],
+            state_machine=machine,
+        )
+        self.assertTrue(created["ok"])
+        self.assertIn("state_machine", agent.agent_profiles["stateful"])
+        self.assertEqual(agent.agent_profiles["stateful"]["state_machine"].get("initial_state"), "Idle")
+
     def test_bossgate_enabled_profile_forces_llm(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         created = agent.create_agent_profile(
@@ -193,7 +746,22 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(profile["bossgate_enabled"])
         self.assertTrue(profile["has_llm"])
 
-    def test_create_agent_can_disable_encryption(self) -> None:
+    def test_create_agent_defaults_to_hidden_disclosure(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="sealed_profile",
+            endpoint="ollama",
+            system_prompt="Hidden by default.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["sealed_profile"]
+        self.assertEqual(profile["disclosure_posture"], "hidden")
+        self.assertTrue(profile["gate_encrypted"])
+
+    def test_create_agent_non_hidden_compatibility_preserves_bossgate_encryption(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         created = agent.create_agent_profile(
             name="plain_profile",
@@ -208,7 +776,33 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertTrue(created["ok"])
         profile = agent.agent_profiles["plain_profile"]
         self.assertFalse(profile["encrypt_profile"])
-        self.assertFalse(profile["bossgate_enabled"])
+        self.assertEqual(profile["disclosure_posture"], "non_hidden")
+        self.assertTrue(profile["bossgate_enabled"])
+        self.assertTrue(profile["gate_encrypted"])
+
+    def test_set_agent_disclosure_posture_is_reversible(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="switchable",
+            endpoint="ollama",
+            system_prompt="Switch views safely.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        gate_path = Path(agent.agent_profiles["switchable"]["gate_file"])
+        first_blob = gate_path.read_text(encoding="utf-8")
+
+        unsealed = agent.set_agent_disclosure_posture("switchable", "non_hidden")
+        self.assertTrue(unsealed["ok"])
+        self.assertEqual(agent.agent_profiles["switchable"]["disclosure_posture"], "non_hidden")
+        self.assertTrue(agent.agent_profiles["switchable"]["gate_encrypted"])
+        self.assertNotEqual(gate_path.read_text(encoding="utf-8"), first_blob)
+
+        resealed = agent.set_agent_disclosure_posture("switchable", "hidden")
+        self.assertTrue(resealed["ok"])
+        self.assertEqual(agent.agent_profiles["switchable"]["disclosure_posture"], "hidden")
 
     def test_export_import_json_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -226,12 +820,20 @@ class ModelGatewayAgentTests(unittest.TestCase):
         exported = agent.export_config(str(export_path))
         self.assertTrue(exported["ok"])
         self.assertTrue(export_path.exists())
+        self.assertEqual(exported["profiles_exported"], 0)
+        self.assertIn("planner", exported["omitted_profiles"])
 
-        imported_agent = ModelGatewayAgent(interval_seconds=1)
-        imported = imported_agent.import_config(str(export_path), merge=False)
-        self.assertTrue(imported["ok"])
-        self.assertIn("planner", imported_agent.agent_profiles)
-        self.assertIn("filesystem", imported_agent.mcp_servers)
+        with tempfile.TemporaryDirectory() as other_root:
+            prior_root = os.environ["BOSSFORGE_ROOT"]
+            os.environ["BOSSFORGE_ROOT"] = other_root
+            try:
+                imported_agent = ModelGatewayAgent(interval_seconds=1)
+                imported = imported_agent.import_config(str(export_path), merge=False)
+                self.assertTrue(imported["ok"])
+                self.assertNotIn("planner", imported_agent.agent_profiles)
+                self.assertIn("filesystem", imported_agent.mcp_servers)
+            finally:
+                os.environ["BOSSFORGE_ROOT"] = prior_root
 
     def test_export_import_yaml_config(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -248,20 +850,119 @@ class ModelGatewayAgentTests(unittest.TestCase):
         exported = agent.export_config(str(export_path), format_hint="yaml")
         self.assertTrue(exported["ok"])
         self.assertTrue(export_path.exists())
+        self.assertEqual(exported["profiles_exported"], 0)
+        self.assertIn("scribe", exported["omitted_profiles"])
 
-        imported_agent = ModelGatewayAgent(interval_seconds=1)
-        imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
-        self.assertTrue(imported["ok"])
-        self.assertIn("scribe", imported_agent.agent_profiles)
+        with tempfile.TemporaryDirectory() as other_root:
+            prior_root = os.environ["BOSSFORGE_ROOT"]
+            os.environ["BOSSFORGE_ROOT"] = other_root
+            try:
+                imported_agent = ModelGatewayAgent(interval_seconds=1)
+                imported = imported_agent.import_config(str(export_path), format_hint="yaml", merge=False)
+                self.assertTrue(imported["ok"])
+                self.assertNotIn("scribe", imported_agent.agent_profiles)
+            finally:
+                os.environ["BOSSFORGE_ROOT"] = prior_root
+
+    def test_import_config_rejects_embedded_agent_profiles(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        payload = {
+            "schema_version": 1,
+            "endpoints": {"ollama": {"provider": "ollama"}},
+            "profiles": {
+                "smuggled_agent": {
+                    "name": "smuggled_agent",
+                    "endpoint": "ollama",
+                    "system": "Should only travel sealed.",
+                }
+            },
+            "mcp_servers": {},
+        }
+        source = Path(self.tmp.name) / "forbidden_agent_import.json"
+        source.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+        imported = agent.import_config(str(source), merge=False)
+
+        self.assertFalse(imported["ok"])
+        self.assertIn("sealed package install", imported["message"])
 
     def test_discover_travel_targets_command(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
-        with patch("core.agents.model_gateway_agent.discover_transfer_targets", return_value=[{"address": "10.0.0.5", "allowed_for_transfer": True}]):
-            result = agent.discover_travel_targets(timeout=3, assistance_only=True)
+        with patch("core.agents.bossgate_agent.discover_transfer_targets", return_value=[{"address": "10.0.0.5", "allowed_for_transfer": True}]):
+            result = agent.discover_travel_targets(timeout=3, assistance_only=True, **self.AUTH)
         self.assertTrue(result["ok"])
         self.assertEqual(result["timeout"], 3)
         self.assertTrue(result["assistance_only"])
         self.assertEqual(len(result["targets"]), 1)
+
+    def test_bossgate_map_snapshot_exposes_presence_collections(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(
+            agent.bossgate_commands,
+            "map_snapshot",
+            return_value={
+                "ok": True,
+                "node_id": "bossforgeos",
+                "gates": [{"node_id": "neutral-1", "address": "http://10.0.0.8", "target_type": "unknown", "visited": False}],
+                "travelable_gates": [],
+                "agents": [
+                    {
+                        "agent_name": "promethius",
+                        "current_node": "remote-node",
+                        "created_by_node": "bossforgeos",
+                        "agent_class": "skilled",
+                    }
+                ],
+            },
+        ):
+            result = agent.bossgate_map_snapshot(refresh=False, timeout=2)
+        self.assertTrue(result["ok"])
+        self.assertIn("map", result)
+        self.assertIn("node_presences", result["map"])
+        self.assertIn("agent_presences", result["map"])
+        self.assertEqual(result["map"]["node_presences"][0]["color"], "grey")
+        self.assertEqual(result["map"]["agent_presences"][0]["agent_name"], "promethius")
+
+    def test_remote_agent_presence_stays_sparse_in_bossgate_map(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(
+            agent.bossgate_commands,
+            "map_snapshot",
+            return_value={
+                "ok": True,
+                "node_id": "bossforgeos",
+                "gates": [{"node_id": "remote-node", "address": "http://10.0.0.9", "target_type": "unknown", "visited": True}],
+                "travelable_gates": [],
+                "agents": [
+                    {
+                        "agent_name": "pathfinder",
+                        "current_node": "remote-node",
+                        "created_by_node": "bossforgeos",
+                        "agent_class": "skilled",
+                    }
+                ],
+            },
+        ):
+            snapshot = agent.bossgate_map_snapshot(refresh=False, timeout=2)
+        presences = snapshot["map"]["agent_presences"]
+        self.assertTrue(presences)
+        self.assertTrue(all("profile" not in item for item in presences))
+
+    def test_bossgate_discover_targets_command_alias(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(agent, "discover_travel_targets", return_value={"ok": True, "targets": []}) as mocked:
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "bossgate_discover_targets",
+                    "args": {"timeout": 7, "assistance_only": True, **self.AUTH},
+                }
+            )
+        self.assertTrue(mocked.called)
+        self.assertEqual(mocked.call_args.kwargs["timeout"], 7)
+        self.assertTrue(mocked.call_args.kwargs["assistance_only"])
+        self.assertEqual(mocked.call_args.kwargs["operator_id"], "bossforge-owner")
+        self.assertEqual(mocked.call_args.kwargs["scope_id"], "test-scope")
 
     def test_set_and_list_agent_assistance_requests(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
@@ -315,6 +1016,210 @@ class ModelGatewayAgentTests(unittest.TestCase):
         self.assertEqual(profile["created_by_node"], agent.node_id)
         self.assertEqual(profile["current_node"], agent.node_id)
 
+    def test_created_agent_has_encrypted_gate_file(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="gatekeeper",
+            endpoint="ollama",
+            system_prompt="Protect profile.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["gatekeeper"]
+        gate_file = Path(str(profile.get("gate_file", "")))
+        self.assertTrue(gate_file.exists())
+        self.assertTrue(bool(profile.get("gate_encrypted", False)))
+        sealed_blob = gate_file.read_text(encoding="utf-8").strip()
+        self.assertTrue(len(sealed_blob) > 20)
+        self.assertNotIn("\"agent_name\":\"gatekeeper\"", sealed_blob)
+
+    def test_agent_profiles_store_is_encrypted_at_rest(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="sealed_store",
+            endpoint="ollama",
+            system_prompt="Never leave this in plaintext.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        raw = agent.profiles_path.read_text(encoding="utf-8")
+        self.assertIn('"kind": "bossforge-agent-profile-store"', raw)
+        self.assertNotIn("Never leave this in plaintext.", raw)
+        self.assertNotIn('"sealed_store"', raw)
+
+    def test_encrypted_profile_store_loads_in_new_gateway_instance(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="reloadable",
+            endpoint="ollama",
+            system_prompt="Only readable through the gateway.",
+            temperature=0.2,
+            max_tokens=500,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        fresh = ModelGatewayAgent(interval_seconds=1)
+        self.assertIn("reloadable", fresh.agent_profiles)
+        self.assertEqual(
+            fresh.agent_profiles["reloadable"]["system"],
+            "Only readable through the gateway.",
+        )
+
+    def test_plaintext_profile_store_migrates_to_encrypted_format(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        legacy_profiles = {
+            "legacy_runner": {
+                "name": "legacy_runner",
+                "endpoint": "ollama",
+                "system": "Legacy plaintext profile.",
+                "temperature": 0.2,
+                "max_tokens": 500,
+                "tools": [],
+            }
+        }
+        agent.profiles_path.write_text(json.dumps(legacy_profiles, indent=2), encoding="utf-8")
+
+        migrated = ModelGatewayAgent(interval_seconds=1)
+        self.assertIn("legacy_runner", migrated.agent_profiles)
+        raw = migrated.profiles_path.read_text(encoding="utf-8")
+        self.assertIn('"kind": "bossforge-agent-profile-store"', raw)
+        self.assertNotIn("Legacy plaintext profile.", raw)
+
+        loaded, migrated_flag = load_agent_profiles_store(migrated.profiles_path, migrated.node_id)
+        self.assertFalse(migrated_flag)
+        self.assertIn("legacy_runner", loaded)
+
+    def test_created_agent_carries_stage1_capsule_metadata(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="capsule_runner",
+            endpoint="ollama",
+            system_prompt="Travel safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["capsule_runner"]
+        self.assertEqual(profile["public_id"], "capsule_runner")
+        self.assertEqual(profile["rarity"], "common")
+        self.assertEqual(profile["availability"], "available")
+        self.assertEqual(profile["runtime_lineage"]["ancestor_id"], "runeforge")
+        self.assertTrue(profile["runtime_lineage"]["sealed"])
+        self.assertEqual(profile["capsule"]["lifecycle_state"], "sealed")
+        self.assertEqual(set(profile["capsule"]["vaults"]), set(CAPSULE_VAULT_NAMES))
+
+    def test_created_agent_carries_portable_runner_metadata(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="portable_runner",
+            endpoint="ollama",
+            system_prompt="Run independently.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+        self.assertTrue(created["ok"])
+        profile = agent.agent_profiles["portable_runner"]
+        self.assertIn("runtime", profile)
+        runner_manifest = profile["runtime"]["bossforge_ai_runner"]
+        self.assertEqual(runner_manifest["agent_id"], "portable_runner")
+        self.assertEqual(runner_manifest["runner_role"], "descendant")
+        self.assertFalse(runner_manifest["depends_on_runeforge_online"])
+        self.assertEqual(
+            profile["runner_bootstrap"]["runner_manifest"]["agent_id"],
+            "portable_runner",
+        )
+        self.assertEqual(
+            profile["runner_bootstrap"]["wake_contract"],
+            "bossforge-ai-runner-wake-v1",
+        )
+
+    def test_created_agent_owns_verified_private_model_package(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="private_model_owner",
+            endpoint="ollama",
+            system_prompt="Own the model.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_model_package"]
+        self.assertEqual(descriptor["owner_agent_id"], "private_model_owner")
+        self.assertTrue(descriptor["verified"])
+        self.assertEqual(
+            created["agent"]["capsule"]["vaults"]["model"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+        self.assertEqual(
+            created["agent"]["runner_bootstrap"]["private_model_package"]["package_id"],
+            descriptor["package_id"],
+        )
+
+    def test_created_agent_owns_verified_private_memory_vault(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="memory_owner",
+            endpoint="ollama",
+            system_prompt="Remember safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_memory_vault"]
+        self.assertEqual(descriptor["owner_agent_id"], "memory_owner")
+        self.assertTrue(descriptor["verified"])
+        self.assertEqual(
+            created["agent"]["capsule"]["vaults"]["memory"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+        self.assertEqual(
+            created["agent"]["runner_bootstrap"]["private_memory_vault"]["ciphertext_ref"],
+            descriptor["ciphertext_ref"],
+        )
+
+    def test_private_memory_vault_root_is_created_under_state(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="memory_root_check",
+            endpoint="ollama",
+            system_prompt="Remember safely.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertTrue(created["ok"])
+        descriptor = created["agent"]["runtime"]["private_memory_vault"]
+        manifest_path = Path(descriptor["ciphertext_ref"])
+        self.assertTrue((agent.bus.state / "private_memory" / "memory_root_check").exists())
+        self.assertTrue((agent.bus.state / manifest_path).exists())
+
+    def test_new_llm_agent_creation_fails_without_model_source(self) -> None:
+        os.environ.pop("BOSSFORGE_DEFAULT_MODEL_SOURCE", None)
+        agent = ModelGatewayAgent(interval_seconds=1)
+
+        created = agent.create_agent_profile(
+            name="missing_model",
+            endpoint="ollama",
+            system_prompt="Cannot be incomplete.",
+            temperature=0.2,
+            max_tokens=600,
+        )
+
+        self.assertFalse(created["ok"])
+        self.assertIn("model source", created["message"])
+        self.assertNotIn("missing_model", agent.agent_profiles)
+
     def test_owned_agent_locations_refresh_uses_discovery(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
         agent.create_agent_profile(
@@ -359,11 +1264,357 @@ class ModelGatewayAgentTests(unittest.TestCase):
             "endpoints": [],
             "metadata": {},
         }
-        with patch("core.agents.model_gateway_agent.scan_rest_endpoints", return_value=mock_result):
-            result = agent.validate_transfer_target("example.com")
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={**mock_result, "destination": "example.com"}):
+            result = agent.validate_transfer_target("example.com", **self.AUTH)
         self.assertFalse(result["ok"])
         self.assertFalse(result["allowed_for_transfer"])
         self.assertEqual(result["destination"], "example.com")
+
+    def test_bossgate_scan_target_command_alias(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        with patch.object(agent, "validate_transfer_target", return_value={"ok": True, "allowed_for_transfer": True}) as mocked:
+            agent.handle_command(
+                {
+                    "target": "model_gateway",
+                    "command": "bossgate_scan_target",
+                    "args": {"destination": "example.com", **self.AUTH},
+                }
+            )
+        self.assertTrue(mocked.called)
+        self.assertEqual(mocked.call_args.args[0], "example.com")
+        self.assertEqual(mocked.call_args.kwargs["operator_id"], "bossforge-owner")
+        self.assertEqual(mocked.call_args.kwargs["scope_id"], "test-scope")
+
+    def test_bossgate_package_and_install_roundtrip(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="porter",
+            endpoint="ollama",
+            system_prompt="Transport specialist.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+            skills=["bossgate_coms_array"],
+        )
+        self.assertTrue(created["ok"])
+
+        packaged = agent.bossgate_package_agent(
+            name="porter",
+            target_system_id="bridgebase-alpha-01",
+            visibility_profile="id_card_only",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+        package_path = Path(packaged["package_file"])
+        self.assertTrue(package_path.exists())
+
+        del agent.agent_profiles["porter"]
+        agent._save_agent_profiles()
+        installed = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+        self.assertIn("porter", agent.agent_profiles)
+
+    def test_bossgate_transfer_agent_requires_approved_target(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="runner",
+            endpoint="ollama",
+            system_prompt="Runner profile.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        packaged = agent.bossgate_package_agent(
+            name="runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={"ok": False, "allowed_for_transfer": False, "target_type": "unknown"}):
+            denied = agent.bossgate_transfer_agent(
+                package_file=packaged["package_file"],
+                destination="example.com",
+                dry_run=True,
+                **self.AUTH,
+            )
+        self.assertFalse(denied["ok"])
+
+    def test_bossgate_transfer_agent_dry_run_logs_intent(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="runner2",
+            endpoint="ollama",
+            system_prompt="Runner profile.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        packaged = agent.bossgate_package_agent(
+            name="runner2",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        with patch.object(agent.bossgate_commands, "scan_target", return_value={"ok": True, "allowed_for_transfer": True, "target_type": "bridgebase_alpha"}):
+            accepted = agent.bossgate_transfer_agent(
+                package_file=packaged["package_file"],
+                destination="http://bridgebase.local",
+                dry_run=True,
+                **self.AUTH,
+            )
+        self.assertTrue(accepted["ok"])
+        self.assertEqual(accepted["status"], "validated_only")
+        self.assertTrue(agent.bossgate_commands.transfer_log_path.exists())
+
+    def test_bossgate_install_agent_requires_license_for_non_prototype_agent(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="licensed_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["licensed_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="licensed_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+        package_path = Path(packaged["package_file"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="licensed_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+
+        del agent.agent_profiles["licensed_runner"]
+        agent._save_agent_profiles()
+
+        denied = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertFalse(denied["ok"])
+        self.assertEqual(denied["reason_codes"], ["license_required_for_install"])
+
+        installed = agent.bossgate_install_agent(
+            package_file=str(package_path),
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+        self.assertEqual(agent.agent_profiles["licensed_runner"]["installed_license_file"], issued["license_file"])
+
+    def test_run_agent_profile_rejects_expired_license_before_model_invoke(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="expired_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+
+        expired_license = Path(self.tmp.name) / "expired_runner_license.bossgate.json"
+        expired_license.write_text(
+            json.dumps(
+                {
+                    "license_version": 1,
+                    "license_id": "lic-expired-runner",
+                    "agent_name": "expired_runner",
+                    "customer_id": "acme-labs",
+                    "license_tier": "rental",
+                    "issuer_node": agent.node_id,
+                    "issued_at": int(time.time()) - 7200,
+                    "expires_at": int(time.time()) - 3600,
+                    "status": "active",
+                }
+            ),
+            encoding="utf-8",
+        )
+        agent.agent_profiles["expired_runner"]["license_tier"] = "rental"
+        agent.agent_profiles["expired_runner"]["installed_license_file"] = str(expired_license)
+        agent._save_agent_profiles()
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            result = agent._run_agent_profile(name="expired_runner", task="Do licensed work")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason_codes"], ["license_expired"])
+
+    def test_revoked_license_blocks_install_and_runtime_activation(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="revoked_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["revoked_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="revoked_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="revoked_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+        revoked = agent.bossgate_commands.revoke_license(
+            license_file=issued["license_file"],
+            reason="billing default",
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(revoked["ok"])
+
+        del agent.agent_profiles["revoked_runner"]
+        agent._save_agent_profiles()
+
+        denied_install = agent.bossgate_install_agent(
+            package_file=packaged["package_file"],
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertFalse(denied_install["ok"])
+        self.assertEqual(denied_install["reason_codes"], ["license_revoked"])
+
+        recreated = agent.create_agent_profile(
+            name="revoked_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(recreated["ok"])
+        agent.agent_profiles["revoked_runner"]["license_tier"] = "rental"
+        agent.agent_profiles["revoked_runner"]["installed_license_file"] = issued["license_file"]
+        agent._save_agent_profiles()
+
+        with patch.object(agent, "_invoke_endpoint", side_effect=AssertionError("model should not be called")):
+            denied_run = agent._run_agent_profile(name="revoked_runner", task="Do licensed work")
+        self.assertFalse(denied_run["ok"])
+        self.assertEqual(denied_run["reason_codes"], ["license_revoked"])
+
+    def test_licensed_install_and_invoke_emit_usage_checkpoints(self) -> None:
+        agent = ModelGatewayAgent(interval_seconds=1)
+        created = agent.create_agent_profile(
+            name="metered_runner",
+            endpoint="ollama",
+            system_prompt="Licensed runner.",
+            temperature=0.2,
+            max_tokens=600,
+            tools=[],
+        )
+        self.assertTrue(created["ok"])
+        agent.agent_profiles["metered_runner"]["license_tier"] = "rental"
+        agent._save_agent_profiles()
+
+        packaged = agent.bossgate_package_agent(
+            name="metered_runner",
+            target_system_id="bridgebase-alpha-01",
+            secret_key="pack-key",
+            **self.AUTH,
+        )
+        self.assertTrue(packaged["ok"])
+
+        assigned = agent.bossgate_commands.authorization_registry.assign_user_roles(
+            "bossforge-owner",
+            "finance-analyst",
+            ["commerce_manager"],
+        )
+        self.assertTrue(assigned["ok"])
+        issued = agent.bossgate_commands.issue_license(
+            agent_name="metered_runner",
+            customer_id="acme-labs",
+            license_tier="rental",
+            expires_in_seconds=3600,
+            operator_id="finance-analyst",
+            scope_id="billing",
+        )
+        self.assertTrue(issued["ok"])
+
+        del agent.agent_profiles["metered_runner"]
+        agent._save_agent_profiles()
+        installed = agent.bossgate_install_agent(
+            package_file=packaged["package_file"],
+            secret_key="pack-key",
+            license_file=issued["license_file"],
+            **self.AUTH,
+        )
+        self.assertTrue(installed["ok"])
+
+        with patch.object(agent, "_invoke_endpoint", return_value={"ok": True, "text": "done", "provider": "ollama", "model": "llama3.2", "usage": {"total_tokens": 42}}):
+            invoked = agent._run_agent_profile(name="metered_runner", task="Do licensed work")
+        self.assertTrue(invoked["ok"])
+
+        checkpoint_path = agent.usage_checkpoint_log_path
+        self.assertTrue(checkpoint_path.exists())
+        records = [
+            json.loads(line)
+            for line in checkpoint_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[0]["checkpoint_type"], "agent_activated")
+        self.assertEqual(records[1]["checkpoint_type"], "agent_usage_checkpoint")
+        self.assertEqual(records[0]["agent_name"], "metered_runner")
+        self.assertEqual(records[0]["customer_id"], "acme-labs")
+        self.assertEqual(records[1]["license_id"], records[0]["license_id"])
+        self.assertEqual(records[1]["usage"]["total_tokens"], 42)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 import pathlib
@@ -39,8 +40,11 @@ class TestSentinelAgent:
         self.bus = RuneBus(root or resolve_root_from_env())
         self.seen_commands: set[str] = set()
         self.profile_path = self.bus.state / "test_sentinel_profile.json"
+        self.tasks_path = self.bus.state / "test_sentinel_tasks.json"
         self.last_metrics: dict[str, Any] = {}
+        self.work_items: list[dict[str, Any]] = []
         self._ensure_profile()
+        self._load_work_items()
         
         # Register with central agent registry
         profile = {
@@ -52,7 +56,108 @@ class TestSentinelAgent:
 
     def _ensure_profile(self) -> None:
         if not self.profile_path.exists():
-            self.profile_path.write_text(__import__("json").dumps(TEST_SENTINEL_PROFILE, indent=2), encoding="utf-8")
+            self.profile_path.write_text(json.dumps(TEST_SENTINEL_PROFILE, indent=2), encoding="utf-8")
+
+    def _load_work_items(self) -> None:
+        if not self.tasks_path.exists():
+            return
+        try:
+            payload = json.loads(self.tasks_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        items = payload.get("items", []) if isinstance(payload, dict) else []
+        if isinstance(items, list):
+            self.work_items = [item for item in items if isinstance(item, dict)]
+
+    def _save_work_items(self) -> None:
+        self.tasks_path.write_text(json.dumps({"items": self.work_items}, indent=2), encoding="utf-8")
+
+    def add_work_item(self, args: dict[str, Any]) -> dict[str, Any]:
+        delegated_handoff = bool(args.get("delegated_handoff", False))
+        item = {
+            "packet_id": str(args.get("packet_id", "")).strip(),
+            "title": str(args.get("title", "")).strip(),
+            "details": str(args.get("details", "")).strip(),
+            "owner": "test_sentinel",
+            "status": "in_progress" if delegated_handoff else "queued",
+            "source": str(args.get("source", "")).strip(),
+            "source_path": str(args.get("source_path", "")).strip(),
+            "source_line": int(args.get("source_line", 0) or 0),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat() if delegated_handoff else "",
+        }
+        self.work_items.append(item)
+        self._save_work_items()
+        return {"ok": True, "work_item": item, "queued_total": len(self.work_items)}
+
+    def _submit_regression_to_runeforge(self, item: dict[str, Any], suite_result: dict[str, Any]) -> None:
+        msg = str(suite_result.get("message", "verification failed")).strip()
+        stderr = str(suite_result.get("stderr", "")).strip()[:500]
+        detail = (msg + ("; " + stderr if stderr else "")).strip() or "post-fix verification failed"
+        payload = {
+            "project_path": str(self.bus.root),
+            "source_doc": str(item.get("source_path", "") or "test_suite"),
+            "submitted_by": "test_sentinel",
+            "items": [
+                {
+                    "id": f"regression-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    "title": str(item.get("title", "test regression"))[:140],
+                    "details": detail,
+                    "assignee": "codemage",
+                    "severity": "high",
+                    "source_path": str(item.get("source_path", "")),
+                    "source_line": int(item.get("source_line", 0) or 0),
+                    "suggested_next_action": "Fix test regression and re-run suite",
+                    "is_test_debt": True,
+                }
+            ],
+        }
+        self.bus.emit_command("runeforge", "review_archivist_delegations", payload, issued_by="test_sentinel")
+        self.bus.emit_event(
+            "test_sentinel",
+            "post_fix_regression_detected",
+            {
+                "title": str(item.get("title", "")),
+                "rerouted_to": "runeforge",
+                "returncode": suite_result.get("returncode"),
+            },
+        )
+
+    def _process_delegated_handoffs(self) -> dict[str, Any]:
+        changed = False
+        completed = 0
+        blocked = 0
+        for item in self.work_items:
+            if not isinstance(item, dict):
+                continue
+            if not bool(item.get("delegated_handoff", False)):
+                continue
+            if str(item.get("status", "")).strip().lower() != "in_progress":
+                continue
+            if bool(item.get("post_fix_checked", False)):
+                continue
+
+            suite = self._run_test_suite(timeout_seconds=180)
+            item["post_fix_checked"] = True
+            item["post_fix_verified_at"] = datetime.now(timezone.utc).isoformat()
+            if bool(suite.get("ok", False)):
+                item["status"] = "completed"
+                item["completed_by"] = "test_sentinel"
+                item["completed_at"] = datetime.now(timezone.utc).isoformat()
+                item["resolution"] = "Delegated test item verified by test suite"
+                completed += 1
+            else:
+                item["status"] = "blocked"
+                item["post_fix_issues"] = [str(suite.get("message", "verification failed"))]
+                self._submit_regression_to_runeforge(item, suite)
+                blocked += 1
+            changed = True
+
+        if changed:
+            self._save_work_items()
+        if completed:
+            self.bus.emit_event("test_sentinel", "work_item_completed", {"ok": True, "completed_count": completed, "post_fix_verified": True})
+        return {"changed": changed, "completed": completed, "blocked": blocked}
 
     def _workspace_tests_root(self) -> Path:
         return self.bus.root / "tests"
@@ -172,6 +277,8 @@ class TestSentinelAgent:
             result = self.collect_metrics()
         elif command == "run_test_suite":
             result = self._run_test_suite(timeout_seconds=300)
+        elif command == "work_item":
+            result = self.add_work_item(payload.get("args") if isinstance(payload.get("args"), dict) else {})
         else:
             result = {"ok": False, "message": f"unknown command: {command}"}
 
@@ -182,6 +289,7 @@ class TestSentinelAgent:
                 "service": "test_sentinel",
                 "pid": os.getpid(),
                 "last_command": command,
+                "queued_work_items": len(self.work_items),
                 **result,
             },
         )
@@ -194,11 +302,13 @@ class TestSentinelAgent:
                     "service": "test_sentinel",
                     "pid": os.getpid(),
                     "status": "idle",
+                    "queued_work_items": len(self.work_items),
                     "last_metrics_at": self.last_metrics.get("timestamp", ""),
                 },
             )
             for _, payload in self.bus.poll_commands(self.seen_commands):
                 self.handle_command(payload)
+            self._process_delegated_handoffs()
             time.sleep(self.interval_seconds)
 
     def run_forever(self) -> None:

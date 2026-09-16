@@ -35,28 +35,17 @@ import wave
 import contextlib
 import tempfile
 import subprocess
+from modules.soundforge import service as soundforge_service
 
-SOUNDFORGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "soundforge_schemes")
-LEGACY_SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "soundstage_schemes")
-SOUNDFORGE_SOUNDS_DIR = os.path.join(SOUNDFORGE_SCHEMES_DIR, "sounds")
-LEGACY_SOUNDSTAGE_SOUNDS_DIR = os.path.join(LEGACY_SOUNDSTAGE_SCHEMES_DIR, "sounds")
-os.makedirs(SOUNDFORGE_SOUNDS_DIR, exist_ok=True)
+SOUNDFORGE_SCHEMES_DIR = str(soundforge_service.SOUNDFORGE_SCHEMES_DIR)
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_service.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
+SOUNDFORGE_SOUNDS_DIR = str(soundforge_service.SOUNDFORGE_SOUNDS_DIR)
+LEGACY_SOUNDSTAGE_SOUNDS_DIR = str(soundforge_service.LEGACY_SOUNDSTAGE_SOUNDS_DIR)
+soundforge_service.ensure_layout()
 
 
 def resolve_sound_path(path):
-    if not path:
-        return None
-    if os.path.isabs(path) and os.path.exists(path):
-        return path
-    # Try managed dir
-    managed = os.path.join(SOUNDFORGE_SOUNDS_DIR, os.path.basename(path))
-    if os.path.exists(managed):
-        return managed
-    legacy_managed = os.path.join(LEGACY_SOUNDSTAGE_SOUNDS_DIR, os.path.basename(path))
-    if os.path.exists(legacy_managed):
-        return legacy_managed
-    # Fallback: original path
-    return path if os.path.exists(path) else None
+    return soundforge_service.resolve_sound_path(path)
 
 def select_sound_entry(event, exe=None):
     """
@@ -120,15 +109,13 @@ def import_sound_file(src_path):
 # =========================
 # CONFIG
 # =========================
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "soundforge_config.json")
-LEGACY_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "soundstage_config.json")
+CONFIG_PATH = str(soundforge_service.SOUNDFORGE_CONFIG_PATH)
+LEGACY_CONFIG_PATH = str(soundforge_service.LEGACY_SOUNDSTAGE_CONFIG_PATH)
 DEFAULT_POLL_RATE = 0.5  # seconds
 
 def load_config():
     try:
-        config_path = CONFIG_PATH if os.path.exists(CONFIG_PATH) else LEGACY_CONFIG_PATH
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return soundforge_service.load_active_config()
     except Exception as e:
         print(f"[SoundForge] Failed to load config: {e}")
         return {}

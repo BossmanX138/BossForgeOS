@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +20,7 @@ class SecuritySentinelTests(unittest.TestCase):
         else:
             os.environ["BOSSFORGE_ROOT"] = self._old_root
 
+    @unittest.skipUnless(sys.platform == "win32", "DPAPI vault requires Windows")
     def test_secret_roundtrip(self) -> None:
         agent = SecuritySentinelAgent(interval_seconds=1)
         saved = agent.set_secret("service_key", "abc12345")

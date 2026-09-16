@@ -360,11 +360,13 @@ class IconForge:
         if not icon.exists():
             return {"ok": False, "message": f"icon not found: {icon}"}
 
+        shortcut_escaped = str(shortcut).replace("'", "''")
+        icon_escaped = str(icon).replace("'", "''")
         ps = (
             "$ws=New-Object -ComObject WScript.Shell;"
-            f"$s=$ws.CreateShortcut('{str(shortcut).replace("'", "''")}');"
+            f"$s=$ws.CreateShortcut('{shortcut_escaped}');"
             "$prev=$s.IconLocation;"
-            f"$s.IconLocation='{str(icon).replace("'", "''")},0';"
+            f"$s.IconLocation='{icon_escaped},0';"
             "$s.Save();"
             "Write-Output $prev"
         )
@@ -562,10 +564,12 @@ class IconForge:
         if kind == "shortcut":
             shortcut = Path(str(item.get("target", ""))).expanduser().resolve()
             previous = str(item.get("previous_icon_location", ""))
+            shortcut_escaped = str(shortcut).replace("'", "''")
+            previous_escaped = previous.replace("'", "''")
             ps = (
                 "$ws=New-Object -ComObject WScript.Shell;"
-                f"$s=$ws.CreateShortcut('{str(shortcut).replace("'", "''")}');"
-                f"$s.IconLocation='{previous.replace("'", "''")}';"
+                f"$s=$ws.CreateShortcut('{shortcut_escaped}');"
+                f"$s.IconLocation='{previous_escaped}';"
                 "$s.Save();"
             )
             proc = subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=False, capture_output=True, text=True)

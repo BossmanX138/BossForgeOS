@@ -1,5 +1,5 @@
 param(
-    [string]$RepoRoot = $PSScriptRoot
+    [string]$RepoRoot = (Join-Path $PSScriptRoot "..")
 )
 
 $ErrorActionPreference = "Stop"
@@ -9,15 +9,16 @@ function Write-Step([string]$Message) {
 }
 
 $RepoRoot = (Resolve-Path -Path $RepoRoot).Path
-$CoreEntry = Join-Path $RepoRoot "core\bforge.py"
+$CoreEntry = Join-Path $RepoRoot "core\utils\bforge.py"
 if (-not (Test-Path $CoreEntry)) {
-    throw "core\\bforge.py not found under repo root: $RepoRoot"
+    throw "core\\utils\\bforge.py not found under repo root: $RepoRoot"
 }
 
 $UserBin = Join-Path $HOME "BossCrafts\bin"
 New-Item -ItemType Directory -Path $UserBin -Force | Out-Null
 
-$RepoPython = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+$CondaPython = Join-Path $HOME "miniconda3\envs\bossforge\python.exe"
+$RepoPython = Join-Path $RepoRoot ".runtime\devpy\Scripts\python.exe"
 $RepoRootPosix = $RepoRoot.Replace('\\', '/')
 $RepoPythonPosix = $RepoPython.Replace('\\', '/')
 $CmdShim = Join-Path $UserBin "bforge.cmd"
@@ -29,10 +30,12 @@ $cmdContent = @"
 setlocal
 set "BOSSFORGE_ROOT=$RepoRoot"
 set "PYTHONPATH=$RepoRoot;%PYTHONPATH%"
-if exist "$RepoPython" (
-  "$RepoPython" -m core.bforge %*
+if exist "$CondaPython" (
+  "$CondaPython" -m core.utils.bforge %*
+) else if exist "$RepoPython" (
+  "$RepoPython" -m core.utils.bforge %*
 ) else (
-  python -m core.bforge %*
+  python -m core.utils.bforge %*
 )
 "@
 
@@ -47,10 +50,12 @@ if ([string]::IsNullOrWhiteSpace(`$env:PYTHONPATH)) {
 } else {
     `$env:PYTHONPATH = "$RepoRoot;`$env:PYTHONPATH"
 }
-if (Test-Path "$RepoPython") {
-    & "$RepoPython" -m core.bforge @Args
+if (Test-Path "$CondaPython") {
+    & "$CondaPython" -m core.utils.bforge @Args
+} elseif (Test-Path "$RepoPython") {
+    & "$RepoPython" -m core.utils.bforge @Args
 } else {
-    & python -m core.bforge @Args
+    & python -m core.utils.bforge @Args
 }
 "@
 
@@ -65,9 +70,9 @@ else
     export PYTHONPATH="__REPO_ROOT__"
 fi
 if [ -x "__REPO_PYTHON__" ]; then
-    "__REPO_PYTHON__" -m core.bforge "$@"
+    "__REPO_PYTHON__" -m core.utils.bforge "$@"
 else
-  python -m core.bforge "$@"
+  python -m core.utils.bforge "$@"
 fi
 '@
 

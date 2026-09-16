@@ -20,7 +20,12 @@
     "integration",
     "mcp",
     "system_wrapper",
-    "instructions"
+    "instructions",
+    "public_id",
+    "rarity",
+    "availability",
+    "runtime_lineage",
+    "capsule"
   ],
   "properties": {
     "id": {
@@ -44,21 +49,19 @@
     "agent_card": {
       "type": "object",
       "required": [
-        "id",
         "name",
-        "description",
+        "public_id",
         "agent_class",
         "agent_type",
-        "rank"
+        "rank",
+        "rarity",
+        "availability"
       ],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "name": {
           "type": "string"
         },
-        "description": {
+        "public_id": {
           "type": "string"
         },
         "agent_class": {
@@ -92,19 +95,11 @@
             "admiral"
           ]
         },
-        "skills": {
-          "type": "array",
-          "description": "Tool-level capabilities (for example: web_search, file_read, shell_exec). Skills are bounded operations.",
-          "items": {
-            "type": "string"
-          }
+        "rarity": {
+          "type": "string"
         },
-        "sigils": {
-          "type": "array",
-          "description": "Prime-tier powers that represent elevated potency (for example: spawn, transmute, banish). Sigils are higher power-level abilities than normal skills.",
-          "items": {
-            "type": "string"
-          }
+        "availability": {
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -471,6 +466,293 @@
     "metadata": {
       "type": "object",
       "additionalProperties": true
+    },
+    "public_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rarity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "availability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_lineage": {
+      "type": "object",
+      "required": [
+        "ancestor_id",
+        "gifted_template_version",
+        "sealed"
+      ],
+      "properties": {
+        "ancestor_id": {
+          "type": "string"
+        },
+        "gifted_template_version": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "capsule": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "agent_id",
+        "public_identity_card",
+        "runtime_lineage",
+        "lifecycle_state",
+        "vaults"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "public_identity_card": {
+          "type": "object",
+          "required": [
+            "name",
+            "public_id",
+            "agent_class",
+            "agent_type",
+            "rank",
+            "rarity",
+            "availability"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "public_id": {
+              "type": "string"
+            },
+            "agent_class": {
+              "type": "string",
+              "enum": [
+                "prime",
+                "skilled",
+                "normalized"
+              ]
+            },
+            "agent_type": {
+              "type": "string",
+              "enum": [
+                "authority",
+                "controller",
+                "worker",
+                "security",
+                "tester",
+                "ranger"
+              ]
+            },
+            "rank": {
+              "type": "string",
+              "enum": [
+                "cadet",
+                "specialist",
+                "lieutenant",
+                "captain",
+                "commander",
+                "general",
+                "admiral"
+              ]
+            },
+            "rarity": {
+              "type": "string"
+            },
+            "availability": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "runtime_lineage": {
+          "type": "object",
+          "required": [
+            "ancestor_id",
+            "gifted_template_version",
+            "sealed"
+          ],
+          "properties": {
+            "ancestor_id": {
+              "type": "string"
+            },
+            "gifted_template_version": {
+              "type": "string"
+            },
+            "sealed": {
+              "type": "boolean",
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "lifecycle_state": {
+          "type": "string",
+          "enum": [
+            "sealed",
+            "installed",
+            "waking",
+            "idle",
+            "active",
+            "travel_pending",
+            "traveling",
+            "dream_eligible",
+            "dreaming",
+            "dream_validating",
+            "rollback",
+            "offline",
+            "dead",
+            "retired"
+          ]
+        },
+        "vaults": {
+          "type": "object",
+          "required": [
+            "identity",
+            "runner",
+            "model",
+            "memory",
+            "capability",
+            "dream",
+            "bossgate"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "runner": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "model": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "memory": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "capability": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "dream": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "bossgate": {
+              "type": "object",
+              "required": [
+                "encrypted",
+                "ciphertext_ref"
+              ],
+              "properties": {
+                "encrypted": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "ciphertext_ref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "allOf": [

@@ -1,0 +1,112 @@
+<h2>BossCrafts Site Direction</h2>
+<p class="subtitle">A company gateway first, then a division-shaped portal, then one shared site whose tone and guide voice shift by division.</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Proposed Entry Flow</div>
+    <div class="mockup-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch;">
+      <div style="background:#111827;border:1px solid #1f2937;border-radius:18px;padding:20px;">
+        <div class="label">Step 1</div>
+        <h3 style="margin-top:8px;">BossCrafts Gateway</h3>
+        <p>Introduce the company, the philosophy, and the three divisions.</p>
+        <p style="opacity:.8;">Visitors choose the lens they want to explore through.</p>
+      </div>
+      <div style="background:#111827;border:1px solid #1f2937;border-radius:18px;padding:20px;">
+        <div class="label">Step 2</div>
+        <h3 style="margin-top:8px;">Division Portal</h3>
+        <p>A short portal page with the selected AI persona, visual flavor, and division framing.</p>
+        <p style="opacity:.8;">This is the main unique page per division on day one.</p>
+      </div>
+      <div style="background:#111827;border:1px solid #1f2937;border-radius:18px;padding:20px;">
+        <div class="label">Step 3</div>
+        <h3 style="margin-top:8px;">Shared Company Site</h3>
+        <p>Same core pages and actions, but typography, color accents, and guide voice follow the selected division.</p>
+        <p style="opacity:.8;">Account signup stores the division choice for public profile and future software sync.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="anvil" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:
+      radial-gradient(circle at top, rgba(245,158,11,.24), transparent 38%),
+      linear-gradient(180deg, #231815 0%, #151515 100%);
+      min-height:230px; display:flex; flex-direction:column; justify-content:space-between; padding:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#fbbf24;">Anvil / Hearthfire</div>
+        <div style="width:34px;height:34px;border-radius:999px;border:1px solid rgba(251,191,36,.55);"></div>
+      </div>
+      <div>
+        <div style="font-size:30px;font-weight:700;line-height:1.05;margin-bottom:10px;">Stoic precision.</div>
+        <div style="font-size:15px;color:#e5e7eb;">Granite, forged metal, warm authority, operational confidence.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span style="padding:8px 12px;border:1px solid rgba(251,191,36,.35);border-radius:999px;">Planning</span>
+        <span style="padding:8px 12px;border:1px solid rgba(251,191,36,.35);border-radius:999px;">Security</span>
+        <span style="padding:8px 12px;border:1px solid rgba(251,191,36,.35);border-radius:999px;">Infrastructure</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Operational and trust-forward</h3>
+      <p>Feels durable, disciplined, and built to last. Best for support, account, governance, and security surfaces.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="technomancy" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:
+      radial-gradient(circle at 20% 20%, rgba(56,189,248,.35), transparent 30%),
+      radial-gradient(circle at 80% 25%, rgba(168,85,247,.28), transparent 28%),
+      linear-gradient(160deg, #0b1120 0%, #111827 55%, #09090b 100%);
+      min-height:230px; display:flex; flex-direction:column; justify-content:space-between; padding:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#67e8f9;">Technomancy / Runeforge</div>
+        <div style="width:34px;height:34px;border-radius:10px;border:1px solid rgba(103,232,249,.55);transform:rotate(12deg);"></div>
+      </div>
+      <div>
+        <div style="font-size:30px;font-weight:700;line-height:1.05;margin-bottom:10px;">Chaotic brilliance.</div>
+        <div style="font-size:15px;color:#dbeafe;">Electric, witty, high-voltage systems thinking with sharp edges and momentum.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span style="padding:8px 12px;border:1px solid rgba(34,211,238,.35);border-radius:999px;">AI</span>
+        <span style="padding:8px 12px;border:1px solid rgba(34,211,238,.35);border-radius:999px;">Operating Systems</span>
+        <span style="padding:8px 12px;border:1px solid rgba(34,211,238,.35);border-radius:999px;">Automation</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Experimental but controlled</h3>
+      <p>Feels alive, rebellious, and precise under pressure. Best for AI, OS, research, and tool-building stories.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="ethereal" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:
+      radial-gradient(circle at 30% 15%, rgba(244,114,182,.28), transparent 32%),
+      radial-gradient(circle at 70% 18%, rgba(192,132,252,.24), transparent 30%),
+      linear-gradient(180deg, #140f24 0%, #24143d 55%, #0f172a 100%);
+      min-height:230px; display:flex; flex-direction:column; justify-content:space-between; padding:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#f9a8d4;">Ethereal / Halcyon</div>
+        <div style="width:34px;height:34px;border-radius:999px;border:1px solid rgba(249,168,212,.55);box-shadow:0 0 18px rgba(249,168,212,.35);"></div>
+      </div>
+      <div>
+        <div style="font-size:30px;font-weight:700;line-height:1.05;margin-bottom:10px;">Luminous imagination.</div>
+        <div style="font-size:15px;color:#f5d0fe;">Cinematic, elegant, expressive, and unapologetically aesthetic.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span style="padding:8px 12px;border:1px solid rgba(244,114,182,.35);border-radius:999px;">Creative</span>
+        <span style="padding:8px 12px;border:1px solid rgba(244,114,182,.35);border-radius:999px;">Editing</span>
+        <span style="padding:8px 12px;border:1px solid rgba(244,114,182,.35);border-radius:999px;">Worldbuilding</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Art-driven and theatrical</h3>
+      <p>Feels emotional, polished, and image-first. Best for portfolio, media, art, and experience-led product storytelling.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:28px;">
+  <h3>Question</h3>
+  <p class="subtitle">Does this translate the three division personalities correctly, and should the shared company gateway lean more toward one division by default or stay neutral BossCrafts with all three visible equally?</p>
+</div>

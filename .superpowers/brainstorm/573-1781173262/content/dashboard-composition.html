@@ -1,0 +1,80 @@
+<style>
+  .variants{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
+  .variant{overflow:hidden;border:1px solid #333640;border-radius:16px;background:#0b0c10;cursor:pointer;transition:.18s ease}
+  .variant:hover,.variant.selected{transform:translateY(-4px);border-color:#d4a857;box-shadow:0 18px 55px #0008,0 0 24px #ff7a2f18}
+  .screen{height:360px;padding:12px;color:#ddd7ca;background:radial-gradient(circle at 80% 0,#4da6ff12,transparent 34%),#090a0d}
+  .top{height:36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #292c34;margin-bottom:10px}
+  .brand{color:#d4a857;font:800 10px sans-serif;letter-spacing:.14em}.live{color:#4cc46a;font:800 7px sans-serif;letter-spacing:.1em}
+  .box{border:1px solid #2a2d35;border-radius:8px;background:linear-gradient(180deg,#17191f,#111217);padding:8px;min-width:0}
+  .label{font:800 6px sans-serif;color:#777f8d;letter-spacing:.12em;text-transform:uppercase}.value{font:800 16px sans-serif;color:#eee4d0;margin-top:5px}
+  .bar{height:5px;border-radius:5px;background:#292d35;margin-top:7px;overflow:hidden}.bar:after{content:"";display:block;width:68%;height:100%;background:#d4a857}
+  .line{height:6px;border-radius:4px;background:#292d35;margin:6px 0}.line.blue{background:linear-gradient(90deg,#4da6ff 0 66%,#292d35 66%)}.line.red{background:linear-gradient(90deg,#ff4d4d 0 38%,#292d35 38%)}.line.gold{background:linear-gradient(90deg,#d4a857 0 78%,#292d35 78%)}
+  .chip{display:inline-block;padding:3px 5px;border-radius:4px;font:800 6px sans-serif;background:#16321e;color:#4cc46a}.chip.warn{background:#38280e;color:#ffb84d}.chip.bad{background:#381417;color:#ff7171}
+  .deck .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.deck .body{display:grid;grid-template-columns:1.4fr .8fr;gap:8px;margin-top:8px}.deck .primary{height:215px}.deck .sidecol{display:grid;gap:8px}.deck .sidecol .box{height:103px}
+  .mission .screen{display:grid;grid-template-columns:72px 1fr;gap:10px}.mission .rail{border-right:1px solid #292c34;padding-right:9px}.mission .rail .nav{height:24px;border-radius:6px;background:#171920;margin-bottom:7px}.mission .rail .nav.on{border-left:3px solid #ff7a2f}.mission .workspace{min-width:0}.mission .hero{height:84px;display:grid;grid-template-columns:1fr 110px;gap:8px}.mission .hero .box{height:84px}.mission .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.mission .lane{height:211px}.mission .card{height:43px;border:1px solid #30343e;border-radius:6px;margin-top:7px;background:#15171c;padding:5px}
+  .signal .screen{display:grid;grid-template-rows:36px 1fr}.signal .grid{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);gap:7px}.signal .health{grid-column:1/5;grid-row:1/3}.signal .agents{grid-column:5/9;grid-row:1/5}.signal .alerts{grid-column:9/13;grid-row:1/5}.signal .tasks{grid-column:1/5;grid-row:3/7}.signal .actions{grid-column:5/9;grid-row:5/7}.signal .events{grid-column:9/13;grid-row:5/9}.signal .models{grid-column:1/9;grid-row:7/9}
+  .copy{padding:15px;min-height:164px}.copy h3{margin:0 0 7px;color:#f1e4cb}.copy p{margin:0;color:#9ca4b2;font-size:13px;line-height:1.5}.rec{display:inline-block;margin-bottom:8px;padding:4px 7px;border-radius:999px;background:#d4a857;color:#090a0d;font:900 8px sans-serif;letter-spacing:.08em}
+  @media(max-width:920px){.variants{grid-template-columns:1fr}}
+</style>
+
+<h2>Choose the dashboard composition</h2>
+<p class="subtitle">All three are layered dashboards. Compare how quickly you can find system state, active work, alerts, and actions.</p>
+
+<div class="variants">
+  <div class="variant deck" data-choice="command-deck" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="top"><span class="brand">BOSSFORGE // CONTROL HALL</span><span class="live">● SYSTEM NOMINAL</span></div>
+      <div class="metrics">
+        <div class="box"><div class="label">Agents</div><div class="value">07</div></div>
+        <div class="box"><div class="label">Active Tasks</div><div class="value">12</div></div>
+        <div class="box"><div class="label">Health</div><div class="value">96%</div></div>
+        <div class="box"><div class="label">Alerts</div><div class="value" style="color:#ffb84d">03</div></div>
+      </div>
+      <div class="body">
+        <div class="box primary">
+          <div class="label">Live Operations</div>
+          <div class="line gold"></div><div class="line blue"></div><div class="line"></div>
+          <div class="line gold"></div><div class="line"></div><div class="line blue"></div>
+          <div style="margin-top:13px"><span class="chip">RUNNING</span> <span class="chip warn">WAITING</span></div>
+        </div>
+        <div class="sidecol">
+          <div class="box"><div class="label">Priority Alerts</div><div class="line red"></div><div class="line"></div><span class="chip bad">OPEN PANEL</span></div>
+          <div class="box"><div class="label">Quick Actions</div><div class="line gold"></div><div class="line blue"></div><div class="line"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="copy"><span class="rec">RECOMMENDED</span><h3>A. Command Deck</h3><p>Stable metrics across the top, live operations as the dominant surface, and a focused right rail for alerts and intervention. Strongest scanning hierarchy.</p></div>
+  </div>
+
+  <div class="variant mission" data-choice="mission-board" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="rail"><div class="brand" style="margin-bottom:14px">BF</div><div class="nav on"></div><div class="nav"></div><div class="nav"></div><div class="nav"></div><div class="nav"></div></div>
+      <div class="workspace">
+        <div class="top"><span class="brand">MISSION BOARD</span><span class="live">12 ACTIVE</span></div>
+        <div class="hero"><div class="box"><div class="label">Current Objective</div><div class="line gold"></div><div class="line blue"></div></div><div class="box"><div class="label">System</div><div class="value">96%</div></div></div>
+        <div class="lanes">
+          <div class="box lane"><div class="label">Queued</div><div class="card"><div class="line"></div><span class="chip warn">READY</span></div><div class="card"><div class="line"></div></div></div>
+          <div class="box lane"><div class="label">Executing</div><div class="card"><div class="line blue"></div><span class="chip">LIVE</span></div><div class="card"><div class="line gold"></div></div></div>
+          <div class="box lane"><div class="label">Attention</div><div class="card"><div class="line red"></div><span class="chip bad">ALERT</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="copy"><h3>B. Mission Board</h3><p>Organizes the home around work state and ownership. Best for task coordination, but health and alerts become secondary to the workflow lanes.</p></div>
+  </div>
+
+  <div class="variant signal" data-choice="signal-grid" onclick="toggleSelect(this)">
+    <div class="screen">
+      <div class="top"><span class="brand">SIGNAL GRID</span><span class="live">LIVE TELEMETRY</span></div>
+      <div class="grid">
+        <div class="box health"><div class="label">Health</div><div class="value">96%</div></div>
+        <div class="box agents"><div class="label">Agents</div><div class="line blue"></div><div class="line gold"></div><div class="line"></div><div class="line blue"></div></div>
+        <div class="box alerts"><div class="label">Alerts</div><div class="line red"></div><div class="line"></div><span class="chip bad">3 OPEN</span></div>
+        <div class="box tasks"><div class="label">Tasks</div><div class="line gold"></div><div class="line blue"></div><div class="line"></div></div>
+        <div class="box actions"><div class="label">Actions</div><div class="line gold"></div><div class="line"></div></div>
+        <div class="box events"><div class="label">Events</div><div class="line"></div><div class="line blue"></div><div class="line"></div></div>
+        <div class="box models"><div class="label">Runtime & Models</div><div class="bar"></div></div>
+      </div>
+    </div>
+    <div class="copy"><h3>C. Signal Grid</h3><p>Modular telemetry tiles with flexible sizing. Most extensible, but it risks becoming another dense collection of panels without a clear daily workflow.</p></div>
+  </div>
+</div>

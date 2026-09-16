@@ -29,33 +29,91 @@ from core.rune.agent_consumer import AgentConsumerLoop
 
 from core.agent_registry import register_agent
 
+UNCHECKED_CHECKLIST_RE = re.compile(r"^\s*[-*+]\s*\[\s\]\s+(?P<task>.+)\s*$", re.IGNORECASE)
+
 
 class ArchivistAgent:
+
+    def enforce_decree_recording(self, project: Path) -> None:
+        """
+        Scan Decrees_and_Governance.md for new decrees and propagate them to all major TODOs and roadmaps.
+        """
+        decrees_path = project / "Decrees_and_Governance.md"
+        if not decrees_path.exists():
+            return
+        content = decrees_path.read_text(encoding="utf-8")
+        # Extract all lines starting with '**Decree' or under a 'Decrees' heading
+        decree_lines = []
+        in_decrees_section = False
+        for line in content.splitlines():
+            if line.strip().lower().startswith('## decrees'):
+                in_decrees_section = True
+                continue
+            if in_decrees_section and line.strip().startswith('##') and not line.strip().lower().startswith('## decrees'):
+                in_decrees_section = False
+            if in_decrees_section or line.strip().startswith('**Decree'):
+                decree_lines.append(line)
+        decree_block = '\n'.join(decree_lines).strip()
+        # List of major TODO/roadmap files
+        todo_files = [
+            project / "BossGate_Features_TODO.md",
+            project / "ENTERPRISE_TODO_LIST.md",
+            project / "ENTERPRISE_ROADMAP.md",
+        ]
+        for path in todo_files:
+            if not path.exists():
+                continue
+            content = path.read_text(encoding="utf-8")
+            # Remove any old decree block
+            new_content = re.sub(r"## Decrees & Governance[\s\S]+?(?=\n##|\Z)", "", content, flags=re.MULTILINE)
+            # Insert updated decree block at the top after title
+            lines = new_content.splitlines()
+            if lines and lines[0].startswith('#'):
+                lines = [lines[0], '', '## Decrees & Governance', '', decree_block, ''] + lines[1:]
+            else:
+                lines = ['## Decrees & Governance', '', decree_block, ''] + lines
+            path.write_text('\n'.join(lines), encoding="utf-8")
+
     TODO_SCAN_SUFFIXES = {".md", ".txt", ".py", ".ps1", ".json", ".yaml", ".yml"}
     TODO_IGNORE_DIR_NAMES = {
         ".git",
         ".continue",
+        ".superpowers",
         ".venv",
         ".venv-xtts",
         ".venv-vllm",
         ".runtime",
         ".models",
+        ".worktrees",
         "__pycache__",
         "node_modules",
         "build",
         "dist",
         "bus",
         "archives",
+        "models",
         "releases",
     }
     TODO_IGNORE_FILE_NAMES = {
         "delegation_notes.md",
         "daily_ledger.md",
+        "autonomous_todo_backlog.md",
         "todos.md",
         "changelog.md",
         "decisions.md",
         "archivistreadme.md",
         "agent_task_assignments.md",
+    }
+    TODO_IGNORE_GLOBS = {
+        "**/.venv/**",
+        "**/.venv-*/**",
+        "**/node_modules/**",
+        "**/site-packages/**",
+        "**/docs/autonomous_todo_backlog.md",
+        "**/docs/delegation_notes.md",
+        "**/docs/daily_ledger.md",
+        "**/docs/superpowers/plans/**",
+        "**/docs/superpowers/specs/**",
     }
     README_IGNORE_DIR_NAMES = {
         ".git",
@@ -74,6 +132,28 @@ class ArchivistAgent:
         "site-packages",
     }
     TODO_PATTERNS = ["TODO", "FIXME", "TBD"]
+    TODO_ACTION_WORDS = {
+        "add",
+        "build",
+        "complete",
+        "create",
+        "define",
+        "document",
+        "fix",
+        "implement",
+        "improve",
+        "investigate",
+        "migrate",
+        "optimize",
+        "refactor",
+        "remove",
+        "replace",
+        "review",
+        "ship",
+        "update",
+        "validate",
+        "write",
+    }
     RUNEBUS_IMPORTANT_LEVELS = {"warning", "error", "critical"}
     RUNEBUS_IMPORTANT_KEYWORDS = {
         "error",
@@ -118,13 +198,18 @@ class ArchivistAgent:
             "name": "ArchivistAgent",
             "description": "Project archivist, TODO/test debt scanner, and documentation agent.",
         }
-        register_agent("archivist", profile)
+        try:
+            register_agent("archivist", profile)
+        except ValueError:
+            # Keep local invocation functional while legacy profiles migrate to stricter registry schema.
+            pass
 
     def _default_policy(self) -> dict[str, Any]:
         return {
             "todo_scan_suffixes": sorted(self.TODO_SCAN_SUFFIXES),
             "todo_ignore_dir_names": sorted(self.TODO_IGNORE_DIR_NAMES),
             "todo_ignore_file_names": sorted(self.TODO_IGNORE_FILE_NAMES),
+            "todo_ignore_globs": sorted(self.TODO_IGNORE_GLOBS),
             "readme_ignore_dir_names": sorted(self.README_IGNORE_DIR_NAMES),
             "todo_patterns": list(self.TODO_PATTERNS),
             "runebus_maintenance": {
@@ -307,13 +392,25 @@ class ArchivistAgent:
             return default
 
         merged = dict(default)
-        for key in [
+        additive_keys = {
             "todo_scan_suffixes",
             "todo_ignore_dir_names",
             "todo_ignore_file_names",
+            "todo_ignore_globs",
             "readme_ignore_dir_names",
+        }
+        override_keys = {
             "todo_patterns",
-        ]:
+        }
+
+        for key in additive_keys:
+            values = self._normalize_list(loaded.get(key))
+            if not values:
+                continue
+            existing = self._normalize_list(default.get(key))
+            merged[key] = sorted({*existing, *values})
+
+        for key in override_keys:
             values = self._normalize_list(loaded.get(key))
             if values:
                 merged[key] = values
@@ -339,6 +436,12 @@ class ArchivistAgent:
         if not values:
             values = sorted(self.TODO_IGNORE_FILE_NAMES)
         return {v.lower() for v in values}
+
+    def _todo_ignore_globs(self) -> list[str]:
+        values = self._normalize_list(self.policy.get("todo_ignore_globs"))
+        if not values:
+            values = sorted(self.TODO_IGNORE_GLOBS)
+        return values
 
     def _readme_ignore_dir_names(self) -> set[str]:
         values = self._normalize_list(self.policy.get("readme_ignore_dir_names"))
@@ -420,6 +523,57 @@ class ArchivistAgent:
             return True
         if "site-packages" in parts:
             return True
+
+        rel_posix = rel.as_posix().lower()
+        if (
+            rel_posix.startswith("docs/superpowers/plans/")
+            or rel_posix.startswith("docs/superpowers/specs/")
+        ):
+            return True
+        for pattern in self._todo_ignore_globs():
+            p = pattern.strip().lower()
+            if not p:
+                continue
+            if Path(rel_posix).match(p):
+                return True
+
+        return False
+
+    def _is_noise_todo_line(self, text: str) -> bool:
+        stripped = text.strip()
+        if not stripped:
+            return True
+
+        lower = stripped.lower()
+        if any(token in lower for token in ["site-packages", "node_modules", ".venv", "__pycache__"]):
+            return True
+
+        # Backlog/ledger/delegation transcript lines are references, not work items.
+        if re.match(r"^\s*-\s*\[[^\]]+:[0-9]+\]\s*-\s*", stripped):
+            return True
+        if " :: " in stripped and stripped.startswith("-"):
+            return True
+        if re.match(r"^\s*[-*]\s*\[[^\]]+\]\(#[^\)]+\)", stripped):
+            return True
+
+        if stripped.lower() in {"todo", "fixme", "tbd", "## todo", "# todo"}:
+            return True
+
+        return False
+
+    def _is_actionable_todo_text(self, text: str) -> bool:
+        if self._is_noise_todo_line(text):
+            return False
+
+        lower = text.lower()
+        if any(word in lower for word in self.TODO_ACTION_WORDS):
+            return True
+
+        # Keep explicit TODO/FIXME markers as actionable by default.
+        if re.search(r"\b(todo|fixme|tbd)\b", lower):
+            return True
+
+        # If a custom token matched but no action language is present, treat as weak/noise.
         return False
 
     def _severity_for_text(self, text: str) -> str:
@@ -462,6 +616,158 @@ class ArchivistAgent:
             return "Convert this note into a tracked work item with owner/date"
         return "Review context, confirm scope, and create a concrete next task"
 
+    def _todo_priority_score(self, item: dict[str, Any]) -> int:
+        severity = str(item.get("severity", "medium")).lower()
+        severity_score = {"high": 3, "medium": 2, "low": 1}.get(severity, 1)
+        text = str(item.get("text", "")).lower()
+        action_bonus = 2 if any(word in text for word in self.TODO_ACTION_WORDS) else 0
+        test_bonus = 1 if bool(item.get("is_test_debt")) else 0
+        return severity_score * 10 + action_bonus + test_bonus
+
+    def _dedupe_todos(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        unique: dict[tuple[str, str, str], dict[str, Any]] = {}
+        for item in items:
+            key = (
+                str(item.get("file", "")).lower(),
+                str(item.get("line", "")),
+                re.sub(r"\s+", " ", str(item.get("text", "")).strip().lower()),
+            )
+            if key not in unique:
+                unique[key] = item
+        return list(unique.values())
+
+    def _write_actionable_todos(self, project: Path, todos: list[dict[str, Any]]) -> Path:
+        todos_path = project / "docs" / "todos.md"
+        todos_path.parent.mkdir(parents=True, exist_ok=True)
+
+        deduped = self._dedupe_todos(todos)
+        ranked = sorted(deduped, key=lambda item: self._todo_priority_score(item), reverse=True)
+        general = [item for item in ranked if not bool(item.get("is_test_debt"))]
+        test_debt = [item for item in ranked if bool(item.get("is_test_debt"))]
+
+        lines = [
+            "# Open Todos",
+            "",
+            "---",
+            "## TODO List Cross-References",
+            "",
+            "- [BossGate Features — Master TODO List](../core/BossGate_Features_TODO.md)",
+            "- [BossForgeOS Enterprise TODO List](../ENTERPRISE_TODO_LIST.md)",
+            "- [BossForgeOS Enterprise Roadmap](../ENTERPRISE_ROADMAP.md)",
+            "",
+            "All TODOs must be kept in sync and up to date by the Archivist agent. See the BossGate master TODO for canonical cross-references and duties.",
+            "",
+            "Curated by Archivist from actionable TODO/FIXME/TBD signals.",
+            "",
+            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Total actionable: {len(ranked)}",
+            f"General backlog: {len(general)}",
+            f"Test debt: {len(test_debt)}",
+            "",
+            "## Priority Backlog",
+            "",
+        ]
+
+        if general:
+            for item in general[:80]:
+                assignee = str(item.get("assignee", "devlot"))
+                severity = str(item.get("severity", "medium"))
+                lines.append(
+                    f"- [{assignee}][{severity}] {item['file']}:{item['line']} :: {item['text']}"
+                )
+                lines.append(f"  next: {item.get('suggested_next_action', '')}")
+        else:
+            lines.append("- No actionable general backlog detected.")
+
+        lines.extend(["", "## Test Debt", ""])
+
+        if test_debt:
+            for item in test_debt[:40]:
+                assignee = str(item.get("assignee", "test_sentinel"))
+                severity = str(item.get("severity", "medium"))
+                lines.append(
+                    f"- [{assignee}][{severity}] {item['file']}:{item['line']} :: {item['text']}"
+                )
+                lines.append(f"  next: {item.get('suggested_next_action', '')}")
+        else:
+            lines.append("- No actionable test debt detected.")
+
+        lines.append("")
+        todos_path.write_text("\n".join(lines), encoding="utf-8")
+
+        # --- Cross-link and update all major TODO lists ---
+        self._enforce_crosslinked_todo_sections(project)
+        return todos_path
+
+    def _enforce_crosslinked_todo_sections(self, project: Path) -> None:
+        """
+        Ensure all major TODO lists (BossGate, Enterprise, Roadmap, docs/todos.md) contain the canonical cross-reference and Archivist Duties section.
+        """
+        # Canonical section text
+        crossref = [
+            "---",
+            "## TODO List Cross-References & Archivist Duties",
+            "",
+            "This master TODO is the canonical BossGate feature tracker. All other TODO lists and tracked work items must be referenced here and kept in sync by the Archivist agent.",
+            "",
+            "### Linked TODO Lists (must be kept accurate and up to date):",
+            "",
+            "- [BossForgeOS Enterprise TODO List](../../ENTERPRISE_TODO_LIST.md)",
+            "- [BossForgeOS Enterprise Roadmap](../../ENTERPRISE_ROADMAP.md)",
+            "- [Global TODO/Backlog/Curated List](../../docs/todos.md)",
+            "- [BossGate Protocol/Connector Docs](../../docs/bossgate_protocol.md), [bossgate_connector.md](../../docs/bossgate_connector.md)",
+            "",
+            "### Archivist Duties",
+            "",
+            "- Regularly scan all TODO lists and codebase for actionable TODO/FIXME/TBD/test debt items.",
+            "- Update this master TODO to reference all other lists and ensure all items are current and not duplicated or orphaned.",
+            "- For each area (BossGate, Enterprise, Mythic Layer, etc.), ensure TODOs reflect actual outstanding work and are delegated to agents as needed.",
+            "- When a TODO is completed, update all lists and remove or archive the item.",
+            "- If a TODO is moved, merged, or split, update all references and cross-links.",
+            "- ENFORCEMENT DECREE: All user decrees must be recorded in TODO files or roadmaps. The Archivist must synchronize decrees across all documentation. See [../../Decrees_and_Governance.md](../../Decrees_and_Governance.md) for canonical decrees.",
+            "",
+            "---",
+            "The Archivist is responsible for TODO list hygiene, decree enforcement, and cross-repo accuracy.",
+        ]
+
+        # List of major TODO files to update
+        todo_files = [
+            project / "core" / "BossGate_Features_TODO.md",
+            project / "ENTERPRISE_TODO_LIST.md",
+            project / "ENTERPRISE_ROADMAP.md",
+            project / "docs" / "todos.md",
+        ]
+        for path in todo_files:
+            if not path.exists():
+                continue
+            # Keep generated docs/todos.md backlog sections intact; it already includes
+            # cross-reference content from _write_actionable_todos.
+            if path == project / "docs" / "todos.md":
+                continue
+            try:
+                content = path.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            # Remove any old cross-reference section
+            new_content = re.sub(
+                r"---\s*## TODO List Cross-References[\s\S]+?(?=\n---|\Z)",
+                "",
+                content,
+                flags=re.MULTILINE,
+            )
+            # Remove any old Archivist Duties section
+            new_content = re.sub(
+                r"---\s*## TODO List Cross-References & Archivist Duties[\s\S]+?(?=\n---|\Z)",
+                "",
+                new_content,
+                flags=re.MULTILINE,
+            )
+            # Append canonical section at the end
+            if not new_content.endswith("\n"):
+                new_content += "\n"
+            new_content += "\n" + "\n".join(crossref) + "\n"
+            path.write_text(new_content, encoding="utf-8")
+
     def _collect_todos(self, project: Path) -> list[dict[str, Any]]:
         todo_items: list[dict[str, Any]] = []
         pattern = self._todo_regex()
@@ -487,25 +793,33 @@ class ArchivistAgent:
 
                 for idx, line in enumerate(lines, start=1):
                     if pattern.search(line):
-                        text = line.strip()[:240]
-                        is_test_debt = self._is_test_debt_item(path=path, project=project, text=text)
-                        assignee = "test_sentinel" if is_test_debt else self._delegate_for(text)
-                        severity = self._severity_for_text(text)
-                        context_before = lines[idx - 2].strip()[:240] if idx - 2 >= 0 else ""
-                        context_after = lines[idx].strip()[:240] if idx < len(lines) else ""
-                        todo_items.append(
-                            {
-                                "file": str(path),
-                                "line": str(idx),
-                                "text": text,
-                                "context_before": context_before,
-                                "context_after": context_after,
-                                "assignee": assignee,
-                                "is_test_debt": is_test_debt,
-                                "severity": severity,
-                                "suggested_next_action": self._suggest_next_action(text, assignee, severity),
-                            }
-                        )
+                        text = line.strip()
+                    else:
+                        checklist_match = UNCHECKED_CHECKLIST_RE.match(line)
+                        if not checklist_match:
+                            continue
+                        text = checklist_match.group("task").strip()
+                    text = text[:240]
+                    if not self._is_actionable_todo_text(text):
+                        continue
+                    is_test_debt = self._is_test_debt_item(path=path, project=project, text=text)
+                    assignee = "test_sentinel" if is_test_debt else self._delegate_for(text)
+                    severity = self._severity_for_text(text)
+                    context_before = lines[idx - 2].strip()[:240] if idx - 2 >= 0 else ""
+                    context_after = lines[idx].strip()[:240] if idx < len(lines) else ""
+                    todo_items.append(
+                        {
+                            "file": str(path),
+                            "line": str(idx),
+                            "text": text,
+                            "context_before": context_before,
+                            "context_after": context_after,
+                            "assignee": assignee,
+                            "is_test_debt": is_test_debt,
+                            "severity": severity,
+                            "suggested_next_action": self._suggest_next_action(text, assignee, severity),
+                        }
+                    )
         return todo_items
 
     def _slugify_heading(self, text: str) -> str:
@@ -615,6 +929,44 @@ class ArchivistAgent:
             return "runeforge"
         return "devlot"
 
+    def _dispatch_to_runeforge_review(self, project: Path, todos: list[dict[str, Any]], source_doc: Path) -> dict[str, Any]:
+        if not todos:
+            return {"ok": True, "submitted": 0, "skipped": True}
+
+        queue_items: list[dict[str, Any]] = []
+        for idx, item in enumerate(todos[:150], start=1):
+            queue_items.append(
+                {
+                    "id": f"archivist-{datetime.now().strftime('%Y%m%d%H%M%S')}-{idx}",
+                    "title": f"{Path(str(item.get('file', ''))).name}:{item.get('line', '')}",
+                    "details": str(item.get("text", "")).strip(),
+                    "assignee": str(item.get("assignee", "devlot")).strip() or "devlot",
+                    "severity": str(item.get("severity", "medium")).strip() or "medium",
+                    "source_path": str(item.get("file", "")).strip(),
+                    "source_line": int(item.get("line", 0) or 0),
+                    "suggested_next_action": str(item.get("suggested_next_action", "")).strip(),
+                    "is_test_debt": bool(item.get("is_test_debt", False)),
+                }
+            )
+
+        payload = {
+            "project_path": str(project),
+            "source_doc": str(source_doc),
+            "submitted_by": "archivist",
+            "items": queue_items,
+        }
+        self.bus.emit_command("runeforge", "review_archivist_delegations", payload, issued_by="archivist")
+        self.bus.emit_event(
+            "archivist",
+            "delegation_submitted_to_runeforge",
+            {
+                "project_path": str(project),
+                "submitted": len(queue_items),
+                "source_doc": str(source_doc),
+            },
+        )
+        return {"ok": True, "submitted": len(queue_items), "source_doc": str(source_doc)}
+
     def on_invoke(self) -> dict[str, Any]:
         self._refresh_policy()
         projects = self.get_onboarded_projects()
@@ -658,7 +1010,11 @@ class ArchivistAgent:
             changes_total += len(readmes_updated)
 
             todos = self._collect_todos(project)
+            todos = self._dedupe_todos(todos)
             delegation_total += len(todos)
+
+            todos_file = self._write_actionable_todos(project, todos)
+            runeforge_submission = self._dispatch_to_runeforge_review(project, todos, todos_file)
 
             delegation_file = docs_dir / "delegation_notes.md"
             if not delegation_file.exists():
@@ -704,6 +1060,7 @@ class ArchivistAgent:
                 f"- todos_detected: {len(todos)}",
                 f"- general_backlog_detected: {general_count}",
                 f"- test_debt_detected: {test_debt_count}",
+                f"- runeforge_review_submitted: {int(runeforge_submission.get('submitted', 0) or 0)}",
                 "- commit_status: awaiting_seal",
             ]
             ledger_path = self._append_daily_ledger(project, ledger_lines)
@@ -714,6 +1071,7 @@ class ArchivistAgent:
                     str(docs_dir / "CHANGELOG.md"),
                     str(docs_dir / "decisions.md"),
                     str(docs_dir / "todos.md"),
+                    str(todos_file),
                     str(docs_dir / "archivistREADME.md"),
                     str(ledger_path),
                     str(delegation_file),
@@ -725,7 +1083,7 @@ class ArchivistAgent:
                 str(project / "README.md"),
                 str(docs_dir / "CHANGELOG.md"),
                 str(docs_dir / "decisions.md"),
-                str(docs_dir / "todos.md"),
+                str(todos_file),
                 str(docs_dir / "archivistREADME.md"),
                 str(ledger_path),
                 str(delegation_file),

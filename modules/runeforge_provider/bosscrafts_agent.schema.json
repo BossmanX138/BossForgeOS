@@ -1,0 +1,1313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bosscrafts.local/schemas/bosscrafts-agent.schema.json",
+  "title": "BossCrafts Agent Definition",
+  "description": "Unified schema for BossCrafts agent registration profiles.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "description",
+    "schema_version",
+    "agent_card",
+    "proprietary",
+    "agent_class",
+    "agent_type",
+    "rank",
+    "skills",
+    "sigils",
+    "llm",
+    "integration",
+    "mcp",
+    "system_wrapper",
+    "instructions"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_\\-]{1,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$"
+    },
+    "agent_card": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "description",
+        "agent_class",
+        "agent_type",
+        "rank"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "agent_class": {
+          "type": "string",
+          "enum": [
+            "prime",
+            "skilled",
+            "normalized"
+          ]
+        },
+        "agent_type": {
+          "type": "string",
+          "enum": [
+            "authority",
+            "controller",
+            "worker",
+            "security",
+            "tester",
+            "ranger"
+          ]
+        },
+        "rank": {
+          "type": "string",
+          "enum": [
+            "cadet",
+            "specialist",
+            "lieutenant",
+            "captain",
+            "commander",
+            "general",
+            "admiral"
+          ]
+        },
+        "skills": {
+          "type": "array",
+          "description": "Tool-level capabilities (for example: web_search, file_read, shell_exec). Skills are bounded operations.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sigils": {
+          "type": "array",
+          "description": "Prime-tier powers that represent elevated potency (for example: spawn, transmute, banish). Sigils are higher power-level abilities than normal skills.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "proprietary": {
+      "type": "object",
+      "required": [
+        "managed_by",
+        "encrypted",
+        "encryption_scheme",
+        "sealed_fields"
+      ],
+      "properties": {
+        "managed_by": {
+          "type": "string",
+          "const": "bossgate_connector"
+        },
+        "encrypted": {
+          "type": "boolean",
+          "const": true
+        },
+        "encryption_scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ciphertext_ref": {
+          "type": "string"
+        },
+        "sealed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "access_policy": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "module": {
+      "type": "string"
+    },
+    "class": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "agent_class": {
+      "type": "string",
+      "description": "Power tier of the agent: normalized (lowest), skilled (medium), prime (highest).",
+      "enum": [
+        "prime",
+        "skilled",
+        "normalized"
+      ]
+    },
+    "agent_type": {
+      "type": "string",
+      "description": "Functional designation used to constrain allowed skills and MCP server categories.",
+      "enum": [
+        "authority",
+        "controller",
+        "worker",
+        "security",
+        "tester",
+        "ranger"
+      ]
+    },
+    "rank": {
+      "type": "string",
+      "description": "Command hierarchy rank used for delegation authority.",
+      "enum": [
+        "cadet",
+        "specialist",
+        "lieutenant",
+        "captain",
+        "commander",
+        "general",
+        "admiral"
+      ]
+    },
+    "skills": {
+      "type": "array",
+      "description": "Operational capabilities implemented as ordinary tools or bounded actions. Normalized agents should keep this empty and rely on MCP.",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sigils": {
+      "type": "array",
+      "description": "Prime sigils or approved skilled-sigil specialist marks (for example: sigil_transporter).",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "llm": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "model_name": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "api_key_env": {
+              "type": "string"
+            },
+            "temperature": {
+              "type": "number"
+            },
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "required": [
+                  "model_name"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "mcp": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "servers"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "transport"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "transport": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http",
+                  "sse",
+                  "ws",
+                  "custom"
+                ]
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "required": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "system_wrapper": {
+      "type": "object",
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "entrypoint": {
+          "type": "string"
+        },
+        "contract_version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "instructions": {
+      "type": "object",
+      "required": [
+        "system"
+      ],
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "developer": {
+          "type": "string"
+        },
+        "operational": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "safety": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "integration": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "type": "string"
+        },
+        "transport": {
+          "type": "string"
+        },
+        "bossgate": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "travel_capable"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "travel_capable": {
+              "type": "boolean"
+            },
+            "connector": {
+              "type": "string"
+            },
+            "allowed_targets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "travel_capable": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          ],
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "dispatch_policy": {
+      "type": "object",
+      "properties": {
+        "autonomous_bus_intake": {
+          "type": "boolean"
+        },
+        "proactive_remote_hunt": {
+          "type": "boolean"
+        },
+        "preferred_scope": {
+          "type": "string",
+          "enum": [
+            "host",
+            "lan",
+            "remote"
+          ]
+        },
+        "can_leave_host_without_command": {
+          "type": "boolean"
+        },
+        "can_leave_host_for_lan_when_host_idle": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "autonomous_bus_intake",
+        "proactive_remote_hunt",
+        "preferred_scope",
+        "can_leave_host_without_command",
+        "can_leave_host_for_lan_when_host_idle"
+      ],
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "authority"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "contains": {
+              "const": "command"
+            },
+            "not": {
+              "contains": {
+                "const": "bossgate_travel_control"
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(bossgate|authority|audit|policy)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "controller"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "contains": {
+              "const": "command"
+            }
+          },
+          "dispatch_policy": {
+            "properties": {
+              "autonomous_bus_intake": {
+                "const": true
+              },
+              "proactive_remote_hunt": {
+                "const": false
+              },
+              "can_leave_host_without_command": {
+                "const": false
+              },
+              "can_leave_host_for_lan_when_host_idle": {
+                "const": true
+              },
+              "preferred_scope": {
+                "enum": [
+                  "host",
+                  "lan"
+                ]
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(orchestration|controller|workflow|coordination)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "worker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "not": {
+              "contains": {
+                "const": "command"
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(worker|task|ops|runtime|file|shell)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "security"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "not": {
+              "contains": {
+                "const": "bossgate_travel_control"
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(security|audit|policy|sentinel)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "tester"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "not": {
+              "contains": {
+                "const": "command"
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(test|qa|validation|sentinel)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_type": {
+            "const": "ranger"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "contains": {
+              "const": "bossgate_travel_control"
+            },
+            "not": {
+              "contains": {
+                "const": "command"
+              }
+            }
+          },
+          "dispatch_policy": {
+            "properties": {
+              "autonomous_bus_intake": {
+                "const": true
+              },
+              "proactive_remote_hunt": {
+                "type": "boolean"
+              },
+              "can_leave_host_without_command": {
+                "type": "boolean"
+              },
+              "preferred_scope": {
+                "enum": [
+                  "host",
+                  "lan",
+                  "remote"
+                ]
+              }
+            }
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "items": {
+                  "properties": {
+                    "name": {
+                      "pattern": "^(ranger|repair|maintenance|diagnostic|runtime|ops|shell|remote)(_|$)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "agent_type": {
+                "const": "ranger"
+              }
+            }
+          },
+          {
+            "properties": {
+              "metadata": {
+                "properties": {
+                  "personality_wrapper": {
+                    "properties": {
+                      "behavior_patterns": {
+                        "contains": {
+                          "const": "ranger_local"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "dispatch_policy": {
+            "properties": {
+              "autonomous_bus_intake": {
+                "const": true
+              },
+              "proactive_remote_hunt": {
+                "const": false
+              },
+              "can_leave_host_without_command": {
+                "const": false
+              },
+              "preferred_scope": {
+                "enum": [
+                  "host",
+                  "lan"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "agent_type": {
+                "const": "ranger"
+              }
+            }
+          },
+          {
+            "not": {
+              "properties": {
+                "metadata": {
+                  "properties": {
+                    "personality_wrapper": {
+                      "properties": {
+                        "behavior_patterns": {
+                          "contains": {
+                            "const": "ranger_local"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "dispatch_policy": {
+            "properties": {
+              "autonomous_bus_intake": {
+                "const": true
+              },
+              "proactive_remote_hunt": {
+                "const": true
+              },
+              "can_leave_host_without_command": {
+                "const": true
+              },
+              "preferred_scope": {
+                "const": "remote"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skills": {
+            "contains": {
+              "const": "command"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rank": {
+            "enum": [
+              "captain",
+              "commander",
+              "general",
+              "admiral"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "cadet"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 1
+          },
+          "sigils": {
+            "maxItems": 0
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "specialist"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 2
+          },
+          "sigils": {
+            "maxItems": 0
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 3
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "lieutenant"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 3
+          },
+          "sigils": {
+            "maxItems": 1
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 4
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "captain"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 5
+          },
+          "sigils": {
+            "maxItems": 2
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 6
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "commander"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 7
+          },
+          "sigils": {
+            "maxItems": 3
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 8
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "general"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 9
+          },
+          "sigils": {
+            "maxItems": 4
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 10
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rank": {
+            "const": "admiral"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 12
+          },
+          "sigils": {
+            "maxItems": 5
+          },
+          "mcp": {
+            "properties": {
+              "servers": {
+                "maxItems": 12
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "skills": {
+            "contains": {
+              "const": "bossgate_travel_control"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "agent_type": {
+            "enum": [
+              "ranger",
+              "controller"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "prime"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "rank": {
+            "enum": [
+              "captain",
+              "commander",
+              "general",
+              "admiral"
+            ]
+          },
+          "sigils": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "prime"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "llm": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "normalized"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skills": {
+            "maxItems": 0
+          },
+          "sigils": {
+            "maxItems": 0
+          },
+          "mcp": {
+            "properties": {
+              "enabled": {
+                "const": true
+              },
+              "servers": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "normalized"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "integration": {
+            "properties": {
+              "bossgate": {
+                "properties": {
+                  "travel_capable": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "skilled"
+          }
+        }
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "llm": {
+                "properties": {
+                  "enabled": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "oneOf": [
+              {
+                "properties": {
+                  "skills": {
+                    "minItems": 1
+                  },
+                  "sigils": {
+                    "maxItems": 0
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "skills": {
+                    "maxItems": 0
+                  },
+                  "sigils": {
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "contains": {
+                      "const": "sigil_transporter"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "integration": {
+            "properties": {
+              "bossgate": {
+                "properties": {
+                  "travel_capable": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "allOf": [
+          {
+            "oneOf": [
+              {
+                "properties": {
+                  "skills": {
+                    "contains": {
+                      "const": "bossgate_travel_control"
+                    }
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "sigils": {
+                    "contains": {
+                      "const": "sigil_transporter"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "properties": {
+              "integration": {
+                "properties": {
+                  "bossgate": {
+                    "properties": {
+                      "enabled": {
+                        "const": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agent_class": {
+            "const": "skilled"
+          },
+          "integration": {
+            "properties": {
+              "bossgate": {
+                "properties": {
+                  "travel_capable": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "llm": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "required": [
+                  "provider",
+                  "model_name",
+                  "endpoint"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "model_name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}

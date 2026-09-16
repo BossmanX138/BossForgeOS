@@ -1,10 +1,11 @@
 import atexit
 import base64
 import json
-import math
 import os
+import re
 import subprocess
 import sys
+import time
 
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,11 +22,28 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from flask import Flask, jsonify, render_template_string, request, send_file
-from werkzeug.utils import secure_filename
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
-from core.security.security_sentinel_agent import SecuritySentinelAgent
+from core.security.bossgate_authorization import BossGateAuthorizationRegistry
+from modules.agentforge import api_adapter as agentforge_api
+from modules.iconforge import api_adapter as iconforge_api
+try:
+    from modules.model_gateway import api_adapter as model_gateway_api
+except ModuleNotFoundError:
+    from core.model_gateway import service as model_gateway_api
+from modules.runeforge_voice import service as runeforge_voice_service
+from modules.security import api_adapter as security_api
+from modules.soundforge import api_adapter as soundforge_api
+from modules.ui_runtime import api_adapter as ui_runtime_api
+from modules.onboarding import api_adapter as onboarding_api
+from modules.ops_runtime import api_adapter as ops_runtime_api
+from modules.ops_runtime import agent_state_adapter as agent_state_api
+
+_ASS_HANDOFF_MAX_AGE_SECONDS = 600
+_ASS_CONSUMED_LAUNCH_TICKETS: set[str] = set()
+from modules.ops_runtime import task_tracker_adapter as task_tracker_api
+from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
 from modules.os_snapshot import snapshot_all
 
@@ -34,9 +52,15 @@ app = Flask(__name__)
 bus = RuneBus(resolve_root_from_env())
 socketio = None
 PIN_OVERLAY_PROCESS = None
+
+
+def _bossgate_authorization() -> BossGateAuthorizationRegistry:
+    return BossGateAuthorizationRegistry(bus.state / "bossgate_human_roles.json")
 PIN_OVERLAY_VIEW = ""
 PIN_OVERLAY_ALPHA = 0.95
 AGENTFORGE_POOL_PATH = PROJECT_ROOT / "state" / "agentforge_custom_pool.json"
+AGENT_TASK_TRACKER_PATH = bus.state / "agent_task_tracker.json"
+AGENT_ASSIGNMENTS_PATH = PROJECT_ROOT / "AGENT_TASK_ASSIGNMENTS.md"
 
 AGENT_STATUS = {
     "hearth_tender": "Hearth-Tender",
@@ -81,13 +105,44 @@ PAGE = """
                 radial-gradient(circle at 50% 100%, rgba(212,168,87,0.08), transparent 45%),
                 var(--bg);
         }
-        .shell { display:grid; grid-template-columns: 250px 1fr; min-height:100vh; }
-        @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(212,168,87,0.55) rgba(16,16,21,0.58);
+        }
+        *::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        *::-webkit-scrollbar-track {
+            background: rgba(16,16,21,0.58);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(212,168,87,0.72), rgba(168,128,55,0.70));
+            border: 2px solid rgba(16,16,21,0.65);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(222,178,96,0.82), rgba(176,136,60,0.78));
+        }
+        .shell {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+        @media (max-width: 1100px) {
+            .shell { grid-template-columns: 1fr; }
+        }
         .side {
             border-right:1px solid var(--line);
             background:linear-gradient(180deg,#101015,#0D0D11 70%, #0A0A0C);
             padding:14px;
             box-shadow: inset -1px 0 0 rgba(255,122,47,0.10);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: auto;
+            scrollbar-gutter: stable both-edges;
         }
         .side h1 { margin:0 0 8px; color:var(--accent); font-size:18px; }
         .group-label { margin:10px 0 6px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
@@ -138,30 +193,495 @@ PAGE = """
             border-color:var(--accent);
             box-shadow: inset 0 0 0 1px rgba(212,168,87,0.30), 0 0 18px rgba(212,168,87,0.18);
         }
-        .wrap { max-width:1200px; margin:0 auto; padding:18px; display:grid; gap:14px; }
+        .wrap {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 14px 18px 18px;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
         .card {
             background:linear-gradient(180deg,var(--panel2),var(--panel));
             border:1px solid var(--line);
             border-radius:12px;
-            padding:12px;
+            padding:10px;
             box-shadow: inset 0 0 0 1px rgba(255,122,47,0.06);
         }
-        h1 { margin:0 0 6px; color:var(--accent); font-size:22px; }
-        h2 { margin:0 0 10px; color:var(--accent); font-size:16px; }
+        .wrap > .card:first-child {
+            position: sticky;
+            top: 8px;
+            z-index: 5;
+            backdrop-filter: blur(6px);
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .row > * {
+            min-height: 32px;
+        }
+        .row > input,
+        .row > select,
+        .row > textarea {
+            flex: 1 1 220px;
+            min-width: 180px;
+        }
+        .view-panel > .row {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .view-panel > .row:last-child {
+            margin-bottom: 0;
+        }
+        .view-panel > .muted {
+            margin-bottom: 6px;
+        }
+        .view-panel h2 {
+            margin-bottom: 8px;
+        }
+        .view-panel > pre {
+            margin-top: 8px;
+        }
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .workspace-pane {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 9px;
+            min-width: 0;
+        }
+        .workspace-pane h3 {
+            margin: 0 0 6px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .topology-shell {
+            margin-top: 8px;
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            background: rgba(12, 14, 20, 0.76);
+            padding: 10px;
+        }
+        .bossgate-presence-layout {
+            display: grid;
+            gap: 10px;
+        }
+        .bossgate-presence-stage {
+            position: relative;
+        }
+        .topology-graph {
+            width: 100%;
+            min-height: 320px;
+            border: 1px solid #2b2f3a;
+            border-radius: 8px;
+            background: radial-gradient(circle at 50% 50%, rgba(77,166,255,0.06), rgba(10,12,18,0.8));
+        }
+        .bossgate-presence-card {
+            border: 1px solid #2b2f3a;
+            border-radius: 12px;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(15,19,28,0.98), rgba(8,11,17,0.98));
+            display: grid;
+            gap: 8px;
+        }
+        .bossgate-presence-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #edf4ff;
+        }
+        .bossgate-presence-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .bossgate-presence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+        .bossgate-presence-grid-item {
+            border: 1px solid #243042;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: rgba(10,14,20,0.72);
+        }
+        .bossgate-presence-grid-item strong {
+            display: block;
+            font-size: 11px;
+            color: #8ea0b8;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+        .bossgate-radial-menu {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            pointer-events: none;
+        }
+        .bossgate-radial-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            border: 1px solid #6ea8ff;
+            background: radial-gradient(circle at 40% 35%, rgba(20,39,70,0.98), rgba(8,14,24,0.98));
+            color: #edf4ff;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 0 26px rgba(77,166,255,0.24);
+        }
+        .bossgate-radial-action {
+            position: absolute;
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            border: 1px solid #395374;
+            background: radial-gradient(circle at 40% 35%, rgba(23,36,56,0.98), rgba(9,14,22,0.98));
+            color: #dbeafe;
+            font-size: 11px;
+            line-height: 1.2;
+            padding: 8px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .bossgate-color-green { border-color: #4CC46A; box-shadow: 0 0 18px rgba(76,196,106,0.16); }
+        .bossgate-color-blue { border-color: #4DA6FF; box-shadow: 0 0 18px rgba(77,166,255,0.16); }
+        .bossgate-color-red { border-color: #FF6262; box-shadow: 0 0 18px rgba(255,98,98,0.16); }
+        .bossgate-color-grey { border-color: #94a3b8; box-shadow: 0 0 18px rgba(148,163,184,0.12); }
+        .topology-legend {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .topology-edge-list {
+            margin-top: 8px;
+            border-top: 1px solid #2b2f3a;
+            padding-top: 8px;
+            display: grid;
+            gap: 4px;
+        }
+        .topology-edge-item {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .topology-empty {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .workspace-stack {
+            display: grid;
+            gap: 6px;
+        }
+        .workspace-canvas-wrap {
+            display: grid;
+            grid-template-columns: auto minmax(300px, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .workspace-canvas-controls {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+        }
+        .iconforge-menubar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0 10px;
+            padding: 6px;
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #141117, #0f0d12);
+        }
+        .iconforge-menu {
+            position: relative;
+        }
+        .iconforge-menu-btn {
+            min-height: 28px;
+            padding: 4px 10px;
+            border-radius: 7px;
+            border: 1px solid rgba(212,168,87,0.35);
+            background: rgba(20, 19, 24, 0.95);
+            color: var(--ink);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .iconforge-menu.open .iconforge-menu-btn {
+            border-color: rgba(212,168,87,0.8);
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.22);
+        }
+        .iconforge-menu-list {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            min-width: 220px;
+            z-index: 25;
+            border: 1px solid #2b2f3a;
+            border-radius: 9px;
+            padding: 6px;
+            background: #101018;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+        }
+        .iconforge-menu.open .iconforge-menu-list {
+            display: grid;
+            gap: 4px;
+        }
+        .iconforge-menu-list button {
+            width: 100%;
+            min-height: 28px;
+            text-align: left;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: rgba(24, 24, 31, 0.95);
+            color: var(--ink);
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .iconforge-menu-list button:hover {
+            border-color: rgba(212,168,87,0.55);
+            box-shadow: none;
+        }
+        .menu-shortcut {
+            float: right;
+            margin-left: 14px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .iconforge-menu-sep {
+            height: 1px;
+            margin: 3px 0;
+            background: rgba(95, 74, 39, 0.75);
+        }
+        .iconforge-schematics {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, rgba(17, 14, 20, 0.95), rgba(12, 10, 16, 0.95));
+        }
+        .iconforge-schematics-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .iconforge-schematics-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .iconforge-schematic-section {
+            border: 1px solid rgba(95, 74, 39, 0.55);
+            border-radius: 10px;
+            padding: 8px;
+            background: rgba(13, 11, 18, 0.72);
+        }
+        .iconforge-schematic-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 0 0 8px;
+        }
+        .iconforge-schematic-section h3 {
+            margin: 0;
+            font-size: 12px;
+            color: #f2cf86;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .iconforge-schematic-toggle {
+            min-height: 24px;
+            padding: 2px 8px;
+            border-radius: 7px;
+            border: 1px solid rgba(212,168,87,0.45);
+            background: rgba(21, 18, 26, 0.9);
+            color: var(--ink);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .iconforge-schematic-toggle:hover {
+            border-color: rgba(255,184,77,0.75);
+        }
+        .iconforge-schematic-section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
+        .iconforge-schematic-section.collapsed .iconforge-schematic-section-grid {
+            display: none;
+        }
+        .iconforge-schematic-card {
+            border: 1px solid rgba(212,168,87,0.35);
+            border-radius: 9px;
+            background: rgba(18, 16, 23, 0.95);
+            padding: 8px;
+            display: grid;
+            gap: 6px;
+            position: relative;
+            overflow: visible;
+        }
+        .iconforge-schematic-card h4 {
+            margin: 0;
+            font-size: 12px;
+            color: #f2cf86;
+        }
+        .iconforge-schematic-meta {
+            font-size: 11px;
+            color: var(--muted);
+            word-break: break-word;
+        }
+        .iconforge-schematic-card button {
+            min-height: 28px;
+        }
+        .iconforge-schematic-preview {
+            width: 56px;
+            height: 56px;
+            border: 1px solid rgba(212,168,87,0.45);
+            border-radius: 8px;
+            background:
+                linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%),
+                linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%),
+                rgba(14, 14, 20, 0.92);
+            background-size: 10px 10px;
+            background-position: 0 0, 5px 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+            transform-origin: top left;
+        }
+        .iconforge-schematic-preview:hover {
+            transform: scale(2.5);
+            border-color: rgba(255, 184, 77, 0.85);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+            z-index: 20;
+            background-color: rgba(8, 8, 12, 0.98);
+        }
+        .iconforge-schematic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: auto;
+        }
+        .iconforge-schematic-preview-empty {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .iconforge-schematic-hint {
+            font-size: 10px;
+            color: var(--muted);
+        }
+        @media (max-width: 900px) {
+            .iconforge-schematic-preview:hover {
+                transform: scale(1.6);
+            }
+        }
+        .wizard-layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+        .wizard-sidebar {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 8px;
+            background: rgba(12, 12, 16, 0.45);
+        }
+        .wizard-sidebar h3 {
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .wizard-checklist {
+            display: grid;
+            gap: 6px;
+        }
+        .wizard-check-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+            border: 1px solid #2b2f3a;
+            border-radius: 8px;
+            padding: 6px 8px;
+            background: rgba(20, 20, 26, 0.85);
+            color: var(--ink);
+            cursor: pointer;
+        }
+        .wizard-check-item .step-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(212,168,87,0.45);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--muted);
+            background: rgba(18,18,24,0.9);
+            flex: 0 0 auto;
+        }
+        .wizard-check-item.is-active {
+            border-color: rgba(212,168,87,0.72);
+            box-shadow: inset 0 0 0 1px rgba(212,168,87,0.24);
+        }
+        .wizard-check-item.is-active .step-dot {
+            color: #111;
+            background: rgba(212,168,87,0.95);
+            border-color: rgba(212,168,87,0.9);
+        }
+        .wizard-check-item.is-complete .step-dot {
+            color: #111;
+            background: rgba(175,220,120,0.9);
+            border-color: rgba(175,220,120,0.9);
+            font-weight: 700;
+        }
+        .wizard-main {
+            min-width: 0;
+        }
+        h1 { margin:0 0 4px; color:var(--accent); font-size:22px; }
+        h2 { margin:0 0 8px; color:var(--accent); font-size:16px; }
         .muted { color:var(--muted); font-size:12px; }
         input, select {
             background:#0E0E13;
             color:var(--ink);
             border:1px solid var(--line);
             border-radius:9px;
-            padding:8px;
+            padding:6px 8px;
         }
         textarea {
             background:#0E0E13;
             color:var(--ink);
             border:1px solid var(--line);
             border-radius:9px;
-            padding:8px;
+            padding:7px 8px;
             min-height:78px;
             width:100%;
         }
@@ -170,22 +690,70 @@ PAGE = """
             color:var(--ink);
             border:1px solid rgba(212,168,87,0.45);
             border-radius:9px;
-            padding:8px 10px;
+            padding:6px 10px;
             cursor:pointer;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
         }
         button:hover {
             border-color:var(--accent);
             box-shadow: 0 0 0 1px rgba(212,168,87,0.22), 0 0 12px rgba(255,122,47,0.14);
         }
-        pre { margin:0; max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px; }
+        pre { margin:0; max-height:420px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#0d1621; border:1px solid var(--line); border-radius:10px; padding:9px; font-size:12px; }
         .agent-item { border:1px solid var(--line); border-radius:9px; padding:8px; margin-bottom:6px; background:#132131; }
+        .agent-task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .agent-task-card {
+            border: 1px solid #2b2f3a;
+            border-radius: 10px;
+            padding: 8px;
+            background: #0d1621;
+        }
+        .agent-task-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .agent-task-agent {
+            font-weight: 600;
+            color: var(--ink);
+        }
+        .agent-task-text {
+            font-size: 12px;
+            color: var(--ink);
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+        }
+        .agent-task-meta {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .agent-task-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .agent-task-actions button {
+            min-height: 28px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
         .pill { display:inline-block; margin-left:8px; border-radius:999px; padding:1px 8px; border:1px solid var(--line); font-size:11px; }
         .pill.online { color:var(--ok); border-color:var(--ok); }
         .pill.warning, .pill.stale { color:var(--warn); border-color:var(--warn); }
         .pill.offline, .pill.critical { color:var(--bad); border-color:var(--bad); }
         .view-panel { display:none; }
-        .view-panel.active { display:block; }
+        .view-panel.active {
+            display:block;
+            min-height: min(72vh, 980px);
+        }
         .panel-heading { display:flex; align-items:center; gap:8px; }
         .panel-icon {
             width:18px;
@@ -216,6 +784,20 @@ PAGE = """
         .busy-indicator.active {
             opacity: 1;
             transform: translateY(0);
+        }
+        .js-error {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid #8a3737;
+            border-radius: 8px;
+            background: rgba(241, 113, 113, 0.14);
+            color: #f17171;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .js-error.active {
+            display: block;
         }
         .spinner {
             width: 12px;
@@ -256,6 +838,43 @@ PAGE = """
                 linear-gradient(to bottom, rgba(53, 81, 111, 0.35) 1px, transparent 1px);
             background-size: 48px 48px;
             pointer-events: none;
+        }
+        @media (max-width: 1100px) {
+            .side {
+                position: static;
+                height: auto;
+                overflow: visible;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+            .nav-btn {
+                margin-bottom: 4px;
+            }
+            .wrap {
+                padding: 12px;
+            }
+            .wrap > .card:first-child {
+                position: static;
+                top: auto;
+            }
+            .view-panel.active {
+                min-height: 0;
+            }
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+            .workspace-canvas-wrap {
+                grid-template-columns: 1fr;
+            }
+            .wizard-layout {
+                grid-template-columns: 1fr;
+            }
+            .row > input,
+            .row > select,
+            .row > textarea {
+                min-width: 0;
+                flex-basis: 100%;
+            }
         }
         .map-watermark {
             position: absolute;
@@ -316,6 +935,13 @@ PAGE = """
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 10px;
             margin-bottom: 10px;
+            position: relative;
+        }
+        .snapshot-grid.pin-mode {
+            border: 1px dashed rgba(212,168,87,0.42);
+            border-radius: 10px;
+            padding: 6px;
+            background: rgba(15, 14, 19, 0.42);
         }
         .gauge-card {
             border: 1px solid rgba(57, 255, 20, 0.38);
@@ -329,6 +955,36 @@ PAGE = """
                 0 0 12px rgba(57, 255, 20, 0.16);
             position: relative;
             overflow: hidden;
+        }
+        .gauge-card.is-pinned {
+            position: absolute;
+            z-index: 4;
+            width: var(--pinned-width, 210px);
+        }
+        .snapshot-grid.pin-mode .gauge-card.is-pinned {
+            cursor: grab;
+            user-select: none;
+        }
+        .snapshot-grid.pin-mode .gauge-card.is-pinned.dragging {
+            cursor: grabbing;
+            z-index: 9;
+            box-shadow: 0 0 0 2px rgba(242,201,107,0.35), inset 0 0 16px rgba(57,255,20,0.13), 0 10px 20px rgba(0,0,0,0.45);
+        }
+        .gauge-pin-btn {
+            min-height: 22px;
+            padding: 1px 7px;
+            border-radius: 6px;
+            border: 1px solid rgba(87,209,131,0.5);
+            background: rgba(8, 28, 18, 0.9);
+            color: #9bffb5;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .gauge-pin-btn.pinned {
+            border-color: rgba(242,201,107,0.7);
+            color: #f2cf86;
+            background: rgba(38, 30, 12, 0.85);
         }
         .gauge-card::before {
             content: '';
@@ -384,6 +1040,26 @@ PAGE = """
             stroke-dashoffset: calc(100 - var(--pct));
             transition: stroke-dashoffset 0.35s ease, stroke 0.35s ease;
             filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.55));
+        }
+        .tachometer .arc-rd {
+            fill: none;
+            stroke: #4da6ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: calc(100 - var(--rdpct, 0));
+            opacity: 0.95;
+            transition: stroke-dashoffset 0.35s ease;
+        }
+        .tachometer .arc-wr {
+            fill: none;
+            stroke: #ffb84d;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: calc(100 - var(--wrpct, 0));
+            opacity: 0.95;
+            transition: stroke-dashoffset 0.35s ease;
         }
         .tachometer .halo {
             position: absolute;
@@ -496,6 +1172,39 @@ PAGE = """
         }
         .snapshot-warning-item {
             border: 1px solid rgba(57, 255, 20, 0.48);
+        .gauge-legend {
+            margin-top: 4px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 10px;
+            color: #9bb0c9;
+            position: relative;
+            z-index: 1;
+        }
+        .gauge-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .gauge-legend-line {
+            display: inline-block;
+            width: 14px;
+            border-radius: 2px;
+        }
+        .gauge-legend-line.usage {
+            height: 4px;
+            background: #39ff14;
+        }
+        .gauge-legend-line.read {
+            height: 3px;
+            background: #4da6ff;
+        }
+        .gauge-legend-line.write {
+            height: 2px;
+            background: #ffb84d;
+        }
             background: rgba(57, 255, 20, 0.12);
             color: #8bff9d;
             border-radius: 8px;
@@ -518,10 +1227,11 @@ PAGE = """
 <body>
     <div class="shell">
         <aside class="side">
-            <h1>BossForgeOS</h1>
-            <div class="muted">Control Hall</div>
+            <h1 id="shell_title">BossForgeOS</h1>
+            <div id="shell_subtitle" class="muted">Control Hall</div>
             <div class="group-label">Operations</div>
             <button class="nav-btn" data-view="view_status" onclick="switchView('view_status')">Agent Status</button>
+            <button class="nav-btn" data-view="view_delegation" onclick="switchView('view_delegation')">Delegation Flow</button>
             <button class="nav-btn" data-view="view_snapshot" onclick="switchView('view_snapshot')">OS Snapshot</button>
             <button class="nav-btn" data-view="view_os_state" onclick="switchView('view_os_state')">OS State</button>
             <button class="nav-btn" data-view="view_commands" onclick="switchView('view_commands')">Quick Commands</button>
@@ -535,8 +1245,12 @@ PAGE = """
             <div class="group-label">Assistants</div>
             <button class="nav-btn" data-view="view_chat" onclick="switchView('view_chat')">Model Chat</button>
             <button class="nav-btn" data-view="view_maker" onclick="switchView('view_maker')">AgentForge</button>
+            <button class="nav-btn" data-view="view_bossgate_map" data-bossgate-panel="bossgate_map" onclick="switchView('view_bossgate_map')">BossGate Map</button>
+            <button class="nav-btn" data-view="view_bossgate_access" data-bossgate-panel="operator" onclick="switchView('view_bossgate_access')">BossGate Access</button>
+            <button class="nav-btn" data-view="view_bossgate_commerce" data-bossgate-panel="commerce" onclick="switchView('view_bossgate_commerce')">BossGate Commerce</button>
+            <button class="nav-btn" data-view="view_bossgate_support" data-bossgate-panel="support" onclick="switchView('view_bossgate_support')">BossGate Support</button>
             <button class="nav-btn" data-view="view_iconforge" onclick="switchView('view_iconforge')" style="color:#ffb27d; font-weight:bold;">IconForge Studio</button>
-            <button class="nav-btn" data-view="view_discovery" onclick="switchView('view_discovery')">Discovery Map</button>
+            <button class="nav-btn" data-view="view_discovery" data-bossgate-panel="discovery" onclick="switchView('view_discovery')">Discovery Map</button>
             <button class="nav-btn" data-view="view_security" onclick="switchView('view_security')">Security</button>
             <button class="nav-btn" data-view="view_sounds" onclick="switchView('view_sounds')" style="color:#39ff14; font-weight:bold;">Sounds</button>
             <div class="group-label">Diagnostics</div>
@@ -545,14 +1259,14 @@ PAGE = """
 
         <main class="wrap">
             <section class="card">
-                <h1>BossForgeOS Control Hall</h1>
-                <div class="muted">Panels open in center. Pin any active panel to always-on-top desktop overlay.</div>
-                <div class="row" style="margin-top:8px;">
+                <h1 id="hall_title">BossForgeOS Control Hall</h1>
+                <div id="hall_subtitle" class="muted">Panels open in center. Pin any active panel to always-on-top desktop overlay.</div>
+                <div id="hall_pin_row" class="row" style="margin-top:8px;">
                     <button id="pin_toggle" onclick="togglePinCurrentView()">Pin Current View</button>
                     <button onclick="clearPinnedView()">Unpin</button>
                     <span id="pin_note" class="pin-note">No desktop pin active</span>
                 </div>
-                <button class="anvil-btn" onclick="launchAnvilShuttle()">Launch Anvil Secured Shuttle</button>
+                <button id="anvil_launch_btn" class="anvil-btn" onclick="launchAnvilShuttle()">Launch Anvil Secured Shuttle</button>
                 <div id="anvil_status" class="muted" style="margin-top:8px;"></div>
                 <script>
                 async function launchAnvilShuttle() {
@@ -572,11 +1286,37 @@ PAGE = """
                     <span class="spinner" aria-hidden="true"></span>
                     <span id="busy_text">Loading...</span>
                 </div>
+                <div id="js_error" class="js-error" aria-live="assertive"></div>
             </section>
 
-            <section id="view_status" class="card view-panel"><h2>Agent Status</h2><div id="agents" class="muted">Loading...</div></section>
+            <section id="view_status" class="card view-panel">
+                <h2>Agent Status</h2>
+                <div id="agents" class="muted">Loading...</div>
+                <div class="row" style="margin-top:10px;">
+                    <h2 style="margin:0;">Agent Task Tracker</h2>
+                    <button onclick="refreshAgentTaskTracker()">Refresh Task Tracker</button>
+                </div>
+                <div class="muted">Live task ownership and execution state for assigned agent TODOs.</div>
+                <div id="agent_task_tracker" class="agent-task-grid"></div>
+            </section>
+            <section id="view_delegation" class="card view-panel">
+                <h2>Delegation Flow</h2>
+                <div class="muted">Archivist -> Runeforge review -> subordinate agents -> in-progress/completed.</div>
+                <div class="row" style="margin-top:8px;">
+                    <button onclick="refreshDelegationFlowPanel()">Refresh Delegation Flow</button>
+                </div>
+                <div id="delegation_flow_summary" class="row" style="margin-top:8px;"></div>
+                <div id="delegation_flow_chips" style="margin-top:8px;"></div>
+                <div id="delegation_flow_timeline" class="row" style="margin-top:8px;"></div>
+                <pre id="delegation_flow_raw">Loading...</pre>
+            </section>
             <section id="view_snapshot" class="card view-panel">
                 <h2>OS Snapshot</h2>
+                <div class="row" style="margin-bottom:8px;">
+                    <button id="snapshot_pin_mode_btn" onclick="toggleSnapshotGaugePinMode()">Gauge Pin Mode: Off</button>
+                    <button onclick="resetSnapshotGaugePins()">Reset Gauge Pins</button>
+                    <span id="snapshot_pin_mode_note" class="muted">Pin gauges to make a movable loadout.</span>
+                </div>
                 <div id="runeforge_voice_status" class="agent-item" style="margin-bottom:10px;">
                     <strong>Runeforge Voice Safety</strong>
                     <div class="muted">Loading approval and execution status...</div>
@@ -661,6 +1401,77 @@ PAGE = """
                 <pre id="discovery_raw">No discovery data loaded.</pre>
             </section>
 
+            <section id="view_bossgate_map" class="card view-panel">
+                <h2>BossGate Map</h2>
+                <div class="muted">Live gate beacon topology showing gates, travelable destinations, and agent locations.</div>
+                <div class="row">
+                    <button onclick="refreshBossGateMap(true)">Refresh BossGate Map</button>
+                    <span id="bossgate_map_summary" class="muted"></span>
+                </div>
+                <div id="bossgate_topology" class="topology-shell">
+                    <div class="topology-empty">No map topology loaded yet.</div>
+                </div>
+                <pre id="bossgate_map_raw">No BossGate map loaded.</pre>
+            </section>
+
+            <section id="view_bossgate_access" class="card view-panel">
+                <h2>BossGate Access</h2>
+                <div class="muted">Human-role permissions control which BossGate mechanisms are available.</div>
+                <div class="row">
+                    <input id="bossgate_current_user" value="bossforge-owner" placeholder="current human user" />
+                    <button onclick="refreshBossGateAccess()">Load Access</button>
+                </div>
+                <pre id="bossgate_access_summary">Load a user to inspect roles and permissions.</pre>
+                <div data-bossgate-permission="bossgate.package">
+                    <h3>Operator Package</h3>
+                    <div class="row">
+                        <input id="bossgate_package_agent_name" placeholder="agent name" />
+                        <input id="bossgate_package_target" placeholder="target system id" />
+                        <button onclick="dispatchBossGateOperator('bossgate_package_agent')">Package Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-permission="bossgate.transfer">
+                    <h3>Operator Transfer</h3>
+                    <div class="row">
+                        <input id="bossgate_transfer_file" placeholder="package file" />
+                        <input id="bossgate_transfer_destination" placeholder="destination URL" />
+                        <button onclick="dispatchBossGateOperator('bossgate_transfer_agent')">Transfer Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-permission="bossgate.install">
+                    <h3>Operator Install</h3>
+                    <div class="row">
+                        <input id="bossgate_install_file" placeholder="package file" />
+                        <button onclick="dispatchBossGateOperator('bossgate_install_agent')">Install Agent</button>
+                    </div>
+                </div>
+                <div data-bossgate-panel="security_admin">
+                    <h3>Security Administration</h3>
+                    <div class="row">
+                        <input id="bossgate_assign_user" placeholder="human user id" />
+                        <input id="bossgate_assign_roles" placeholder="roles, comma separated" />
+                        <button onclick="assignBossGateRoles()">Assign Roles</button>
+                    </div>
+                    <div class="row">
+                        <input id="bossgate_custom_role" placeholder="custom role name" />
+                        <input id="bossgate_custom_permissions" placeholder="permissions, comma separated" />
+                        <button onclick="saveBossGateCustomRole()">Save Custom Role</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view_bossgate_commerce" class="card view-panel">
+                <h2>BossGate Commerce</h2>
+                <div class="muted">Commerce responsibility workspace. License issue, validation, and usage report commands are permission-mapped and remain pending under BG-017 through BG-021.</div>
+                <pre id="bossgate_commerce_summary">Load BossGate Access to inspect commerce permissions.</pre>
+            </section>
+
+            <section id="view_bossgate_support" class="card view-panel">
+                <h2>BossGate Support</h2>
+                <div class="muted">Support responsibility workspace. Remote-debug open and close controls are permission-mapped and remain pending under BG-022 through BG-025.</div>
+                <pre id="bossgate_support_summary">Load BossGate Access to inspect support permissions.</pre>
+            </section>
+
             <section id="view_chat" class="card view-panel">
                 <h2>Model Chat</h2>
                 <div class="row"><select id="chat_endpoint"></select><input id="chat_system" value="You are BossForgeOS assistant." placeholder="system prompt" /></div>
@@ -679,18 +1490,24 @@ PAGE = """
             <section id="view_sounds" class="card view-panel">
                 <h2 style="color:#39ff14;">Sounds</h2>
                 <div class="muted">Sound scheme and SoundForge bundle tools.</div>
-                <pre id="sound_events">Open this panel to load sound status.</pre>
-                <div class="row">
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundforgeBundle()">Export Bundle</button>
-                    <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                <div class="workspace-grid" style="margin-top:8px;">
+                    <div class="workspace-pane workspace-stack">
+                        <h3>SoundForge Actions</h3>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="saveSoundScheme()">Save Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="loadSoundScheme()">Load Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="createNewScheme()">Create New Scheme</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="exportSoundforgeBundle()">Export Bundle</button>
+                        <button style="background:#111; color:#39ff14; border-color:#39ff14;" onclick="showImportBundleDialog()">Import Bundle</button>
+                        <div id="sound_scheme_status" class="muted" style="margin-top:2px;"></div>
+                        <div id="soundforge_schemes_list" class="muted"></div>
+                    </div>
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Sound Scheme State</h3>
+                        <pre id="sound_events">Open this panel to load sound status.</pre>
+                    </div>
                 </div>
                 <input type="file" id="sound_scheme_file" style="display:none;" accept=".json,.soundstage" onchange="handleSchemeFile(event)" />
                 <input type="file" id="soundforge_bundle_file" style="display:none;" accept=".B4Gsoundforge,.B4Gsoundstage,application/zip" onchange="handleImportBundle(event)" />
-                <div id="sound_scheme_status" class="muted" style="margin-top:10px;"></div>
-                <div id="soundforge_schemes_list" class="muted" style="margin-top:10px;"></div>
             </section>
 
             <section id="view_maker" class="card view-panel">
@@ -703,129 +1520,169 @@ PAGE = """
                 <pre id="maker_agents">Loading...</pre>
 
                 <div id="maker_wizard_mode" style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
-                    <div class="muted" style="margin-bottom:8px;">Guided builder for quick agent creation.</div>
-                    <div class="row">
-                        <input id="wizard_name" placeholder="agent name" />
-                        <select id="wizard_endpoint"></select>
-                        <input id="wizard_role_focus" placeholder="what should this agent do?" />
-                    </div>
-                    <div class="row">
-                        <select id="wizard_scope">
-                            <option value="host">Local Host</option>
-                            <option value="lan">LAN</option>
-                            <option value="remote">Remote/Customer</option>
-                        </select>
-                        <select id="wizard_behavior">
-                            <option value="directive_local">Directive Local Specialist</option>
-                            <option value="proactive_remote">Proactive Remote Fixer</option>
-                            <option value="security_guard">Security Watcher</option>
-                            <option value="qa_tester">QA/Test Specialist</option>
-                        </select>
-                        <select id="wizard_power">
-                            <option value="normalized">Normalized</option>
-                            <option value="skilled" selected>Skilled</option>
-                            <option value="prime">Prime</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <select id="wizard_personality">
-                            <option value="balanced" selected>personality: balanced</option>
-                            <option value="decisive">personality: decisive</option>
-                            <option value="cautious">personality: cautious</option>
-                            <option value="creative">personality: creative</option>
-                            <option value="analytical">personality: analytical</option>
-                            <option value="introvert_local">personality: i don't like crowded places</option>
-                        </select>
-                        <input id="wizard_personality_notes" placeholder="personality notes (optional)" />
-                        <input id="wizard_personality_interests" placeholder="interests e.g. ui, art, animation (comma-separated)" />
-                    </div>
-                    <div class="row">
-                        <select id="wizard_behavior_patterns" multiple size="4" style="min-width:260px;">
-                            <option value="authority_like">authority_like</option>
-                            <option value="controller_like">controller_like</option>
-                            <option value="worker_like">worker_like</option>
-                            <option value="security_like">security_like</option>
-                            <option value="tester_like">tester_like</option>
-                            <option value="ranger_like">ranger_like</option>
-                            <option value="ranger_local">ranger_local</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <select id="wizard_skill_list" multiple size="4" style="min-width:260px;">
-                            <option value="command">command</option>
-                            <option value="bossgate_travel_control">bossgate_travel_control</option>
-                            <option value="runtime_observation">runtime_observation</option>
-                            <option value="task_queue_management">task_queue_management</option>
-                            <option value="web_search">web_search</option>
-                            <option value="policy_planning">policy_planning</option>
-                            <option value="memory_sync">memory_sync</option>
-                            <option value="incident_triage">incident_triage</option>
-                            <option value="code_review">code_review</option>
-                            <option value="ui_design">ui_design</option>
-                            <option value="art_direction">art_direction</option>
-                            <option value="documentation_crafting">documentation_crafting</option>
-                            <option value="test_orchestration">test_orchestration</option>
-                            <option value="security_audit">security_audit</option>
-                            <option value="performance_tuning">performance_tuning</option>
-                            <option value="data_analysis">data_analysis</option>
-                            <option value="workflow_automation">workflow_automation</option>
-                            <option value="customer_support">customer_support</option>
-                            <option value="integration_mapping">integration_mapping</option>
-                            <option value="api_composition">api_composition</option>
-                        </select>
-                        <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
-                            <option value="sigil_transporter">sigil_transporter</option>
-                            <option value="prime_overwatch">prime_overwatch</option>
-                            <option value="sigil_bind">sigil_bind</option>
-                            <option value="sigil_trace">sigil_trace</option>
-                            <option value="sigil_harmony">sigil_harmony</option>
-                            <option value="prime_foresight">prime_foresight</option>
-                            <option value="prime_bastion">prime_bastion</option>
-                            <option value="sigil_palette">sigil_palette</option>
-                            <option value="sigil_resonance">sigil_resonance</option>
-                            <option value="sigil_flux">sigil_flux</option>
-                            <option value="sigil_anchor">sigil_anchor</option>
-                            <option value="sigil_lens">sigil_lens</option>
-                            <option value="sigil_weave">sigil_weave</option>
-                            <option value="sigil_echo">sigil_echo</option>
-                            <option value="sigil_guard">sigil_guard</option>
-                            <option value="sigil_spark">sigil_spark</option>
-                            <option value="sigil_patch">sigil_patch</option>
-                            <option value="sigil_scribe">sigil_scribe</option>
-                            <option value="sigil_orbit">sigil_orbit</option>
-                            <option value="sigil_shield">sigil_shield</option>
-                        </select>
-                    </div>
-                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
-                        <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
+                    <div class="muted" style="margin-bottom:8px;">Wizard flow: answer each step, review, then finalize.</div>
+                    <div id="wizard_step_label" class="muted" style="margin-bottom:8px;">Step 1 of 4: Identity</div>
+                    <div class="wizard-layout">
+                        <aside class="wizard-sidebar">
+                            <h3>Checklist</h3>
+                            <div class="wizard-checklist">
+                                <button class="wizard-check-item" data-check-step="1" onclick="setWizardStep(1)"><span class="step-dot">1</span><span>Identity</span></button>
+                                <button class="wizard-check-item" data-check-step="2" onclick="setWizardStep(2)"><span class="step-dot">2</span><span>Profile</span></button>
+                                <button class="wizard-check-item" data-check-step="3" onclick="setWizardStep(3)"><span class="step-dot">3</span><span>Capabilities</span></button>
+                                <button class="wizard-check-item" data-check-step="4" onclick="setWizardStep(4)"><span class="step-dot">4</span><span>Review</span></button>
+                            </div>
+                        </aside>
+                        <div class="wizard-main">
+
+                    <div class="wizard-step" data-wizard-step="1">
                         <div class="row">
-                            <select id="wizard_icon_mode" onchange="toggleWizardIconSource()">
-                                <option value="none" selected>icon: default</option>
-                                <option value="upload">icon: upload file</option>
-                                <option value="iconforge">icon: create in IconForge</option>
-                            </select>
-                            <input id="wizard_icon_path" placeholder="custom icon path (.ico)" readonly />
-                            <button onclick="clearWizardIconSelection()">Clear Icon</button>
+                            <input id="wizard_name" placeholder="agent name" />
+                            <select id="wizard_endpoint"></select>
+                            <input id="wizard_role_focus" placeholder="what should this agent do?" />
                         </div>
-                        <div id="wizard_icon_upload_row" class="row" style="display:none; margin-top:6px;">
-                            <button onclick="triggerWizardIconUpload()">Upload Icon/Image</button>
-                            <span id="wizard_icon_upload_name" class="muted">No file selected</span>
-                            <input id="wizard_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleWizardIconUpload(event)" />
-                        </div>
-                        <div id="wizard_iconforge_row" class="row" style="display:none; margin-top:6px;">
-                            <input id="wizard_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
-                            <input id="wizard_icon_bg" value="#1d3557" placeholder="background color" />
-                            <input id="wizard_icon_fg" value="#f1faee" placeholder="foreground color" />
-                            <button onclick="createWizardIconForge()">Create In IconForge</button>
-                        </div>
-                        <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
                     </div>
-                    <div class="row">
+
+                    <div class="wizard-step" data-wizard-step="2" style="display:none;">
+                        <div class="row">
+                            <select id="wizard_scope">
+                                <option value="host">Local Host</option>
+                                <option value="lan">LAN</option>
+                                <option value="remote">Remote/Customer</option>
+                            </select>
+                            <select id="wizard_behavior">
+                                <option value="directive_local">Directive Local Specialist</option>
+                                <option value="proactive_remote">Proactive Remote Fixer</option>
+                                <option value="security_guard">Security Watcher</option>
+                                <option value="qa_tester">QA/Test Specialist</option>
+                            </select>
+                            <select id="wizard_power">
+                                <option value="normalized">Normalized</option>
+                                <option value="skilled" selected>Skilled</option>
+                                <option value="prime">Prime</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <select id="wizard_personality">
+                                <option value="balanced" selected>personality: balanced</option>
+                                <option value="decisive">personality: decisive</option>
+                                <option value="cautious">personality: cautious</option>
+                                <option value="creative">personality: creative</option>
+                                <option value="analytical">personality: analytical</option>
+                                <option value="introvert_local">personality: i don't like crowded places</option>
+                            </select>
+                            <input id="wizard_personality_notes" placeholder="personality notes (optional)" />
+                            <input id="wizard_personality_interests" placeholder="interests e.g. ui, art, animation (comma-separated)" />
+                        </div>
+                    </div>
+
+                    <div class="wizard-step" data-wizard-step="3" style="display:none;">
+                        <div class="row">
+                            <select id="wizard_behavior_patterns" multiple size="4" style="min-width:260px;">
+                                <option value="authority_like">authority_like</option>
+                                <option value="controller_like">controller_like</option>
+                                <option value="worker_like">worker_like</option>
+                                <option value="security_like">security_like</option>
+                                <option value="tester_like">tester_like</option>
+                                <option value="ranger_like">ranger_like</option>
+                                <option value="ranger_local">ranger_local</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <select id="wizard_skill_list" multiple size="4" style="min-width:260px;">
+                                <option value="command">command</option>
+                                <option value="bossgate_travel_control">bossgate_travel_control</option>
+                                <option value="runtime_observation">runtime_observation</option>
+                                <option value="task_queue_management">task_queue_management</option>
+                                <option value="web_search">web_search</option>
+                                <option value="policy_planning">policy_planning</option>
+                                <option value="memory_sync">memory_sync</option>
+                                <option value="incident_triage">incident_triage</option>
+                                <option value="code_review">code_review</option>
+                                <option value="ui_design">ui_design</option>
+                                <option value="art_direction">art_direction</option>
+                                <option value="documentation_crafting">documentation_crafting</option>
+                                <option value="test_orchestration">test_orchestration</option>
+                                <option value="security_audit">security_audit</option>
+                                <option value="performance_tuning">performance_tuning</option>
+                                <option value="data_analysis">data_analysis</option>
+                                <option value="workflow_automation">workflow_automation</option>
+                                <option value="customer_support">customer_support</option>
+                                <option value="integration_mapping">integration_mapping</option>
+                                <option value="api_composition">api_composition</option>
+                            </select>
+                            <select id="wizard_state_machine_template" style="min-width:260px;" onchange="syncWizardStateMachinePreview()">
+                                <option value="none" selected>state machine: none</option>
+                                <option value="basic_lifecycle">state machine: basic lifecycle</option>
+                                <option value="delegation_flow">state machine: delegation flow</option>
+                                <option value="incident_response">state machine: incident response</option>
+                            </select>
+                            <select id="wizard_sigil_list" multiple size="4" style="min-width:260px;">
+                                <option value="sigil_transporter">sigil_transporter</option>
+                                <option value="prime_overwatch">prime_overwatch</option>
+                                <option value="sigil_bind">sigil_bind</option>
+                                <option value="sigil_trace">sigil_trace</option>
+                                <option value="sigil_harmony">sigil_harmony</option>
+                                <option value="prime_foresight">prime_foresight</option>
+                                <option value="prime_bastion">prime_bastion</option>
+                                <option value="sigil_palette">sigil_palette</option>
+                                <option value="sigil_resonance">sigil_resonance</option>
+                                <option value="sigil_flux">sigil_flux</option>
+                                <option value="sigil_anchor">sigil_anchor</option>
+                                <option value="sigil_lens">sigil_lens</option>
+                                <option value="sigil_weave">sigil_weave</option>
+                                <option value="sigil_echo">sigil_echo</option>
+                                <option value="sigil_guard">sigil_guard</option>
+                                <option value="sigil_spark">sigil_spark</option>
+                                <option value="sigil_patch">sigil_patch</option>
+                                <option value="sigil_scribe">sigil_scribe</option>
+                                <option value="sigil_orbit">sigil_orbit</option>
+                                <option value="sigil_shield">sigil_shield</option>
+                            </select>
+                        </div>
+                        <div id="wizard_state_machine_hint" class="muted" style="margin-top:6px;">No state machine selected. Agent runtime can remain stateless.</div>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                            <div class="muted" style="margin-bottom:8px;">Custom Icon (Wizard)</div>
+                            <div class="row">
+                                <select id="wizard_icon_mode" onchange="toggleWizardIconSource()">
+                                    <option value="none" selected>icon: default</option>
+                                    <option value="upload">icon: upload file</option>
+                                    <option value="iconforge">icon: create in IconForge</option>
+                                </select>
+                                <input id="wizard_icon_path" placeholder="custom icon path (.ico)" readonly />
+                                <button onclick="clearWizardIconSelection()">Clear Icon</button>
+                            </div>
+                            <div id="wizard_icon_upload_row" class="row" style="display:none; margin-top:6px;">
+                                <button onclick="triggerWizardIconUpload()">Upload Icon/Image</button>
+                                <span id="wizard_icon_upload_name" class="muted">No file selected</span>
+                                <input id="wizard_icon_upload_file" type="file" style="display:none;" accept=".png" onchange="handleWizardIconUpload(event)" />
+                            </div>
+                            <div id="wizard_iconforge_row" class="row" style="display:none; margin-top:6px;">
+                                <input id="wizard_icon_label" maxlength="3" value="AG" placeholder="label (max 3)" />
+                                <input id="wizard_icon_bg" value="#1d3557" placeholder="background color" />
+                                <input id="wizard_icon_fg" value="#f1faee" placeholder="foreground color" />
+                                <button onclick="createWizardIconForge()">Create In IconForge</button>
+                                <button onclick="openIconForgeFromAgentForge('wizard')">Open IconForge Session</button>
+                            </div>
+                            <div id="wizard_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
+                        </div>
                         <label class="muted" style="display:flex; align-items:center; gap:6px;">
-                            <input id="wizard_encrypt_profile" type="checkbox" checked /> Encrypt profile via BossGate
+                            <input id="wizard_encrypt_profile" type="checkbox" checked /> Hide proprietary profile details
                         </label>
+                    </div>
+
+                    <div class="wizard-step" data-wizard-step="4" style="display:none;">
+                        <div class="muted" style="margin-bottom:8px;">Review your choices before creating.</div>
+                        <pre id="wizard_review">No wizard summary yet.</pre>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                        <button id="wizard_back_btn" onclick="wizardPrevStep()">Back</button>
+                        <button id="wizard_next_btn" onclick="wizardNextStep()">Next</button>
+                        <button id="wizard_review_btn" onclick="wizardOpenReview()">Review</button>
                         <button onclick="buildWizardDraft()">Build Draft In Advanced</button>
-                        <button onclick="createWizardAgent()">Create From Wizard</button>
+                        <button id="wizard_create_btn" onclick="createWizardAgent()">Create From Wizard</button>
+                    </div>
+                        </div>
                     </div>
                 </div>
 
@@ -940,6 +1797,21 @@ PAGE = """
                         <input id="maker_custom_sigils" placeholder="custom sigils (comma-separated, advanced mode)" />
                     </div>
                     <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
+                        <div class="muted" style="margin-bottom:8px;">State Machine (Advanced)</div>
+                        <div class="row">
+                            <select id="maker_state_machine_template" onchange="applySelectedStateMachineTemplate()">
+                                <option value="none" selected>state machine: none</option>
+                                <option value="basic_lifecycle">state machine: basic lifecycle</option>
+                                <option value="delegation_flow">state machine: delegation flow</option>
+                                <option value="incident_response">state machine: incident response</option>
+                            </select>
+                            <button onclick="formatStateMachineJson()">Format JSON</button>
+                            <button onclick="clearStateMachineJson()">Clear</button>
+                        </div>
+                        <div id="maker_state_machine_hint" class="muted" style="margin:6px 0;">No state machine selected. You can paste custom JSON below.</div>
+                        <textarea id="maker_state_machine_json" placeholder='{"initial_state":"Idle","states":{"Idle":{"on_task":"Executing"}}}' style="min-height:140px;"></textarea>
+                    </div>
+                    <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0;">
                         <div class="muted" style="margin-bottom:8px;">Custom Icon (Advanced)</div>
                         <div class="row">
                             <select id="maker_icon_mode" onchange="toggleMakerIconSource()">
@@ -960,6 +1832,7 @@ PAGE = """
                             <input id="maker_icon_bg" value="#1d3557" placeholder="background color" />
                             <input id="maker_icon_fg" value="#f1faee" placeholder="foreground color" />
                             <button onclick="createMakerIconForge()">Create In IconForge</button>
+                            <button onclick="openIconForgeFromAgentForge('advanced')">Open IconForge Session</button>
                         </div>
                         <div id="maker_icon_status" class="muted" style="margin-top:6px;">Using default icon.</div>
                     </div>
@@ -980,16 +1853,22 @@ PAGE = """
                         <input id="maker_max_tokens" type="number" min="64" max="8192" step="1" value="900" placeholder="max tokens" />
                         <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_has_llm" type="checkbox" checked /> has LLM</label>
                         <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_bossgate_enabled" type="checkbox" checked /> BossGate enabled</label>
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Encrypt profile</label>
+                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="maker_encrypt_profile" type="checkbox" checked /> Hide proprietary profile details</label>
                         <button onclick="createAgentProfile()">Create/Update</button>
                     </div>
+                    <div class="row">
+                        <input id="maker_model_source_path" placeholder="complete local model source directory" style="min-width:360px;" />
+                        <input id="maker_model_base_source_path" placeholder="adapter base-model directory (optional)" style="min-width:320px;" />
+                    </div>
+                    <div class="muted">AgentForge leaves the Forge source unchanged and immediately creates a complete, independently owned encrypted model package for the new agent.</div>
                     <pre id="maker_validation" class="muted">Role-aware validation ready.</pre>
                 </div>
 
                 <div class="row">
-                    <select id="maker_agent_select"></select>
+                    <select id="maker_agent_select" onchange="inspectSelectedAgentProfile()"></select>
                     <input id="maker_task" placeholder="task for selected agent" />
                     <select id="maker_override_endpoint"></select>
+                    <button onclick="inspectSelectedAgentProfile()">Inspect</button>
                     <button onclick="runAgentProfile()">Run</button>
                     <button onclick="deleteAgentProfile()">Delete</button>
                 </div>
@@ -1017,15 +1896,111 @@ PAGE = """
                     </div>
                     <pre id="triage_result">No triage run yet.</pre>
                 </div>
+                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin:8px 0; background:linear-gradient(180deg, rgba(16,20,28,0.98), rgba(10,13,19,0.98));">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                        <strong style="color:#8fd3ff; letter-spacing:0.04em;">Selected Agent View</strong>
+                        <span id="maker_agent_policy_badge" style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid #4b5563; color:#cbd5e1; font-size:12px;">Awaiting selection</span>
+                    </div>
+                    <div id="maker_agent_policy" class="muted" style="margin-bottom:8px;">Select an agent to inspect its sealed status or authenticated forge view.</div>
+                    <div id="maker_agent_summary" style="border:1px solid #263041; border-radius:12px; padding:12px; margin-bottom:10px; background:radial-gradient(circle at top, rgba(71,118,230,0.14), rgba(8,12,18,0.96));">
+                        <div id="maker_agent_summary_title" style="font-size:15px; font-weight:700; color:#dbeafe; margin-bottom:4px;">No agent selected</div>
+                        <div id="maker_agent_summary_subtitle" class="muted" style="margin-bottom:10px;">Choose an agent to reveal its package status.</div>
+                        <div id="maker_agent_summary_chips" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+                        <div id="maker_agent_summary_grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px;"></div>
+                    </div>
+                    <pre id="maker_agent_view">No agent selected.</pre>
+                </div>
                 <pre id="maker_result">No agent operation yet.</pre>
             </section>
 
             <section id="view_iconforge" class="card view-panel">
                 <h2 style="color:#ffb27d;">IconForge Studio</h2>
                 <div class="muted" style="margin-bottom:8px;">Full-center icon editor for painting, importing, FX, and multi-size .ico export.</div>
-                <div class="row" style="align-items:flex-start;">
-                    <canvas id="icon_studio_canvas" width="256" height="256" style="width:256px; height:256px; border:1px solid #3c4559; border-radius:10px; background:linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%), linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%); background-size:16px 16px; background-position:0 0, 8px 8px; cursor:crosshair;"></canvas>
-                    <div style="display:grid; gap:8px; min-width:340px;">
+                <div class="iconforge-menubar" id="iconforge_menubar">
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">File</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); iconStudioClearCanvas();">New Canvas <span class="menu-shortcut">Ctrl+N</span></button>
+                            <button onclick="closeIconForgeMenus(); triggerIconStudioImport();">Import Image... <span class="menu-shortcut">Ctrl+O</span></button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioDraft();">Save Draft <span class="menu-shortcut">Ctrl+S</span></button>
+                            <button onclick="closeIconForgeMenus(); loadIconStudioDraft();">Load Draft <span class="menu-shortcut">Ctrl+Shift+L</span></button>
+                            <button onclick="closeIconForgeMenus(); clearIconStudioDraft();">Clear Draft</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); downloadIconStudioPng();">Export PNG <span class="menu-shortcut">Ctrl+Shift+P</span></button>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioIco();">Export .ico (16-256) <span class="menu-shortcut">Ctrl+Shift+S</span></button>
+                            <button onclick="closeIconForgeMenus(); saveIconStudioAnimated();">Export Animated GIF <span class="menu-shortcut">Ctrl+Shift+G</span></button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Edit</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); iconStudioUndoStroke();">Undo Stroke <span class="menu-shortcut">Ctrl+Z</span></button>
+                            <button onclick="closeIconForgeMenus(); iconStudioFillBackground();">Fill Background</button>
+                            <button onclick="closeIconForgeMenus(); iconStudioClearCanvas();">Clear Canvas <span class="menu-shortcut">Ctrl+L</span></button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">FX</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('grayscale');">Grayscale <span class="menu-shortcut">Ctrl+Shift+1</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('invert');">Invert <span class="menu-shortcut">Ctrl+I</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('contrast');">Contrast+ <span class="menu-shortcut">Ctrl+Shift+C</span></button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('soften');">Soften</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('glow_soft');">Glow Soft</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('glow_neon');">Glow Neon</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('swirl_warp');">Swirl Warp</button>
+                            <button onclick="closeIconForgeMenus(); applyIconStudioFx('particle_swirl');">Particle Swirl</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">View</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); refreshIconForgeOps();">Refresh Backups</button>
+                            <button onclick="closeIconForgeMenus(); refreshWindowsIconCache();">Refresh Icon Cache</button>
+                            <button onclick="closeIconForgeMenus(); setIconStudioStatus('IconForge menus are active.');">Status Ping</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Windows Ops</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); setIconForgeFromStudioIco();">Use Latest Studio ICO</button>
+                            <button onclick="closeIconForgeMenus(); applyWindowsIconOverride();">Apply Icon Override</button>
+                            <button onclick="closeIconForgeMenus(); restoreWindowsIconOverride();">Restore Backup</button>
+                            <div class="iconforge-menu-sep"></div>
+                            <button onclick="closeIconForgeMenus(); exportIconForgePack();">Export Icon Pack</button>
+                            <button onclick="closeIconForgeMenus(); importIconForgePack();">Import Icon Pack</button>
+                        </div>
+                    </div>
+                    <div class="iconforge-menu" data-iconforge-menu>
+                        <button class="iconforge-menu-btn" onclick="toggleIconForgeMenu(this, event)">Help</button>
+                        <div class="iconforge-menu-list">
+                            <button onclick="closeIconForgeMenus(); setIconStudioStatus('File menu: import/export. FX menu: visual transforms. Windows Ops: apply/restore icon overrides.');">Show Quick Help</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="iconforge_schematics_panel" class="iconforge-schematics">
+                    <div class="iconforge-schematics-head">
+                        <div>
+                            <strong style="color:#f2cf86;">Icon Schematics Map</strong>
+                            <div class="muted">Grid of active icon targets and where each icon is applied. Click any tile to edit/change that icon.</div>
+                        </div>
+                        <div class="row">
+                            <button onclick="refreshIconForgeSchematics()">Refresh Map</button>
+                            <button onclick="openIconForgeEditorFromSchematic('new')">New Icon</button>
+                        </div>
+                    </div>
+                    <div id="iconforge_schematics_stats" class="muted" style="margin-bottom:8px;">Loading schematics...</div>
+                    <div id="iconforge_schematics_grid" class="iconforge-schematics-grid"></div>
+                </div>
+                <div id="iconforge_editor_panel" class="workspace-grid" style="display:none;">
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Studio Controls</h3>
+                        <div class="row">
+                            <button onclick="showIconForgeSchematics()">Back To Icon Schematics</button>
+                            <span id="iconforge_editor_context" class="muted">No target selected.</span>
+                        </div>
                         <div class="row">
                             <select id="icon_studio_tool">
                                 <option value="brush" selected>tool: brush</option>
@@ -1037,31 +2012,70 @@ PAGE = """
                         </div>
                         <div class="row">
                             <input id="icon_studio_name" placeholder="icon file stem" value="agent_forge_icon" />
+                        </div>
+                        <div class="row" id="icon_studio_agentforge_row" style="display:none;">
                             <select id="icon_studio_target">
+                                <option value="standalone" selected>apply: standalone only</option>
                                 <option value="wizard">apply to wizard</option>
-                                <option value="advanced" selected>apply to advanced</option>
+                                <option value="advanced">apply to advanced</option>
                                 <option value="both">apply to both</option>
                             </select>
                         </div>
-                        <div class="row">
-                            <button onclick="triggerIconStudioImport()">Import Image</button>
-                            <button onclick="iconStudioUndoStroke()">Undo</button>
-                            <button onclick="iconStudioClearCanvas()">Clear</button>
-                            <button onclick="iconStudioFillBackground()">Fill</button>
-                            <input id="icon_studio_import_file" type="file" style="display:none;" accept=".png" onchange="handleIconStudioImport(event)" />
+                        <div id="icon_studio_agentforge_hint" class="muted" style="display:none;">AgentForge session active.</div>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:8px; margin-top:6px;">
+                            <div class="muted" style="margin-bottom:6px;">Layers</div>
+                            <div class="row">
+                                <input id="icon_studio_layer_name" placeholder="active layer name" />
+                                <button onclick="iconStudioRenameActiveLayer()">Rename</button>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">blend
+                                    <select id="icon_studio_layer_blend" onchange="iconStudioSetActiveLayerBlend(this.value)">
+                                        <option value="source-over" selected>normal</option>
+                                        <option value="multiply">multiply</option>
+                                        <option value="screen">screen</option>
+                                        <option value="overlay">overlay</option>
+                                        <option value="soft-light">soft light</option>
+                                        <option value="hard-light">hard light</option>
+                                        <option value="color-dodge">color dodge</option>
+                                        <option value="color-burn">color burn</option>
+                                        <option value="lighten">lighten</option>
+                                        <option value="darken">darken</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">opacity
+                                    <input id="icon_studio_layer_opacity" type="range" min="0" max="100" step="1" value="100" oninput="iconStudioSetActiveLayerOpacity(this.value)" />
+                                </label>
+                                <span id="icon_studio_layer_opacity_label" class="muted">100%</span>
+                            </div>
+                            <div class="row">
+                                <button onclick="iconStudioAddLayer()">Add Layer</button>
+                                <button onclick="iconStudioDuplicateLayer()">Duplicate</button>
+                                <button onclick="iconStudioDeleteLayer()">Delete</button>
+                                <button onclick="iconStudioMoveLayer(-1)">Up</button>
+                                <button onclick="iconStudioMoveLayer(1)">Down</button>
+                                <button onclick="iconStudioToggleActiveLayerVisibility()">Toggle Visible</button>
+                            </div>
+                            <div id="icon_studio_layer_list" class="muted" style="max-height:120px; overflow:auto; border:1px solid #2b2f3a; border-radius:8px; padding:6px;">No layers yet.</div>
                         </div>
-                        <div class="row">
-                            <button onclick="applyIconStudioFx('grayscale')">FX: Grayscale</button>
-                            <button onclick="applyIconStudioFx('invert')">FX: Invert</button>
-                            <button onclick="applyIconStudioFx('contrast')">FX: Contrast+</button>
-                            <button onclick="applyIconStudioFx('soften')">FX: Soften</button>
+                        <div style="border:1px solid #2b2f3a; border-radius:10px; padding:8px; margin-top:6px;">
+                            <div class="muted" style="margin-bottom:6px;">FX Control</div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">strength
+                                    <input id="icon_fx_strength" type="range" min="1" max="100" step="1" value="55" />
+                                </label>
+                                <span id="icon_fx_strength_label" class="muted">55%</span>
+                            </div>
+                            <div class="row">
+                                <label class="muted" style="display:flex; align-items:center; gap:6px;">passes
+                                    <input id="icon_fx_passes" type="range" min="1" max="5" step="1" value="1" />
+                                </label>
+                                <span id="icon_fx_passes_label" class="muted">1x</span>
+                            </div>
                         </div>
-                        <div class="row">
-                            <button onclick="saveIconStudioDraft()">Save Draft</button>
-                            <button onclick="loadIconStudioDraft()">Load Draft</button>
-                            <button onclick="clearIconStudioDraft()">Clear Draft</button>
-                            <button onclick="downloadIconStudioPng()">Download PNG</button>
-                        </div>
+                        <input id="icon_studio_import_file" type="file" style="display:none;" accept=".png" onchange="handleIconStudioImport(event)" />
                         <div class="row">
                             <select id="icon_studio_anim_preset">
                                 <option value="pulse" selected>anim: pulse</option>
@@ -1070,50 +2084,52 @@ PAGE = """
                             </select>
                             <input id="icon_studio_anim_seconds" type="number" min="1" max="12" step="1" value="3" placeholder="seconds" />
                             <input id="icon_studio_anim_fps" type="number" min="6" max="30" step="1" value="12" placeholder="fps" />
-                            <button onclick="saveIconStudioAnimated()">Save Animated GIF</button>
                         </div>
-                        <div class="row">
-                            <button onclick="saveIconStudioIco()">Save .ico (16-256)</button>
-                        </div>
+                        <div class="muted">Use the menu bar for File, Edit, FX, View, and Windows operations.</div>
                         <div id="icon_studio_status" class="muted">Studio ready.</div>
                     </div>
-                </div>
 
-                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px; margin-top:12px;">
-                    <div class="muted" style="margin-bottom:8px;">Windows Icon Operations (replace system icons + icon packs)</div>
-                    <div class="row">
-                        <select id="iconforge_target_type">
-                            <option value="folder" selected>target: folder path</option>
-                            <option value="shortcut">target: shortcut (.lnk)</option>
-                            <option value="file_extension">target: file extension (e.g. .txt)</option>
-                            <option value="application">target: application (e.g. notepad.exe)</option>
-                            <option value="drive">target: drive letter (e.g. C or D:)</option>
-                        </select>
-                        <input id="iconforge_target_value" placeholder="target value" />
-                        <input id="iconforge_icon_path" placeholder="icon path (.ico)" />
+                    <div class="workspace-pane workspace-stack">
+                        <h3>Canvas + Operations</h3>
+                        <div class="workspace-canvas-wrap">
+                            <canvas id="icon_studio_canvas" width="256" height="256" style="width:256px; height:256px; border:1px solid #3c4559; border-radius:10px; background:linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%), linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%); background-size:16px 16px; background-position:0 0, 8px 8px; cursor:crosshair;"></canvas>
+
+                            <div class="workspace-canvas-controls">
+                                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px;">
+                                    <div class="muted" style="margin-bottom:8px;">Windows Icon Operations (replace system icons + icon packs)</div>
+                                    <div class="row">
+                                        <select id="iconforge_target_type">
+                                            <option value="folder" selected>target: folder path</option>
+                                            <option value="shortcut">target: shortcut (.lnk)</option>
+                                            <option value="file_extension">target: file extension (e.g. .txt)</option>
+                                            <option value="application">target: application (e.g. notepad.exe)</option>
+                                            <option value="drive">target: drive letter (e.g. C or D:)</option>
+                                        </select>
+                                        <input id="iconforge_target_value" placeholder="target value" />
+                                        <input id="iconforge_icon_path" placeholder="icon path (.ico)" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_restore_key" placeholder="backup key to restore" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_pack_export_dir" placeholder="export pack directory path" />
+                                    </div>
+                                    <div class="row">
+                                        <input id="iconforge_pack_import_source" placeholder="import pack source (dir or icon_set_manifest.json path)" />
+                                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_apply" type="checkbox" checked /> apply changes</label>
+                                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_refresh" type="checkbox" checked /> refresh cache</label>
+                                    </div>
+                                    <div class="muted">Run these operations from the Windows Ops menu.</div>
+                                    <pre id="iconforge_ops_result">No icon operations yet.</pre>
+                                </div>
+
+                                <div style="border:1px solid #2b2f3a; border-radius:10px; padding:10px;">
+                                    <div class="muted" style="margin-bottom:8px;">Backup Catalog</div>
+                                    <pre id="iconforge_backups">No backups loaded.</pre>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <button onclick="setIconForgeFromStudioIco()">Use Latest Studio ICO</button>
-                        <button onclick="applyWindowsIconOverride()">Apply Icon Override</button>
-                        <button onclick="refreshWindowsIconCache()">Refresh Icon Cache</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_restore_key" placeholder="backup key to restore" />
-                        <button onclick="restoreWindowsIconOverride()">Restore Backup</button>
-                        <button onclick="refreshIconForgeOps()">Refresh Backups</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_pack_export_dir" placeholder="export pack directory path" />
-                        <button onclick="exportIconForgePack()">Export Icon Pack</button>
-                    </div>
-                    <div class="row">
-                        <input id="iconforge_pack_import_source" placeholder="import pack source (dir or icon_set_manifest.json path)" />
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_apply" type="checkbox" checked /> apply changes</label>
-                        <label class="muted" style="display:flex; align-items:center; gap:6px;"><input id="iconforge_pack_refresh" type="checkbox" checked /> refresh cache</label>
-                        <button onclick="importIconForgePack()">Import Icon Pack</button>
-                    </div>
-                    <pre id="iconforge_ops_result">No icon operations yet.</pre>
-                    <pre id="iconforge_backups">No backups loaded.</pre>
                 </div>
             </section>
 
@@ -1184,13 +2200,72 @@ PAGE = """
         let discoveryLocations = {};
         let activeDiscoveryKey = '';
         let snapshotGaugeBooted = false;
+        let snapshotDiskIoLast = {};
+        let snapshotDiskIoLastTs = 0;
         let previousOsState = null;
         let busLiveTimer = null;
         let iconStudioCtx = null;
         let iconStudioDrawing = false;
         let iconStudioUndo = [];
         let iconStudioBooted = false;
+        let iconStudioLayers = [];
+        let iconStudioActiveLayer = 0;
+        let iconStudioDraggingLayer = -1;
+        let iconStudioLayerSeed = 1;
+        let iconForgeSchematics = [];
+        let iconForgeBackupsCache = {};
+        let iconForgeVisited = false;
+        let iconForgeSectionCollapseState = {};
+        let iconForgeAgentContext = { active: false, source: '', agentName: '' };
+        let wizardStep = 1;
+        const WIZARD_TOTAL_STEPS = 4;
         const ICON_STUDIO_DRAFT_KEY = 'bossforge.iconforge.studio.v1';
+        const PRODUCT_MODE_CONFIG = {
+            iconforge: {
+                title: 'IconForge',
+                subtitle: 'Standalone Edition',
+                hallTitle: 'IconForge Studio',
+                hallSubtitle: 'Standalone icon design and Windows icon operations workspace.',
+                defaultView: 'view_iconforge',
+                allowedViews: ['view_iconforge'],
+            },
+            soundforge: {
+                title: 'SoundForge',
+                subtitle: 'Standalone Edition',
+                hallTitle: 'SoundForge Console',
+                hallSubtitle: 'Standalone sound scheme editor and bundle operations workspace.',
+                defaultView: 'view_sounds',
+                allowedViews: ['view_sounds'],
+            },
+        };
+
+        function showJsError(message) {
+            const root = document.getElementById('js_error');
+            if (!root) return;
+            root.textContent = String(message || 'Unknown JavaScript error');
+            root.classList.add('active');
+        }
+
+        function clearJsError() {
+            const root = document.getElementById('js_error');
+            if (!root) return;
+            root.textContent = '';
+            root.classList.remove('active');
+        }
+
+        function wireInlineClickFallback() {
+            // Keep native inline handlers untouched; some environments block eval-style execution.
+        }
+
+        window.addEventListener('error', (event) => {
+            const msg = event && event.message ? event.message : 'Unknown JavaScript error';
+            showJsError('Runtime error: ' + msg);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            const reason = event && event.reason ? String(event.reason) : 'Unhandled promise rejection';
+            showJsError('Async error: ' + reason);
+        });
 
         function beginBusy(message) {
             pendingLoads += 1;
@@ -1396,7 +2471,7 @@ PAGE = """
 
         async function refreshDiscoveryMap() {
             const assistanceOnly = !!document.getElementById('discovery_assistance_only')?.checked;
-            const data = await fetchJsonWithTimeout('/api/model/travel/discover?timeout=5&assistance_only=' + (assistanceOnly ? 'true' : 'false'), 5000);
+            const data = await fetchJsonWithTimeout('/api/model/travel/discover?timeout=5&operator_id=' + encodeURIComponent(bossGateCurrentUser()) + '&scope_id=bossgate-map-read&assistance_only=' + (assistanceOnly ? 'true' : 'false'), 5000);
             const discovered = (data && data.ok && Array.isArray(data.targets)) ? data.targets : [];
             const locationsData = await fetchJsonWithTimeout('/api/model/agents/locations?refresh=true', 5000);
             discoveryLocations = (locationsData && locationsData.ok && locationsData.agents && typeof locationsData.agents === 'object') ? locationsData.agents : {};
@@ -1415,6 +2490,317 @@ PAGE = """
                 );
             }
             renderDiscoveryMapPins();
+        }
+
+        async function refreshBossGateMap(refreshRemote = true) {
+            const data = await fetchJsonWithTimeout('/api/model/travel/map?refresh=' + (refreshRemote ? 'true' : 'false') + '&timeout=3', 5000);
+            const transferData = await fetchJsonWithTimeout('/api/model/travel/transfers?limit=25', 5000);
+            const raw = document.getElementById('bossgate_map_raw');
+            const summary = document.getElementById('bossgate_map_summary');
+            const transfers = (transferData && transferData.ok && Array.isArray(transferData.items)) ? transferData.items : [];
+            if (raw) raw.textContent = JSON.stringify({ map: data, transfers }, null, 2);
+            const map = (data && data.ok && data.map && typeof data.map === 'object') ? data.map : {};
+            const gateCount = Array.isArray(map.gates) ? map.gates.length : 0;
+            const travelableCount = Array.isArray(map.travelable_gates) ? map.travelable_gates.length : 0;
+            const agentCount = map.agents && typeof map.agents === 'object' ? Object.keys(map.agents).length : 0;
+            if (summary) summary.textContent = `gates: ${gateCount} | travelable: ${travelableCount} | agents: ${agentCount} | transfers: ${transfers.length}`;
+            renderBossGateTopology(map, transfers);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function _hostFromAddress(address) {
+            const raw = String(address || '').trim();
+            if (!raw) return '';
+            try {
+                const u = new URL(raw);
+                return u.hostname || raw;
+            } catch (_) {
+                const lowered = raw.toLowerCase();
+                let trimmed = raw;
+                if (lowered.startsWith('http://')) trimmed = raw.slice(7);
+                else if (lowered.startsWith('https://')) trimmed = raw.slice(8);
+                return trimmed.split('/')[0];
+            }
+        }
+
+        const bossGatePresenceState = {
+            nodes: [],
+            agents: [],
+            selected: null,
+        };
+
+        function _bossGatePresenceKey(kind, id) {
+            return `${String(kind || '')}:${String(id || '')}`;
+        }
+
+        function renderBossGatePresenceCard(presence) {
+            if (!presence || typeof presence !== 'object') {
+                return '<div class="topology-empty">Select a BossGate presence to inspect it.</div>';
+            }
+            if (presence.presence_kind === 'agent') {
+                const card = presence.model_card && typeof presence.model_card === 'object' ? presence.model_card : {};
+                return `
+                    <div class="bossgate-presence-card bossgate-color-${escapeHtml(presence.color || 'grey')}">
+                        <div class="bossgate-presence-title">${escapeHtml(presence.agent_name || 'unknown agent')}</div>
+                        <div class="bossgate-presence-subtitle">Model card only while abroad. Return to the origin forge for full inspection.</div>
+                        <div class="bossgate-presence-grid">
+                            <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'unknown')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Class</strong>${escapeHtml(card.agent_class || presence.public_identity_card?.agent_class || 'n/a')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Type</strong>${escapeHtml(card.agent_type || presence.public_identity_card?.agent_type || 'n/a')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Rank</strong>${escapeHtml(card.rank || presence.public_identity_card?.rank || 'n/a')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (presence.discovery_state === 'unrevealed_beacon') {
+                return `
+                    <div class="bossgate-presence-card bossgate-color-grey">
+                        <div class="bossgate-presence-title">Unrevealed Beacon</div>
+                        <div class="bossgate-presence-subtitle">Neutral or unaffiliated presence. Identity remains hidden until an actual visit resolves it.</div>
+                        <div class="bossgate-presence-grid">
+                            <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'neutral_unaffiliated')}</div>
+                            <div class="bossgate-presence-grid-item"><strong>Status</strong>Beacon only</div>
+                            <div class="bossgate-presence-grid-item"><strong>Reveal</strong>Visit required</div>
+                        </div>
+                    </div>
+                `;
+            }
+            return `
+                <div class="bossgate-presence-card bossgate-color-${escapeHtml(presence.color || 'grey')}">
+                    <div class="bossgate-presence-title">${escapeHtml(presence.display_name || presence.node_id || 'node')}</div>
+                    <div class="bossgate-presence-subtitle">${escapeHtml(presence.public_summary || 'Known node presence')}</div>
+                    <div class="bossgate-presence-grid">
+                        <div class="bossgate-presence-grid-item"><strong>Trust</strong>${escapeHtml(presence.trust_state || 'unknown')}</div>
+                        <div class="bossgate-presence-grid-item"><strong>Type</strong>${escapeHtml(presence.node_type || 'unknown')}</div>
+                        <div class="bossgate-presence-grid-item"><strong>Discovery</strong>${escapeHtml(presence.discovery_state || 'revealed')}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBossGateRadialMenu(presence, x, y) {
+            if (!presence) return '';
+            const actions = presence.presence_kind === 'agent'
+                ? ['Send Message', 'Recall Home', 'Route Orders', 'View Model Card', 'Hold / Quarantine', 'Trade History']
+                : (presence.discovery_state === 'unrevealed_beacon'
+                    ? ['Visit Beacon', 'Allow Unknown Messaging']
+                    : ['Send Message', 'Open Node Card', 'Trade History']);
+            const angleStep = (Math.PI * 2) / Math.max(actions.length, 1);
+            const radius = 74;
+            const buttons = actions.map((label, idx) => {
+                const angle = (-Math.PI / 2) + (idx * angleStep);
+                const left = 110 + (radius * Math.cos(angle)) - 37;
+                const top = 110 + (radius * Math.sin(angle)) - 37;
+                return `<button class="bossgate-radial-action" style="left:${left}px; top:${top}px;">${escapeHtml(label)}</button>`;
+            }).join('');
+            const centerLabel = presence.presence_kind === 'agent'
+                ? escapeHtml(presence.agent_name || 'agent')
+                : escapeHtml(presence.display_name || presence.node_id || 'beacon');
+            return `
+                <div class="bossgate-radial-menu" style="left:${x}px; top:${y}px;">
+                    ${buttons}
+                    <div class="bossgate-radial-center bossgate-color-${escapeHtml(presence.color || 'grey')}">${centerLabel}</div>
+                </div>
+            `;
+        }
+
+        function selectBossGatePresence(kind, id, x, y) {
+            const key = _bossGatePresenceKey(kind, id);
+            const all = [
+                ...bossGatePresenceState.nodes,
+                ...bossGatePresenceState.agents,
+            ];
+            const presence = all.find((item) => _bossGatePresenceKey(item.presence_kind, item.node_id || item.agent_name || item.agent_id) === key) || null;
+            bossGatePresenceState.selected = presence;
+            const card = document.getElementById('bossgate_presence_card');
+            const overlay = document.getElementById('bossgate_topology_overlay');
+            if (card) card.innerHTML = renderBossGatePresenceCard(presence);
+            if (overlay) overlay.innerHTML = renderBossGateRadialMenu(presence, x, y);
+        }
+
+        function renderBossGateTopology(map, transfers = []) {
+            const root = document.getElementById('bossgate_topology');
+            if (!root) return;
+            const gates = Array.isArray(map && map.gates) ? map.gates : [];
+            const travelable = Array.isArray(map && map.travelable_gates) ? map.travelable_gates : [];
+            const agents = Array.isArray(map && map.agents) ? map.agents : [];
+            const nodePresences = Array.isArray(map && map.node_presences) ? map.node_presences : [];
+            const agentPresences = Array.isArray(map && map.agent_presences) ? map.agent_presences : [];
+            const travelableSet = new Set(travelable.map((item) => String(item && (item.address || item.destination || item.endpoint || '')).trim()).filter(Boolean));
+
+            if (!gates.length) {
+                root.innerHTML = '<div class="topology-empty">No discovered gates in current snapshot.</div>';
+                return;
+            }
+
+            const byGate = {};
+            for (const agent of agents) {
+                if (!agent || typeof agent !== 'object') continue;
+                const name = String(agent.agent_name || '').trim().toLowerCase();
+                const node = String(agent.current_node || agent.node_id || '').trim();
+                if (!node) continue;
+                if (!byGate[node]) byGate[node] = [];
+                byGate[node].push(name);
+            }
+            const nodes = gates.map((gate) => {
+                const nodeId = String(gate && (gate.node_id || gate.name || gate.id || 'unknown')).trim() || 'unknown';
+                const address = String(gate && (gate.address || gate.endpoint || '')).trim();
+                const type = String(gate && gate.target_type || 'bossgate_connector').trim();
+                const nodePresence = nodePresences.find((item) => String(item && item.node_id || '').trim() === nodeId) || null;
+                return {
+                    id: nodeId,
+                    label: nodeId,
+                    address,
+                    host: _hostFromAddress(address),
+                    type,
+                    travelable: !!(address && travelableSet.has(address)),
+                    agents: byGate[nodeId] || [],
+                    external: false,
+                    presence: nodePresence,
+                };
+            });
+            const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
+            const nodeByAddress = Object.fromEntries(nodes.filter((n) => n.address).map((n) => [n.address, n]));
+            const nodeByHost = Object.fromEntries(nodes.filter((n) => n.host).map((n) => [n.host, n]));
+            bossGatePresenceState.nodes = nodePresences;
+            bossGatePresenceState.agents = agentPresences;
+
+            const edgeItems = [];
+            for (const t of transfers) {
+                if (!t || typeof t !== 'object') continue;
+                const sourceId = String(t.node_id || '').trim();
+                const destination = String(t.destination || '').trim();
+                if (!sourceId || !destination) continue;
+                let target = nodeByAddress[destination] || nodeByHost[_hostFromAddress(destination)];
+                if (!target) {
+                    const extId = `external:${_hostFromAddress(destination) || destination}`;
+                    if (!nodeById[extId]) {
+                        nodeById[extId] = {
+                            id: extId,
+                            label: _hostFromAddress(destination) || destination,
+                            address: destination,
+                            host: _hostFromAddress(destination),
+                            type: "external",
+                            travelable: false,
+                            agents: [],
+                            external: true,
+                        };
+                        nodes.push(nodeById[extId]);
+                    }
+                    target = nodeById[extId];
+                }
+                if (!nodeById[sourceId]) {
+                    nodeById[sourceId] = {
+                        id: sourceId,
+                        label: sourceId,
+                        address: "",
+                        host: "",
+                        type: "source",
+                        travelable: false,
+                        agents: [],
+                        external: true,
+                    };
+                    nodes.push(nodeById[sourceId]);
+                }
+                edgeItems.push({
+                    from: sourceId,
+                    to: target.id,
+                    status: String(t.status || "unknown"),
+                    dryRun: !!t.dry_run,
+                    timestamp: Number(t.timestamp || 0),
+                });
+            }
+
+            const width = 980;
+            const height = 420;
+            const cx = width / 2;
+            const cy = height / 2;
+            const radius = Math.max(120, Math.min(width, height) * 0.34);
+            const total = Math.max(nodes.length, 1);
+            const pos = {};
+            nodes.forEach((n, idx) => {
+                const ang = (Math.PI * 2 * idx) / total - (Math.PI / 2);
+                pos[n.id] = { x: cx + radius * Math.cos(ang), y: cy + radius * Math.sin(ang) };
+            });
+
+            const edgeSvg = edgeItems.map((edge) => {
+                const a = pos[edge.from];
+                const b = pos[edge.to];
+                if (!a || !b) return '';
+                const color = edge.status === "transfer_failed" ? "#FF4D4D"
+                    : edge.status === "validated_only" ? "#4DA6FF"
+                    : "#4CC46A";
+                const dash = edge.dryRun ? 'stroke-dasharray="5 4"' : '';
+                return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${color}" stroke-width="2" ${dash} marker-end="url(#bg_arrow)" opacity="0.9" />`;
+            }).join('');
+
+            const nodeSvg = nodes.map((n) => {
+                const p = pos[n.id];
+                if (!p) return '';
+                const color = String(n.presence?.color || '').trim().toLowerCase();
+                const fill = color === 'green' ? "#183923" : color === 'blue' ? "#132d4f" : color === 'red' ? "#4a1717" : "#343b48";
+                const stroke = color === 'green' ? "#4CC46A" : color === 'blue' ? "#4DA6FF" : color === 'red' ? "#FF6262" : "#94a3b8";
+                const agentText = n.agents.length ? ` | ${n.agents.slice(0, 2).join(",")}` : "";
+                const px = Number(p.x.toFixed(1));
+                const py = Number(p.y.toFixed(1));
+                return `
+                    <g>
+                        <circle cx="${p.x}" cy="${p.y}" r="22" fill="${fill}" stroke="${stroke}" stroke-width="2" onclick="selectBossGatePresence('node', '${escapeHtml(n.id)}', ${px}, ${py})" style="cursor:pointer;" />
+                        <text x="${p.x}" y="${p.y - 30}" text-anchor="middle" fill="#e6ddcb" font-size="12">${escapeHtml(n.label)}</text>
+                        <text x="${p.x}" y="${p.y + 42}" text-anchor="middle" fill="#a9b1c1" font-size="11">${escapeHtml(n.type + agentText)}</text>
+                    </g>
+                `;
+            }).join('');
+
+            const agentSvg = agentPresences.map((presence, idx) => {
+                const anchor = pos[String(presence.current_node_id || presence.origin_node_id || '').trim()];
+                if (!anchor) return '';
+                const offsetAngle = (idx % 6) * (Math.PI / 3);
+                const ax = anchor.x + 34 * Math.cos(offsetAngle);
+                const ay = anchor.y + 34 * Math.sin(offsetAngle);
+                const stroke = presence.color === 'green' ? "#4CC46A" : presence.color === 'blue' ? "#4DA6FF" : presence.color === 'red' ? "#FF6262" : "#94a3b8";
+                return `
+                    <g>
+                        <circle cx="${ax}" cy="${ay}" r="9" fill="#0b121d" stroke="${stroke}" stroke-width="2" onclick="selectBossGatePresence('agent', '${escapeHtml(presence.agent_name || presence.agent_id)}', ${Number(ax.toFixed(1))}, ${Number(ay.toFixed(1))})" style="cursor:pointer;" />
+                    </g>
+                `;
+            }).join('');
+
+            const edgeList = edgeItems.slice(-10).reverse().map((e) => {
+                const from = nodeById[e.from] ? nodeById[e.from].label : e.from;
+                const to = nodeById[e.to] ? nodeById[e.to].label : e.to;
+                const when = e.timestamp > 0 ? new Date(e.timestamp * 1000).toLocaleString() : "unknown-time";
+                return `<div class="topology-edge-item">${escapeHtml(when)} | ${escapeHtml(from)} -> ${escapeHtml(to)} | ${escapeHtml(e.status)}${e.dryRun ? " (dry-run)" : ""}</div>`;
+            }).join('');
+
+            root.innerHTML = `
+                <div class="bossgate-presence-layout">
+                    <div id="bossgate_presence_card">${renderBossGatePresenceCard(bossGatePresenceState.selected || nodePresences[0] || agentPresences[0] || null)}</div>
+                    <div class="bossgate-presence-stage">
+                        <svg class="topology-graph" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="bg_arrow" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 7 3.5, 0 7" fill="#D4A857"></polygon>
+                                </marker>
+                            </defs>
+                            ${edgeSvg}
+                            ${nodeSvg}
+                            ${agentSvg}
+                        </svg>
+                        <div id="bossgate_topology_overlay">${renderBossGateRadialMenu(bossGatePresenceState.selected || nodePresences[0] || agentPresences[0] || null, cx, cy)}</div>
+                    </div>
+                    <div class="topology-legend">Green edge: posted transfer. Blue dashed edge: dry-run validation. Red edge: failed transfer. Green markers: your forge. Blue markers: trade-linked. Red markers: revealed unknowns. Grey markers: unresolved beacons.</div>
+                    <div class="topology-edge-list">${edgeList || '<div class="topology-empty">No recent transfer edges.</div>'}</div>
+                </div>
+            `;
         }
 
         function renderSoundEvents() {
@@ -1442,6 +2828,7 @@ PAGE = """
                 view_scheduler: 'AgentForge.png',
                 view_chat: 'RuneVoiceOS.png',
                 view_maker: 'AgentForge.png',
+                view_bossgate_map: 'BossGate.png',
                 view_iconforge: 'IconForge.png',
                 view_discovery: 'BossGate.png',
                 view_security: 'bossgate.svg',
@@ -1461,6 +2848,7 @@ PAGE = """
                 view_diagnostics: 'BossForgeOS.png',
                 view_sounds: 'Soundforge.png',
                 view_maker: 'AgentForge.png',
+                view_bossgate_map: 'BossGate.png',
                 view_iconforge: 'IconForge.png',
                 view_security: 'bossgate.svg',
                 view_onboarding: 'RuneVoiceOS.png',
@@ -1524,7 +2912,15 @@ PAGE = """
             if (viewId === 'view_diagnostics') refreshDiagnostics();
             if (viewId === 'view_sounds') fetchSoundEvents();
             if (viewId === 'view_discovery') refreshDiscoveryMap();
-            if (viewId === 'view_iconforge') refreshIconForgeOps();
+            if (viewId === 'view_bossgate_map') refreshBossGateMap(true);
+            if (viewId === 'view_bossgate_access') refreshBossGateAccess();
+            if (viewId === 'view_iconforge') {
+                refreshIconForgeOps();
+                if (!iconForgeVisited) {
+                    iconForgeVisited = true;
+                    showIconForgeSchematics();
+                }
+            }
             if (viewId === 'view_os_state') refreshOsStatePanel();
             if (viewId === 'view_onboarding') refreshOnboardingStatus();
             if (viewId === 'view_scheduler') refreshSchedulerStatus();
@@ -1541,13 +2937,93 @@ PAGE = """
             setTimeout(endBusy, 180);
         }
 
-        document.addEventListener('keydown', (event) => {
-            if (!(event.ctrlKey || event.metaKey)) return;
-            if (String(event.key || '').toLowerCase() !== 's') return;
-            if (currentView !== 'view_iconforge') return;
-            event.preventDefault();
-            saveIconStudioIco();
-        });
+        function applyStandaloneProductMode(mode) {
+            const cfg = PRODUCT_MODE_CONFIG[mode];
+            if (!cfg) return false;
+
+            const shellTitle = document.getElementById('shell_title');
+            const shellSubtitle = document.getElementById('shell_subtitle');
+            const hallTitle = document.getElementById('hall_title');
+            const hallSubtitle = document.getElementById('hall_subtitle');
+            const pinRow = document.getElementById('hall_pin_row');
+            const anvilBtn = document.getElementById('anvil_launch_btn');
+            const anvilStatus = document.getElementById('anvil_status');
+
+            if (shellTitle) shellTitle.textContent = cfg.title;
+            if (shellSubtitle) shellSubtitle.textContent = cfg.subtitle;
+            if (hallTitle) hallTitle.textContent = cfg.hallTitle;
+            if (hallSubtitle) hallSubtitle.textContent = cfg.hallSubtitle;
+            if (pinRow) pinRow.style.display = 'none';
+            if (anvilBtn) anvilBtn.style.display = 'none';
+            if (anvilStatus) anvilStatus.style.display = 'none';
+            document.title = cfg.hallTitle;
+
+            const allowed = new Set(cfg.allowedViews || []);
+            document.querySelectorAll('.nav-btn').forEach((btn) => {
+                const view = String(btn.getAttribute('data-view') || '');
+                btn.style.display = allowed.has(view) ? '' : 'none';
+            });
+
+            document.querySelectorAll('.group-label').forEach((label) => {
+                let sib = label.nextElementSibling;
+                let visibleCount = 0;
+                while (sib && !sib.classList.contains('group-label')) {
+                    if (sib.classList.contains('nav-btn') && sib.style.display !== 'none') visibleCount += 1;
+                    sib = sib.nextElementSibling;
+                }
+                label.style.display = visibleCount ? '' : 'none';
+            });
+
+            switchView(cfg.defaultView);
+            return true;
+        }
+
+        function applyUrlLaunchContext() {
+            const params = new URLSearchParams(window.location.search || '');
+            const mode = String(params.get('mode') || '').trim().toLowerCase();
+            const modeApplied = applyStandaloneProductMode(mode);
+            const afIcon = String(params.get('agentforge_icon') || '').trim().toLowerCase();
+            const afTarget = String(params.get('agentforge_target') || '').trim().toLowerCase();
+            const afAgentName = String(params.get('agent_name') || '').trim();
+            if (afIcon === '1' || afIcon === 'true' || afIcon === 'yes') {
+                iconForgeAgentContext = {
+                    active: true,
+                    source: (afTarget === 'wizard' || afTarget === 'advanced') ? afTarget : 'advanced',
+                    agentName: afAgentName,
+                };
+            } else if (modeApplied) {
+                iconForgeAgentContext = { active: false, source: '', agentName: '' };
+            }
+            applyIconForgeAgentContextUI();
+            const requestedView = (params.get('view') || '').trim();
+            if (requestedView && document.getElementById(requestedView)) {
+                switchView(requestedView);
+            } else if (!modeApplied && currentView !== 'view_status') {
+                switchView('view_status');
+            }
+
+            const openIcon = (params.get('open_icon') || '').trim();
+            if (!openIcon) return;
+
+            if (currentView !== 'view_iconforge') {
+                switchView('view_iconforge');
+            }
+            showIconForgeEditor('Explorer selection');
+
+            const iconPathInput = document.getElementById('iconforge_icon_path');
+            if (iconPathInput) {
+                iconPathInput.value = openIcon;
+            }
+
+            const baseName = openIcon.split(/[\\/]/).pop() || '';
+            const iconStem = baseName.replace(/\\.[^.]+$/, '').trim();
+            const studioName = document.getElementById('icon_studio_name');
+            if (studioName && iconStem) {
+                studioName.value = iconStem;
+            }
+
+            setIconStudioStatus('Explorer selection loaded: ' + openIcon);
+        }
 
         async function refreshOnboardingStatus() {
             const data = await fetchJsonWithTimeout('/api/onboarding/status');
@@ -1718,6 +3194,63 @@ PAGE = """
             const data = await res.json();
             document.getElementById('toast').textContent = data.ok ? ('Command queued: ' + command) : ('Command failed: ' + (data.message || 'unknown error'));
             refresh();
+        }
+
+        function bossGateCurrentUser() {
+            const input = document.getElementById('bossgate_current_user');
+            const user = String(input?.value || localStorage.getItem('bossgate_current_user') || 'bossforge-owner').trim() || 'bossforge-owner';
+            localStorage.setItem('bossgate_current_user', user);
+            if (input) input.value = user;
+            return user;
+        }
+
+        function csvValues(id) {
+            return String(document.getElementById(id)?.value || '').split(',').map((item) => item.trim()).filter(Boolean);
+        }
+
+        async function refreshBossGateAccess() {
+            const user = bossGateCurrentUser();
+            const data = await fetchJsonWithTimeout('/api/bossgate/access/capabilities?user_id=' + encodeURIComponent(user));
+            const policy = await fetchJsonWithTimeout('/api/bossgate/access/policy');
+            const permissions = new Set(Array.isArray(data?.permissions) ? data.permissions : []);
+            const panels = data?.panels || {};
+            document.querySelectorAll('[data-bossgate-permission]').forEach((el) => {
+                el.style.display = permissions.has(el.dataset.bossgatePermission) ? '' : 'none';
+            });
+            document.querySelectorAll('[data-bossgate-panel]').forEach((el) => {
+                el.style.display = panels[el.dataset.bossgatePanel] ? '' : 'none';
+            });
+            const summary = document.getElementById('bossgate_access_summary');
+            if (summary) summary.textContent = JSON.stringify({ ...data, policy: policy?.policy || {} }, null, 2);
+            const commerce = document.getElementById('bossgate_commerce_summary');
+            if (commerce) commerce.textContent = JSON.stringify({ enabled: !!panels.commerce, permissions: [...permissions].filter((item) => item.includes('license') || item.includes('usage') || item.includes('commerce')) }, null, 2);
+            const support = document.getElementById('bossgate_support_summary');
+            if (support) support.textContent = JSON.stringify({ enabled: !!panels.support, permissions: [...permissions].filter((item) => item.includes('remote_debug') || item.includes('support')) }, null, 2);
+        }
+
+        async function dispatchBossGateOperator(command) {
+            const base = { operator_id: bossGateCurrentUser(), scope_id: 'control-hall', actor_type: 'human' };
+            if (command === 'bossgate_package_agent') {
+                Object.assign(base, { name: document.getElementById('bossgate_package_agent_name').value.trim(), target_system_id: document.getElementById('bossgate_package_target').value.trim() });
+            } else if (command === 'bossgate_transfer_agent') {
+                Object.assign(base, { package_file: document.getElementById('bossgate_transfer_file').value.trim(), destination: document.getElementById('bossgate_transfer_destination').value.trim(), dry_run: true });
+            } else if (command === 'bossgate_install_agent') {
+                Object.assign(base, { package_file: document.getElementById('bossgate_install_file').value.trim() });
+            }
+            await sendCmd('bossgate', command, base);
+        }
+
+        async function assignBossGateRoles() {
+            const userId = document.getElementById('bossgate_assign_user').value.trim();
+            const res = await fetch('/api/bossgate/access/users/' + encodeURIComponent(userId) + '/roles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acting_user: bossGateCurrentUser(), roles: csvValues('bossgate_assign_roles') }) });
+            document.getElementById('toast').textContent = JSON.stringify(await res.json());
+            await refreshBossGateAccess();
+        }
+
+        async function saveBossGateCustomRole() {
+            const res = await fetch('/api/bossgate/access/roles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acting_user: bossGateCurrentUser(), role_name: document.getElementById('bossgate_custom_role').value.trim(), permissions: csvValues('bossgate_custom_permissions') }) });
+            document.getElementById('toast').textContent = JSON.stringify(await res.json());
+            await refreshBossGateAccess();
         }
 
         function refreshTargetDropdown(agents) {
@@ -1996,13 +3529,720 @@ PAGE = """
             root.style.color = isError ? '#f17171' : '#A9B1C1';
         }
 
+        function applyIconForgeAgentContextUI() {
+            const row = document.getElementById('icon_studio_agentforge_row');
+            const hint = document.getElementById('icon_studio_agentforge_hint');
+            const target = document.getElementById('icon_studio_target');
+            if (row) row.style.display = iconForgeAgentContext.active ? 'flex' : 'none';
+            if (hint) {
+                hint.style.display = iconForgeAgentContext.active ? 'block' : 'none';
+                if (iconForgeAgentContext.active) {
+                    const src = iconForgeAgentContext.source || 'advanced';
+                    const agent = iconForgeAgentContext.agentName ? (' (' + iconForgeAgentContext.agentName + ')') : '';
+                    hint.textContent = 'AgentForge session active: target=' + src + agent + '.';
+                }
+            }
+            if (target) {
+                if (!iconForgeAgentContext.active) {
+                    target.value = 'standalone';
+                } else if (iconForgeAgentContext.source === 'wizard' || iconForgeAgentContext.source === 'advanced') {
+                    target.value = iconForgeAgentContext.source;
+                }
+            }
+        }
+
+        function openIconForgeFromAgentForge(source) {
+            const src = (source === 'wizard' || source === 'advanced') ? source : 'advanced';
+            const name = src === 'wizard'
+                ? String(document.getElementById('wizard_name')?.value || '').trim()
+                : String(document.getElementById('maker_name')?.value || '').trim();
+            iconForgeAgentContext = { active: true, source: src, agentName: name };
+            const studioName = document.getElementById('icon_studio_name');
+            if (studioName && name) studioName.value = name;
+            applyIconForgeAgentContextUI();
+            switchView('view_iconforge');
+            showIconForgeEditor();
+            setIconStudioStatus('AgentForge icon session opened (' + src + ').');
+        }
+
+        function iconForgeSafeText(value, fallback = '') {
+            const raw = String(value || '').trim();
+            return raw || fallback;
+        }
+
+        function iconForgeInferStem(pathLike, fallback = 'iconforge_item') {
+            const raw = String(pathLike || '').trim();
+            if (!raw) return fallback;
+            const base = raw.split(/[\\/]/).pop() || raw;
+            const stem = base.replace(/\\.[^.]+$/, '').trim();
+            return stem || fallback;
+        }
+
+        function iconForgeBuildPreviewUrl(pathLike) {
+            const raw = String(pathLike || '').trim();
+            if (!raw) return '';
+            if (raw.startsWith('data:image/')) return raw;
+            if (/^https?:\\/\\//i.test(raw)) return raw;
+            return '/api/iconforge/preview?path=' + encodeURIComponent(raw);
+        }
+
+        function iconForgeLoadSectionCollapseState() {
+            try {
+                const raw = localStorage.getItem('bossforge.iconforge.sections.collapsed.v1');
+                if (!raw) {
+                    iconForgeSectionCollapseState = {};
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                iconForgeSectionCollapseState = (parsed && typeof parsed === 'object') ? parsed : {};
+            } catch {
+                iconForgeSectionCollapseState = {};
+            }
+        }
+
+        function iconForgeSaveSectionCollapseState() {
+            try {
+                localStorage.setItem('bossforge.iconforge.sections.collapsed.v1', JSON.stringify(iconForgeSectionCollapseState || {}));
+            } catch {
+                // Ignore storage failures.
+            }
+        }
+
+        function iconForgeSectionIsCollapsed(sectionKey) {
+            return iconForgeSectionCollapseState && iconForgeSectionCollapseState[String(sectionKey)] === true;
+        }
+
+        function iconForgeToggleSection(sectionKey) {
+            const key = String(sectionKey || '').trim();
+            if (!key) return;
+            const next = !iconForgeSectionIsCollapsed(key);
+            iconForgeSectionCollapseState[key] = next;
+            iconForgeSaveSectionCollapseState();
+            renderIconForgeSchematics();
+        }
+
+        function collectIconForgeSchematics() {
+            const items = [];
+            const wizardIcon = String(document.getElementById('wizard_icon_path')?.value || '').trim();
+            const wizardName = String(document.getElementById('wizard_name')?.value || '').trim();
+            items.push({
+                id: 'agentforge-wizard',
+                title: 'AgentForge Wizard',
+                where: 'wizard creation profile',
+                targetType: 'agentforge',
+                target: 'wizard icon slot',
+                icon: wizardIcon,
+                source: 'wizard',
+                agentName: wizardName,
+            });
+
+            const makerIcon = String(document.getElementById('maker_icon_path')?.value || '').trim();
+            const makerName = String(document.getElementById('maker_name')?.value || '').trim();
+            items.push({
+                id: 'agentforge-advanced',
+                title: 'AgentForge Advanced',
+                where: 'advanced agent profile',
+                targetType: 'agentforge',
+                target: 'advanced icon slot',
+                icon: makerIcon,
+                source: 'advanced',
+                agentName: makerName,
+            });
+
+            const windowsTemplates = [
+                {
+                    id: 'windows-folder-template',
+                    title: 'Windows Folder Icon',
+                    where: 'folder shell icon',
+                    targetType: 'folder',
+                    target: 'C:/Path/To/Folder',
+                    icon: '',
+                },
+                {
+                    id: 'windows-shortcut-template',
+                    title: 'Windows Shortcut Icon',
+                    where: 'shortcut (.lnk) icon',
+                    targetType: 'shortcut',
+                    target: 'C:/Path/To/AppShortcut.lnk',
+                    icon: '',
+                },
+                {
+                    id: 'windows-file-extension-template',
+                    title: 'Windows File Extension Icon',
+                    where: 'extension class icon',
+                    targetType: 'file_extension',
+                    target: '.txt',
+                    icon: '',
+                },
+                {
+                    id: 'windows-application-template',
+                    title: 'Windows Application Icon',
+                    where: 'application registration icon',
+                    targetType: 'application',
+                    target: 'notepad.exe',
+                    icon: '',
+                },
+                {
+                    id: 'windows-drive-template',
+                    title: 'Windows Drive Icon',
+                    where: 'drive letter shell icon',
+                    targetType: 'drive',
+                    target: 'D',
+                    icon: '',
+                },
+            ];
+            windowsTemplates.forEach((entry) => {
+                items.push({ ...entry, source: 'windows-template' });
+            });
+
+            const backupItems = (iconForgeBackupsCache && typeof iconForgeBackupsCache === 'object') ? iconForgeBackupsCache : {};
+            Object.entries(backupItems).forEach(([key, entry], index) => {
+                if (!entry || typeof entry !== 'object') return;
+                const targetType = String(entry.target_type || 'unknown').trim() || 'unknown';
+                const target = String(entry.target || key).trim() || key;
+                const icon = String(entry.icon || '').trim();
+                items.push({
+                    id: 'backup-' + String(index),
+                    title: 'Windows Override: ' + targetType,
+                    where: 'windows shell icon override',
+                    targetType,
+                    target,
+                    icon,
+                    backupKey: key,
+                    source: 'windows',
+                });
+            });
+
+            return items;
+        }
+
+        function renderIconForgeSchematics() {
+            iconForgeSchematics = collectIconForgeSchematics();
+            const statsRoot = document.getElementById('iconforge_schematics_stats');
+            const gridRoot = document.getElementById('iconforge_schematics_grid');
+            if (!statsRoot || !gridRoot) return;
+
+            const total = iconForgeSchematics.length;
+            const withIcon = iconForgeSchematics.filter((item) => String(item.icon || '').trim()).length;
+            const withPreview = iconForgeSchematics.filter((item) => String(iconForgeBuildPreviewUrl(item.icon) || '').trim()).length;
+            statsRoot.textContent = 'Targets mapped: ' + String(total) + ' | with icon path: ' + String(withIcon) + ' | previewable: ' + String(withPreview) + ' | click a tile to edit.';
+
+            if (!total) {
+                gridRoot.innerHTML = '<div class="iconforge-schematic-card"><h4>No icon targets found</h4><div class="iconforge-schematic-meta">Create or apply icon operations to populate the map.</div></div>';
+                return;
+            }
+
+            const sectionConfig = [
+                { key: 'agentforge', label: 'AgentForge Icon Targets' },
+                { key: 'windows-template', label: 'Windows Icon Templates' },
+                { key: 'windows', label: 'Active Windows Overrides' },
+            ];
+
+            const grouped = {
+                agentforge: [],
+                'windows-template': [],
+                windows: [],
+                other: [],
+            };
+            iconForgeSchematics.forEach((item) => {
+                const key = String(item.source || '').trim();
+                if (grouped[key]) {
+                    grouped[key].push(item);
+                } else {
+                    grouped.other.push(item);
+                }
+            });
+
+            const renderCard = (item) => {
+                const title = htmlEscape(iconForgeSafeText(item.title, 'Icon target'));
+                const where = htmlEscape(iconForgeSafeText(item.where, 'unknown location'));
+                const targetType = htmlEscape(iconForgeSafeText(item.targetType, 'unknown'));
+                const target = htmlEscape(iconForgeSafeText(item.target, 'unknown'));
+                const icon = htmlEscape(iconForgeSafeText(item.icon, 'not set'));
+                const id = htmlEscape(String(item.id || 'new'));
+                const previewUrl = iconForgeBuildPreviewUrl(item.icon);
+                const preview = previewUrl
+                    ? ('<div class="iconforge-schematic-preview"><img src="' + htmlEscape(previewUrl) + '" alt="icon preview for ' + title + '" loading="lazy" /></div><div class="iconforge-schematic-hint">Hover to zoom</div>')
+                    : '<div class="iconforge-schematic-preview"><span class="iconforge-schematic-preview-empty">No Icon</span></div>';
+                return '<div class="iconforge-schematic-card">'
+                    + '<h4>' + title + '</h4>'
+                    + preview
+                    + '<div class="iconforge-schematic-meta">goes to: ' + where + '</div>'
+                    + '<div class="iconforge-schematic-meta">type: ' + targetType + '</div>'
+                    + '<div class="iconforge-schematic-meta">target: ' + target + '</div>'
+                    + '<div class="iconforge-schematic-meta">icon: ' + icon + '</div>'
+                    + '<button onclick="openIconForgeEditorFromSchematic(\\\'' + id + '\\\')">Change This Icon</button>'
+                    + '</div>';
+            };
+
+            const sectionsHtml = sectionConfig.map((section) => {
+                const entries = grouped[section.key] || [];
+                if (!entries.length) return '';
+                const collapsed = iconForgeSectionIsCollapsed(section.key);
+                const btn = collapsed ? 'Expand' : 'Collapse';
+                const sectionClass = collapsed ? 'iconforge-schematic-section collapsed' : 'iconforge-schematic-section';
+                return '<div class="' + sectionClass + '">'
+                    + '<div class="iconforge-schematic-section-head">'
+                    + '<h3>' + htmlEscape(section.label) + '</h3>'
+                    + '<button class="iconforge-schematic-toggle" onclick="iconForgeToggleSection(\\\'' + htmlEscape(section.key) + '\\\')">' + btn + '</button>'
+                    + '</div>'
+                    + '<div class="iconforge-schematic-section-grid">'
+                    + entries.map(renderCard).join('')
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+
+            const otherHtml = (grouped.other || []).length
+                ? (() => {
+                    const otherKey = 'other';
+                    const collapsed = iconForgeSectionIsCollapsed(otherKey);
+                    const btn = collapsed ? 'Expand' : 'Collapse';
+                    const sectionClass = collapsed ? 'iconforge-schematic-section collapsed' : 'iconforge-schematic-section';
+                    return '<div class="' + sectionClass + '">'
+                    + '<div class="iconforge-schematic-section-head">'
+                    + '<h3>Other Icon Targets</h3>'
+                    + '<button class="iconforge-schematic-toggle" onclick="iconForgeToggleSection(\\\'' + otherKey + '\\\')">' + btn + '</button>'
+                    + '</div>'
+                    + '<div class="iconforge-schematic-section-grid">'
+                    + grouped.other.map(renderCard).join('')
+                    + '</div>'
+                    + '</div>';
+                })()
+                : '';
+
+            gridRoot.innerHTML = sectionsHtml + otherHtml;
+        }
+
+        function showIconForgeSchematics() {
+            const mapPanel = document.getElementById('iconforge_schematics_panel');
+            const editorPanel = document.getElementById('iconforge_editor_panel');
+            if (mapPanel) mapPanel.style.display = '';
+            if (editorPanel) editorPanel.style.display = 'none';
+            renderIconForgeSchematics();
+            setIconStudioStatus('Icon schematics map ready. Click a target to change its icon.');
+        }
+
+        function showIconForgeEditor(contextLabel = '') {
+            const mapPanel = document.getElementById('iconforge_schematics_panel');
+            const editorPanel = document.getElementById('iconforge_editor_panel');
+            const contextRoot = document.getElementById('iconforge_editor_context');
+            if (mapPanel) mapPanel.style.display = 'none';
+            if (editorPanel) editorPanel.style.display = '';
+            if (contextRoot) contextRoot.textContent = contextLabel || 'Custom icon editor';
+        }
+
+        function openIconForgeEditorFromSchematic(schematicId) {
+            const id = String(schematicId || '').trim();
+            if (id === 'new') {
+                showIconForgeEditor('New standalone icon');
+                setIconStudioStatus('New icon editor opened.');
+                return;
+            }
+
+            const entry = iconForgeSchematics.find((item) => String(item.id) === id);
+            if (!entry) {
+                showIconForgeEditor('Custom icon editor');
+                return;
+            }
+
+            const studioName = document.getElementById('icon_studio_name');
+            const targetType = document.getElementById('iconforge_target_type');
+            const targetValue = document.getElementById('iconforge_target_value');
+            const iconPath = document.getElementById('iconforge_icon_path');
+            const source = String(entry.source || '').trim();
+            const agentName = String(entry.agentName || '').trim();
+
+            if (studioName) studioName.value = iconForgeInferStem(entry.icon, iconForgeInferStem(entry.target, 'iconforge_item'));
+            if (targetType) {
+                const nextType = String(entry.targetType || 'folder');
+                const hasType = Array.from(targetType.options || []).some((opt) => String(opt.value) === nextType);
+                if (hasType) targetType.value = nextType;
+            }
+            if (targetValue) targetValue.value = String(entry.target || '');
+            if (iconPath) iconPath.value = String(entry.icon || '');
+
+            if (source === 'wizard' || source === 'advanced') {
+                iconForgeAgentContext = { active: true, source, agentName };
+            }
+            applyIconForgeAgentContextUI();
+
+            showIconForgeEditor('Editing: ' + iconForgeSafeText(entry.title, 'selected target'));
+            setIconStudioStatus('Editing icon target: ' + iconForgeSafeText(entry.target, 'unknown'));
+        }
+
+        function refreshIconForgeSchematics() {
+            renderIconForgeSchematics();
+        }
+
+        function createIconStudioLayer(name = '') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            return {
+                id: 'layer-' + String(iconStudioLayerSeed++),
+                name: String(name || ('Layer ' + iconStudioLayerSeed)).trim(),
+                visible: true,
+                blendMode: 'source-over',
+                opacity: 1,
+                canvas,
+                ctx,
+            };
+        }
+
+        function iconStudioGetActiveLayer() {
+            return iconStudioLayers[iconStudioActiveLayer] || null;
+        }
+
+        function iconStudioRenderLayers() {
+            const canvas = document.getElementById('icon_studio_canvas');
+            if (!canvas || !iconStudioCtx) return;
+            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            iconStudioLayers.forEach((layer) => {
+                if (!layer || !layer.visible) return;
+                iconStudioCtx.save();
+                iconStudioCtx.globalAlpha = Number.isFinite(layer.opacity) ? Math.max(0, Math.min(1, layer.opacity)) : 1;
+                iconStudioCtx.globalCompositeOperation = String(layer.blendMode || 'source-over');
+                iconStudioCtx.drawImage(layer.canvas, 0, 0);
+                iconStudioCtx.restore();
+            });
+            iconStudioSyncActiveLayerControls();
+            refreshIconStudioLayerList();
+        }
+
+        function iconStudioSyncActiveLayerControls() {
+            const active = iconStudioGetActiveLayer();
+            const nameInput = document.getElementById('icon_studio_layer_name');
+            const blendSelect = document.getElementById('icon_studio_layer_blend');
+            const opacitySlider = document.getElementById('icon_studio_layer_opacity');
+            const opacityLabel = document.getElementById('icon_studio_layer_opacity_label');
+            const hasLayer = !!active;
+            const opacityPercent = hasLayer ? Math.round((Number(active.opacity) || 0) * 100) : 100;
+
+            if (nameInput) {
+                nameInput.disabled = !hasLayer;
+                nameInput.value = hasLayer ? String(active.name || '') : '';
+            }
+            if (blendSelect) {
+                blendSelect.disabled = !hasLayer;
+                blendSelect.value = hasLayer ? String(active.blendMode || 'source-over') : 'source-over';
+            }
+            if (opacitySlider) {
+                opacitySlider.disabled = !hasLayer;
+                opacitySlider.value = String(Math.max(0, Math.min(100, opacityPercent)));
+            }
+            if (opacityLabel) {
+                opacityLabel.textContent = String(Math.max(0, Math.min(100, opacityPercent))) + '%';
+            }
+        }
+
+        function iconStudioRenameActiveLayer() {
+            const active = iconStudioGetActiveLayer();
+            const nameInput = document.getElementById('icon_studio_layer_name');
+            if (!active || !nameInput) return;
+            const nextName = String(nameInput.value || '').trim();
+            if (!nextName) {
+                setIconStudioStatus('Layer name cannot be empty.', true);
+                iconStudioSyncActiveLayerControls();
+                return;
+            }
+            active.name = nextName;
+            refreshIconStudioLayerList();
+            setIconStudioStatus('Layer renamed.');
+        }
+
+        function iconStudioSetActiveLayerBlend(mode) {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            active.blendMode = String(mode || 'source-over').trim() || 'source-over';
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer blend: ' + active.blendMode);
+        }
+
+        function iconStudioSetActiveLayerOpacity(rawValue) {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            const parsed = parseInt(String(rawValue ?? '100'), 10);
+            const value = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 100;
+            active.opacity = value / 100;
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioMoveLayerTo(fromIndex, toIndex) {
+            const from = Number(fromIndex);
+            const to = Number(toIndex);
+            if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+            if (from < 0 || to < 0 || from >= iconStudioLayers.length || to >= iconStudioLayers.length) return;
+            if (from === to) return;
+            const [layer] = iconStudioLayers.splice(from, 1);
+            iconStudioLayers.splice(to, 0, layer);
+            if (iconStudioActiveLayer === from) {
+                iconStudioActiveLayer = to;
+            } else if (iconStudioActiveLayer > from && iconStudioActiveLayer <= to) {
+                iconStudioActiveLayer -= 1;
+            } else if (iconStudioActiveLayer < from && iconStudioActiveLayer >= to) {
+                iconStudioActiveLayer += 1;
+            }
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioLayerDragStart(index, event) {
+            const idx = Number(index);
+            if (!Number.isInteger(idx)) return;
+            iconStudioDraggingLayer = idx;
+            if (event?.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', String(idx));
+            }
+        }
+
+        function iconStudioLayerDragOver(index, event) {
+            if (!event) return;
+            event.preventDefault();
+            if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+        }
+
+        function iconStudioLayerDrop(index, event) {
+            if (event) event.preventDefault();
+            const to = Number(index);
+            const from = iconStudioDraggingLayer;
+            if (!Number.isInteger(from) || !Number.isInteger(to)) return;
+            if (from < 0 || to < 0) return;
+            iconStudioMoveLayerTo(from, to);
+            iconStudioDraggingLayer = -1;
+            setIconStudioStatus('Layer order updated.');
+        }
+
+        function iconStudioLayerDragEnd() {
+            iconStudioDraggingLayer = -1;
+        }
+
+        function refreshIconStudioLayerList() {
+            const root = document.getElementById('icon_studio_layer_list');
+            if (!root) return;
+            if (!iconStudioLayers.length) {
+                root.innerHTML = 'No layers yet.';
+                return;
+            }
+            root.innerHTML = iconStudioLayers.map((layer, idx) => {
+                const active = idx === iconStudioActiveLayer;
+                const eye = layer.visible ? 'visible' : 'hidden';
+                const blend = String(layer.blendMode || 'source-over');
+                const opacity = Math.round((Number(layer.opacity) || 0) * 100);
+                const border = active ? 'border-color: rgba(212,168,87,0.8);' : '';
+                const bg = active ? 'background: rgba(34,30,20,0.75);' : 'background: rgba(14,14,19,0.85);';
+                return '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid #2b2f3a; border-radius:6px; padding:4px 6px; margin-bottom:4px; ' + border + bg + '" draggable="true" ondragstart="iconStudioLayerDragStart(' + idx + ', event)" ondragover="iconStudioLayerDragOver(' + idx + ', event)" ondrop="iconStudioLayerDrop(' + idx + ', event)" ondragend="iconStudioLayerDragEnd()">'
+                    + '<button style="flex:1 1 auto; text-align:left; min-height:24px; padding:2px 6px;" onclick="iconStudioSelectLayer(' + idx + ')">' + htmlEscape(layer.name) + '</button>'
+                    + '<span class="muted" style="font-size:11px;">' + eye + ' • ' + htmlEscape(blend) + ' • ' + String(Math.max(0, Math.min(100, opacity))) + '%</span>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function iconStudioResetLayers() {
+            iconStudioLayers = [createIconStudioLayer('Base')];
+            iconStudioActiveLayer = 0;
+            iconStudioUndo = [];
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioSelectLayer(index) {
+            const idx = Number(index);
+            if (!Number.isInteger(idx) || idx < 0 || idx >= iconStudioLayers.length) return;
+            iconStudioActiveLayer = idx;
+            iconStudioRenderLayers();
+        }
+
+        function iconStudioAddLayer() {
+            iconStudioLayers.push(createIconStudioLayer('Layer ' + (iconStudioLayers.length + 1)));
+            iconStudioActiveLayer = iconStudioLayers.length - 1;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer added.');
+        }
+
+        function iconStudioDuplicateLayer() {
+            const active = iconStudioGetActiveLayer();
+            if (!active || !active.ctx) return;
+            const dup = createIconStudioLayer(active.name + ' Copy');
+            dup.ctx.drawImage(active.canvas, 0, 0);
+            dup.blendMode = String(active.blendMode || 'source-over');
+            dup.opacity = Number.isFinite(active.opacity) ? Math.max(0, Math.min(1, active.opacity)) : 1;
+            iconStudioLayers.splice(iconStudioActiveLayer + 1, 0, dup);
+            iconStudioActiveLayer += 1;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer duplicated.');
+        }
+
+        function iconStudioDeleteLayer() {
+            if (iconStudioLayers.length <= 1) {
+                setIconStudioStatus('Cannot delete the last layer.', true);
+                return;
+            }
+            iconStudioLayers.splice(iconStudioActiveLayer, 1);
+            iconStudioActiveLayer = Math.max(0, Math.min(iconStudioActiveLayer, iconStudioLayers.length - 1));
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer deleted.');
+        }
+
+        function iconStudioMoveLayer(direction) {
+            const dir = Number(direction) < 0 ? -1 : 1;
+            const from = iconStudioActiveLayer;
+            const to = from + dir;
+            if (to < 0 || to >= iconStudioLayers.length) return;
+            iconStudioMoveLayerTo(from, to);
+            setIconStudioStatus('Layer order updated.');
+        }
+
+        function iconStudioToggleActiveLayerVisibility() {
+            const active = iconStudioGetActiveLayer();
+            if (!active) return;
+            active.visible = !active.visible;
+            iconStudioRenderLayers();
+            setIconStudioStatus('Layer visibility: ' + (active.visible ? 'visible' : 'hidden'));
+        }
+
+        function readIconFxControls() {
+            const strengthRaw = parseInt(document.getElementById('icon_fx_strength')?.value || '55', 10);
+            const passesRaw = parseInt(document.getElementById('icon_fx_passes')?.value || '1', 10);
+            const strength = Number.isFinite(strengthRaw) ? Math.max(1, Math.min(100, strengthRaw)) : 55;
+            const passes = Number.isFinite(passesRaw) ? Math.max(1, Math.min(5, passesRaw)) : 1;
+            return { strength, passes };
+        }
+
+        function updateIconFxControlLabels() {
+            const { strength, passes } = readIconFxControls();
+            const s = document.getElementById('icon_fx_strength_label');
+            const p = document.getElementById('icon_fx_passes_label');
+            if (s) s.textContent = String(strength) + '%';
+            if (p) p.textContent = String(passes) + 'x';
+        }
+
+        function closeIconForgeMenus() {
+            document.querySelectorAll('[data-iconforge-menu]').forEach((menu) => {
+                menu.classList.remove('open');
+            });
+        }
+
+        function toggleIconForgeMenu(button, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const menu = button ? button.closest('[data-iconforge-menu]') : null;
+            if (!menu) return;
+            const shouldOpen = !menu.classList.contains('open');
+            closeIconForgeMenus();
+            if (shouldOpen) menu.classList.add('open');
+        }
+
+        function isTypingTarget(target) {
+            const tag = String(target?.tagName || '').toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || !!target?.isContentEditable;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (currentView !== 'view_iconforge') return;
+            if (event.key === 'Escape') {
+                closeIconForgeMenus();
+                return;
+            }
+
+            const ctrlLike = event.ctrlKey || event.metaKey;
+            if (!ctrlLike) return;
+
+            const key = String(event.key || '').toLowerCase();
+            const shift = !!event.shiftKey;
+            const typing = isTypingTarget(event.target);
+
+            if (!shift && key === 'z') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioUndoStroke();
+                return;
+            }
+
+            if (typing) return;
+
+            if (!shift && key === 'n') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioClearCanvas();
+                setIconStudioStatus('New canvas ready.');
+                return;
+            }
+            if (!shift && key === 'o') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                triggerIconStudioImport();
+                return;
+            }
+            if (!shift && key === 's') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioDraft();
+                return;
+            }
+            if (shift && key === 'l') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                loadIconStudioDraft();
+                return;
+            }
+            if (!shift && key === 'l') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                iconStudioClearCanvas();
+                return;
+            }
+            if (shift && key === 'p') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                downloadIconStudioPng();
+                return;
+            }
+            if (shift && key === 's') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioIco();
+                return;
+            }
+            if (shift && key === 'g') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                saveIconStudioAnimated();
+                return;
+            }
+            if (!shift && key === 'i') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('invert');
+                return;
+            }
+            if (shift && key === 'c') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('contrast');
+                return;
+            }
+            if (shift && key === '1') {
+                event.preventDefault();
+                closeIconForgeMenus();
+                applyIconStudioFx('grayscale');
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const target = event && event.target;
+            const insideMenu = target && typeof target.closest === 'function' ? target.closest('[data-iconforge-menu]') : null;
+            if (!insideMenu) closeIconForgeMenus();
+        });
+
         function iconStudioBuildDraftPayload() {
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return null;
             return {
                 image_data: canvas.toDataURL('image/png'),
                 icon_name: (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim(),
-                target: (document.getElementById('icon_studio_target')?.value || 'advanced').trim(),
+                target: (document.getElementById('icon_studio_target')?.value || 'standalone').trim(),
                 tool: (document.getElementById('icon_studio_tool')?.value || 'brush').trim(),
                 color: (document.getElementById('icon_studio_color')?.value || '#d4a857').trim(),
                 size: (document.getElementById('icon_studio_size')?.value || '10').trim(),
@@ -2026,7 +4266,8 @@ PAGE = """
 
         async function loadIconStudioDraft(showStatus = true) {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             try {
                 const raw = localStorage.getItem(ICON_STUDIO_DRAFT_KEY);
                 if (!raw) {
@@ -2044,8 +4285,9 @@ PAGE = """
                     img.onerror = () => reject(new Error('saved draft image failed to load'));
                     img.src = payload.image_data;
                 });
-                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
-                iconStudioCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                active.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                active.ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                iconStudioRenderLayers();
 
                 const nameEl = document.getElementById('icon_studio_name');
                 const targetEl = document.getElementById('icon_studio_target');
@@ -2057,7 +4299,7 @@ PAGE = """
                 const animSecondsEl = document.getElementById('icon_studio_anim_seconds');
                 const animFpsEl = document.getElementById('icon_studio_anim_fps');
                 if (nameEl && payload.icon_name) nameEl.value = String(payload.icon_name);
-                if (targetEl && payload.target) targetEl.value = String(payload.target);
+                if (targetEl && payload.target && iconForgeAgentContext.active) targetEl.value = String(payload.target);
                 if (toolEl && payload.tool) toolEl.value = String(payload.tool);
                 if (colorEl && payload.color) colorEl.value = String(payload.color);
                 if (sizeEl && payload.size) sizeEl.value = String(payload.size);
@@ -2094,9 +4336,17 @@ PAGE = """
         }
 
         function iconStudioPushUndo() {
-            const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
-            const frame = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            if (!iconStudioLayers.length) return;
+            const frame = {
+                active: iconStudioActiveLayer,
+                layers: iconStudioLayers.map((layer) => ({
+                    name: layer.name,
+                    visible: !!layer.visible,
+                    blendMode: String(layer.blendMode || 'source-over'),
+                    opacity: Number.isFinite(layer.opacity) ? Math.max(0, Math.min(1, layer.opacity)) : 1,
+                    image: layer.ctx ? layer.ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height) : null,
+                })),
+            };
             iconStudioUndo.push(frame);
             if (iconStudioUndo.length > 25) iconStudioUndo.shift();
         }
@@ -2123,19 +4373,22 @@ PAGE = """
         }
 
         function iconStudioStroke(from, to) {
-            if (!iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!active || !active.ctx) return;
             const stroke = iconStudioCurrentStroke();
-            iconStudioCtx.save();
-            iconStudioCtx.lineCap = 'round';
-            iconStudioCtx.lineJoin = 'round';
-            iconStudioCtx.lineWidth = stroke.size;
-            iconStudioCtx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
-            iconStudioCtx.strokeStyle = stroke.color;
-            iconStudioCtx.beginPath();
-            iconStudioCtx.moveTo(from.x, from.y);
-            iconStudioCtx.lineTo(to.x, to.y);
-            iconStudioCtx.stroke();
-            iconStudioCtx.restore();
+            const ctx = active.ctx;
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = stroke.size;
+            ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = stroke.color;
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+            ctx.restore();
+            iconStudioRenderLayers();
         }
 
         function initIconForgeStudio() {
@@ -2145,9 +4398,8 @@ PAGE = """
             iconStudioCtx = canvas.getContext('2d', { willReadFrequently: true });
             if (!iconStudioCtx) return;
             iconStudioBooted = true;
-            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
-            iconStudioCtx.fillStyle = 'rgba(0,0,0,0)';
-            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
+            iconStudioResetLayers();
+            applyIconForgeAgentContextUI();
 
             const slider = document.getElementById('icon_studio_size');
             const label = document.getElementById('icon_studio_size_label');
@@ -2158,6 +4410,12 @@ PAGE = """
                 slider.addEventListener('input', sync);
                 sync();
             }
+
+            const fxStrength = document.getElementById('icon_fx_strength');
+            const fxPasses = document.getElementById('icon_fx_passes');
+            if (fxStrength) fxStrength.addEventListener('input', updateIconFxControlLabels);
+            if (fxPasses) fxPasses.addEventListener('input', updateIconFxControlLabels);
+            updateIconFxControlLabels();
 
             let lastPoint = { x: 0, y: 0 };
             canvas.addEventListener('pointerdown', (event) => {
@@ -2190,7 +4448,8 @@ PAGE = """
         async function handleIconStudioImport(event) {
             const file = event?.target?.files?.[0];
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!file || !canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!file || !canvas || !active || !active.ctx) return;
             try {
                 const objectUrl = URL.createObjectURL(file);
                 const img = new Image();
@@ -2200,14 +4459,15 @@ PAGE = """
                     img.src = objectUrl;
                 });
                 iconStudioPushUndo();
-                iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+                active.ctx.clearRect(0, 0, canvas.width, canvas.height);
                 const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
                 const drawW = Math.max(1, Math.floor(img.width * scale));
                 const drawH = Math.max(1, Math.floor(img.height * scale));
                 const offX = Math.floor((canvas.width - drawW) / 2);
                 const offY = Math.floor((canvas.height - drawH) / 2);
-                iconStudioCtx.drawImage(img, offX, offY, drawW, drawH);
+                active.ctx.drawImage(img, offX, offY, drawW, drawH);
                 URL.revokeObjectURL(objectUrl);
+                iconStudioRenderLayers();
                 saveIconStudioDraft(false);
                 setIconStudioStatus('Imported image: ' + file.name);
             } catch (err) {
@@ -2222,66 +4482,203 @@ PAGE = """
                 setIconStudioStatus('Undo stack is empty.');
                 return;
             }
-            iconStudioCtx.putImageData(frame, 0, 0);
+            if (Array.isArray(frame.layers) && frame.layers.length) {
+                iconStudioLayers = frame.layers.map((layerFrame, idx) => {
+                    const layer = createIconStudioLayer(layerFrame?.name || ('Layer ' + (idx + 1)));
+                    layer.visible = layerFrame?.visible !== false;
+                    layer.blendMode = String(layerFrame?.blendMode || 'source-over');
+                    const opacityValue = Number(layerFrame?.opacity);
+                    layer.opacity = Number.isFinite(opacityValue) ? Math.max(0, Math.min(1, opacityValue)) : 1;
+                    if (layer.ctx && layerFrame?.image) layer.ctx.putImageData(layerFrame.image, 0, 0);
+                    return layer;
+                });
+                iconStudioActiveLayer = Math.max(0, Math.min(Number(frame.active) || 0, iconStudioLayers.length - 1));
+                iconStudioRenderLayers();
+            }
             saveIconStudioDraft(false);
             setIconStudioStatus('Undo applied.');
         }
 
         function iconStudioClearCanvas() {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             iconStudioPushUndo();
-            iconStudioCtx.clearRect(0, 0, canvas.width, canvas.height);
+            active.ctx.clearRect(0, 0, canvas.width, canvas.height);
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Canvas cleared.');
         }
 
         function iconStudioFillBackground() {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             const color = document.getElementById('icon_studio_color')?.value || '#1d3557';
             iconStudioPushUndo();
-            iconStudioCtx.save();
-            iconStudioCtx.globalCompositeOperation = 'source-over';
-            iconStudioCtx.fillStyle = color;
-            iconStudioCtx.fillRect(0, 0, canvas.width, canvas.height);
-            iconStudioCtx.restore();
+            active.ctx.save();
+            active.ctx.globalCompositeOperation = 'source-over';
+            active.ctx.fillStyle = color;
+            active.ctx.fillRect(0, 0, canvas.width, canvas.height);
+            active.ctx.restore();
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Background filled.');
         }
 
         function applyIconStudioFx(kind) {
             const canvas = document.getElementById('icon_studio_canvas');
-            if (!canvas || !iconStudioCtx) return;
+            const active = iconStudioGetActiveLayer();
+            if (!canvas || !active || !active.ctx) return;
             iconStudioPushUndo();
-            const image = iconStudioCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const image = active.ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = image.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                if (kind === 'grayscale') {
-                    const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-                    data[i] = y;
-                    data[i + 1] = y;
-                    data[i + 2] = y;
-                } else if (kind === 'invert') {
-                    data[i] = 255 - r;
-                    data[i + 1] = 255 - g;
-                    data[i + 2] = 255 - b;
-                } else if (kind === 'contrast') {
-                    const c = 36;
-                    const factor = (259 * (c + 255)) / (255 * (259 - c));
-                    data[i] = Math.max(0, Math.min(255, Math.round(factor * (r - 128) + 128)));
-                    data[i + 1] = Math.max(0, Math.min(255, Math.round(factor * (g - 128) + 128)));
-                    data[i + 2] = Math.max(0, Math.min(255, Math.round(factor * (b - 128) + 128)));
-                } else if (kind === 'soften') {
-                    data[i] = Math.round((r + 255) / 2);
-                    data[i + 1] = Math.round((g + 255) / 2);
-                    data[i + 2] = Math.round((b + 255) / 2);
+            const width = canvas.width;
+            const height = canvas.height;
+            const source = new Uint8ClampedArray(data);
+            const controls = readIconFxControls();
+            const strengthScale = controls.strength / 100;
+            const passes = controls.passes;
+
+            const clampByte = (v) => Math.max(0, Math.min(255, Math.round(v)));
+            const hex = String(document.getElementById('icon_studio_color')?.value || '#d4a857').trim();
+            const glowRgb = /^#[0-9a-fA-F]{6}$/.test(hex)
+                ? [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
+                : [212, 168, 87];
+
+            function sampleNearest(buffer, x, y) {
+                const sx = Math.max(0, Math.min(width - 1, Math.round(x)));
+                const sy = Math.max(0, Math.min(height - 1, Math.round(y)));
+                const idx = (sy * width + sx) * 4;
+                return [buffer[idx], buffer[idx + 1], buffer[idx + 2], buffer[idx + 3]];
+            }
+
+            function alphaBlurAt(buffer, x, y) {
+                let sum = 0;
+                let weightSum = 0;
+                for (let oy = -1; oy <= 1; oy += 1) {
+                    for (let ox = -1; ox <= 1; ox += 1) {
+                        const sx = Math.max(0, Math.min(width - 1, x + ox));
+                        const sy = Math.max(0, Math.min(height - 1, y + oy));
+                        const idx = (sy * width + sx) * 4 + 3;
+                        const weight = (ox === 0 && oy === 0) ? 4 : ((ox === 0 || oy === 0) ? 2 : 1);
+                        sum += buffer[idx] * weight;
+                        weightSum += weight;
+                    }
+                }
+                return sum / Math.max(1, weightSum);
+            }
+
+            for (let pass = 0; pass < passes; pass += 1) {
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    if (kind === 'grayscale') {
+                        const y = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+                        data[i] = clampByte(r * (1 - strengthScale) + y * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + y * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + y * strengthScale);
+                    } else if (kind === 'invert') {
+                        data[i] = clampByte(r * (1 - strengthScale) + (255 - r) * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + (255 - g) * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + (255 - b) * strengthScale);
+                    } else if (kind === 'contrast') {
+                        const c = 36 + Math.round(52 * strengthScale);
+                        const factor = (259 * (c + 255)) / (255 * (259 - c));
+                        data[i] = clampByte(factor * (r - 128) + 128);
+                        data[i + 1] = clampByte(factor * (g - 128) + 128);
+                        data[i + 2] = clampByte(factor * (b - 128) + 128);
+                    } else if (kind === 'soften') {
+                        data[i] = clampByte(r * (1 - strengthScale) + ((r + 255) / 2) * strengthScale);
+                        data[i + 1] = clampByte(g * (1 - strengthScale) + ((g + 255) / 2) * strengthScale);
+                        data[i + 2] = clampByte(b * (1 - strengthScale) + ((b + 255) / 2) * strengthScale);
+                    }
                 }
             }
-            iconStudioCtx.putImageData(image, 0, 0);
+
+            if (kind === 'glow_soft' || kind === 'glow_neon') {
+                for (let y = 0; y < height; y += 1) {
+                    for (let x = 0; x < width; x += 1) {
+                        const idx = (y * width + x) * 4;
+                        const baseR = source[idx];
+                        const baseG = source[idx + 1];
+                        const baseB = source[idx + 2];
+                        const baseA = source[idx + 3];
+                        const auraA = alphaBlurAt(source, x, y);
+
+                        if (kind === 'glow_soft') {
+                            const glowMix = (auraA / 255) * 0.55;
+                            data[idx] = clampByte(baseR * (1 - glowMix) + glowRgb[0] * glowMix + 12);
+                            data[idx + 1] = clampByte(baseG * (1 - glowMix) + glowRgb[1] * glowMix + 12);
+                            data[idx + 2] = clampByte(baseB * (1 - glowMix) + glowRgb[2] * glowMix + 12);
+                            data[idx + 3] = clampByte(Math.max(baseA, auraA * 0.9));
+                        } else {
+                            const edge = Math.max(0, auraA - baseA);
+                            const neon = Math.min(1, edge / 190);
+                            data[idx] = clampByte(baseR + glowRgb[0] * neon + 20 * neon);
+                            data[idx + 1] = clampByte(baseG + glowRgb[1] * neon + 30 * neon);
+                            data[idx + 2] = clampByte(baseB + glowRgb[2] * neon + 46 * neon);
+                            data[idx + 3] = clampByte(Math.max(baseA, auraA));
+                        }
+                    }
+                }
+            } else if (kind === 'swirl_warp') {
+                const out = new Uint8ClampedArray(data.length);
+                const cx = width / 2;
+                const cy = height / 2;
+                const maxR = Math.max(1, Math.hypot(cx, cy));
+                for (let y = 0; y < height; y += 1) {
+                    for (let x = 0; x < width; x += 1) {
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const r = Math.hypot(dx, dy);
+                        const norm = Math.min(1, r / maxR);
+                        const theta = Math.atan2(dy, dx);
+                        const twist = (1 - norm) * (1 - norm) * 1.35;
+                        const srcTheta = theta - twist;
+                        const sx = cx + Math.cos(srcTheta) * r;
+                        const sy = cy + Math.sin(srcTheta) * r;
+                        const [rr, gg, bb, aa] = sampleNearest(source, sx, sy);
+                        const idx = (y * width + x) * 4;
+                        out[idx] = rr;
+                        out[idx + 1] = gg;
+                        out[idx + 2] = bb;
+                        out[idx + 3] = aa;
+                    }
+                }
+                data.set(out);
+            } else if (kind === 'particle_swirl') {
+                const out = new Uint8ClampedArray(source);
+                const cx = width / 2;
+                const cy = height / 2;
+                const maxR = Math.min(width, height) * 0.42;
+                const particles = 160;
+                for (let p = 0; p < particles; p += 1) {
+                    const t = p / particles;
+                    const angle = t * Math.PI * 7.5;
+                    const radius = maxR * Math.pow(t, 0.8);
+                    const x = Math.round(cx + Math.cos(angle) * radius);
+                    const y = Math.round(cy + Math.sin(angle) * radius * 0.7);
+                    for (let oy = -1; oy <= 1; oy += 1) {
+                        for (let ox = -1; ox <= 1; ox += 1) {
+                            const px = x + ox;
+                            const py = y + oy;
+                            if (px < 0 || py < 0 || px >= width || py >= height) continue;
+                            const idx = (py * width + px) * 4;
+                            const strength = 1 - (Math.abs(ox) + Math.abs(oy)) / 3;
+                            out[idx] = clampByte(out[idx] + glowRgb[0] * 0.42 * strength);
+                            out[idx + 1] = clampByte(out[idx + 1] + glowRgb[1] * 0.46 * strength);
+                            out[idx + 2] = clampByte(out[idx + 2] + glowRgb[2] * 0.62 * strength + 18 * strength);
+                            out[idx + 3] = clampByte(Math.max(out[idx + 3], 145 * strength));
+                        }
+                    }
+                }
+                data.set(out);
+            }
+
+            active.ctx.putImageData(image, 0, 0);
+            iconStudioRenderLayers();
             saveIconStudioDraft(false);
             setIconStudioStatus('Applied FX: ' + kind);
         }
@@ -2290,7 +4687,8 @@ PAGE = """
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return;
             const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
-            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const selectedTarget = (document.getElementById('icon_studio_target')?.value || 'standalone').trim();
+            const target = iconForgeAgentContext.active ? selectedTarget : 'standalone';
             const payload = {
                 icon_name: iconName,
                 image_data: canvas.toDataURL('image/png'),
@@ -2324,14 +4722,22 @@ PAGE = """
                 setIconStatus('maker_icon_status', 'Custom icon ready: ' + iconPath);
                 toggleMakerIconSource();
             }
-            setIconStudioStatus('Saved icon: ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            if (target === 'standalone') {
+                setIconStudioStatus('Saved icon (standalone): ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            } else {
+                setIconStudioStatus('Saved icon: ' + iconPath + ' (sizes: 16,24,32,48,64,128,256)');
+            }
+            if (window.confirm('Icon saved. Are you done and want to return to the Icon Schematics map?')) {
+                showIconForgeSchematics();
+            }
         }
 
         async function saveIconStudioAnimated() {
             const canvas = document.getElementById('icon_studio_canvas');
             if (!canvas) return;
             const iconName = (document.getElementById('icon_studio_name')?.value || 'agent_forge_icon').trim();
-            const target = (document.getElementById('icon_studio_target')?.value || 'advanced').trim();
+            const selectedTarget = (document.getElementById('icon_studio_target')?.value || 'standalone').trim();
+            const target = iconForgeAgentContext.active ? selectedTarget : 'standalone';
             const preset = (document.getElementById('icon_studio_anim_preset')?.value || 'pulse').trim();
             const seconds = parseInt(document.getElementById('icon_studio_anim_seconds')?.value || '3', 10);
             const fps = parseInt(document.getElementById('icon_studio_anim_fps')?.value || '12', 10);
@@ -2373,7 +4779,14 @@ PAGE = """
                 setIconStatus('maker_icon_status', 'Custom icon ready: ' + icoPath);
                 toggleMakerIconSource();
             }
-            setIconStudioStatus('Animated saved: ' + gifPath + ' | ICO fallback: ' + icoPath);
+            if (target === 'standalone') {
+                setIconStudioStatus('Animated saved (standalone): ' + gifPath + ' | ICO fallback: ' + icoPath);
+            } else {
+                setIconStudioStatus('Animated saved: ' + gifPath + ' | ICO fallback: ' + icoPath);
+            }
+            if (window.confirm('Icon saved. Are you done and want to return to the Icon Schematics map?')) {
+                showIconForgeSchematics();
+            }
         }
 
         function setIconForgeFromStudioIco() {
@@ -2389,6 +4802,8 @@ PAGE = """
             const root = document.getElementById('iconforge_backups');
             if (!root) return;
             root.textContent = JSON.stringify(data, null, 2);
+            iconForgeBackupsCache = (data && data.ok && data.items && typeof data.items === 'object') ? data.items : {};
+            renderIconForgeSchematics();
         }
 
         async function applyWindowsIconOverride() {
@@ -2516,7 +4931,7 @@ PAGE = """
         function composeSystemWithPersonality(baseSystem, preset, notes) {
             const key = String(preset || 'balanced').trim().toLowerCase();
             const def = personalityDefinitions()[key] || personalityDefinitions().balanced;
-            const marker = '\n\nPersonality Wrapper (';
+            const marker = '\\n\\nPersonality Wrapper (';
             const rawRoot = String(baseSystem || '').trim();
             const markerIndex = rawRoot.indexOf(marker);
             const root = (markerIndex >= 0 ? rawRoot.slice(0, markerIndex).trim() : rawRoot) || 'You are a helpful specialist agent.';
@@ -2539,15 +4954,15 @@ PAGE = """
 
         function rankCaps(rank) {
             const caps = {
-                cadet: { skills: 1, sigils: 0, mcp: 2 },
-                specialist: { skills: 2, sigils: 0, mcp: 3 },
-                lieutenant: { skills: 3, sigils: 1, mcp: 4 },
-                captain: { skills: 5, sigils: 2, mcp: 6 },
-                commander: { skills: 7, sigils: 3, mcp: 8 },
-                general: { skills: 9, sigils: 4, mcp: 10 },
-                admiral: { skills: 12, sigils: 5, mcp: 12 },
+                cadet: { skills: 4, sigils: 3, mcp: 5 },
+                specialist: { skills: 5, sigils: 3, mcp: 6 },
+                lieutenant: { skills: 6, sigils: 4, mcp: 7 },
+                captain: { skills: 8, sigils: 5, mcp: 9 },
+                commander: { skills: 10, sigils: 6, mcp: 11 },
+                general: { skills: 12, sigils: 7, mcp: 13 },
+                admiral: { skills: 15, sigils: 8, mcp: 15 },
             };
-            return caps[String(rank || '').trim().toLowerCase()] || { skills: 1, sigils: 0, mcp: 2 };
+            return caps[String(rank || '').trim().toLowerCase()] || { skills: 4, sigils: 3, mcp: 5 };
         }
 
         function selectedWizardValues(selectId) {
@@ -2567,7 +4982,204 @@ PAGE = """
             advanced.style.display = useWizard ? 'none' : 'block';
             if (wizardBtn) wizardBtn.style.opacity = useWizard ? '1' : '0.65';
             if (advancedBtn) advancedBtn.style.opacity = useWizard ? '0.65' : '1';
+            if (useWizard) setWizardStep(1);
             if (!useWizard) syncAdvancedPolicyAwareness();
+        }
+
+        function wizardSummary() {
+            return {
+                name: (document.getElementById('wizard_name')?.value || '').trim(),
+                endpoint: (document.getElementById('wizard_endpoint')?.value || '').trim(),
+                role_focus: (document.getElementById('wizard_role_focus')?.value || '').trim(),
+                scope: (document.getElementById('wizard_scope')?.value || '').trim(),
+                behavior: (document.getElementById('wizard_behavior')?.value || '').trim(),
+                power: (document.getElementById('wizard_power')?.value || '').trim(),
+                personality: (document.getElementById('wizard_personality')?.value || '').trim(),
+                personality_notes: (document.getElementById('wizard_personality_notes')?.value || '').trim(),
+                personality_interests: parseCsvTags(document.getElementById('wizard_personality_interests')?.value || ''),
+                behavior_patterns: selectedBehaviorPatterns('wizard_behavior_patterns'),
+                skills: selectedWizardValues('wizard_skill_list'),
+                sigils: selectedWizardValues('wizard_sigil_list'),
+                state_machine_template: (document.getElementById('wizard_state_machine_template')?.value || 'none').trim(),
+                icon_mode: (document.getElementById('wizard_icon_mode')?.value || 'none').trim(),
+                icon_path: (document.getElementById('wizard_icon_path')?.value || '').trim(),
+                encrypt_profile: !!document.getElementById('wizard_encrypt_profile')?.checked,
+            };
+        }
+
+        function updateWizardReview() {
+            const root = document.getElementById('wizard_review');
+            if (!root) return;
+            root.textContent = JSON.stringify(wizardSummary(), null, 2);
+        }
+
+        function updateWizardChecklist() {
+            document.querySelectorAll('[data-check-step]').forEach((btn) => {
+                const step = Number(btn.getAttribute('data-check-step') || '0');
+                btn.classList.toggle('is-active', step === wizardStep);
+                btn.classList.toggle('is-complete', step < wizardStep);
+                const dot = btn.querySelector('.step-dot');
+                if (dot) dot.textContent = step < wizardStep ? '✓' : String(step);
+            });
+        }
+
+        function setWizardStep(step) {
+            const bounded = Math.max(1, Math.min(WIZARD_TOTAL_STEPS, Number(step) || 1));
+            wizardStep = bounded;
+            document.querySelectorAll('[data-wizard-step]').forEach((node) => {
+                const nodeStep = Number(node.getAttribute('data-wizard-step') || '0');
+                node.style.display = nodeStep === wizardStep ? 'block' : 'none';
+            });
+            const label = document.getElementById('wizard_step_label');
+            if (label) {
+                const names = ['Identity', 'Profile', 'Capabilities', 'Review'];
+                label.textContent = `Step ${wizardStep} of ${WIZARD_TOTAL_STEPS}: ${names[wizardStep - 1]}`;
+            }
+            const backBtn = document.getElementById('wizard_back_btn');
+            const nextBtn = document.getElementById('wizard_next_btn');
+            const reviewBtn = document.getElementById('wizard_review_btn');
+            const createBtn = document.getElementById('wizard_create_btn');
+            if (backBtn) backBtn.disabled = wizardStep <= 1;
+            if (nextBtn) nextBtn.style.display = wizardStep < WIZARD_TOTAL_STEPS ? '' : 'none';
+            if (reviewBtn) reviewBtn.style.display = wizardStep < WIZARD_TOTAL_STEPS ? '' : 'none';
+            if (createBtn) createBtn.style.display = wizardStep === WIZARD_TOTAL_STEPS ? '' : 'none';
+            updateWizardChecklist();
+            if (wizardStep === WIZARD_TOTAL_STEPS) updateWizardReview();
+        }
+
+        function wizardNextStep() {
+            setWizardStep(wizardStep + 1);
+        }
+
+        function wizardPrevStep() {
+            setWizardStep(wizardStep - 1);
+        }
+
+        function wizardOpenReview() {
+            setWizardStep(WIZARD_TOTAL_STEPS);
+        }
+
+        const STATE_MACHINE_TEMPLATES = {
+            none: {
+                label: 'none',
+                description: 'No predefined state machine. Agent can run with default runtime behavior.',
+                machine: null,
+            },
+            basic_lifecycle: {
+                label: 'basic lifecycle',
+                description: 'Simple work loop: Idle -> Executing -> Completed/Blocked.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_task: 'Executing' },
+                        Executing: { on_success: 'Completed', on_error: 'Blocked' },
+                        Completed: { on_task: 'Executing' },
+                        Blocked: { on_retry: 'Executing', on_abort: 'Idle' },
+                    },
+                },
+            },
+            delegation_flow: {
+                label: 'delegation flow',
+                description: 'Delegation-aware flow with planning and verification stages.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_task: 'Planning' },
+                        Planning: { on_ready: 'Delegating', on_error: 'Blocked' },
+                        Delegating: { on_dispatched: 'Executing', on_error: 'Blocked' },
+                        Executing: { on_partial: 'Delegating', on_success: 'Verifying', on_error: 'Blocked' },
+                        Verifying: { on_pass: 'Completed', on_fail: 'Blocked' },
+                        Completed: { on_task: 'Planning' },
+                        Blocked: { on_retry: 'Planning', on_abort: 'Idle' },
+                    },
+                },
+            },
+            incident_response: {
+                label: 'incident response',
+                description: 'Incident triage and mitigation loop for operational agents.',
+                machine: {
+                    initial_state: 'Idle',
+                    states: {
+                        Idle: { on_incident: 'Triage' },
+                        Triage: { on_classified: 'Mitigation', on_escalate: 'Blocked' },
+                        Mitigation: { on_fixed: 'Validation', on_failed: 'Blocked' },
+                        Validation: { on_pass: 'Completed', on_fail: 'Mitigation' },
+                        Completed: { on_incident: 'Triage' },
+                        Blocked: { on_retry: 'Triage', on_abort: 'Idle' },
+                    },
+                },
+            },
+        };
+
+        function cloneTemplateMachine(machine) {
+            if (!machine || typeof machine !== 'object') return null;
+            return JSON.parse(JSON.stringify(machine));
+        }
+
+        function getTemplateMeta(templateId) {
+            const key = String(templateId || 'none').trim();
+            return STATE_MACHINE_TEMPLATES[key] || STATE_MACHINE_TEMPLATES.none;
+        }
+
+        function syncWizardStateMachinePreview() {
+            const templateId = (document.getElementById('wizard_state_machine_template')?.value || 'none').trim();
+            const meta = getTemplateMeta(templateId);
+            const hint = document.getElementById('wizard_state_machine_hint');
+            if (hint) hint.textContent = meta.description;
+        }
+
+        function applySelectedStateMachineTemplate() {
+            const templateId = (document.getElementById('maker_state_machine_template')?.value || 'none').trim();
+            const meta = getTemplateMeta(templateId);
+            const root = document.getElementById('maker_state_machine_json');
+            const hint = document.getElementById('maker_state_machine_hint');
+            if (root) {
+                if (!meta.machine) {
+                    root.value = '';
+                } else {
+                    root.value = JSON.stringify(cloneTemplateMachine(meta.machine), null, 2);
+                }
+            }
+            if (hint) hint.textContent = meta.description;
+        }
+
+        function clearStateMachineJson() {
+            const root = document.getElementById('maker_state_machine_json');
+            const sel = document.getElementById('maker_state_machine_template');
+            const hint = document.getElementById('maker_state_machine_hint');
+            if (root) root.value = '';
+            if (sel) sel.value = 'none';
+            if (hint) hint.textContent = STATE_MACHINE_TEMPLATES.none.description;
+        }
+
+        function formatStateMachineJson() {
+            const root = document.getElementById('maker_state_machine_json');
+            if (!root) return;
+            const raw = String(root.value || '').trim();
+            if (!raw) return;
+            try {
+                const obj = JSON.parse(raw);
+                root.value = JSON.stringify(obj, null, 2);
+            } catch {
+                alert('State machine JSON is invalid.');
+            }
+        }
+
+        function parseAdvancedStateMachine() {
+            const raw = String(document.getElementById('maker_state_machine_json')?.value || '').trim();
+            if (!raw) return null;
+            let parsed;
+            try {
+                parsed = JSON.parse(raw);
+            } catch {
+                alert('State machine JSON must be valid JSON.');
+                throw new Error('invalid state machine json');
+            }
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                alert('State machine must be a JSON object.');
+                throw new Error('invalid state machine object');
+            }
+            return parsed;
         }
 
         function setMakerPolicyChips(chips) {
@@ -2791,6 +5403,7 @@ PAGE = """
             const encrypt = !!document.getElementById('wizard_encrypt_profile').checked;
             const wizardSkills = selectedWizardValues('wizard_skill_list');
             const wizardSigils = selectedWizardValues('wizard_sigil_list');
+            const wizardStateMachineTemplate = (document.getElementById('wizard_state_machine_template').value || 'none').trim();
             const wizardIconPath = (document.getElementById('wizard_icon_path').value || '').trim();
 
             document.getElementById('maker_name').value = name;
@@ -2850,6 +5463,11 @@ PAGE = """
             document.getElementById('maker_system').value = baseSystemText;
             document.getElementById('maker_custom_skills').value = wizardSkills.join(', ');
             document.getElementById('maker_custom_sigils').value = (power === 'prime') ? wizardSigils.join(', ') : '';
+            const makerStateMachineTemplate = document.getElementById('maker_state_machine_template');
+            if (makerStateMachineTemplate) {
+                makerStateMachineTemplate.value = wizardStateMachineTemplate;
+                applySelectedStateMachineTemplate();
+            }
             document.getElementById('maker_icon_path').value = wizardIconPath;
             const makerIconMode = document.getElementById('maker_icon_mode');
             if (makerIconMode) makerIconMode.value = wizardIconPath ? 'upload' : 'none';
@@ -2905,7 +5523,128 @@ PAGE = """
                 sel.innerHTML = names.map((n) => `<option value="${n}">${n}</option>`).join('');
                 if (current && names.includes(current)) sel.value = current;
             }
+            await inspectSelectedAgentProfile();
             syncAdvancedPolicyAwareness();
+        }
+
+        function renderSelectedAgentProfile(data) {
+            const policyRoot = document.getElementById('maker_agent_policy');
+            const badge = document.getElementById('maker_agent_policy_badge');
+            const detail = document.getElementById('maker_agent_view');
+            const summaryTitle = document.getElementById('maker_agent_summary_title');
+            const summarySubtitle = document.getElementById('maker_agent_summary_subtitle');
+            const summaryChips = document.getElementById('maker_agent_summary_chips');
+            const summaryGrid = document.getElementById('maker_agent_summary_grid');
+            if (!policyRoot || !badge || !detail || !summaryTitle || !summarySubtitle || !summaryChips || !summaryGrid) return;
+
+            function chip(label, color) {
+                return `<span style="display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px; border:1px solid ${color}; color:${color}; font-size:12px; letter-spacing:0.02em;">${label}</span>`;
+            }
+
+            function gridItem(label, value) {
+                return `<div style="border:1px solid #243042; border-radius:10px; padding:8px 10px; background:rgba(10,14,20,0.72);">
+                    <div style="font-size:11px; color:#8ea0b8; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px;">${label}</div>
+                    <div style="font-size:13px; color:#e5eefc; word-break:break-word;">${value || 'n/a'}</div>
+                </div>`;
+            }
+
+            if (!data || !data.ok) {
+                badge.textContent = 'Unavailable';
+                badge.style.borderColor = '#7f1d1d';
+                badge.style.color = '#fca5a5';
+                policyRoot.textContent = (data && data.message) ? String(data.message) : 'Unable to inspect agent profile.';
+                summaryTitle.textContent = 'Inspection unavailable';
+                summarySubtitle.textContent = 'The forge could not retrieve a readable profile payload.';
+                summaryChips.innerHTML = chip('inspection failed', '#fca5a5');
+                summaryGrid.innerHTML = gridItem('Status', 'Unavailable');
+                detail.textContent = JSON.stringify(data || { ok: false, message: 'No response returned.' }, null, 2);
+                return;
+            }
+
+            if (data.sealed) {
+                const identity = (data.public_identity_card && typeof data.public_identity_card === 'object') ? data.public_identity_card : {};
+                const modelCard = (data.model_card && typeof data.model_card === 'object') ? data.model_card : {};
+                badge.textContent = 'Sealed Asset';
+                badge.style.borderColor = '#7c3aed';
+                badge.style.color = '#c4b5fd';
+                const policy = String(data.view_policy || 'model_card_only_outside_origin_forge').replaceAll('_', ' ');
+                const message = String(data.message || 'Model card only.');
+                policyRoot.textContent = `${message} Policy: ${policy}.`;
+                summaryTitle.textContent = `${String(data.agent || identity.name || 'Unknown Agent')} is sealed`;
+                summarySubtitle.textContent = 'This package is armored outside its forge of creation. Only its public identity and model card are exposed here.';
+                summaryChips.innerHTML = [
+                    chip('sealed package', '#c4b5fd'),
+                    chip(`posture: ${String(data.disclosure_posture || 'hidden')}`, '#93c5fd'),
+                    chip('model card visible', '#67e8f9'),
+                ].join('');
+                summaryGrid.innerHTML = [
+                    gridItem('Public Name', String(identity.name || data.agent || 'n/a')),
+                    gridItem('Public ID', String(identity.public_id || data.agent || 'n/a')),
+                    gridItem('Class', String(identity.agent_class || modelCard.agent_class || 'n/a')),
+                    gridItem('Type', String(identity.agent_type || modelCard.agent_type || 'n/a')),
+                    gridItem('Rank', String(identity.rank || modelCard.rank || 'n/a')),
+                    gridItem('Origin Forge View', data.full_view_available_at_origin_forge ? 'Available at creation forge' : 'Not advertised'),
+                ].join('');
+                detail.textContent = JSON.stringify({
+                    agent: data.agent,
+                    disclosure_posture: data.disclosure_posture,
+                    full_view_available_at_origin_forge: !!data.full_view_available_at_origin_forge,
+                    public_identity_card: data.public_identity_card || {},
+                    model_card: data.model_card || {},
+                }, null, 2);
+                return;
+            }
+
+            badge.textContent = 'Origin Forge View';
+            badge.style.borderColor = '#14532d';
+            badge.style.color = '#86efac';
+            policyRoot.textContent = 'Authenticated origin-forge access granted. Full profile view is available on this forge.';
+            const profile = (data.profile && typeof data.profile === 'object') ? data.profile : {};
+            summaryTitle.textContent = `${String(data.agent || profile.name || 'Selected agent')} opened on origin forge`;
+            summarySubtitle.textContent = 'This forge created the package and is allowed to view beyond the public armor.';
+            summaryChips.innerHTML = [
+                chip('origin forge access', '#86efac'),
+                chip(`posture: ${String(data.disclosure_posture || 'non_hidden')}`, '#93c5fd'),
+                chip('full profile visible', '#fcd34d'),
+            ].join('');
+            summaryGrid.innerHTML = [
+                gridItem('Name', String(profile.name || data.agent || 'n/a')),
+                gridItem('Endpoint', String(profile.endpoint || 'n/a')),
+                gridItem('Class', String(profile.agent_class || 'n/a')),
+                gridItem('Type', String(profile.agent_type || 'n/a')),
+                gridItem('Rank', String(profile.rank || 'n/a')),
+                gridItem('BossGate Enabled', profile.bossgate_enabled ? 'Yes' : 'No'),
+            ].join('');
+            detail.textContent = JSON.stringify(data.profile || data, null, 2);
+        }
+
+        async function inspectSelectedAgentProfile() {
+            const sel = document.getElementById('maker_agent_select');
+            const detail = document.getElementById('maker_agent_view');
+            const policyRoot = document.getElementById('maker_agent_policy');
+            const badge = document.getElementById('maker_agent_policy_badge');
+            const name = (sel && sel.value) ? String(sel.value).trim() : '';
+            if (!detail || !policyRoot || !badge) return;
+            if (!name) {
+                badge.textContent = 'Awaiting selection';
+                badge.style.borderColor = '#4b5563';
+                badge.style.color = '#cbd5e1';
+                policyRoot.textContent = 'Select an agent to inspect its sealed status or authenticated forge view.';
+                const summaryTitle = document.getElementById('maker_agent_summary_title');
+                const summarySubtitle = document.getElementById('maker_agent_summary_subtitle');
+                const summaryChips = document.getElementById('maker_agent_summary_chips');
+                const summaryGrid = document.getElementById('maker_agent_summary_grid');
+                if (summaryTitle) summaryTitle.textContent = 'No agent selected';
+                if (summarySubtitle) summarySubtitle.textContent = 'Choose an agent to reveal its package status.';
+                if (summaryChips) summaryChips.innerHTML = '';
+                if (summaryGrid) summaryGrid.innerHTML = '';
+                detail.textContent = 'No agent selected.';
+                return;
+            }
+            policyRoot.textContent = `Inspecting ${name}...`;
+            detail.textContent = 'Loading agent view...';
+            const data = await fetchJsonWithTimeout(`/api/agentforge/agents/${encodeURIComponent(name)}/view?viewer_id=control-hall&viewer_channel=bossforgeos`);
+            renderSelectedAgentProfile(data);
         }
 
         async function createAgentProfile() {
@@ -2936,6 +5675,12 @@ PAGE = """
                 alert(`rank ${rankValue} allows at most ${cap.sigils} sigils`);
                 return;
             }
+            let stateMachine = null;
+            try {
+                stateMachine = parseAdvancedStateMachine();
+            } catch {
+                return;
+            }
             const payload = {
                 name: (document.getElementById('maker_name').value || '').trim(),
                 endpoint: (document.getElementById('maker_endpoint').value || '').trim(),
@@ -2964,10 +5709,13 @@ PAGE = """
                     system: composeSystemWithPersonality((document.getElementById('maker_system').value || '').trim(), personalityPreset, personalityNotes),
                     developer: personalityNotes,
                 },
+                state_machine: stateMachine,
                 custom_icon_path: (document.getElementById('maker_icon_path').value || '').trim(),
                 has_llm: !!document.getElementById('maker_has_llm').checked,
                 bossgate_enabled: !!document.getElementById('maker_bossgate_enabled').checked,
                 encrypt_profile: !!document.getElementById('maker_encrypt_profile').checked,
+                model_source_path: (document.getElementById('maker_model_source_path').value || '').trim(),
+                model_base_source_path: (document.getElementById('maker_model_base_source_path').value || '').trim(),
                 dispatch_policy: {
                     autonomous_bus_intake: !!document.getElementById('maker_dispatch_autonomous').checked,
                     proactive_remote_hunt: !!document.getElementById('maker_dispatch_remote_hunt').checked,
@@ -2978,6 +5726,10 @@ PAGE = """
             };
             if (!payload.name || !payload.endpoint) {
                 alert('name and endpoint are required');
+                return;
+            }
+            if (payload.has_llm && !payload.model_source_path) {
+                alert('a complete local model source directory is required for LLM-enabled agents');
                 return;
             }
             const res = await fetch('/api/model/agents/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -3092,6 +5844,77 @@ PAGE = """
             root.innerHTML = entries || '<div class="muted">No agents found.</div>';
         }
 
+        function taskStatusPillClass(status) {
+            const key = String(status || '').trim().toLowerCase();
+            if (key === 'done') return 'online';
+            if (key === 'in_progress') return 'warning';
+            if (key === 'blocked') return 'critical';
+            return 'stale';
+        }
+
+        function taskStatusLabel(status) {
+            const key = String(status || '').trim().toLowerCase();
+            if (key === 'in_progress') return 'in progress';
+            return key || 'assigned';
+        }
+
+        function renderAgentTaskTracker(data) {
+            const root = document.getElementById('agent_task_tracker');
+            if (!root) return;
+            const items = (data && Array.isArray(data.items)) ? data.items : [];
+            if (!items.length) {
+                root.innerHTML = '<div class="agent-item"><strong>No tracked tasks</strong><div class="muted">Create assignments in AGENT_TASK_ASSIGNMENTS.md to bootstrap.</div></div>';
+                return;
+            }
+
+            root.innerHTML = items.map((item) => {
+                const taskId = htmlEscape(String(item.id || ''));
+                const agent = htmlEscape(String(item.agent || 'unknown-agent'));
+                const task = htmlEscape(String(item.task || ''));
+                const status = String(item.status || 'assigned').toLowerCase();
+                const statusLabel = htmlEscape(taskStatusLabel(status));
+                const statusClass = taskStatusPillClass(status);
+                const startedAt = htmlEscape(String(item.started_at || 'not started'));
+                const completedAt = htmlEscape(String(item.completed_at || 'not completed'));
+                const updatedAt = htmlEscape(String(item.updated_at || 'unknown'));
+                const note = String(item.note || '').trim();
+                const noteHtml = note ? ('<div class="agent-task-meta">note: ' + htmlEscape(note) + '</div>') : '';
+                return '<div class="agent-task-card">'
+                    + '<div class="agent-task-head"><span class="agent-task-agent">' + agent + '</span><span class="pill ' + statusClass + '">' + statusLabel + '</span></div>'
+                    + '<div class="agent-task-text">' + task + '</div>'
+                    + '<div class="agent-task-meta">started: ' + startedAt + ' | completed: ' + completedAt + '</div>'
+                    + '<div class="agent-task-meta">updated: ' + updatedAt + '</div>'
+                    + noteHtml
+                    + '<div class="agent-task-actions">'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'assigned\\')">Assign</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'in_progress\\')">Start</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'blocked\\')">Block</button>'
+                    + '<button onclick="updateAgentTaskStatus(\\'' + taskId + '\\', \\'done\\')">Done</button>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        async function refreshAgentTaskTracker() {
+            const data = await fetchJsonWithTimeout('/api/agent_tasks', 5000);
+            renderAgentTaskTracker(data);
+        }
+
+        async function updateAgentTaskStatus(taskId, status) {
+            const note = status === 'blocked' ? (prompt('Blocked reason (optional):') || '').trim() : '';
+            const res = await fetch('/api/agent_tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: taskId, status, note }),
+            });
+            const data = await res.json();
+            renderAgentTaskTracker(data);
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = (data && data.ok) ? 'Task updated.' : ('Task update failed: ' + String(data?.message || 'unknown error'));
+            }
+        }
+
         function gaugeTone(percent) {
             const safe = Number.isFinite(percent) ? percent : 0;
             if (safe >= 90) return '#39ff14';
@@ -3112,6 +5935,50 @@ PAGE = """
             return '';
         }
 
+        function computeDiskIoRates(disks) {
+            const nowTs = Date.now() / 1000;
+            const elapsed = snapshotDiskIoLastTs > 0 ? Math.max(0, nowTs - snapshotDiskIoLastTs) : 0;
+            const current = {};
+            const rates = {};
+
+            (Array.isArray(disks) ? disks : []).forEach((disk) => {
+                const key = String(disk?.key || disk?.mount || disk?.device || '').trim();
+                if (!key) return;
+                const readBytes = Number(disk?.read_bytes);
+                const writeBytes = Number(disk?.write_bytes);
+                const hasRead = Number.isFinite(readBytes) && readBytes >= 0;
+                const hasWrite = Number.isFinite(writeBytes) && writeBytes >= 0;
+                current[key] = {
+                    read_bytes: hasRead ? readBytes : null,
+                    write_bytes: hasWrite ? writeBytes : null,
+                };
+
+                const prev = snapshotDiskIoLast[key];
+                if (!prev || elapsed <= 0) {
+                    rates[key] = { read_bps: 0, write_bps: 0 };
+                    return;
+                }
+
+                const prevRead = Number(prev.read_bytes);
+                const prevWrite = Number(prev.write_bytes);
+                const readBps = (hasRead && Number.isFinite(prevRead) && readBytes >= prevRead)
+                    ? (readBytes - prevRead) / elapsed
+                    : 0;
+                const writeBps = (hasWrite && Number.isFinite(prevWrite) && writeBytes >= prevWrite)
+                    ? (writeBytes - prevWrite) / elapsed
+                    : 0;
+
+                rates[key] = {
+                    read_bps: Math.max(0, readBps),
+                    write_bps: Math.max(0, writeBps),
+                };
+            });
+
+            snapshotDiskIoLast = current;
+            snapshotDiskIoLastTs = nowTs;
+            return rates;
+        }
+
         function renderSnapshotDashboard(snapshot) {
             const root = document.getElementById('snapshot_dashboard');
             const warningsRoot = document.getElementById('snapshot_warnings');
@@ -3121,36 +5988,118 @@ PAGE = """
             const memory = (system.memory && typeof system.memory === 'object') ? system.memory : {};
             const swap = (system.swap && typeof system.swap === 'object') ? system.swap : {};
             const disk = (snapshot && snapshot.disk && typeof snapshot.disk === 'object') ? snapshot.disk : {};
+            const disks = (snapshot && Array.isArray(snapshot.disks)) ? snapshot.disks : [];
+            const thermal = (snapshot && snapshot.thermal && typeof snapshot.thermal === 'object') ? snapshot.thermal : {};
+            const fans = (snapshot && snapshot.fans && typeof snapshot.fans === 'object') ? snapshot.fans : {};
             const gpu = (snapshot && snapshot.gpu_vram && Array.isArray(snapshot.gpu_vram.gpus)) ? snapshot.gpu_vram.gpus[0] : null;
+
+            const safeNumber = (value) => {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : null;
+            };
 
             const gauges = [
                 {
                     label: 'CPU',
                     percent: percentValue(system.cpu_percent),
                     detail: String(Number.isFinite(Number(system.cpu_percent)) ? Number(system.cpu_percent).toFixed(1) : '0.0') + '%',
+                    readPct: 0,
+                    writePct: 0,
                 },
                 {
                     label: 'RAM',
                     percent: percentValue(memory.percent),
                     detail: (memory.used_gb ?? '?') + ' / ' + (memory.total_gb ?? '?') + ' GB',
-                },
-                {
-                    label: 'Disk',
-                    percent: percentValue(disk.percent),
-                    detail: (disk.used_gb ?? '?') + ' / ' + (disk.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
                 },
                 {
                     label: 'Swap',
                     percent: percentValue(swap.percent),
                     detail: (swap.used_gb ?? '?') + ' / ' + (swap.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
                 },
             ];
+
+            const diskRows = disks.length
+                ? disks
+                : [
+                    {
+                        key: String(disk.root || 'disk').toLowerCase(),
+                        mount: String(disk.root || 'disk'),
+                        percent: disk.percent,
+                        used_gb: disk.used_gb,
+                        total_gb: disk.total_gb,
+                        read_bytes: null,
+                        write_bytes: null,
+                    },
+                ];
+            const ioRates = computeDiskIoRates(diskRows);
+            const maxObservedRate = Math.max(
+                50 * 1024 * 1024,
+                ...Object.values(ioRates).map((r) => Math.max(Number(r?.read_bps || 0), Number(r?.write_bps || 0)))
+            );
+
+            diskRows.forEach((diskRow) => {
+                const key = String(diskRow?.key || diskRow?.mount || '').trim().toLowerCase();
+                const rates = ioRates[key] || { read_bps: 0, write_bps: 0 };
+                const readMbps = Number(rates.read_bps || 0) / (1024 * 1024);
+                const writeMbps = Number(rates.write_bps || 0) / (1024 * 1024);
+                const mount = String(diskRow?.mount || diskRow?.device || diskRow?.key || 'disk');
+                const readPct = percentValue((Number(rates.read_bps || 0) / maxObservedRate) * 100);
+                const writePct = percentValue((Number(rates.write_bps || 0) / maxObservedRate) * 100);
+                gauges.push({
+                    label: 'Disk ' + mount,
+                    percent: percentValue(diskRow?.percent),
+                    detail: (diskRow?.used_gb ?? '?') + ' / ' + (diskRow?.total_gb ?? '?') + ' GB | R ' + readMbps.toFixed(1) + ' MB/s | W ' + writeMbps.toFixed(1) + ' MB/s',
+                    readPct,
+                    writePct,
+                    multiLegend: true,
+                });
+            });
 
             if (gpu) {
                 gauges.push({
                     label: 'GPU VRAM',
                     percent: percentValue(gpu.percent),
                     detail: (gpu.used_gb ?? '?') + ' / ' + (gpu.total_gb ?? '?') + ' GB',
+                    readPct: 0,
+                    writePct: 0,
+                });
+            }
+
+            const cpuTemp = safeNumber(thermal.cpu_temp_c);
+            const maxTemp = safeNumber(thermal.max_temp_c);
+            const gpuTemp = safeNumber(gpu && gpu.temperature_c);
+            const tempC = (cpuTemp !== null) ? cpuTemp : ((gpuTemp !== null) ? gpuTemp : maxTemp);
+            if (tempC !== null) {
+                const tempPct = Math.max(0, Math.min(100, (tempC / 100) * 100));
+                const tempSource = (cpuTemp !== null) ? 'cpu' : ((gpuTemp !== null) ? 'gpu' : 'sensor');
+                gauges.push({
+                    label: 'Temp',
+                    percent: percentValue(tempPct),
+                    detail: tempC.toFixed(1) + ' C (' + tempSource + ')',
+                    readPct: 0,
+                    writePct: 0,
+                });
+            }
+
+            const gpuFan = safeNumber(gpu && gpu.fan_percent);
+            const maxFanRpm = safeNumber(fans.max_rpm);
+            if (gpuFan !== null || maxFanRpm !== null) {
+                const fanPercent = (gpuFan !== null)
+                    ? percentValue(gpuFan)
+                    : percentValue((Math.max(0, maxFanRpm) / 5000) * 100);
+                const fanDetail = (gpuFan !== null)
+                    ? (gpuFan.toFixed(1) + '% (gpu)')
+                    : (Math.round(maxFanRpm || 0) + ' rpm');
+                gauges.push({
+                    label: 'Fan',
+                    percent: fanPercent,
+                    detail: fanDetail,
+                    readPct: 0,
+                    writePct: 0,
                 });
             }
 
@@ -3159,16 +6108,24 @@ PAGE = """
                 const tone = gaugeTone(p);
                 const sweepClass = snapshotGaugeBooted ? '' : ' sweep';
                 const pulse = pulseClass(p);
+                const readPct = percentValue(item.readPct);
+                const writePct = percentValue(item.writePct);
+                const legend = item.multiLegend
+                    ? '<div class="gauge-legend"><span class="gauge-legend-item"><span class="gauge-legend-line usage"></span>Usage</span><span class="gauge-legend-item"><span class="gauge-legend-line read"></span>Read</span><span class="gauge-legend-item"><span class="gauge-legend-line write"></span>Write</span></div>'
+                    : '';
                 return '<div class="gauge-card">'
                     + '<div class="gauge-head"><strong>' + htmlEscape(item.label) + '</strong><span class="muted">' + p.toFixed(1) + '%</span></div>'
-                    + '<div class="tachometer' + sweepClass + pulse + '" style="--pct:' + p.toFixed(1) + ';--tone:' + tone + ';">'
+                    + '<div class="tachometer' + sweepClass + pulse + '" style="--pct:' + p.toFixed(1) + ';--rdpct:' + readPct.toFixed(1) + ';--wrpct:' + writePct.toFixed(1) + ';--tone:' + tone + ';">'
                     + '<div class="halo"></div>'
                     + '<svg viewBox="0 0 100 60" aria-hidden="true">'
                     + '<path class="arc-bg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
                     + '<path class="arc-fg" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '<path class="arc-rd" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
+                    + '<path class="arc-wr" pathLength="100" d="M 10 50 A 40 40 0 0 1 90 50"></path>'
                     + '</svg>'
                     + '<div class="ticks"></div>'
                     + '</div>'
+                        + legend
                     + '<div class="gauge-foot"><span>0%</span><span>' + htmlEscape(String(item.detail)) + '</span><span>100%</span></div>'
                     + '</div>';
             }).join('');
@@ -3214,6 +6171,103 @@ PAGE = """
             }
 
             root.innerHTML = html;
+        }
+
+        function renderDelegationFlow(data) {
+            const summary = document.getElementById('delegation_flow_summary');
+            const chipsRoot = document.getElementById('delegation_flow_chips');
+            const timelineRoot = document.getElementById('delegation_flow_timeline');
+            const raw = document.getElementById('delegation_flow_raw');
+            if (!summary || !chipsRoot || !timelineRoot || !raw) return;
+
+            if (!data || data.ok === false) {
+                summary.innerHTML = '<div class="agent-item"><strong>Delegation Flow</strong><div class="muted">Unavailable</div></div>';
+                chipsRoot.innerHTML = '';
+                timelineRoot.innerHTML = '';
+                raw.textContent = JSON.stringify(data || { ok: false, message: 'unavailable' }, null, 2);
+                return;
+            }
+
+            const c = data.counts || {};
+            const q = data.queue || {};
+            const accepted = data.accepted_by_agent || {};
+            const verification = data.verification || {};
+            const latestPacketId = String(data.latest_packet_id || '').trim();
+            const timeline = Array.isArray(data.timeline) ? data.timeline : [];
+
+            const cards = [
+                { title: 'Submitted', value: Number(c.submitted_items || 0), sub: Number(c.submitted_packets || 0) + ' packet(s)' },
+                { title: 'Reviewed', value: Number(c.reviewed_items || 0), sub: Number(c.reviewed_packets || 0) + ' packet(s)' },
+                { title: 'Dispatched', value: Number(c.dispatched_items || 0), sub: Number(c.accepted_items || 0) + ' accepted' },
+                { title: 'In Progress', value: Number(q.in_progress || 0), sub: Number(q.queued || 0) + ' queued' },
+                { title: 'Completed', value: Number(c.completed_items || 0), sub: 'from bus events' },
+            ];
+
+            const acceptedText = Object.keys(accepted).length
+                ? Object.entries(accepted).map(([k, v]) => htmlEscape(String(k)) + ': ' + htmlEscape(String(v))).join(' | ')
+                : 'No agent acceptance events yet';
+
+            const latestText = latestPacketId || 'none';
+
+            summary.innerHTML = cards.map((item) => (
+                '<div class="agent-item"><strong>' + htmlEscape(item.title) + '</strong>'
+                + '<div style="font-size:22px;margin-top:4px;">' + htmlEscape(String(item.value)) + '</div>'
+                + '<div class="muted">' + htmlEscape(item.sub) + '</div></div>'
+            )).join('')
+                + '<div class="agent-item"><strong>Latest Packet</strong><div class="muted" style="margin-top:6px;">' + htmlEscape(latestText) + '</div></div>'
+                + '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Accepted By Agent</strong><div class="muted">' + acceptedText + '</div></div>';
+
+            const chips = [
+                {
+                    label: 'Verified',
+                    value: Number(verification.verified || 0),
+                    style: 'border-color:#4CC46A;color:#4CC46A;background:rgba(76,196,106,0.12);',
+                },
+                {
+                    label: 'Blocked',
+                    value: Number(verification.blocked || 0),
+                    style: 'border-color:#FF4D4D;color:#FF4D4D;background:rgba(255,77,77,0.12);',
+                },
+                {
+                    label: 'Rerouted',
+                    value: Number(verification.rerouted || 0),
+                    style: 'border-color:#FFB84D;color:#FFB84D;background:rgba(255,184,77,0.12);',
+                },
+            ];
+
+            chipsRoot.innerHTML = chips
+                .map((chip) => '<span class="pill" style="margin-right:8px;padding:4px 10px;' + chip.style + '">'
+                    + htmlEscape(chip.label) + ': ' + htmlEscape(String(chip.value)) + '</span>')
+                .join('');
+
+            if (!timeline.length) {
+                timelineRoot.innerHTML = '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Recent Review Timeline</strong><div class="muted">No review packets yet.</div></div>';
+            } else {
+                timelineRoot.innerHTML = '<div class="agent-item" style="grid-column: 1 / -1;"><strong>Recent Review Timeline</strong><div class="muted">Most recent packet waves and target dispatch mix.</div>'
+                    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
+                    + timeline.map((entry) => {
+                        const packetId = htmlEscape(String(entry.packet_id || 'packet'));
+                        const dispatched = htmlEscape(String(entry.dispatched || 0));
+                        const stamp = htmlEscape(String(entry.timestamp || ''));
+                        const byTarget = (entry.by_target && typeof entry.by_target === 'object')
+                            ? Object.entries(entry.by_target).map(([k, v]) => htmlEscape(String(k)) + ':' + htmlEscape(String(v))).join(' | ')
+                            : '';
+                        return '<span class="pill" style="padding:6px 8px;line-height:1.3;">'
+                            + '<strong>' + packetId + '</strong><br/>'
+                            + 'dispatch: ' + dispatched + '<br/>'
+                            + (byTarget ? (byTarget + '<br/>') : '')
+                            + '<span class="muted" style="font-size:11px;">' + stamp + '</span>'
+                            + '</span>';
+                    }).join('')
+                    + '</div></div>';
+            }
+
+            raw.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function refreshDelegationFlowPanel() {
+            const data = await fetchJsonWithTimeout('/api/delegation/flow', 6000);
+            renderDelegationFlow(data);
         }
 
         async function refreshOsStatePanel() {
@@ -3267,18 +6321,22 @@ PAGE = """
             const snapData = await fetchJsonWithTimeout('/api/snapshot');
             const sealData = await fetchJsonWithTimeout('/api/archivist/seal');
             const voiceData = await fetchJsonWithTimeout('/api/runeforge/voice_status');
+            const delegationData = await fetchJsonWithTimeout('/api/delegation/flow');
 
             if (statusData && statusData.agent_state) {
                 renderAgents(statusData.agent_state);
                 refreshTargetDropdown(statusData.agent_state);
+                renderAgentTaskTracker(statusData.agent_tasks || { items: [] });
             } else {
                 document.getElementById('agents').innerHTML = '<div class="muted">Status unavailable.</div>';
+                renderAgentTaskTracker({ items: [] });
             }
 
             document.getElementById('events').textContent = JSON.stringify((eventsData && eventsData.items) ? eventsData.items : eventsData, null, 2);
             document.getElementById('snapshot').textContent = JSON.stringify(snapData, null, 2);
             renderSnapshotDashboard(snapData);
             renderRuneforgeVoiceStatus(voiceData);
+            renderDelegationFlow(delegationData);
             document.getElementById('seal').textContent = JSON.stringify(sealData, null, 2);
 
             if (currentView === 'view_os_state') {
@@ -3287,8 +6345,14 @@ PAGE = """
             if (currentView === 'view_bus') {
                 await refreshBusInspector();
             }
+            if (currentView === 'view_delegation') {
+                await refreshDelegationFlowPanel();
+            }
+            if (currentView === 'view_bossgate_map') {
+                await refreshBossGateMap(false);
+            }
 
-            const failed = [statusData, eventsData, snapData, sealData, voiceData].filter(x => x && x.ok === false).length;
+            const failed = [statusData, eventsData, snapData, sealData, voiceData, delegationData].filter(x => x && x.ok === false).length;
             document.getElementById('toast').textContent = failed ? ('Loaded with ' + failed + ' endpoint issue(s).') : 'Loaded successfully.';
         }
 
@@ -3403,6 +6467,8 @@ PAGE = """
         }
 
         // Call on load
+        wireInlineClickFallback();
+        iconForgeLoadSectionCollapseState();
         switchView(currentView);
         refreshPinState();
         refreshChatEndpoints();
@@ -3414,9 +6480,14 @@ PAGE = """
         refreshCicdStatus();
         applyAssetIcons();
         initIconForgeStudio();
+        applyUrlLaunchContext();
         toggleWizardIconSource();
         toggleMakerIconSource();
+        setWizardStep(1);
+        syncWizardStateMachinePreview();
+        applySelectedStateMachineTemplate();
         refresh();
+        refreshBossGateAccess();
         listSoundforgeSchemes();
         setInterval(refresh, 4000);
         setInterval(refreshPinState, 3000);
@@ -3426,9 +6497,130 @@ PAGE = """
 """
 
 
+def _read_ass_session_handoff() -> dict:
+    encoded = str(os.environ.get("ASS_SESSION_HANDOFF_B64", "") or "").strip()
+    if not encoded:
+        return {}
+    try:
+        raw = base64.b64decode(encoded)
+        payload = json.loads(raw.decode("utf-8"))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _validate_ass_session_handoff(handoff: dict, *, expected_ticket: str, expected_target: str) -> str:
+    if not handoff:
+        return "No A.S.S. launch handoff is available."
+
+    user_id = str(handoff.get("userId", "") or "").strip()
+    username = str(handoff.get("username", "") or "").strip()
+    if not user_id or not username:
+        return "A.S.S. launch handoff is missing required identity."
+
+    issued_at_raw = handoff.get("ts")
+    try:
+        issued_at = int(issued_at_raw)
+    except (TypeError, ValueError):
+        return "A.S.S. launch handoff is missing a valid issued timestamp."
+
+    now = int(time.time())
+    if issued_at <= 0 or issued_at > now + 30:
+        return "A.S.S. launch handoff has an invalid issued timestamp."
+    if now - issued_at > _ASS_HANDOFF_MAX_AGE_SECONDS:
+        return "A.S.S. launch handoff has expired."
+
+    actual_ticket = str(handoff.get("launchTicketId", "") or "").strip()
+    actual_target = str(handoff.get("targetApp", "") or "").strip().lower()
+    if actual_ticket != expected_ticket or actual_target != expected_target:
+        return "Launch ticket mismatch."
+
+    if expected_ticket in _ASS_CONSUMED_LAUNCH_TICKETS:
+        return "Launch ticket has already been used."
+
+    return ""
+
+
+def _build_launch_ticket_bootstrap_script() -> str:
+    launch_ticket = str(request.args.get("launch_ticket", "") or "").strip()
+    target_app = str(request.args.get("target_app", "") or "").strip()
+    launcher = str(request.args.get("launcher", "") or "").strip()
+    if not launch_ticket or not target_app or launcher.lower() != "ass":
+        return ""
+
+    payload = json.dumps(
+        {
+            "ticketId": launch_ticket,
+            "targetApp": target_app,
+        }
+    )
+    return f"""
+<script>
+(() => {{
+  const launchTicketPayload = {payload};
+  window.__bossforgeLaunchTicket = launchTicketPayload;
+  window.__bossforgeLaunchSession = {{ ok: false, pending: true }};
+  fetch('/api/auth/launch-ticket/exchange', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify(launchTicketPayload),
+  }})
+    .then((response) => response.json())
+    .then((data) => {{
+      window.__bossforgeLaunchSession = data;
+      try {{
+        sessionStorage.setItem('bossforge_launch_session', JSON.stringify(data));
+      }} catch (_err) {{}}
+    }})
+    .catch((error) => {{
+      window.__bossforgeLaunchSession = {{
+        ok: false,
+        message: error && error.message ? error.message : 'Launch ticket exchange failed.',
+      }};
+    }});
+}})();
+</script>
+"""
+
+
 @app.get("/")
 def index():
+    bootstrap = _build_launch_ticket_bootstrap_script()
+    if bootstrap:
+        return render_template_string(PAGE.replace("</body>", bootstrap + "\n</body>"))
     return render_template_string(PAGE)
+
+
+@app.post("/api/auth/launch-ticket/exchange")
+def auth_launch_ticket_exchange():
+    payload = request.get_json(force=True, silent=True) or {}
+    ticket_id = str(payload.get("ticketId", "") or payload.get("launchTicketId", "")).strip()
+    target_app = str(payload.get("targetApp", "")).strip().lower()
+    handoff = _read_ass_session_handoff()
+
+    if not ticket_id or not target_app:
+        return jsonify({"ok": False, "message": "ticketId and targetApp are required."}), 400
+    validation_error = _validate_ass_session_handoff(
+        handoff,
+        expected_ticket=ticket_id,
+        expected_target=target_app,
+    )
+    if validation_error:
+        status = 403 if validation_error == "Launch ticket mismatch." else 409 if "already been used" in validation_error else 401
+        return jsonify({"ok": False, "message": validation_error}), status
+
+    session = {
+        "userId": str(handoff.get("userId", "")).strip(),
+        "username": str(handoff.get("username", "")).strip(),
+        "roles": handoff.get("roles") if isinstance(handoff.get("roles"), list) else [],
+        "targetApp": target_app,
+        "launchTicketId": ticket_id,
+        "issuedAt": handoff.get("ts"),
+        "bosskey": handoff.get("bosskey") if isinstance(handoff.get("bosskey"), dict) else {},
+        "source": "ass",
+    }
+    _ASS_CONSUMED_LAUNCH_TICKETS.add(ticket_id)
+    return jsonify({"ok": True, "session": session})
 
 
 @app.get("/api/assets/icons/<path:filename>")
@@ -3461,6 +6653,7 @@ def status():
             "status": "online",
             "agents": AGENT_STATUS,
             "agent_state": read_agent_state(),
+            "agent_tasks": load_agent_task_state(),
             "recent_events": latest,
         }
     )
@@ -3599,50 +6792,158 @@ def snapshot():
 
 @app.get("/api/runeforge/voice_status")
 def runeforge_voice_status():
-    pending_path = bus.state / "runeforge_pending_approval.json"
-    runeforge_state_path = bus.state / "runeforge.json"
+    return jsonify(runeforge_voice_service.get_voice_status(bus))
 
-    pending = None
-    if pending_path.exists():
+
+@app.get("/api/delegation/flow")
+def delegation_flow_status():
+    events = bus.read_latest_events(limit=300)
+    worker_agents = {"runeforge", "codemage", "devlot", "test_sentinel"}
+
+    submitted_packets = 0
+    submitted_items = 0
+    reviewed_packets = 0
+    reviewed_items = 0
+    dispatched_items = 0
+    accepted_items = 0
+    completed_items = 0
+    rerouted_items = 0
+    verified_items = 0
+    accepted_by_agent: dict[str, int] = {}
+    timeline_entries: list[dict[str, object]] = []
+    latest_packet_id = ""
+
+    latest_submission_at = ""
+    latest_review_at = ""
+
+    for item in events:
+        if not isinstance(item, dict):
+            continue
+        source = str(item.get("source", "")).strip().lower()
+        event_name = str(item.get("event", "")).strip()
+        data = item.get("data") if isinstance(item.get("data"), dict) else {}
+        stamp = str(item.get("timestamp", "")).strip()
+
+        if source == "archivist" and event_name == "delegation_submitted_to_runeforge":
+            submitted_packets += 1
+            submitted_items += int(data.get("submitted", 0) or 0)
+            if stamp:
+                latest_submission_at = stamp
+
+        if source == "runeforge" and event_name == "delegation_review_completed":
+            packet_id = str(data.get("packet_id", "")).strip()
+            reviewed_packets += 1
+            reviewed_items += int(data.get("submitted", 0) or 0)
+            dispatched_items += int(data.get("dispatched", 0) or 0)
+            if packet_id:
+                latest_packet_id = packet_id
+
+            by_target: dict[str, int] = {}
+            for dispatch_item in data.get("items", []) if isinstance(data.get("items"), list) else []:
+                if not isinstance(dispatch_item, dict):
+                    continue
+                target = str(dispatch_item.get("target", "")).strip().lower()
+                if not target:
+                    continue
+                by_target[target] = by_target.get(target, 0) + 1
+
+            timeline_entries.append(
+                {
+                    "packet_id": packet_id or "unknown",
+                    "timestamp": stamp,
+                    "submitted": int(data.get("submitted", 0) or 0),
+                    "dispatched": int(data.get("dispatched", 0) or 0),
+                    "by_target": by_target,
+                }
+            )
+            if stamp:
+                latest_review_at = stamp
+
+        if source in worker_agents and event_name == "command:work_item":
+            if bool(data.get("ok", False)):
+                accepted_items += 1
+                accepted_by_agent[source] = accepted_by_agent.get(source, 0) + 1
+
+        if source in worker_agents and event_name == "work_item_completed":
+            completed_items += int(data.get("completed_count", 0) or 0)
+            if bool(data.get("post_fix_verified", False)):
+                verified_items += int(data.get("completed_count", 0) or 0)
+
+        if source in worker_agents and event_name == "post_fix_regression_detected":
+            rerouted_items += 1
+
+    def _read_items(path: Path) -> list[dict[str, object]]:
+        if not path.exists():
+            return []
         try:
-            payload = json.loads(pending_path.read_text(encoding="utf-8"))
-            if isinstance(payload, dict):
-                pending = payload
+            payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            pending = {"error": "invalid pending approval state"}
+            return []
+        raw = payload.get("items", []) if isinstance(payload, dict) else []
+        return [x for x in raw if isinstance(x, dict)] if isinstance(raw, list) else []
 
-    last_report = None
-    if runeforge_state_path.exists():
-        try:
-            state = json.loads(runeforge_state_path.read_text(encoding="utf-8"))
-            if isinstance(state, dict):
-                if isinstance(state.get("report"), dict):
-                    last_report = state.get("report")
-                elif isinstance(state.get("execution"), dict) and isinstance(state.get("execution", {}).get("report"), dict):
-                    last_report = state.get("execution", {}).get("report")
-        except (OSError, json.JSONDecodeError):
-            pass
+    queue_files = {
+        "runeforge": bus.state / "runeforge_tasks.json",
+        "codemage": bus.state / "codemage_work_packets.json",
+        "devlot": bus.state / "devlot_tasks.json",
+        "test_sentinel": bus.state / "test_sentinel_tasks.json",
+    }
 
-    if last_report is None:
-        events = bus.read_latest_events(limit=120)
-        for item in events:
-            if str(item.get("source", "")).strip() != "runeforge":
+    queued = 0
+    in_progress = 0
+    blocked = 0
+    delegated_seen = 0
+
+    for _, path in queue_files.items():
+        for task in _read_items(path):
+            is_delegated = bool(task.get("delegated_handoff", False)) or str(task.get("source", "")).strip().lower() == "archivist_review"
+            if not is_delegated:
                 continue
-            event_name = str(item.get("event", "")).strip()
-            data = item.get("data") if isinstance(item.get("data"), dict) else {}
-            if event_name in {"sentinel_plan_approval_result", "sentinel_recommendations_applied", "os_action_approval_result"}:
-                if isinstance(data.get("report"), dict):
-                    last_report = data.get("report")
-                elif isinstance(data.get("execution"), dict) and isinstance(data.get("execution", {}).get("report"), dict):
-                    last_report = data.get("execution", {}).get("report")
-                else:
-                    last_report = {
-                        "action_type": event_name,
-                        "ok": bool(data.get("ok", True)),
-                    }
-                break
+            delegated_seen += 1
+            status = str(task.get("status", "queued")).strip().lower()
+            if status == "in_progress":
+                in_progress += 1
+            elif status == "queued":
+                queued += 1
+            elif status == "blocked":
+                blocked += 1
 
-    return jsonify({"ok": True, "pending_approval": pending, "last_report": last_report})
+    timeline = list(reversed(timeline_entries[:8]))
+    if not latest_packet_id and timeline:
+        latest_packet_id = str(timeline[-1].get("packet_id", "")).strip()
+
+    return jsonify(
+        {
+            "ok": True,
+            "counts": {
+                "submitted_packets": submitted_packets,
+                "submitted_items": submitted_items,
+                "reviewed_packets": reviewed_packets,
+                "reviewed_items": reviewed_items,
+                "dispatched_items": dispatched_items,
+                "accepted_items": accepted_items,
+                "completed_items": completed_items,
+            },
+            "queue": {
+                "delegated_items_seen": delegated_seen,
+                "in_progress": in_progress,
+                "queued": queued,
+                "blocked": blocked,
+            },
+            "verification": {
+                "verified": verified_items,
+                "blocked": blocked,
+                "rerouted": rerouted_items,
+            },
+            "accepted_by_agent": accepted_by_agent,
+            "latest_packet_id": latest_packet_id,
+            "timeline": timeline,
+            "latest": {
+                "submission_at": latest_submission_at,
+                "review_at": latest_review_at,
+            },
+        }
+    )
 
 
 @app.get("/api/archivist/seal")
@@ -3658,531 +6959,280 @@ def archivist_seal():
 
 @app.get("/api/model/endpoints")
 def model_endpoints():
-    path = bus.state / "model_endpoints.json"
-    if not path.exists():
-        return jsonify({"endpoints": {}})
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return jsonify({"endpoints": {}})
-        return jsonify({"endpoints": data})
-    except (OSError, json.JSONDecodeError):
-        return jsonify({"endpoints": {}})
+    return jsonify(model_gateway_api.list_endpoints_from_state(str(bus.state / "model_endpoints.json")))
 
 
 @app.get("/api/model/agents")
 def model_agents():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    return jsonify({"agents": gateway.list_agent_profiles()})
+    return jsonify(agentforge_api.list_agent_profiles())
 
 
 @app.post("/api/model/agents/create")
 def model_agents_create():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
-    name = str(payload.get("name", "")).strip()
-    endpoint = str(payload.get("endpoint", "")).strip()
-    system = str(payload.get("system", "You are a helpful specialist agent."))
-    temperature = float(payload.get("temperature", 0.2))
-    max_tokens = int(payload.get("max_tokens", 900))
-    agent_class = str(payload.get("agent_class", "prime")).strip().lower()
-    has_llm_raw = payload.get("has_llm")
-    has_llm = bool(has_llm_raw) if isinstance(has_llm_raw, bool) else None
-    bossgate_enabled_raw = payload.get("bossgate_enabled")
-    bossgate_enabled = True if bossgate_enabled_raw is None else bool(bossgate_enabled_raw)
-    encrypt_profile_raw = payload.get("encrypt_profile")
-    encrypt_profile = True if encrypt_profile_raw is None else bool(encrypt_profile_raw)
-    agent_type = str(payload.get("agent_type", "")).strip().lower() or None
-    rank = str(payload.get("rank", "")).strip().lower() or None
-    skills_raw = payload.get("skills")
-    skills = skills_raw if isinstance(skills_raw, list) else None
-    sigils_raw = payload.get("sigils")
-    sigils = sigils_raw if isinstance(sigils_raw, list) else None
-    dispatch_policy_raw = payload.get("dispatch_policy")
-    dispatch_policy = dispatch_policy_raw if isinstance(dispatch_policy_raw, dict) else None
-    personality_wrapper_raw = payload.get("personality_wrapper")
-    personality_wrapper = personality_wrapper_raw if isinstance(personality_wrapper_raw, dict) else None
-    system_wrapper_raw = payload.get("system_wrapper")
-    system_wrapper = system_wrapper_raw if isinstance(system_wrapper_raw, dict) else None
-    instructions_raw = payload.get("instructions")
-    instructions = instructions_raw if isinstance(instructions_raw, dict) else None
-    custom_icon_path = str(payload.get("custom_icon_path", "")).strip() or None
-
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.create_agent_profile(
-        name,
-        endpoint,
-        system,
-        temperature,
-        max_tokens,
-        agent_class=agent_class,
-        has_llm=has_llm,
-        bossgate_enabled=bossgate_enabled,
-        encrypt_profile=encrypt_profile,
-        agent_type=agent_type,
-        rank=rank,
-        skills=skills,
-        sigils=sigils,
-        dispatch_policy=dispatch_policy,
-        personality_wrapper=personality_wrapper,
-        system_wrapper=system_wrapper,
-        instructions=instructions,
-        custom_icon_path=custom_icon_path,
-    )
+    result = agentforge_api.create_agent_profile(payload)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
+@app.get("/api/agentforge/agents/<name>/view")
+def agentforge_agent_view(name: str):
+    result = agentforge_api.view_agent_profile(
+        name,
+        viewer_id=str(request.args.get("viewer_id", "")).strip(),
+        viewer_channel=str(request.args.get("viewer_channel", "")).strip(),
+    )
+    status = 200 if result.get("ok") else 404
+    return jsonify(result), status
+
+
+@app.post("/api/agentforge/agents/<name>/disclosure")
+def agentforge_agent_disclosure(name: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    result = agentforge_api.set_agent_disclosure_posture(name, str(payload.get("disclosure_posture", "")).strip())
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/bossgate/access/capabilities")
+def bossgate_access_capabilities():
+    user_id = str(request.args.get("user_id", "")).strip()
+    return jsonify(_bossgate_authorization().capabilities_for_user(user_id))
+
+
+@app.get("/api/bossgate/access/policy")
+def bossgate_access_policy():
+    return jsonify(model_gateway_api.bossgate_presence_policy())
+
+
+@app.post("/api/bossgate/access/policy")
+def bossgate_access_policy_update():
+    payload = request.get_json(force=True, silent=True) or {}
+    result = model_gateway_api.set_bossgate_presence_policy(
+        accept_unknown_messages=bool(payload.get("accept_unknown_messages", False))
+    )
+    return jsonify(result), (200 if result.get("ok") else 400)
+
+
+@app.post("/api/bossgate/access/roles")
+def bossgate_access_roles():
+    payload = request.get_json(force=True, silent=True) or {}
+    permissions = payload.get("permissions") if isinstance(payload.get("permissions"), list) else []
+    result = _bossgate_authorization().create_or_update_custom_role(
+        acting_user=str(payload.get("acting_user", "")).strip(),
+        role_name=str(payload.get("role_name", "")).strip(),
+        permissions=[str(item) for item in permissions],
+    )
+    return jsonify(result), (200 if result.get("ok") else 403)
+
+
+@app.post("/api/bossgate/access/users/<user_id>/roles")
+def bossgate_access_user_roles(user_id: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    roles = payload.get("roles") if isinstance(payload.get("roles"), list) else []
+    result = _bossgate_authorization().assign_user_roles(
+        acting_user=str(payload.get("acting_user", "")).strip(),
+        user_id=str(user_id).strip(),
+        roles=[str(item) for item in roles],
+    )
+    return jsonify(result), (200 if result.get("ok") else 403)
+
+
 @app.post("/api/agentforge/icon/upload")
 def agentforge_icon_upload():
-    from core.icons.icon_forge import IconForge
-
     uploaded = request.files.get("icon")
     if uploaded is None:
         return jsonify({"ok": False, "message": "icon file is required"}), 400
-
-    original_name = secure_filename(uploaded.filename or "")
-    if not original_name:
-        return jsonify({"ok": False, "message": "icon file name is required"}), 400
-
-    source_ext = Path(original_name).suffix.lower()
-    allowed = {".png"}
-    if source_ext not in allowed:
-        return jsonify({"ok": False, "message": "unsupported file type; use .png"}), 400
-
     hint = str(request.form.get("icon_name", "agent_icon")).strip()
-    stem = _safe_icon_stem(hint)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        source_path = icon_dir / f"{stem}_{suffix}{source_ext}"
-        final_path = icon_dir / f"{stem}_{suffix}.ico"
-        uploaded.save(source_path)
-
-        forge = IconForge(PROJECT_ROOT)
-        result = forge.create_icon_from_image(str(source_path), str(final_path))
-        if source_path.exists():
-            source_path.unlink(missing_ok=True)
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon conversion failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon uploaded and converted"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon upload failed: {exc}"}), 500
+    result, status = agentforge_api.upload_icon(uploaded=uploaded, icon_name=hint, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create")
 def agentforge_icon_create():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    label = str(payload.get("label", "AG")).strip() or "AG"
-    background = str(payload.get("background", "#1d3557")).strip() or "#1d3557"
-    foreground = str(payload.get("foreground", "#f1faee")).strip() or "#f1faee"
-
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    final_path = icon_dir / f"{stem}_{suffix}.ico"
-
-    try:
-        forge = IconForge(PROJECT_ROOT)
-        result = forge.create_icon_from_text(
-            text=label,
-            output_ico=str(final_path),
-            background=background,
-            foreground=foreground,
-        )
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
+    result, status = agentforge_api.create_icon(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create_from_canvas")
 def agentforge_icon_create_from_canvas():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    image_data = str(payload.get("image_data", "")).strip()
-    if not image_data.startswith("data:image/png"):
-        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
-
-    comma_idx = image_data.find(",")
-    if comma_idx <= 0:
-        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
-
-    encoded = image_data[comma_idx + 1 :]
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    temp_png = icon_dir / f"{stem}_{suffix}_src.png"
-    final_path = icon_dir / f"{stem}_{suffix}.ico"
-
-    try:
-        raw = base64.b64decode(encoded)
-    except Exception:
-        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
-
-    try:
-        temp_png.write_bytes(raw)
-        forge = IconForge(PROJECT_ROOT)
-        result = forge.create_icon_from_image(str(temp_png), str(final_path))
-        if not result.get("ok"):
-            return jsonify({"ok": False, "message": str(result.get("message", "icon creation failed"))}), 400
-        return jsonify({"ok": True, "icon": _to_project_relpath(final_path), "message": "icon created"})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"icon creation failed: {exc}"}), 500
-    finally:
-        if temp_png.exists():
-            temp_png.unlink(missing_ok=True)
+    result, status = agentforge_api.create_icon_from_canvas(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.post("/api/agentforge/icon/create_animated_from_canvas")
 def agentforge_icon_create_animated_from_canvas():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    icon_name = str(payload.get("icon_name", "agent_icon")).strip()
-    image_data = str(payload.get("image_data", "")).strip()
-    preset = str(payload.get("preset", "pulse")).strip().lower()
-    seconds = int(payload.get("seconds", 3))
-    fps = int(payload.get("fps", 12))
-
-    if not image_data.startswith("data:image/png"):
-        return jsonify({"ok": False, "message": "image_data must be a PNG data URL"}), 400
-
-    comma_idx = image_data.find(",")
-    if comma_idx <= 0:
-        return jsonify({"ok": False, "message": "invalid image_data format"}), 400
-
-    encoded = image_data[comma_idx + 1 :]
-    stem = _safe_icon_stem(icon_name)
-    suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    icon_dir = PROJECT_ROOT / "assets" / "icons" / "agents"
-    icon_dir.mkdir(parents=True, exist_ok=True)
-    temp_png = icon_dir / f"{stem}_{suffix}_anim_src.png"
-    final_ico = icon_dir / f"{stem}_{suffix}.ico"
-    final_gif = icon_dir / f"{stem}_{suffix}.gif"
-
-    try:
-        raw = base64.b64decode(encoded)
-    except Exception:
-        return jsonify({"ok": False, "message": "image_data is not valid base64"}), 400
-
-    try:
-        from PIL import Image, ImageEnhance
-    except Exception:
-        return jsonify({"ok": False, "message": "Pillow is required for animated export. Install with: pip install pillow"}), 400
-
-    seconds = max(1, min(12, seconds))
-    fps = max(6, min(30, fps))
-    total_frames = max(8, min(360, seconds * fps))
-    duration_ms = int(1000 / fps)
-
-    try:
-        temp_png.write_bytes(raw)
-        base = Image.open(temp_png).convert("RGBA")
-        w, h = base.size
-        frames = []
-
-        for idx in range(total_frames):
-            t = idx / max(1, total_frames - 1)
-            if preset == "spin":
-                angle = 360.0 * t
-                frame = base.rotate(angle, resample=Image.BICUBIC, expand=False)
-            elif preset == "shimmer":
-                frame = base.copy()
-                overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-                band_center = int((w * 1.5) * t) - (w // 4)
-                for x in range(w):
-                    dist = abs(x - band_center)
-                    if dist > w // 5:
-                        continue
-                    alpha = max(0, 140 - int((dist / (w // 5 + 1)) * 140))
-                    for y in range(h):
-                        overlay.putpixel((x, y), (255, 255, 255, alpha))
-                frame = Image.alpha_composite(frame, overlay)
-            else:
-                pulse = 0.88 + 0.20 * (0.5 + 0.5 * math.sin(2.0 * math.pi * t))
-                nw = max(8, int(w * pulse))
-                nh = max(8, int(h * pulse))
-                resized = base.resize((nw, nh), resample=Image.BICUBIC)
-                frame = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-                frame.paste(resized, ((w - nw) // 2, (h - nh) // 2), resized)
-                frame = ImageEnhance.Brightness(frame).enhance(1.05)
-            frames.append(frame)
-
-        if not frames:
-            return jsonify({"ok": False, "message": "failed to build animated frames"}), 400
-
-        frames[0].save(
-            final_gif,
-            format="GIF",
-            save_all=True,
-            append_images=frames[1:],
-            loop=0,
-            duration=duration_ms,
-            disposal=2,
-            transparency=0,
-        )
-
-        forge = IconForge(PROJECT_ROOT)
-        ico_result = forge.create_icon_from_image(str(temp_png), str(final_ico))
-        if not ico_result.get("ok"):
-            return jsonify({"ok": False, "message": str(ico_result.get("message", "ico fallback creation failed"))}), 400
-
-        return jsonify(
-            {
-                "ok": True,
-                "animated": _to_project_relpath(final_gif),
-                "icon": _to_project_relpath(final_ico),
-                "preset": preset,
-                "frames": total_frames,
-                "fps": fps,
-                "seconds": seconds,
-                "message": "animated gif + ico fallback created",
-            }
-        )
-    except Exception as exc:
-        return jsonify({"ok": False, "message": f"animated export failed: {exc}"}), 500
-    finally:
-        if temp_png.exists():
-            temp_png.unlink(missing_ok=True)
+    result, status = agentforge_api.create_animated_icon_from_canvas(payload=payload, project_root=PROJECT_ROOT)
+    return jsonify(result), status
 
 
 @app.get("/api/iconforge/backups")
 def iconforge_backups():
-    from core.icons.icon_forge import IconForge
+    result, status = iconforge_api.list_backups(PROJECT_ROOT)
+    return jsonify(result), status
 
-    try:
-        forge = IconForge(PROJECT_ROOT)
-        return jsonify({"ok": True, "items": forge.list_backups()})
-    except Exception as exc:
-        return jsonify({"ok": False, "message": str(exc), "items": {}}), 500
+
+@app.get("/api/iconforge/preview")
+def iconforge_preview():
+    candidate, err, status = iconforge_api.resolve_preview_path(PROJECT_ROOT, request.args.get("path", ""))
+    if err is not None:
+        return jsonify(err), status
+    return send_file(candidate)
 
 
 @app.post("/api/iconforge/apply")
 def iconforge_apply():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    target_type = str(payload.get("target_type", "folder")).strip().lower()
-    target = str(payload.get("target", "")).strip()
-    icon = str(payload.get("icon", "")).strip()
-    if not target or not icon:
-        return jsonify({"ok": False, "message": "target and icon are required"}), 400
-
-    icon_path = Path(icon)
-    if not icon_path.is_absolute():
-        icon_path = (PROJECT_ROOT / icon_path).resolve()
-
-    forge = IconForge(PROJECT_ROOT)
-    if target_type == "folder":
-        result = forge.set_folder_icon(target, str(icon_path))
-    elif target_type == "shortcut":
-        result = forge.set_shortcut_icon(target, str(icon_path))
-    elif target_type == "file_extension":
-        result = forge.set_file_extension_icon(target, str(icon_path))
-    elif target_type == "application":
-        result = forge.set_application_icon(target, str(icon_path))
-    elif target_type == "drive":
-        result = forge.set_drive_icon(target, str(icon_path))
-    else:
-        return jsonify({"ok": False, "message": f"unsupported target_type: {target_type}"}), 400
-
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.apply_icon(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/refresh_cache")
 def iconforge_refresh_cache():
-    from core.icons.icon_forge import IconForge
-
-    forge = IconForge(PROJECT_ROOT)
-    result = forge.refresh_icon_cache()
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.refresh_icon_cache(PROJECT_ROOT)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/restore")
 def iconforge_restore():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    backup_key = str(payload.get("backup_key", "")).strip()
-    if not backup_key:
-        return jsonify({"ok": False, "message": "backup_key is required"}), 400
-    forge = IconForge(PROJECT_ROOT)
-    result = forge.restore(backup_key)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.restore_backup(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/pack/export")
 def iconforge_pack_export():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    output_dir = str(payload.get("output_dir", "")).strip()
-    if not output_dir:
-        return jsonify({"ok": False, "message": "output_dir is required"}), 400
-
-    forge = IconForge(PROJECT_ROOT)
-    result = forge.export_icon_set(output_dir)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.export_pack(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/iconforge/pack/import")
 def iconforge_pack_import():
-    from core.icons.icon_forge import IconForge
-
     payload = request.get_json(force=True, silent=True) or {}
-    source = str(payload.get("source", "")).strip()
-    apply_changes = bool(payload.get("apply_changes", True))
-    refresh_cache = bool(payload.get("refresh_cache", False))
-    if not source:
-        return jsonify({"ok": False, "message": "source is required"}), 400
-
-    forge = IconForge(PROJECT_ROOT)
-    result = forge.import_icon_set(source=source, apply_changes=apply_changes, refresh_cache=refresh_cache)
-    status = 200 if result.get("ok") else 400
+    result, status = iconforge_api.import_pack(PROJECT_ROOT, payload)
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/triage")
 def model_agents_triage():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    from core.schemas.agent_schema import infer_incident_domains, rank_agents_for_incident
-
     payload = request.get_json(force=True, silent=True) or {}
     incident = payload.get("incident") if isinstance(payload.get("incident"), dict) else {}
     weights_raw = payload.get("weights")
     weights = weights_raw if isinstance(weights_raw, dict) else None
-
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    profiles = gateway.list_agent_profiles()
-    candidates = []
-    for name, profile in profiles.items():
-        if not isinstance(profile, dict):
-            continue
-        item = dict(profile)
-        item.setdefault("id", str(name).strip().lower())
-        item.setdefault("name", str(name).strip().lower())
-        candidates.append(item)
-
-    ranked = rank_agents_for_incident(incident=incident, agent_profiles=candidates, weights=weights)
-    return jsonify(
-        {
-            "ok": True,
-            "incident_inference": infer_incident_domains(incident),
-            "ranked_candidates": ranked,
-            "candidate_count": len(candidates),
-        }
-    )
+    return jsonify(model_gateway_api.triage_agent_candidates(incident=incident, weights=weights))
 
 
 @app.post("/api/model/agents/delete")
 def model_agents_delete():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.delete_agent_profile(name)
+    result = model_gateway_api.delete_agent_profile(name)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/run")
 def model_agents_run():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     task = str(payload.get("task", "")).strip()
     endpoint = str(payload.get("endpoint", "")).strip()
     memory_context = payload.get("memory_context") if isinstance(payload.get("memory_context"), dict) else {}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.run_agent_profile(name, task, endpoint, memory_context=memory_context)
+    result = model_gateway_api.run_agent_profile(name, task, endpoint, memory_context=memory_context)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/memory")
 def model_agents_memory():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     name = str(request.args.get("name", "")).strip()
     limit = int(request.args.get("limit", "25"))
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.recall_agent_memory(name=name, limit=limit)
+    result = model_gateway_api.recall_agent_memory(name=name, limit=limit)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/travel/discover")
 def model_travel_discover():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     timeout = int(request.args.get("timeout", "5"))
     assistance_only = str(request.args.get("assistance_only", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.discover_travel_targets(timeout=timeout, assistance_only=assistance_only)
+    operator_id = str(request.args.get("operator_id", "")).strip()
+    scope_id = str(request.args.get("scope_id", "")).strip()
+    actor_type = str(request.args.get("actor_type", "human")).strip()
+    result = model_gateway_api.discover_travel_targets(
+        timeout=timeout,
+        assistance_only=assistance_only,
+        operator_id=operator_id,
+        scope_id=scope_id,
+        actor_type=actor_type,
+    )
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/travel/map")
+def model_travel_map():
+    refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
+    timeout = int(request.args.get("timeout", "2"))
+    result = model_gateway_api.bossgate_map_snapshot(refresh=refresh, timeout=timeout)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.get("/api/model/travel/transfers")
+def model_travel_transfers():
+    limit = int(request.args.get("limit", "20"))
+    result = _read_bossgate_transfers(limit=limit)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/travel/validate")
 def model_travel_validate():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     destination = str(payload.get("destination", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.validate_transfer_target(destination=destination)
+    result = model_gateway_api.validate_transfer_target(
+        destination=destination,
+        operator_id=str(payload.get("operator_id", "")).strip(),
+        scope_id=str(payload.get("scope_id", "")).strip(),
+        actor_type=str(payload.get("actor_type", "human")).strip(),
+    )
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/agents/assistance")
 def model_agents_assistance_set():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     name = str(payload.get("name", "")).strip()
     requested = bool(payload.get("requested", True))
     reason = str(payload.get("reason", "")).strip()
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.set_agent_assistance_request(name=name, requested=requested, reason=reason)
+    result = model_gateway_api.set_agent_assistance_request(name=name, requested=requested, reason=reason)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/assistance")
 def model_agents_assistance_list():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.list_assistance_requests()
+    result = model_gateway_api.list_assistance_requests()
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.get("/api/model/agents/locations")
 def model_agents_locations():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     refresh = str(request.args.get("refresh", "false")).strip().lower() in {"1", "true", "yes", "on"}
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.list_owned_agent_locations(refresh=refresh)
+    result = model_gateway_api.list_owned_agent_locations(refresh=refresh)
     status = 200 if result.get("ok") else 400
     return jsonify(result), status
 
 
 @app.post("/api/model/chat")
 def model_chat():
-    from core.agents.model_gateway_agent import ModelGatewayAgent
     payload = request.get_json(force=True, silent=True) or {}
     endpoint = str(payload.get("endpoint", "")).strip()
     prompt = str(payload.get("prompt", "")).strip()
@@ -4193,43 +7243,26 @@ def model_chat():
     if not endpoint or not prompt:
         return jsonify({"ok": False, "message": "endpoint and prompt are required"}), 400
 
-    gateway = ModelGatewayAgent(interval_seconds=5, enable_presence_broadcast=False)
-    result = gateway.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
+    result = model_gateway_api.invoke_endpoint(endpoint, prompt, system, temperature, max_tokens)
     return jsonify(result)
 
 
 @app.get("/api/security/state")
 def security_state():
-    path = bus.state / "security_sentinel.json"
-    if not path.exists():
-        return jsonify({"ok": True, "status": "idle", "findings": []})
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        payload = {"ok": False, "message": "invalid security state", "findings": []}
-    if not isinstance(payload, dict):
-        payload = {"ok": False, "message": "invalid security state", "findings": []}
-    payload.setdefault("findings", [])
-    return jsonify(payload)
+    return jsonify(security_api.read_security_state(bus.state / "security_sentinel.json"))
 
 
 @app.post("/api/security/scan")
 def security_scan():
     payload = request.get_json(force=True, silent=True) or {}
     path = str(payload.get("path", "")).strip()
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.scan_workspace(path)
-    agent.bus.emit_event("security_sentinel", "manual:scan_workspace", result)
-    agent.bus.write_state("security_sentinel", {"service": "security_sentinel", "pid": os.getpid(), "last_command": "scan_workspace", **result})
-    status = 200 if result.get("ok") else 400
+    result, status = security_api.scan_workspace(path)
     return jsonify(result), status
 
 
 @app.get("/api/security/secrets")
 def security_secrets():
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.list_secrets()
-    return jsonify(result)
+    return jsonify(security_api.list_secrets())
 
 
 @app.post("/api/security/policy/set")
@@ -4237,9 +7270,7 @@ def security_policy_set():
     payload = request.get_json(force=True, silent=True) or {}
     agent_name = str(payload.get("agent", "")).strip()
     actions = payload.get("actions") if isinstance(payload.get("actions"), list) else []
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.set_policy(agent_name, [str(a) for a in actions])
-    status = 200 if result.get("ok") else 400
+    result, status = security_api.set_policy(agent_name, [str(a) for a in actions])
     return jsonify(result), status
 
 
@@ -4248,31 +7279,13 @@ def security_policy_check():
     payload = request.get_json(force=True, silent=True) or {}
     agent_name = str(payload.get("agent", "")).strip()
     action = str(payload.get("action", "")).strip()
-    agent = SecuritySentinelAgent(interval_seconds=20)
-    result = agent.check_policy(agent_name, action)
-    return jsonify(result)
+    return jsonify(security_api.check_policy(agent_name, action))
 
 
 def _pin_overlay_is_running() -> bool:
     global PIN_OVERLAY_PROCESS
     if PIN_OVERLAY_PROCESS is None:
         return False
-
-
-    def _safe_icon_stem(value: str) -> str:
-        cleaned = secure_filename(str(value or "").strip())
-        if not cleaned:
-            return "agent_icon"
-        stem = Path(cleaned).stem.replace("-", "_")
-        stem = "".join(ch for ch in stem if ch.isalnum() or ch == "_").strip("_")
-        return (stem[:64] or "agent_icon").lower()
-
-
-    def _to_project_relpath(path: Path) -> str:
-        try:
-            return str(path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
-        except Exception:
-            return str(path).replace("\\", "/")
     return PIN_OVERLAY_PROCESS.poll() is None
 
 
@@ -4300,24 +7313,19 @@ atexit.register(_terminate_pin_overlay)
 @app.get("/api/pin/state")
 def pin_state():
     global PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA
-    if PIN_OVERLAY_PROCESS is not None and PIN_OVERLAY_PROCESS.poll() is not None:
-        PIN_OVERLAY_PROCESS = None
-        PIN_OVERLAY_VIEW = ""
-    return jsonify({"ok": True, "running": _pin_overlay_is_running(), "view": PIN_OVERLAY_VIEW, "alpha": PIN_OVERLAY_ALPHA})
+    out = ui_runtime_api.pin_state(PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA, _pin_overlay_is_running)
+    PIN_OVERLAY_PROCESS = out.pop("_process", PIN_OVERLAY_PROCESS)
+    PIN_OVERLAY_VIEW = out.pop("_view", PIN_OVERLAY_VIEW)
+    return jsonify(out)
 
 
 @app.post("/api/pin/launch")
 def pin_launch():
     global PIN_OVERLAY_PROCESS, PIN_OVERLAY_VIEW, PIN_OVERLAY_ALPHA
     payload = request.get_json(force=True, silent=True) or {}
-    view = str(payload.get("view", "")).strip() or "view_status"
-    try:
-        alpha = float(payload.get("alpha", PIN_OVERLAY_ALPHA))
-    except (TypeError, ValueError):
-        alpha = PIN_OVERLAY_ALPHA
-    alpha = max(0.35, min(1.0, alpha))
+    view, alpha = ui_runtime_api.pin_launch_payload(payload, PIN_OVERLAY_ALPHA)
 
-    overlay_path = Path(__file__).resolve().parent / "pin_overlay.py"
+    overlay_path = ui_runtime_api.pin_overlay_path(__file__)
     if not overlay_path.exists():
         return jsonify({"ok": False, "message": f"overlay script missing: {overlay_path}"}), 500
 
@@ -4344,131 +7352,37 @@ def pin_close():
     return jsonify({"ok": True, "running": False, "view": "", "alpha": PIN_OVERLAY_ALPHA})
 
 
-def _health_from_timestamp(ts: str | None) -> str:
-    if not ts:
-        return "offline"
-    try:
-        then = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except ValueError:
-        return "offline"
-    delta = (datetime.now(timezone.utc) - then).total_seconds()
-    if delta <= 60:
-        return "online"
-    if delta <= 300:
-        return "stale"
-    return "offline"
-
-
-def _model_agent_state_key(name: str) -> str:
-    safe = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in name.strip().lower())
-    return f"model_agent_{safe}"
+def load_agent_task_state() -> dict:
+    if not AGENT_TASK_TRACKER_PATH.exists():
+        initial = task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH)
+        _save_json_state(AGENT_TASK_TRACKER_PATH, initial)
+        return initial
+    state = _load_json_state(
+        AGENT_TASK_TRACKER_PATH,
+        task_tracker_api.default_agent_task_state(AGENT_ASSIGNMENTS_PATH),
+    )
+    normalized = task_tracker_api.normalize_agent_task_state(state)
+    if normalized != state:
+        _save_json_state(AGENT_TASK_TRACKER_PATH, normalized)
+    return normalized
 
 
 def read_agent_state() -> dict[str, dict[str, str]]:
-    result: dict[str, dict[str, str]] = {}
-
-    dynamic_agents: dict[str, str] = {}
-    dynamic_meta: dict[str, dict[str, str]] = {}
-    profiles_path = bus.state / "model_agents.json"
-    if profiles_path.exists():
-        try:
-            profiles = json.loads(profiles_path.read_text(encoding="utf-8"))
-            if isinstance(profiles, dict):
-                endpoints = {}
-                endpoints_path = bus.state / "model_endpoints.json"
-                if endpoints_path.exists():
-                    try:
-                        raw_eps = json.loads(endpoints_path.read_text(encoding="utf-8"))
-                        if isinstance(raw_eps, dict):
-                            endpoints = raw_eps
-                    except (OSError, json.JSONDecodeError):
-                        endpoints = {}
-
-                for name, profile in profiles.items():
-                    key = str(name).strip().lower()
-                    if key:
-                        state_key = _model_agent_state_key(key)
-                        dynamic_agents[state_key] = f"Model Agent: {key}"
-                        endpoint = ""
-                        provider = ""
-                        if isinstance(profile, dict):
-                            endpoint = str(profile.get("endpoint", "")).strip()
-                        if endpoint and isinstance(endpoints, dict):
-                            endpoint_cfg = endpoints.get(endpoint)
-                            if isinstance(endpoint_cfg, dict):
-                                provider = str(endpoint_cfg.get("provider", "")).strip()
-                        dynamic_meta[state_key] = {"endpoint": endpoint, "provider": provider}
-        except (OSError, json.JSONDecodeError):
-            pass
-
-    combined = dict(AGENT_STATUS)
-    combined.update(dynamic_agents)
-
-    for key, display in combined.items():
-        state_file = bus.state / f"{key}.json"
-        payload = {}
-        if state_file.exists():
-            try:
-                payload = json.loads(state_file.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                payload = {}
-
-        last_seen = payload.get("timestamp")
-        meta = dynamic_meta.get(key, {})
-        endpoint = str(payload.get("endpoint", "") or meta.get("endpoint", "")).strip()
-        provider = str(meta.get("provider", "")).strip()
-        result[key] = {
-            "display_name": display,
-            "health": _health_from_timestamp(last_seen),
-            "last_seen": last_seen or "never",
-            "endpoint": endpoint,
-            "provider": provider,
-        }
-    return result
+    return agent_state_api.read_agent_state(state_dir=bus.state, static_agents=AGENT_STATUS)
 
 
 # === SoundForge Bundle Endpoints ===
-import zipfile
-import shutil
 
-SOUNDFORGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_config.json")
-LEGACY_SOUNDSTAGE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_config.json")
-SOUNDFORGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundforge_schemes")
-LEGACY_SOUNDSTAGE_SCHEMES_DIR = os.path.join(os.path.dirname(__file__), "..", "core", "soundstage_schemes")
-SOUNDFORGE_SOUNDS_DIR = os.path.join(SOUNDFORGE_SCHEMES_DIR, "sounds")
-os.makedirs(SOUNDFORGE_SCHEMES_DIR, exist_ok=True)
-os.makedirs(SOUNDFORGE_SOUNDS_DIR, exist_ok=True)
-
-def _rewrite_config_paths(config, sound_dir="sounds"):
-    # Rewrites all sound file paths in config to be relative to sound_dir
-    def rewrite_entry(entry):
-        if not entry or not isinstance(entry, dict):
-            return entry
-        files = entry.get("files", [])
-        entry["files"] = [os.path.join(sound_dir, os.path.basename(f)) for f in files]
-        return entry
-    if "global" in config:
-        for k, v in config["global"].items():
-            config["global"][k] = rewrite_entry(v)
-    if "per_app" in config:
-        for app, events in config["per_app"].items():
-            for k, v in events.items():
-                config["per_app"][app][k] = rewrite_entry(v)
-    return config
-
+SOUNDFORGE_CONFIG_PATH = str(soundforge_api.SOUNDFORGE_CONFIG_PATH)
+LEGACY_SOUNDSTAGE_CONFIG_PATH = str(soundforge_api.LEGACY_SOUNDSTAGE_CONFIG_PATH)
+SOUNDFORGE_SCHEMES_DIR = str(soundforge_api.SOUNDFORGE_SCHEMES_DIR)
+LEGACY_SOUNDSTAGE_SCHEMES_DIR = str(soundforge_api.LEGACY_SOUNDSTAGE_SCHEMES_DIR)
+SOUNDFORGE_SOUNDS_DIR = str(soundforge_api.SOUNDFORGE_SOUNDS_DIR)
+soundforge_api.ensure_layout()
 
 @app.get("/api/soundforge/config")
 def soundforge_get_config():
-    source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
-    if not os.path.exists(source_config_path):
-        return jsonify({"ok": True, "config": {"global": {}, "per_app": {}}})
-    try:
-        with open(source_config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-    except Exception as ex:
-        return jsonify({"ok": False, "message": f"Failed to read config: {ex}"}), 500
-    if not isinstance(config, dict):
-        config = {"global": {}, "per_app": {}}
+    config = soundforge_api.load_active_config()
     return jsonify({"ok": True, "config": config})
 
 
@@ -4479,10 +7393,7 @@ def soundforge_save_config():
     if not isinstance(config, dict):
         return jsonify({"ok": False, "message": "config object is required"}), 400
     try:
-        with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
-        with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
+        soundforge_api.save_active_config(config)
     except Exception as ex:
         return jsonify({"ok": False, "message": f"Failed to save config: {ex}"}), 500
     return jsonify({"ok": True, "message": "SoundForge config saved."})
@@ -4492,36 +7403,10 @@ def soundforge_save_config():
 def export_soundforge_bundle():
     """Export current config + all referenced sounds as a .B4Gsoundforge zip bundle."""
     try:
-        source_config_path = SOUNDFORGE_CONFIG_PATH if os.path.exists(SOUNDFORGE_CONFIG_PATH) else LEGACY_SOUNDSTAGE_CONFIG_PATH
-        with open(source_config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
+        bundle_path = soundforge_api.export_bundle(Path(SOUNDFORGE_SCHEMES_DIR) / "exported.B4Gsoundforge")
     except Exception as e:
-        return jsonify({"ok": False, "message": f"Failed to load config: {e}"}), 500
-    # Gather all sound files
-    sound_files = set()
-    def gather_files(entry):
-        if not entry or not isinstance(entry, dict):
-            return
-        for f in entry.get("files", []):
-            if f: sound_files.add(f)
-    if "global" in config:
-        for v in config["global"].values():
-            gather_files(v)
-    if "per_app" in config:
-        for events in config["per_app"].values():
-            for v in events.values():
-                gather_files(v)
-    # Prepare bundle
-    bundle_path = os.path.join(SOUNDFORGE_SCHEMES_DIR, "exported.B4Gsoundforge")
-    with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as z:
-        # Add config (rewrite paths to just 'sounds/filename')
-        config_for_bundle = _rewrite_config_paths(json.loads(json.dumps(config)), sound_dir="sounds")
-        z.writestr("soundforge_config.json", json.dumps(config_for_bundle, indent=2))
-        # Add all sound files
-        for f in sound_files:
-            if os.path.exists(f):
-                z.write(f, arcname=os.path.join("sounds", os.path.basename(f)))
-    return send_file(bundle_path, as_attachment=True, download_name="exported.B4Gsoundforge")
+        return jsonify({"ok": False, "message": f"Failed to export bundle: {e}"}), 500
+    return send_file(str(bundle_path), as_attachment=True, download_name="exported.B4Gsoundforge")
 
 @app.post("/api/soundforge/import_bundle")
 @app.post("/api/soundstage/import_bundle")
@@ -4531,52 +7416,168 @@ def import_soundforge_bundle():
         return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
     bundle = request.files["bundle"]
     scheme_name = request.form.get("scheme_name", "imported_scheme")
-    scheme_dir = os.path.join(SOUNDFORGE_SCHEMES_DIR, scheme_name)
-    os.makedirs(scheme_dir, exist_ok=True)
-    # Extract bundle
-    with zipfile.ZipFile(bundle, "r") as z:
-        z.extractall(scheme_dir)
-    # Move/copy sounds to managed dir
-    sounds_src = os.path.join(scheme_dir, "sounds")
-    for fname in os.listdir(sounds_src):
-        src = os.path.join(sounds_src, fname)
-        dst = os.path.join(SOUNDFORGE_SOUNDS_DIR, fname)
-        shutil.copy2(src, dst)
-    # Load and rewrite config
-    config_path = os.path.join(scheme_dir, "soundforge_config.json")
-    if not os.path.exists(config_path):
-        config_path = os.path.join(scheme_dir, "soundstage_config.json")
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    config = _rewrite_config_paths(config, sound_dir="core/soundforge_schemes/sounds")
-    # Save as active config
-    with open(SOUNDFORGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
-    with open(LEGACY_SOUNDSTAGE_CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
-    return jsonify({"ok": True, "message": f"Imported scheme '{scheme_name}' and activated."})
+    collision_policy = request.form.get("collision_policy", "rename")
+    try:
+        result = soundforge_api.import_bundle(
+            bundle.stream,
+            scheme_name=scheme_name,
+            collision_policy=collision_policy,
+        )
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to import bundle: {ex}"}), 500
+    return jsonify(
+        {
+            "ok": True,
+            "message": f"Imported scheme '{result.get('scheme_name', scheme_name)}' and activated.",
+            "result": result,
+        }
+    )
 
 @app.get("/api/soundforge/list_schemes")
 @app.get("/api/soundstage/list_schemes")
 def list_soundforge_schemes():
     """List available imported SoundForge schemes."""
-    schemes = []
-    for name in os.listdir(SOUNDFORGE_SCHEMES_DIR):
-        path = os.path.join(SOUNDFORGE_SCHEMES_DIR, name)
-        if os.path.isdir(path):
-            schemes.append(name)
-    if not schemes and os.path.isdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
-        for name in os.listdir(LEGACY_SOUNDSTAGE_SCHEMES_DIR):
-            path = os.path.join(LEGACY_SOUNDSTAGE_SCHEMES_DIR, name)
-            if os.path.isdir(path):
-                schemes.append(name)
+    schemes = soundforge_api.list_schemes()
     return jsonify({"ok": True, "schemes": schemes})
+
+
+@app.post("/api/soundforge/activate_scheme")
+@app.post("/api/soundstage/activate_scheme")
+def activate_soundforge_scheme():
+    payload = request.get_json(force=True, silent=True) or {}
+    scheme_name = payload.get("scheme_name")
+    if not isinstance(scheme_name, str) or not scheme_name.strip():
+        return jsonify({"ok": False, "message": "scheme_name is required"}), 400
+    try:
+        result = soundforge_api.activate_scheme(scheme_name)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Failed to activate scheme: {ex}"}), 500
+    return jsonify(result)
+
+
+@app.post("/api/soundforge/validate_bundle")
+@app.post("/api/soundstage/validate_bundle")
+def validate_soundforge_bundle():
+    if "bundle" not in request.files:
+        return jsonify({"ok": False, "message": "No bundle uploaded"}), 400
+    bundle = request.files["bundle"]
+    try:
+        report = soundforge_api.validate_bundle(bundle.stream)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Validation failed: {ex}"}), 500
+    return jsonify(report)
+
+
+@app.get("/api/soundforge/diagnostics")
+@app.get("/api/soundstage/diagnostics")
+def soundforge_diagnostics():
+    try:
+        report = soundforge_api.diagnose_config()
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Diagnostics failed: {ex}"}), 500
+    return jsonify(report)
+
+
+@app.get("/api/soundforge/migration_status")
+@app.get("/api/soundstage/migration_status")
+def soundforge_migration_status():
+    try:
+        status = soundforge_api.migration_status()
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Migration status failed: {ex}"}), 500
+    return jsonify({"ok": True, "status": status})
+
+
+@app.post("/api/soundforge/migrate_legacy")
+@app.post("/api/soundstage/migrate_legacy")
+def soundforge_migrate_legacy():
+    payload = request.get_json(force=True, silent=True) or {}
+    collision_policy = str(payload.get("collision_policy", "rename")).strip().lower()
+    if collision_policy not in {"rename", "replace", "fail"}:
+        return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
+    try:
+        result = soundforge_api.migrate_legacy_to_soundforge(collision_policy=collision_policy)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Migration failed: {ex}"}), 500
+    return jsonify(result)
+
+
+@app.post("/api/soundforge/finalize_soundstage_removal")
+@app.post("/api/soundstage/finalize_removal")
+def soundforge_finalize_soundstage_removal():
+    payload = request.get_json(force=True, silent=True) or {}
+    collision_policy = str(payload.get("collision_policy", "rename")).strip().lower()
+    if collision_policy not in {"rename", "replace", "fail"}:
+        return jsonify({"ok": False, "message": "collision_policy must be rename|replace|fail"}), 400
+    try:
+        result = soundforge_api.finalize_soundstage_removal(collision_policy=collision_policy)
+    except Exception as ex:
+        return jsonify({"ok": False, "message": f"Finalization failed: {ex}"}), 500
+    code = 200 if result.get("ok") else 409
+    return jsonify(result), code
 
 
 
 ###############################
 # Collaborative Agent Editing #
 ###############################
+
+
+def _collab_join_flow(
+    agent_editors: dict[str, set[str]],
+    agent_locks: dict[str, str],
+    data: dict,
+    *,
+    emit_fn,
+    join_room_fn,
+) -> None:
+    agent, presence = collab_api.join_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    join_room_fn(agent)
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_leave_flow(
+    agent_editors: dict[str, set[str]],
+    agent_locks: dict[str, str],
+    data: dict,
+    *,
+    emit_fn,
+    leave_room_fn,
+) -> None:
+    agent, presence = collab_api.leave_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    leave_room_fn(agent)
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_lock_flow(agent_editors: dict[str, set[str]], agent_locks: dict[str, str], data: dict, *, emit_fn) -> None:
+    agent, presence = collab_api.lock_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_unlock_flow(agent_editors: dict[str, set[str]], agent_locks: dict[str, str], data: dict, *, emit_fn) -> None:
+    agent, presence = collab_api.unlock_agent(agent_editors, agent_locks, data)
+    if not presence.get("ok"):
+        emit_fn("presence", presence)
+        return
+    emit_fn("presence", presence, room=agent)
+
+
+def _collab_edit_flow(data: dict, *, emit_fn) -> None:
+    agent, payload = collab_api.edit_agent_payload(data)
+    if not payload.get("ok"):
+        emit_fn("agent_edit", payload)
+        return
+    emit_fn("agent_edit", payload, room=agent, include_self=False)
+
 
 try:
     from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -4587,48 +7588,23 @@ try:
 
     @socketio.on('join_agent')
     def handle_join_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        join_room(agent)
-        agent_editors.setdefault(agent, set()).add(user)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors[agent]), 'lock': agent_locks.get(agent)}, room=agent)
+        _collab_join_flow(agent_editors, agent_locks, data, emit_fn=emit, join_room_fn=join_room)
 
     @socketio.on('leave_agent')
     def handle_leave_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        leave_room(agent)
-        if agent in agent_editors:
-            agent_editors[agent].discard(user)
-            if not agent_editors[agent]:
-                agent_editors.pop(agent)
-        if agent_locks.get(agent) == user:
-            agent_locks.pop(agent)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        _collab_leave_flow(agent_editors, agent_locks, data, emit_fn=emit, leave_room_fn=leave_room)
 
     @socketio.on('lock_agent')
     def handle_lock_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        if agent_locks.get(agent) in (None, user):
-            agent_locks[agent] = user
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        _collab_lock_flow(agent_editors, agent_locks, data, emit_fn=emit)
 
     @socketio.on('unlock_agent')
     def handle_unlock_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        if agent_locks.get(agent) == user:
-            agent_locks.pop(agent)
-        emit('presence', {'agent': agent, 'editors': list(agent_editors.get(agent, [])), 'lock': agent_locks.get(agent)}, room=agent)
+        _collab_unlock_flow(agent_editors, agent_locks, data, emit_fn=emit)
 
     @socketio.on('edit_agent')
     def handle_edit_agent(data):
-        agent = str(data.get('agent', '')).strip().lower()
-        user = str(data.get('user', 'anon')).strip()
-        content = data.get('content', {})
-        # Broadcast edit to all in room except sender
-        emit('agent_edit', {'agent': agent, 'user': user, 'content': content}, room=agent, include_self=False)
+        _collab_edit_flow(data, emit_fn=emit)
 except ImportError:
     socketio = None
 
@@ -4651,23 +7627,48 @@ def _save_json_state(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def _read_bossgate_transfers(limit: int = 20) -> dict:
+    path = bus.state / "bossgate_transfers.jsonl"
+    if not path.exists():
+        return {"ok": True, "items": []}
+    entries = []
+    try:
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(item, dict):
+                entries.append(item)
+    except OSError as ex:
+        return {"ok": False, "message": str(ex), "items": []}
+    lim = max(1, int(limit))
+    normalized = []
+    for item in entries[-lim:]:
+        normalized.append(
+            {
+                **item,
+                "presence_color": str(item.get("presence_color", "")).strip() or "grey",
+                "agent_name": str(item.get("agent_name", "")).strip(),
+                "discovery_state": str(item.get("discovery_state", "")).strip() or "revealed",
+            }
+        )
+    return {"ok": True, "items": normalized}
+
+
 def _default_scheduler_state() -> dict:
-    return {"jobs": [], "history": []}
+    return ops_runtime_api.default_scheduler_state()
 
 
 def _default_cicd_state() -> dict:
-    return {"last_run": {}, "history": []}
+    return ops_runtime_api.default_cicd_state()
 
 
 def _default_onboarding_state() -> dict:
-    return {
-        "steps": {
-            "workspace_check": False,
-            "security_baseline": False,
-            "model_gateway": False,
-        },
-        "updated_at": "",
-    }
+    return onboarding_api.default_state()
 
 
 @app.route('/api/scheduler', methods=['GET', 'POST'])
@@ -4675,74 +7676,13 @@ def scheduler():
     state = _load_json_state(SCHEDULER_STATE_PATH, _default_scheduler_state())
 
     if request.method == 'GET':
-        return jsonify({"ok": True, **state})
+        return jsonify(ops_runtime_api.scheduler_get(state))
 
     payload = request.get_json(force=True, silent=True) or {}
-    action = str(payload.get("action", "")).strip().lower()
-
-    jobs = state.get("jobs") if isinstance(state.get("jobs"), list) else []
-    history = state.get("history") if isinstance(state.get("history"), list) else []
-
-    if action == "add":
-        label = str(payload.get("label", "")).strip() or "unnamed-job"
-        command = str(payload.get("command", "")).strip()
-        interval_seconds = max(30, int(payload.get("interval_seconds", 300)))
-        job_id = f"job-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
-        jobs.append(
-            {
-                "id": job_id,
-                "label": label,
-                "command": command,
-                "interval_seconds": interval_seconds,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
-        state["jobs"] = jobs
-        state["history"] = history[-50:]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job added", "job_id": job_id, **state})
-
-    if action == "remove":
-        job_id = str(payload.get("id", "")).strip()
-        if not job_id:
-            return jsonify({"ok": False, "message": "id is required"}), 400
-        state["jobs"] = [item for item in jobs if str(item.get("id", "")).strip() != job_id]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job removed", **state})
-
-    if action == "run_now":
-        job_id = str(payload.get("id", "")).strip()
-        if not job_id:
-            return jsonify({"ok": False, "message": "id is required"}), 400
-        job = next((item for item in jobs if str(item.get("id", "")).strip() == job_id), None)
-        if not isinstance(job, dict):
-            return jsonify({"ok": False, "message": "job not found"}), 404
-
-        command = str(job.get("command", "")).strip()
-        if not command:
-            result = {"ok": True, "message": "job has no command; treated as metadata-only task", "exit_code": 0}
-        else:
-            proc = subprocess.run(command, cwd=str(PROJECT_ROOT), shell=True, capture_output=True, text=True)
-            result = {
-                "ok": proc.returncode == 0,
-                "exit_code": proc.returncode,
-                "stdout": (proc.stdout or "")[-2000:],
-                "stderr": (proc.stderr or "")[-2000:],
-            }
-
-        history.append(
-            {
-                "job_id": job_id,
-                "label": str(job.get("label", "")).strip(),
-                "ran_at": datetime.now(timezone.utc).isoformat(),
-                **result,
-            }
-        )
-        state["history"] = history[-100:]
-        _save_json_state(SCHEDULER_STATE_PATH, state)
-        return jsonify({"ok": True, "message": "job executed", "result": result, **state})
-
-    return jsonify({"ok": False, "message": "unsupported scheduler action"}), 400
+    result, status = ops_runtime_api.scheduler_post(state=state, payload=payload, project_root=PROJECT_ROOT)
+    if status == 200 and result.get("ok"):
+        _save_json_state(SCHEDULER_STATE_PATH, {k: v for k, v in result.items() if k not in {"ok", "message", "result"}})
+    return jsonify(result), status
 
 
 @app.route('/api/cicd', methods=['GET', 'POST'])
@@ -4750,37 +7690,13 @@ def cicd():
     state = _load_json_state(CICD_STATE_PATH, _default_cicd_state())
 
     if request.method == 'GET':
-        return jsonify({"ok": True, **state})
+        return jsonify(ops_runtime_api.cicd_get(state))
 
     payload = request.get_json(force=True, silent=True) or {}
-    action = str(payload.get("action", "")).strip().lower()
-    suite = str(payload.get("suite", "quick")).strip().lower()
-
-    if action != "run":
-        return jsonify({"ok": False, "message": "unsupported cicd action"}), 400
-
-    if suite == "full":
-        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests"]
-    else:
-        cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]
-
-    proc = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
-    result = {
-        "suite": suite,
-        "command": " ".join(cmd),
-        "ok": proc.returncode == 0,
-        "exit_code": proc.returncode,
-        "stdout": (proc.stdout or "")[-5000:],
-        "stderr": (proc.stderr or "")[-5000:],
-        "ran_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    history = state.get("history") if isinstance(state.get("history"), list) else []
-    history.append(result)
-    state["last_run"] = result
-    state["history"] = history[-30:]
-    _save_json_state(CICD_STATE_PATH, state)
-    return jsonify({"ok": True, **state})
+    result, status = ops_runtime_api.cicd_post(state=state, payload=payload, project_root=PROJECT_ROOT)
+    if status == 200 and result.get("ok"):
+        _save_json_state(CICD_STATE_PATH, {k: v for k, v in result.items() if k != "ok"})
+    return jsonify(result), status
 
 
 @app.route('/api/onboarding', methods=['POST'])
@@ -4789,35 +7705,17 @@ def onboarding():
     state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
     payload = request.get_json(force=True, silent=True) or {}
     step = str(payload.get("step", "")).strip().lower()
-
-    if step == "workspace_check":
-        checks = {
-            "project_root_exists": PROJECT_ROOT.exists(),
-            "bus_state_exists": (bus.root / "state").exists(),
-            "core_exists": (PROJECT_ROOT / "core").exists(),
-            "ui_exists": (PROJECT_ROOT / "ui").exists(),
-        }
-        state.setdefault("checks", {}).update(checks)
-        state.setdefault("steps", {})["workspace_check"] = all(bool(v) for v in checks.values())
-    elif step in {"security_baseline", "model_gateway"}:
-        state.setdefault("steps", {})[step] = True
-    else:
-        return jsonify({"ok": False, "message": "unsupported onboarding step"}), 400
-
-    state["updated_at"] = datetime.now(timezone.utc).isoformat()
-    _save_json_state(ONBOARDING_STATE_PATH, state)
-    return jsonify({"ok": True, **state})
+    result, status = onboarding_api.apply_step(state, step, PROJECT_ROOT, bus.root)
+    if status == 200:
+        _save_json_state(ONBOARDING_STATE_PATH, {k: v for k, v in result.items() if k != "ok"})
+    return jsonify(result), status
 
 
 @app.route('/api/onboarding/status', methods=['GET'])
 @app.route('/onboarding', methods=['GET'])
 def onboarding_status():
     state = _load_json_state(ONBOARDING_STATE_PATH, _default_onboarding_state())
-    steps = state.get("steps") if isinstance(state.get("steps"), dict) else {}
-    completion = 0.0
-    if steps:
-        completion = round((sum(1 for value in steps.values() if bool(value)) / max(1, len(steps))) * 100.0, 1)
-    return jsonify({"ok": True, "completion_percent": completion, **state})
+    return jsonify(onboarding_api.status_payload(state))
 
 
 def main() -> None:

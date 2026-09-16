@@ -1,0 +1,15 @@
+{
+  "triggers": [
+    {
+      "id": "deploy-alert",
+      "enabled": false,
+      "url": "http://127.0.0.1:9000/webhook/runeforge",
+      "keywords": [
+        "deploy",
+        "production",
+        "outage",
+        "incident"
+      ]
+    }
+  ]
+}
