@@ -32,11 +32,11 @@ Contains test suites and supporting validation assets.
 - Smoke (fast sanity subset):
   - `python -m unittest tests.test_rune_bus`
 - Focused (single subsystem/module):
-  - `python -m unittest tests.test_archivist_agent`
+  - `python -m unittest tests.test_os_snapshot`
 - Full Python suite from repo root:
   - `python -m unittest discover -s tests`
 
 ## Current Full-Suite Notes
 
 - `python -m unittest discover` (without `-s tests`) currently reports `Ran 0 tests`.
-- The discovered full suite currently has pre-existing failures on this branch (for example agent profile validation, missing optional `psutil`, and Windows-only security vault imports on Linux).
+- The discovered full suite currently has pre-existing failures on this branch, primarily agent profile validation and a missing model-gateway persistence method.
