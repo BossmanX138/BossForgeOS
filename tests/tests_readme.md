@@ -40,4 +40,4 @@ Contains test suites and supporting validation assets.
 
 - `python -m unittest discover` (without `-s tests`) currently reports `Ran 0 tests`.
 - Use `python -m unittest discover -s tests` from the repository root to run the full suite; a zero-test result from the default discovery command is not a full-suite validation.
-- As of the latest verification, `python -m unittest discover -s tests` passes the full suite (425 tests, `OK`); there are no known pre-existing failures.
+- Locally, `python -m unittest discover -s tests -p "test_*.py" -q` passes the full suite (425 tests, `OK`). Hosted Windows CI has separately reported failures in this run; see the workflow's latest results for current status.
