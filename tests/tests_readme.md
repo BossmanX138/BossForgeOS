@@ -39,4 +39,5 @@ Contains test suites and supporting validation assets.
 ## Current Full-Suite Notes
 
 - `python -m unittest discover` (without `-s tests`) currently reports `Ran 0 tests`.
-- The discovered full suite currently has pre-existing failures on this branch, primarily agent profile validation and a missing model-gateway persistence method.
+- Use `python -m unittest discover -s tests` from the repository root to run the full suite; a zero-test result from the default discovery command is not a full-suite validation.
+- As of the latest verification, `python -m unittest discover -s tests` passes the full suite (425 tests, `OK`); there are no known pre-existing failures.
