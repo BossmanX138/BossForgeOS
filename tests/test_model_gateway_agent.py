@@ -1434,7 +1434,10 @@ class ModelGatewayAgentTests(unittest.TestCase):
             **self.AUTH,
         )
         self.assertTrue(installed["ok"])
-        self.assertEqual(agent.agent_profiles["licensed_runner"]["installed_license_file"], issued["license_file"])
+        self.assertEqual(
+            Path(agent.agent_profiles["licensed_runner"]["installed_license_file"]),
+            Path(issued["license_file"]).resolve(),
+        )
 
     def test_run_agent_profile_rejects_expired_license_before_model_invoke(self) -> None:
         agent = ModelGatewayAgent(interval_seconds=1)
