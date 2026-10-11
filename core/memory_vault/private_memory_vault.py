@@ -1444,7 +1444,13 @@ def validate_private_memory_descriptor(
         raise ValueError("private memory descriptor owner root escapes vault_root")
 
     lexical_manifest_path = Path(ciphertext_ref)
-    if lexical_manifest_path != lexical_agent_root / "vault.manifest.enc":
+    # initialize() emits the canonical (resolved) path; accept it as well as the lexical form
+    # so non-canonical vault_root values (e.g. Windows 8.3 short names) still validate.
+    if lexical_manifest_path == lexical_agent_root / "vault.manifest.enc":
+        manifest_ref_root = lexical_agent_root
+    elif lexical_manifest_path == resolved_owner_root / "vault.manifest.enc":
+        manifest_ref_root = resolved_owner_root
+    else:
         raise ValueError("private memory descriptor ciphertext_ref path mismatch")
     if _is_reparse_or_symlink(lexical_manifest_path):
         raise ValueError("private memory descriptor manifest reparse or symlink rejected")
@@ -1453,7 +1459,7 @@ def validate_private_memory_descriptor(
     if manifest_path != expected_manifest_path:
         raise ValueError("private memory descriptor ciphertext_ref path rebind rejected")
     try:
-        lexical_manifest_path.relative_to(lexical_agent_root)
+        lexical_manifest_path.relative_to(manifest_ref_root)
     except ValueError as exc:
         raise ValueError("private memory descriptor path escape rejected") from exc
     if not _is_parent_or_self(resolved_root, manifest_path):
