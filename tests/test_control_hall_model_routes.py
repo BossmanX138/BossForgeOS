@@ -1,3 +1,4 @@
+import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -7,6 +8,18 @@ from ui import control_hall
 class ControlHallModelRouteTests(unittest.TestCase):
     def setUp(self) -> None:
         self.client = control_hall.app.test_client()
+        control_hall._BOSSGATE_SESSIONS.clear()
+        session_token = "control-hall-model-route-test-session"
+        control_hall._BOSSGATE_SESSIONS[control_hall._bossgate_session_digest(session_token)] = {
+            "userId": "bossforge-owner",
+            "username": "bossforge-owner",
+            "targetApp": "bossforgeos",
+            "source": "test-fixture",
+            "issuedAt": int(time.time()),
+            "expiresAt": int(time.time()) + 60,
+        }
+        self.client.set_cookie(control_hall._BOSSGATE_SESSION_COOKIE, session_token)
+        self.addCleanup(control_hall._BOSSGATE_SESSIONS.clear)
 
     @patch.object(control_hall.model_gateway_api, "list_endpoints_from_state")
     def test_model_endpoints_uses_adapter(self, mock_list_endpoints) -> None:
@@ -157,11 +170,12 @@ class ControlHallModelRouteTests(unittest.TestCase):
     @patch("ui.control_hall._bossgate_authorization")
     def test_bossgate_access_role_create_forwards_security_admin(self, mock_registry_factory) -> None:
         registry = Mock()
+        registry.has_permission.return_value = True
         registry.create_or_update_custom_role.return_value = {"ok": True, "role": "auditor"}
         mock_registry_factory.return_value = registry
         res = self.client.post(
             "/api/bossgate/access/roles",
-            json={"acting_user": "bossforge-owner", "role_name": "auditor", "permissions": ["bossgate.map.view"]},
+            json={"acting_user": "spoofed-client-value", "role_name": "auditor", "permissions": ["bossgate.map.view"]},
         )
         self.assertEqual(res.status_code, 200)
         registry.create_or_update_custom_role.assert_called_once_with(
@@ -173,11 +187,12 @@ class ControlHallModelRouteTests(unittest.TestCase):
     @patch("ui.control_hall._bossgate_authorization")
     def test_bossgate_access_user_assignment_forwards_multiple_roles(self, mock_registry_factory) -> None:
         registry = Mock()
+        registry.has_permission.return_value = True
         registry.assign_user_roles.return_value = {"ok": True, "user_id": "hybrid"}
         mock_registry_factory.return_value = registry
         res = self.client.post(
             "/api/bossgate/access/users/hybrid/roles",
-            json={"acting_user": "bossforge-owner", "roles": ["commerce_manager", "support_engineer"]},
+            json={"acting_user": "spoofed-client-value", "roles": ["commerce_manager", "support_engineer"]},
         )
         self.assertEqual(res.status_code, 200)
         registry.assign_user_roles.assert_called_once_with(

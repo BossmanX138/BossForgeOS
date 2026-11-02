@@ -1,14 +1,18 @@
 import atexit
 import base64
+import hashlib
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import time
 
 from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
+from urllib.parse import urlsplit
 
 # === Path Resolver for Bundled/Source Modes ===
 def get_project_root():
@@ -21,7 +25,7 @@ PROJECT_ROOT = get_project_root()
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from flask import Flask, jsonify, render_template_string, request, send_file
+from flask import Flask, g, jsonify, render_template_string, request, send_file
 
 
 from core.rune.rune_bus import RuneBus, resolve_root_from_env
@@ -42,6 +46,9 @@ from modules.ops_runtime import agent_state_adapter as agent_state_api
 
 _ASS_HANDOFF_MAX_AGE_SECONDS = 600
 _ASS_CONSUMED_LAUNCH_TICKETS: set[str] = set()
+_BOSSGATE_SESSION_MAX_AGE_SECONDS = 3600
+_BOSSGATE_SESSION_COOKIE = "bossforge_session"
+_BOSSGATE_SESSIONS: dict[str, dict] = {}
 from modules.ops_runtime import task_tracker_adapter as task_tracker_api
 from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
@@ -56,6 +63,88 @@ PIN_OVERLAY_PROCESS = None
 
 def _bossgate_authorization() -> BossGateAuthorizationRegistry:
     return BossGateAuthorizationRegistry(bus.state / "bossgate_human_roles.json")
+
+
+def _bossgate_session_digest(token: str) -> str:
+    return hashlib.sha256(str(token).encode("utf-8")).hexdigest()
+
+
+def _create_bossgate_session(handoff: dict, *, target_app: str) -> tuple[str, dict]:
+    now = int(time.time())
+    token = secrets.token_urlsafe(32)
+    principal = {
+        "userId": str(handoff.get("userId", "") or "").strip(),
+        "username": str(handoff.get("username", "") or "").strip(),
+        "targetApp": str(target_app).strip().lower(),
+        "source": "ass",
+        "issuedAt": now,
+        "expiresAt": now + _BOSSGATE_SESSION_MAX_AGE_SECONDS,
+    }
+    _BOSSGATE_SESSIONS[_bossgate_session_digest(token)] = principal
+    return token, principal
+
+
+def _request_bossgate_principal() -> tuple[dict | None, str]:
+    token = str(request.cookies.get(_BOSSGATE_SESSION_COOKIE, "") or "").strip()
+    if not token:
+        return None, "authentication required"
+    digest = _bossgate_session_digest(token)
+    principal = _BOSSGATE_SESSIONS.get(digest)
+    if not isinstance(principal, dict):
+        return None, "invalid session credential"
+    try:
+        expires_at = int(principal.get("expiresAt", 0))
+    except (TypeError, ValueError):
+        expires_at = 0
+    if expires_at <= int(time.time()):
+        _BOSSGATE_SESSIONS.pop(digest, None)
+        return None, "session credential expired"
+    if principal.get("targetApp") != "bossforgeos" or not str(principal.get("userId", "")).strip():
+        return None, "invalid session principal"
+    return dict(principal), ""
+
+
+def _normalized_origin(value: str) -> tuple[str, str, int] | None:
+    try:
+        parsed = urlsplit(str(value).strip())
+        if not parsed.scheme or not parsed.hostname or parsed.username or parsed.password:
+            return None
+        default_port = 443 if parsed.scheme.lower() == "https" else 80
+        return parsed.scheme.lower(), parsed.hostname.lower(), parsed.port or default_port
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_same_origin_request() -> bool:
+    fetch_site = str(request.headers.get("Sec-Fetch-Site", "") or "").strip().lower()
+    if fetch_site and fetch_site not in {"same-origin", "none"}:
+        return False
+    source = str(request.headers.get("Origin", "") or request.headers.get("Referer", "") or "").strip()
+    if not source:
+        return True
+    return _normalized_origin(source) == _normalized_origin(request.host_url)
+
+
+def _require_bossgate_permission(permission: str):
+    def decorate(view):
+        @wraps(view)
+        def protected(*args, **kwargs):
+            principal, error = _request_bossgate_principal()
+            if principal is None:
+                return jsonify({"ok": False, "message": error}), 401
+            if not _is_same_origin_request():
+                return jsonify({"ok": False, "message": "cross-origin request denied"}), 403
+            user_id = str(principal.get("userId", "")).strip()
+            authorization = _bossgate_authorization()
+            if not authorization.has_permission(user_id, permission):
+                return jsonify({"ok": False, "message": f"authorization denied: {permission} is required"}), 403
+            g.bossgate_principal = principal
+            g.bossgate_authorization = authorization
+            return view(*args, **kwargs)
+
+        return protected
+
+    return decorate
 PIN_OVERLAY_VIEW = ""
 PIN_OVERLAY_ALPHA = 0.95
 AGENTFORGE_POOL_PATH = PROJECT_ROOT / "state" / "agentforge_custom_pool.json"
@@ -6598,6 +6687,8 @@ def auth_launch_ticket_exchange():
     target_app = str(payload.get("targetApp", "")).strip().lower()
     handoff = _read_ass_session_handoff()
 
+    if not _is_same_origin_request():
+        return jsonify({"ok": False, "message": "cross-origin request denied"}), 403
     if not ticket_id or not target_app:
         return jsonify({"ok": False, "message": "ticketId and targetApp are required."}), 400
     validation_error = _validate_ass_session_handoff(
@@ -6609,6 +6700,7 @@ def auth_launch_ticket_exchange():
         status = 403 if validation_error == "Launch ticket mismatch." else 409 if "already been used" in validation_error else 401
         return jsonify({"ok": False, "message": validation_error}), status
 
+    session_token, principal = _create_bossgate_session(handoff, target_app=target_app)
     session = {
         "userId": str(handoff.get("userId", "")).strip(),
         "username": str(handoff.get("username", "")).strip(),
@@ -6616,11 +6708,22 @@ def auth_launch_ticket_exchange():
         "targetApp": target_app,
         "launchTicketId": ticket_id,
         "issuedAt": handoff.get("ts"),
+        "expiresAt": principal["expiresAt"],
         "bosskey": handoff.get("bosskey") if isinstance(handoff.get("bosskey"), dict) else {},
         "source": "ass",
     }
     _ASS_CONSUMED_LAUNCH_TICKETS.add(ticket_id)
-    return jsonify({"ok": True, "session": session})
+    response = jsonify({"ok": True, "session": session})
+    response.set_cookie(
+        _BOSSGATE_SESSION_COOKIE,
+        session_token,
+        max_age=_BOSSGATE_SESSION_MAX_AGE_SECONDS,
+        httponly=True,
+        secure=request.is_secure,
+        samesite="Strict",
+        path="/api/bossgate/access",
+    )
+    return response
 
 
 @app.get("/api/assets/icons/<path:filename>")
@@ -7015,11 +7118,12 @@ def bossgate_access_policy_update():
 
 
 @app.post("/api/bossgate/access/roles")
+@_require_bossgate_permission("bossgate.roles.manage")
 def bossgate_access_roles():
     payload = request.get_json(force=True, silent=True) or {}
     permissions = payload.get("permissions") if isinstance(payload.get("permissions"), list) else []
-    result = _bossgate_authorization().create_or_update_custom_role(
-        acting_user=str(payload.get("acting_user", "")).strip(),
+    result = g.bossgate_authorization.create_or_update_custom_role(
+        acting_user=str(g.bossgate_principal["userId"]).strip(),
         role_name=str(payload.get("role_name", "")).strip(),
         permissions=[str(item) for item in permissions],
     )
@@ -7027,11 +7131,12 @@ def bossgate_access_roles():
 
 
 @app.post("/api/bossgate/access/users/<user_id>/roles")
+@_require_bossgate_permission("bossgate.roles.manage")
 def bossgate_access_user_roles(user_id: str):
     payload = request.get_json(force=True, silent=True) or {}
     roles = payload.get("roles") if isinstance(payload.get("roles"), list) else []
-    result = _bossgate_authorization().assign_user_roles(
-        acting_user=str(payload.get("acting_user", "")).strip(),
+    result = g.bossgate_authorization.assign_user_roles(
+        acting_user=str(g.bossgate_principal["userId"]).strip(),
         user_id=str(user_id).strip(),
         roles=[str(item) for item in roles],
     )
