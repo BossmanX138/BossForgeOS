@@ -49,6 +49,7 @@ _ASS_CONSUMED_LAUNCH_TICKETS: set[str] = set()
 _BOSSGATE_SESSION_MAX_AGE_SECONDS = 3600
 _BOSSGATE_SESSION_COOKIE = "bossforge_session"
 _BOSSGATE_SESSIONS: dict[str, dict] = {}
+_BOSSCRAFTS_CAPABILITY_TOKENS_ENV = "BOSSFORGEOS_CAPABILITY_TOKENS_JSON"
 from modules.ops_runtime import task_tracker_adapter as task_tracker_api
 from modules.collab_runtime import api_adapter as collab_api
 from core.state.os_state import build_os_state, diff_os_states
@@ -102,6 +103,39 @@ def _request_bossgate_principal() -> tuple[dict | None, str]:
     if principal.get("targetApp") != "bossforgeos" or not str(principal.get("userId", "")).strip():
         return None, "invalid session principal"
     return dict(principal), ""
+
+
+def _configured_capability_tokens() -> dict[str, str] | None:
+    raw = str(os.environ.get(_BOSSCRAFTS_CAPABILITY_TOKENS_ENV, "") or "").strip()
+    if not raw:
+        return None
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    tokens = {
+        str(consumer).strip().lower(): str(token).strip()
+        for consumer, token in payload.items()
+        if str(consumer).strip() and isinstance(token, str) and len(str(token).strip()) >= 32
+    }
+    return tokens or None
+
+
+def _authorize_capability_request() -> tuple[bool, int, str]:
+    tokens = _configured_capability_tokens()
+    if tokens is None:
+        return False, 503, "capability authentication is not configured"
+    consumer = str(request.headers.get("X-BossCrafts-Consumer", "") or "").strip().lower()
+    authorization = str(request.headers.get("Authorization", "") or "").strip()
+    if not consumer or not authorization.startswith("Bearer "):
+        return False, 401, "capability credential is required"
+    supplied = authorization[7:].strip()
+    expected = tokens.get(consumer)
+    if not expected or not supplied or not secrets.compare_digest(supplied, expected):
+        return False, 403, "capability credential is invalid"
+    return True, 200, ""
 
 
 def _normalized_origin(value: str) -> tuple[str, str, int] | None:
@@ -6760,6 +6794,14 @@ def status():
             "recent_events": latest,
         }
     )
+
+
+@app.get("/api/v1/capabilities/system-status")
+def capability_system_status():
+    authorized, status_code, message = _authorize_capability_request()
+    if not authorized:
+        return jsonify({"ok": False, "message": message}), status_code
+    return jsonify({"provider": "bossforgeos", "status": "online", "version": "1.0.0"})
 
 
 @app.get("/api/os/state")

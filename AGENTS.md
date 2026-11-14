@@ -1,30 +1,19 @@
-# BossCrafts Universal Project Isolation Policy
+# BossForgeOS project instructions
 
-**MANDATORY: Applies to every BossCrafts project, past, present, and future.**
+## BossCrafts Cross-Project Resource Policy
 
-1. Before operations, determine and record the canonical active project root. If ambiguous, STOP.
-2. All project writes, edits, generated files, logs, caches, temporary files, downloads, artifacts, and destructive actions MUST remain inside that project root. Never modify another project or any external path.
-3. Treat other projects as strictly READ-ONLY. COPY any needed code, assets, configurations, models, templates, or other resources into the active root *before use*. Never move or edit sources. Preserve provenance and licensing.
-4. Do not circumvent isolation using symlinks, hardlinks, junctions, submodules, mounts, path traversal, inherited output paths, or external build scripts. Validate resolved destinations.
-5. Prefer relative paths inside root. Never depend on mutable files in another BossCrafts checkout. Bundle project-owned resources for whole-folder portability.
-6. Configure tools, agents, subprocesses, caches, temp dirs, and output dirs to write only within root. If this cannot be guaranteed, STOP rather than executing.
-7. Preserve existing project-specific instructions. Audit historical projects individually; do not assume compliance.
-8. Before declaring a project isolated, document root, source provenance, copied dependency hashes, unavoidable external OS/runtime prerequisites, and results of a clean-folder portability test in the project.
-9. If a request conflicts with this policy, STOP and report the conflict. No silent exceptions.
+This policy supersedes all earlier BossCrafts project-isolation and controlled-sharing rules.
 
-**Important:** Instructions alone are not a security boundary. Enforce with filesystem sandboxing/permissions and automated path-validation checks. External OS/runtime reads are permitted, but project-data writes outside root are forbidden.
+- Confirm the active project root before writing files.
+- When this project needs code, assets, configuration, models, templates, tooling, or other resources from another ordinary project, copy the required resources into this project's own root before modifying or integrating them. Copy; never move.
+- Treat the originating project as read-only during consumer-project work. Changes, generated output, caches, logs, and temporary files belong to the consuming project or its declared user-selected workspace.
+- Record copied-resource provenance, including the source project, version or commit when available, applicable license, and update method.
+- Do not use links, mounts, submodules, path traversal, or subprocess output paths to turn another ordinary project into a hidden writable dependency.
+- Shared-purpose resources are the exception. Databases, durable state stores, services, APIs, registries, model or package stores, shared-resource hubs, and projects explicitly designed to serve other projects may be used in place through their owner-approved interface or declared contract.
+- A shared-purpose resource may be written only when its ownership contract explicitly grants that operation. The grant covers only the declared API, database, state, or companion files; it does not grant general write access to the provider's source tree or unrelated state.
+- Maintenance of a provider project's implementation must be performed as explicit work in that provider project, not as an accidental side effect of consumer-project work.
+- Database migrations and repairs must preserve data, use recoverable procedures where supported, validate integrity, and never replace a canonical database with an empty substitute.
+- Keep credentials and encryption keys in approved secret storage.
+- Preserve stricter project-specific safety and quality rules unless they conflict with this policy. When they conflict, this policy controls cross-project resource use.
 
-
-## BossCrafts Controlled Sharing Amendment (2026-11-01; supersedes conflicting restrictions above)
-
-**ABSOLUTE INVARIANT: No project may modify another project's files, directories, configurations, caches, private data, or source.** This includes direct writes, indirect subprocess writes, deletes, renames, moves, and writes through linked paths. No user-facing integration changes this rule.
-
-**Approved opt-in sharing:** A project MAY read immutable, version-pinned centrally managed libraries, dependency environments (e.g. PyAudio), models, and assets from a separately governed shared-resource root. A consuming project MUST NOT write to that root. Each opted-in resource must be declared in an in-project manifest with resource ID, version/hash, access scope, license, and resolution path. No implicit access. Shared-library changes can only be made by an independent authorized maintenance workflow, never as part of a consuming project's work.
-
-**Cross-project features:** Use documented, versioned APIs or message protocols with explicit capabilities and least privilege. Invoking BossForgeOS from AgentForge does not grant AgentForge direct write access to BossForgeOS or its state. The receiving service may manage only its own state under its own authorization and policy. No source-tree mounts, shared-writable working directories, or hidden cross-project write paths.
-
-**Writes:** All project-owned outputs, caches, logs, builds, temp data, and checkpoints MUST remain within the active project's verified canonical root. Dedicated shared services may write *their own* service-owned storage under separate service authorization, not at the direction of a consumer's unrestricted filesystem access. Validate real paths, symlinks, junctions, subprocess and tool outputs; stop on boundary violation.
-
-**Portability:** Integrated mode declares external shared resources and reproducible resolution. Standalone release bundles redistributable components or a verified installer/dependency lock. No silent runtime dependency on other projects' private directories. Do not copy a dependency merely because it is accessed from the approved shared library; the earlier copy-before-use requirement remains in force for borrowing from *other project roots*, not the shared-resource hub.
-
-**Enforcement:** AGENTS.md is advisory, not a sandbox. Use OS permissions, capability tokens, path checks, integration tests, and explicit opt-in manifests. Fail closed on uncertain authorization. Never update another project's AGENTS.md as a side effect of working inside a different project; universal-policy rollout is a separately authorized administrative operation.
+`AGENTS.md` is operational guidance, not an operating-system security boundary. Use permissions, capability checks, path validation, and tests where enforcement matters.

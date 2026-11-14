@@ -304,6 +304,52 @@ class ControlHallAuthRouteTests(unittest.TestCase):
         self.assertEqual(res.status_code, 403)
         self.assertFalse(control_hall._BOSSGATE_SESSIONS)
 
+    def test_system_status_capability_fails_closed_when_unconfigured(self) -> None:
+        with patch.dict("os.environ", {}, clear=True):
+            res = self.client.get("/api/v1/capabilities/system-status")
+
+        self.assertEqual(res.status_code, 503)
+        self.assertIn("not configured", res.get_json()["message"])
+
+    def test_system_status_capability_requires_bearer_credential(self) -> None:
+        configured = json.dumps({"agentforge": "secret-capability-token-123456789012345"})
+        with patch.dict("os.environ", {"BOSSFORGEOS_CAPABILITY_TOKENS_JSON": configured}, clear=False):
+            res = self.client.get(
+                "/api/v1/capabilities/system-status",
+                headers={"X-BossCrafts-Consumer": "agentforge"},
+            )
+
+        self.assertEqual(res.status_code, 401)
+
+    def test_system_status_capability_rejects_wrong_consumer_or_token(self) -> None:
+        configured = json.dumps({"agentforge": "secret-capability-token-123456789012345"})
+        with patch.dict("os.environ", {"BOSSFORGEOS_CAPABILITY_TOKENS_JSON": configured}, clear=False):
+            wrong_consumer = self.client.get(
+                "/api/v1/capabilities/system-status",
+                headers={"X-BossCrafts-Consumer": "other", "Authorization": "Bearer secret-capability-token-123456789012345"},
+            )
+            wrong_token = self.client.get(
+                "/api/v1/capabilities/system-status",
+                headers={"X-BossCrafts-Consumer": "agentforge", "Authorization": "Bearer wrong-capability-token-123456789012345"},
+            )
+
+        self.assertEqual(wrong_consumer.status_code, 403)
+        self.assertEqual(wrong_token.status_code, 403)
+
+    def test_system_status_capability_returns_only_minimal_contract_payload(self) -> None:
+        configured = json.dumps({"agentforge": "secret-capability-token-123456789012345"})
+        with patch.dict("os.environ", {"BOSSFORGEOS_CAPABILITY_TOKENS_JSON": configured}, clear=False):
+            res = self.client.get(
+                "/api/v1/capabilities/system-status",
+                headers={"X-BossCrafts-Consumer": "agentforge", "Authorization": "Bearer secret-capability-token-123456789012345"},
+            )
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(
+            res.get_json(),
+            {"provider": "bossforgeos", "status": "online", "version": "1.0.0"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
