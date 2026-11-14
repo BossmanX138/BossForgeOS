@@ -1,0 +1,23 @@
+{
+  "$schema": "https://bosscrafts.local/schemas/project-manifest.v1.json",
+  "manifest_version": 1,
+  "project_id": "agentforge",
+  "permissions": {
+    "external_project_writes": false,
+    "shared_resource_modification": false
+  },
+  "resources": [
+    {"id": "bosscrafts.contracts", "version": "1.0.0", "modes": ["integrated", "standalone"]}
+  ],
+  "capabilities": [
+    {
+      "consumer": "agentforge",
+      "provider": "bossforgeos",
+      "contract": "bossforgeos.system-status",
+      "version": "1.0.0",
+      "access": "invoke",
+      "endpoint_env": "BOSSFORGEOS_API_URL",
+      "operations": ["getSystemStatus"]
+    }
+  ]
+}
