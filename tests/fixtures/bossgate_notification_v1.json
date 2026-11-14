@@ -1,0 +1,33 @@
+{
+  "envelope": {
+    "schema": "bosscrafts.bossgate.notification.v1",
+    "event_type": "repair.approval_requested",
+    "severity": "warning",
+    "source_gate": "archivist-gate",
+    "recipient_account_id": "account-1",
+    "preview": {
+      "title": "Approval requested",
+      "project_name": "Example \u2603",
+      "summary": "Review the proposed repair",
+      "action": "Open Archivist"
+    },
+    "correlation_id": "e09ccbad-0569-44ec-b07a-a7a37806b78f",
+    "message_id": "3675c3ec-b28d-412f-87ae-b3b380118bed",
+    "created_at": "2026-10-23T12:00:00Z",
+    "expires_at": "2026-10-24T12:00:00Z",
+    "nonce": "1111111111111111111111111111111111111111111111111111111111111111",
+    "key_id": "golden-envelope-1",
+    "sealed_payload": "eyJ2ZXJzaW9uIjoxLCJhbGciOiJBRVMtMjU2LUdDTSIsImtleV9pZCI6ImdvbGRlbi1lbnZlbG9wZS0xIiwibm9uY2VfYjY0IjoiQUFFQ0F3UUZCZ2NJQ1FvTCIsImNpcGhlcnRleHRfYjY0IjoiWmN4ZCtSeWFsTFcrWW56WGtJUDNxNThaVW9ERUQ1ZjY3MldidmlsVzY5NUgvZ0Q1SnJGTHhyNk00R1ZLNzM5MWRNaC9zMHc3anY2N1Vnanlmcnh2TTF2M2VRUmM5M3o2ampITW1EdURBTWVZMGcvTldvNFlpNFZabmRwcXp5TUx2aGg2OVJlNmx6T3M0a3NoeGNTaFppYjhhTkRiIn0=",
+    "signature": "377b63e15d1ff6f4c14fc8e798f3f7fa558b40d0611bfd18ccdad9734c0e6bc3",
+    "payload_hash": "4bb0b3f1d8f99c78bb0f8a54f684a2d5ed97d41f77b9bb49bca981846e191cc3"
+  },
+  "canonical_sha256": "989de1a3efbea28f70a7daf97adf92670d7d8d73491dd69a15328cb6a114f20d",
+  "secret_key": "test-only-golden-notification-key",
+  "detail": {
+    "repair_job_id": "repair-1",
+    "evidence": "Example diagnostic evidence",
+    "project_name": "Example \u2603"
+  },
+  "at": "2026-10-23T12:00:00Z",
+  "aes_nonce_hex": "000102030405060708090a0b"
+}

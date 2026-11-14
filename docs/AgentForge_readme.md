@@ -221,7 +221,7 @@ Direct travel control is skill-gated via `bossgate_travel_control`.
 - Rarity is assigned at creation and immutable. Rank remains explicit-promotion only.
 - Capsule lifecycle metadata uses validated states and transitions. Full encrypted movement, dream training, and capability evolution are staged follow-up work.
 - Stage 2 adds the BossForgeOS AI runner contract. RuneForge publishes a signed development-integrity gifted runtime template, while descendants receive detached per-agent runner manifests and bootstrap payloads that do not require RuneForge to remain online.
-- Complete physical model-weight copying into each private model vault remains open work and is not implied by the runner metadata contract.
+- Complete private model-weight packages use the streaming authenticated model vault. GGUF bundles can satisfy architecture and tokenizer requirements from their embedded metadata; projector-only bundles are rejected. Non-model capsule payloads use `build_private_payload_package` with the same authenticated encryption and verification, without pretending to be complete models.
 
 ## Skill Namespace Conventions
 

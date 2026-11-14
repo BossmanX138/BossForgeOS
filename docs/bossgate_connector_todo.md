@@ -98,3 +98,10 @@ Owner: `codemage` (background implementation owner)
   evidence: [2026-06-13 02:30:01] added docs/bossgate_operator_runbook.md and linked it from docs/bossgate_connector.md
 - [x] (BG-033) Prepare release notes and acceptance checklist.
   evidence: [2026-06-13 02:30:48] added docs/release_notes_2026-06-13_bossgate_connector_milestone.md and linked it from docs/bossgate_connector.md
+
+## Phase 8: Notification and Approval Protocol
+
+- [x] (BG-037) Publish the v1 notification, reply, and repair-approval contract, including redaction, key rotation, replay handling, and approval lifetime.
+  evidence: `python -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q` (pass, 458 tests)
+- [x] (BG-038) Document and cross-link the notification contract from the protocol and connector references.
+  evidence: `python -W error::ResourceWarning -W error::SyntaxWarning -m unittest discover -s tests -p "test_*.py" -q` (pass, 458 tests)

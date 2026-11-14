@@ -244,3 +244,7 @@ source secure retirement remain Stage 6 work.
 2. Unauthorized network probing.
 3. Exfiltration of encrypted agent internals.
 4. Circumventing platform or tenant controls.
+
+## Notification and Approval Protocol
+
+The BossForgeOS reference notification and repair-approval wire contracts for future CBCAA and Grand Archivist integration are documented in [BossGate Notification Protocol](./bossgate_notification_protocol.md). That reference covers the exact schemas, redacted-preview/sealed-detail boundary, reply correlation, key IDs, replay state, and short-lived approval assertions; it is distinct from agent-package transfer.

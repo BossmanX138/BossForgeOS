@@ -455,6 +455,7 @@ def build_transfer_replay_token(envelope: dict[str, Any]) -> str:
 
 
 def encrypt_json_payload(payload: dict[str, Any], secret_key: str, key_id: str = "") -> str:
+    """Seal JSON with AES-256-GCM; also exported by core.bossgate."""
     key = _derive_aes256_key(secret_key)
     aes = AESGCM(key)
     nonce = secrets.token_bytes(12)
@@ -471,6 +472,7 @@ def encrypt_json_payload(payload: dict[str, Any], secret_key: str, key_id: str =
 
 
 def decrypt_json_payload(encoded_payload: str, secret_key: str | dict[str, str]) -> dict[str, Any]:
+    """Open the shared AES-GCM payload format, preserving legacy key fallback."""
     raw = base64.b64decode(str(encoded_payload).encode("ascii"))
     blob = json.loads(raw.decode("utf-8"))
     if not isinstance(blob, dict):

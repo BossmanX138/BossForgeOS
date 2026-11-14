@@ -1,0 +1,26 @@
+{
+  "envelope": {
+    "schema": "bosscrafts.bossgate.reply.v1",
+    "parent_message_id": "3675c3ec-b28d-412f-87ae-b3b380118bed",
+    "correlation_id": "e09ccbad-0569-44ec-b07a-a7a37806b78f",
+    "source_gate": "cbcaa-gate",
+    "target_gate": "archivist-gate",
+    "reply_type": "request_status",
+    "message_id": "4675c3ec-b28d-412f-87ae-b3b380118bed",
+    "created_at": "2026-10-23T12:00:00Z",
+    "expires_at": "2026-10-30T12:00:00Z",
+    "nonce": "2222222222222222222222222222222222222222222222222222222222222222",
+    "key_id": "golden-envelope-1",
+    "sealed_payload": "eyJ2ZXJzaW9uIjoxLCJhbGciOiJBRVMtMjU2LUdDTSIsImtleV9pZCI6ImdvbGRlbi1lbnZlbG9wZS0xIiwibm9uY2VfYjY0IjoiREEwT0R4QVJFaE1VRlJZWCIsImNpcGhlcnRleHRfYjY0IjoiMG5CWUVnWnNOUU15aitkMGp0cUExUnA5R2J3S05WMktYOTk3blc2N0M5SXlHNFpKOE1IdEdDNHdlaFRJS2V6SGI3TnNJMTJqbEpYQWQ0NCszaG04Tzl0UUZLa3hTaFFiSkdzTkhxai94Y1RxQW9ia0tzT0xkVlh5RzE1diJ9",
+    "signature": "0c7454633b0087fd647a02c3be3c5a96d3e0ecc8799463f04ab7fd6d87c3f130",
+    "payload_hash": "726f154118d4fcf9236bf36a5ff20a661449010902eaaad4398858ea71eb4318"
+  },
+  "canonical_sha256": "e30d45224e4b8c6b4e64e767b65e09fdb64d3f0cefd0953e51e09666dc58d77c",
+  "secret_key": "test-only-golden-notification-key",
+  "detail": {
+    "question": "Show the latest verification status",
+    "repair_job_id": "repair-1"
+  },
+  "at": "2026-10-23T12:00:00Z",
+  "aes_nonce_hex": "0c0d0e0f1011121314151617"
+}

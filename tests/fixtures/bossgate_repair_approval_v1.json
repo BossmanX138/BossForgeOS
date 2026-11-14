@@ -1,0 +1,33 @@
+{
+  "assertion": {
+    "account_id": "account-1",
+    "device_id": "device-1",
+    "source_gate": "archivist-gate",
+    "repair_job_id": "repair-1",
+    "proposal_version": "1",
+    "proposal_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "project_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "action": "approve_repair",
+    "schema": "bosscrafts.bossgate.repair-approval.v1",
+    "key_id": "approval-test-1",
+    "nonce": "approval-test-nonce-1",
+    "created_at": "2026-10-23T12:00:00Z",
+    "expires_at": "2026-10-23T12:01:00Z",
+    "signature": "7k3ZKvgei1C+VUjQiiG4YEu9Jg94y3Qhe1+naXgQAy2T+IveXLBzgkQ0GKFvEldSruhIwlDCIZv9LUwj8vZmCA=="
+  },
+  "canonical_sha256": "0fe95852d827e3125c1fb5e589a720c368187281086b5ef7fe38b6b3b2f294d4",
+  "public_keys": {
+    "approval-test-1": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAA6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=\n-----END PUBLIC KEY-----\n"
+  },
+  "expected": {
+    "account_id": "account-1",
+    "device_id": "device-1",
+    "source_gate": "archivist-gate",
+    "repair_job_id": "repair-1",
+    "proposal_version": "1",
+    "proposal_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "project_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "action": "approve_repair"
+  },
+  "at": "2026-10-23T12:00:00Z"
+}

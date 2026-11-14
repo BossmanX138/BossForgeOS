@@ -101,6 +101,13 @@ def _inventory_group(root: Path, source_group: str, prefix: str = "") -> list[di
 
 def _validate_complete_model(files: list[dict[str, Any]]) -> set[str]:
     present = {str(item["category"]) for item in files}
+    if 'tokenizer' not in present or 'model_config' not in present:
+        from .gguf_metadata import inspect_gguf
+        for item in files:
+            if str(item['relative_path']).lower().endswith('.gguf'):
+                metadata = inspect_gguf(item['source_path'])
+                if metadata['architecture'] and metadata['embedded_tokenizer']:
+                    present.update({'tokenizer', 'model_config'})
     for required, message in (
         ("weights", "model weights are required"),
         ("tokenizer", "tokenizer assets are required"),
@@ -258,6 +265,37 @@ def build_private_model_package(
     runtime_requirements: dict[str, object] | None = None,
     chunk_size: int = 4 * 1024 * 1024,
 ) -> dict[str, object]:
+    inventory = inspect_model_source(source_root, base_source_root=base_source_root)
+    return _build_private_package(agent_id=agent_id, inventory=inventory, vault_root=vault_root,
+        secret_key=secret_key, key_ref=key_ref, runtime_requirements=runtime_requirements, chunk_size=chunk_size)
+
+
+def build_private_payload_package(
+    *, agent_id: str, source_root: str | Path, vault_root: str | Path,
+    secret_key: str, key_ref: str, runtime_requirements: dict[str, object] | None = None,
+    chunk_size: int = 4 * 1024 * 1024,
+) -> dict[str, object]:
+    """Seal a non-model capsule vault with the same authenticated streaming format.
+
+    This entry point never asserts model completeness. Agent creation continues
+    to call build_private_model_package, whose strict model validation is kept.
+    """
+    root = Path(source_root).resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError('capsule payload source must be a directory')
+    files = _inventory_group(root, 'payload')
+    if not files:
+        raise ValueError('capsule payload must not be empty')
+    inventory = {'source_roots': {'payload': str(root)}, 'adapter_only': False, 'files': files,
+                 'present_categories': sorted({item['category'] for item in files}),
+                 'required_categories': [], 'total_size': sum(item['size'] for item in files)}
+    return _build_private_package(agent_id=agent_id, inventory=inventory, vault_root=vault_root,
+        secret_key=secret_key, key_ref=key_ref, runtime_requirements=runtime_requirements, chunk_size=chunk_size)
+
+
+def _build_private_package(
+    *, agent_id, inventory, vault_root, secret_key, key_ref, runtime_requirements, chunk_size,
+):
     owner_agent_id = _normalized_agent_id(agent_id)
     normalized_key_ref = str(key_ref or "").strip()
     if not normalized_key_ref:
@@ -266,7 +304,6 @@ def build_private_model_package(
     if safe_chunk_size <= 0:
         raise ValueError("private model chunk_size must be positive")
 
-    inventory = inspect_model_source(source_root, base_source_root=base_source_root)
     root = Path(vault_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
     total_size = int(inventory["total_size"])

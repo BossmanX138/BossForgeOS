@@ -271,3 +271,7 @@ attestation. Package ownership must match the runner and capsule agent ID.
 BossGate transport may resume and verify these ciphertext artifacts, but may
 not rename the agent, rebind the package to a sibling identity, or replace the
 package with shared destination weights.
+
+## Notification and Approval Protocol
+
+The BossForgeOS reference notification, reply, and repair-approval wire contracts for future CBCAA and Grand Archivist integration are documented in [BossGate Notification Protocol](./bossgate_notification_protocol.md). These v1 message types are separate from the agent-package transfer envelope described above.

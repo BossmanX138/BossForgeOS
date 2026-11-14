@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "bosscrafts.bossgate.notification.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "message_id",
+    "correlation_id",
+    "source_gate",
+    "created_at",
+    "expires_at",
+    "sealed_payload",
+    "payload_hash",
+    "nonce",
+    "key_id",
+    "signature",
+    "event_type",
+    "severity",
+    "recipient_account_id",
+    "preview"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bosscrafts.bossgate.notification.v1"
+    },
+    "message_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "source_gate": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "sealed_payload": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1048576,
+      "pattern": "^[A-Za-z0-9+/]+={0,2}$",
+      "description": "ASCII Base64 encrypted payload, at most 1048576 UTF-8 bytes."
+    },
+    "payload_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "key_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "event_type": {
+      "enum": [
+        "delivery.recovered",
+        "repair.approval_requested",
+        "repair.backup_failed",
+        "repair.implementation_completed",
+        "repair.implementation_started",
+        "repair.needs_decision",
+        "repair.verification_failed"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ]
+    },
+    "recipient_account_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "project_name",
+        "summary",
+        "action"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "project_name": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "action": {
+          "type": "string",
+          "maxLength": 2048
+        }
+      },
+      "description": "Canonical sorted compact ASCII JSON serialization must contain at most 2048 characters; enforced by runtime validator."
+    }
+  },
+  "$comment": "Runtime validation additionally enforces canonical preview size, timestamp ordering/expiry, payload encryption, hash, HMAC signature and replay protection."
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "bosscrafts.bossgate.repair-approval.v1",
+  "title": "BossGate repair approval assertion v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "account_id",
+    "device_id",
+    "source_gate",
+    "repair_job_id",
+    "proposal_version",
+    "proposal_digest",
+    "project_fingerprint",
+    "action",
+    "created_at",
+    "expires_at",
+    "nonce",
+    "key_id",
+    "signature"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bosscrafts.bossgate.repair-approval.v1"
+    },
+    "account_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "device_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "source_gate": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "repair_job_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "proposal_version": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "proposal_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "project_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "action": {
+      "const": "approve_repair"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "key_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{86}==$"
+    }
+  },
+  "$comment": "Runtime validation additionally checks canonical Base64, Ed25519 signature by key_id, complete expected bindings, UTC timestamp ordering, lifetime of at most 60 seconds, expiry and nonce replay. The issuer verifies authorization before signing; command codes never enter the assertion."
+}
