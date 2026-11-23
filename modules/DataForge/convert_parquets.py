@@ -1,41 +1,34 @@
-import os
-import pandas as pd
-from pathlib import Path
+"""Convert a directory of standalone Parquet shards to individual CSVs."""
+if __package__:
+    from .parquet_cli import fresh_csv, parquet_sources, read_only_destination, run_cli
+else:
+    from parquet_cli import fresh_csv, parquet_sources, read_only_destination, run_cli
+
 
 def convert_parquet_directory(input_dir, output_dir):
-    """
-    Convert all parquet files in input directory to CSV format.
-    Creates corresponding CSV files with same names (minus extension).
-    """
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
+    """Read Parquet shards, creating one new CSV for each without altering input."""
+    import pandas as pd
 
-    # Process each file in input directory
-    for filename in os.listdir(input_dir):
-        filepath = os.path.join(input_dir, filename)
-        if os.path.isfile(filepath) and filename.lower().endswith('.parquet'):
-            print(f"Processing {filename}...")
+    root, files = parquet_sources(input_dir)
+    out = read_only_destination(root, output_dir)
+    targets = [fresh_csv(out / part.with_suffix(".csv").name) for part in files]
+    # Guard case-insensitive filesystems, and mixed-case extensions on any OS.
+    if len({p.name.casefold() for p in targets}) != len(targets):
+        raise ValueError("Two Parquet filenames would produce the same CSV name")
+    # Do not follow a destination-directory symlink back into the input dataset.
+    for target in targets:
+        read_only_destination(root, target)
+    out.mkdir(parents=True, exist_ok=True)
+    for part, target in zip(files, targets):
+        frame = pd.read_parquet(part)
+        with target.open("x", encoding="utf-8", newline="") as file:
+            frame.to_csv(file, index=False)
+        print(f"Converted {part.name} to {target}")
 
-            try:
-                # Read parquet file
-                df = pd.read_parquet(filepath)
 
-                # Create output CSV path (same name but .csv extension)
-                csv_filename = os.path.splitext(filename)[0] + '.csv'
-                csv_path = os.path.join(output_dir, csv_filename)
+def main(argv=None):
+    return run_cli(convert_parquet_directory, "--output-dir", __doc__, argv)
 
-                # Write to CSV
-                df.to_csv(csv_path, index=False)
-                print(f"Successfully converted {filename} to {csv_filename}")
-
-            except Exception as e:
-                print(f"Error processing {filename}: {str(e)}")
-                continue
 
 if __name__ == "__main__":
-    # Set your input and output directories here
-    input_parquet_dir = r"E:\codex-2m-thinking\Codex Data Parquets"
-    output_csv_dir = r"E:\codex-2m-thinking\Converted CSVs"
-
-    convert_parquet_directory(input_parquet_dir, output_csv_dir)
-    print("Conversion complete!")
+    raise SystemExit(main())

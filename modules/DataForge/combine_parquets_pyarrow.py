@@ -1,29 +1,27 @@
-import pyarrow.parquet as pq
-import pyarrow.csv as csv
-import glob
+"""Combine same-schema Parquet shards into a new CSV using PyArrow."""
+if __package__:
+    from .parquet_cli import fresh_csv, parquet_sources, read_only_destination, run_cli
+else:
+    from parquet_cli import fresh_csv, parquet_sources, read_only_destination, run_cli
+
 
 def combine_with_pyarrow(input_dir, output_file):
-    """Combine parquet files using PyArrow"""
-    # Get all parquet files
-    parquet_files = glob.glob(f"{input_dir}/*.parquet")
+    """Append shards by rows, preserving the common Arrow schema."""
+    import pyarrow as pa
+    import pyarrow.csv as csv
+    import pyarrow.parquet as pq
 
-    if not parquet_files:
-        raise ValueError("No parquet files found in directory")
+    root, files = parquet_sources(input_dir)
+    out = fresh_csv(read_only_destination(root, output_file))
+    table = pa.concat_tables([pq.read_table(part) for part in files])
+    with out.open("xb") as file:
+        csv.write_csv(table, file)
+    print(f"Combined {len(files)} Parquet files into {out}")
 
-    # Read first file to get schema
-    table = pq.read_table(parquet_files[0])
 
-    # Append remaining files
-    for file in parquet_files[1:]:
-        more_data = pq.read_table(file)
-        table = table.append_columns(more_data)
+def main(argv=None):
+    return run_cli(combine_with_pyarrow, "--output-file", __doc__, argv)
 
-    # Write to CSV
-    csv.write_csv(table, output_file)
-    print(f"Successfully combined {len(parquet_files)} files into {output_file}")
 
 if __name__ == "__main__":
-    input_dir = "E:\\codex-2m-thinking\\Codex Data Parquets"
-    output_file = "combined_dataset.csv"
-
-    combine_with_pyarrow(input_dir, output_file)
+    raise SystemExit(main())

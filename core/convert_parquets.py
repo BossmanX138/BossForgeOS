@@ -1,41 +1,15 @@
-import os
-import pandas as pd
-from pathlib import Path
+"""Compatibility entry point for the standalone DataForge converter."""
+if not __package__:
+    import sys
+    from pathlib import Path
 
-def convert_parquet_directory(input_dir, output_dir):
-    """
-    Convert all parquet files in input directory to CSV format.
-    Creates corresponding CSV files with same names (minus extension).
-    """
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
+    # Direct invocation sets sys.path[0] to core/, not this repository root.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-    # Process each file in input directory
-    for filename in os.listdir(input_dir):
-        filepath = os.path.join(input_dir, filename)
-        if os.path.isfile(filepath) and filename.lower().endswith('.parquet'):
-            print(f"Processing {filename}...")
+from modules.DataForge.convert_parquets import convert_parquet_directory, main
 
-            try:
-                # Read parquet file
-                df = pd.read_parquet(filepath)
+__all__ = ["convert_parquet_directory", "main"]
 
-                # Create output CSV path (same name but .csv extension)
-                csv_filename = os.path.splitext(filename)[0] + '.csv'
-                csv_path = os.path.join(output_dir, csv_filename)
-
-                # Write to CSV
-                df.to_csv(csv_path, index=False)
-                print(f"Successfully converted {filename} to {csv_filename}")
-
-            except Exception as e:
-                print(f"Error processing {filename}: {str(e)}")
-                continue
 
 if __name__ == "__main__":
-    # Set your input and output directories here
-    input_parquet_dir = r"E:\codex-2m-thinking\Codex Data Parquets"
-    output_csv_dir = r"E:\codex-2m-thinking\Converted CSVs"
-
-    convert_parquet_directory(input_parquet_dir, output_csv_dir)
-    print("Conversion complete!")
+    raise SystemExit(main())
